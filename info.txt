@@ -1,0 +1,12 @@
+TODO:
+Finish creating lcms2.java
+Create lcms2_internal.java
+
+Create "public" functions for whatever can be public. Classes that are public in abstract but implemented internally should have a special class built to handle that (public class stuff{int internalValue;})
+
+Implement other source files
+
+Determine what/if internal structures can be discovered (keep it as if the only accessible items are those in the headers), if they can then make them public, otherwise internal.
+
+Figure out what the high-level structures should be, then...
+Create high-level structures that handle color management in a true OOP fashion.

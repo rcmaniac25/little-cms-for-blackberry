@@ -1,0 +1,20 @@
+<Properties ModelVersion="1.1.2">
+  <General Title="" Version="2.0" Vendor="Marti Maria" Description="LittleCMS color engine"/>
+  <Application Type="Library" MainMIDletName="" MainArgs="" HomeScreenPosition="0" StartupTier="7" IsSystemModule="true" IsAutostartup="false"/>
+  <Resources hasTitleResource="false" TitleResourceBundleName="" TitleResourceBundleRelativePath="" TitleResourceBundleClassName="" TitleResourceBundleKey="" DescriptionId="">
+    <Icons/>
+  </Resources>
+  <Compile OutputCompilerMessages="false" ConvertImages="false" CreateWarningForNoExportedRoutine="true" CompressResources="false" AliasList="">
+    <PreprocessorDefines>
+      <PreprocessorTag IsActive="true" PreprocessorDefine="CMS_DONT_USE_PTHREADS" Scope="0"/>
+    </PreprocessorDefines>
+  </Compile>
+  <Packaging OutputFileName="lcms2_4bb" OutputFolder="deliverables" PreBuildStep="" PostBuildStep="" CleanStep="" GenerateALXFile="true">
+    <AlxFiles/>
+  </Packaging>
+  <HiddenProperties>
+    <ClassProtection/>
+    <PackageProtection/>
+  </HiddenProperties>
+  <AlternateEntryPoints/>
+</Properties>
