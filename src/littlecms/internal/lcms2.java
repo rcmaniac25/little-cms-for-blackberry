@@ -32,7 +32,7 @@ import java.util.Calendar;
 import net.rim.device.api.io.Seekable; //TODO: Create a custom type that is seekable and can tell length so that it can work on older systems.
 import net.rim.device.api.util.Arrays;
 
-public final class lcms2
+public class lcms2
 {
 	/** Version/release*/
 	public static final int LCMS_VERSION = 2000;
@@ -887,7 +887,7 @@ public final class lcms2
 	 * @param Plugin Pointer to plug-in collection.
 	 * @return TRUE on success FALSE on error.
 	 */
-	public static boolean cmsPlugin(Object Plugin)
+	public static boolean cmsPlugin(lcms2_plugin.cmsPluginBase Plugin) //This originally took a generic Object but internally would only take cmsPluginBase. Reduce chance of errors.
 	{
 		return cmsplugin.cmsPlugin(Plugin);
 	}
@@ -1167,7 +1167,7 @@ public final class lcms2
 	
 	/**
 	 * 
-	 * @param TempK Pointer to a user-allocated cmsFloat64Number variable to receive the resulting temperature.
+	 * @param TempK Pointer to a user-allocated double variable to receive the resulting temperature.
 	 * @param WhitePoint Target chromaticity in cmsCIExyY
 	 * @return TRUE on success, FALSE on error.
 	 */
@@ -2716,7 +2716,7 @@ public final class lcms2
 	
 	// IO handlers ----------------------------------------------------------------------------------------------------------
 	
-	//IN: lcms2_plugin.java
+	public static class cmsIOHANDLER extends lcms2_plugin._cms_io_handler{};
 	
 	/**
 	 * Creates an IO handler object from a disk-based file.
@@ -2925,7 +2925,533 @@ public final class lcms2
 		return cmsio0.cmsSaveProfileToIOhandler(hProfile, io);
 	}
 	
-	//TODO: #1412
+	// Predefined virtual profiles ------------------------------------------------------------------------------------------
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param WhitePoint The white point of the RGB device or space.
+	 * @param Primaries The primaries in xyY of the device or space.
+	 * @param TransferFunction 3 tone curves describing the device or space gamma.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateRGBProfileTHR(cmsContext ContextID, final cmsCIExyY WhitePoint, final cmsCIExyYTRIPLE Primaries, 
+			final cmsToneCurve[] TransferFunction)
+	{
+		return cmsvirt.cmsCreateRGBProfileTHR(ContextID, WhitePoint, Primaries, TransferFunction);
+	}
+	
+	/**
+	 * This function creates a RGB profile based on White point, primaries and transfer functions. It populates following tags; this conform 
+	 * a standard RGB Display Profile, and then I add (As per addendum II) chromaticity tag.
+	 * <p>
+	 * <table border=1>
+	 * <tr><td>1</td><td>cmsSigProfileDescriptionTag</td></tr>
+	 * <tr><td>2</td><td>cmsSigMediaWhitePointTag</td></tr>
+	 * <tr><td>3</td><td>cmsSigRedColorantTag</td></tr>
+	 * <tr><td>4</td><td>cmsSigGreenColorantTag</td></tr>
+	 * <tr><td>5</td><td>cmsSigBlueColorantTag</td></tr>
+	 * <tr><td>6</td><td>cmsSigRedTRCTag</td></tr>
+	 * <tr><td>7</td><td>cmsSigGreenTRCTag</td></tr>
+	 * <tr><td>8</td><td>cmsSigBlueTRCTag</td></tr>
+	 * <tr><td>9</td><td>Chromatic adaptation Tag</td></tr>
+	 * <tr><td>10</td><td>cmsSigChromaticityTag</td></tr>
+	 * </table>
+	 * @param WhitePoint The white point of the RGB device or space.
+	 * @param Primaries The primaries in xyY of the device or space.
+	 * @param TransferFunction 3 tone curves describing the device or space gamma.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateRGBProfile(final cmsCIExyY WhitePoint, final cmsCIExyYTRIPLE Primaries, final cmsToneCurve[] TransferFunction)
+	{
+		return cmsvirt.cmsCreateRGBProfile(WhitePoint, Primaries, TransferFunction);
+	}
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param WhitePoint The white point of the gray device or space.
+	 * @param TransferFunction tone curve describing the device or space gamma.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateGrayProfileTHR(cmsContext ContextID, final cmsCIExyY WhitePoint, final cmsToneCurve TransferFunction)
+	{
+		return cmsvirt.cmsCreateGrayProfileTHR(ContextID, WhitePoint, TransferFunction);
+	}
+	
+	/**
+	 * This function creates a gray profile based on White point and transfer function. It populates following tags; this conform a 
+	 * standard gray display profile.
+	 * <p>
+	 * <table border=1>
+	 * <tr><td>1</td><td>cmsSigProfileDescriptionTag</td></tr>
+	 * <tr><td>2</td><td>cmsSigMediaWhitePointTag</td></tr>
+	 * <tr><td>3</td><td>cmsSigGrayTRCTag</td></tr>
+	 * </table>
+	 * @param WhitePoint The white point of the gray device or space.
+	 * @param TransferFunction tone curve describing the device or space gamma.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateGrayProfile(final cmsCIExyY WhitePoint, final cmsToneCurve TransferFunction)
+	{
+		return cmsvirt.cmsCreateGrayProfile(WhitePoint, TransferFunction);
+	}
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param ColorSpace Any color space signiture.
+	 * @param TransferFunctions tone curves describing the device or space linearization.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateLinearizationDeviceLinkTHR(cmsContext ContextID, int ColorSpace, final cmsToneCurve[] TransferFunctions)
+	{
+		return cmsvirt.cmsCreateLinearizationDeviceLinkTHR(ContextID, ColorSpace, TransferFunctions);
+	}
+	
+	/**
+	 * This is a devicelink operating in the target colorspace with as many transfer functions as components.
+	 * @param ColorSpace Any color space signiture.
+	 * @param TransferFunctions tone curves describing the device or space linearization.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateLinearizationDeviceLink(int ColorSpace, final cmsToneCurve[] TransferFunctions)
+	{
+		return cmsvirt.cmsCreateLinearizationDeviceLink(ColorSpace, TransferFunctions);
+	}
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param ColorSpace Any color space signiture. Currently only cmsSigCmykData is supported.
+	 * @param Limit Amount of ink limiting in % (0..400%)
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateInkLimitingDeviceLinkTHR(cmsContext ContextID, int ColorSpace, double Limit)
+	{
+		return cmsvirt.cmsCreateInkLimitingDeviceLinkTHR(ContextID, ColorSpace, Limit);
+	}
+	
+	/**
+	 * This is a devicelink operating in CMYK for ink-limiting.
+	 * <p>
+	 * Ink-limiting algorithm:
+	 * <br>
+	 * <code>
+	 * Sum = C + M + Y + K<br>
+	 * If Sum > InkLimit<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ratio= 1 - (Sum - InkLimit) / (C + M + Y)<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if Ratio <0<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ratio=0<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;endif<br>
+	 * Else<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ratio=1<br>
+	 * endif<br><br>
+	 * C = Ratio * C<br>
+	 * M = Ratio * M<br>
+	 * Y = Ratio * Y<br>
+	 * K: Does not change
+	 * </code>
+	 * @param ColorSpace Any color space signiture. Currently only cmsSigCmykData is supported.
+	 * @param Limit Amount of ink limiting in % (0..400%)
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateInkLimitingDeviceLink(int ColorSpace, double Limit)
+	{
+		return cmsvirt.cmsCreateInkLimitingDeviceLink(ColorSpace, Limit);
+	}
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param WhitePoint Lab reference white. NULL for D50.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateLab2ProfileTHR(cmsContext ContextID, final cmsCIExyY WhitePoint)
+	{
+		return cmsvirt.cmsCreateLab2ProfileTHR(ContextID, WhitePoint);
+	}
+	
+	/**
+	 * Creates a Lab -> Lab identity, marking it as v2 ICC profile. Adjustments for accomodating PCS endoing shall be done by Little CMS when using this profile.
+	 * @param WhitePoint Lab reference white. NULL for D50.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateLab2Profile(final cmsCIExyY WhitePoint)
+	{
+		return cmsvirt.cmsCreateLab2Profile(WhitePoint);
+	}
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param WhitePoint Lab reference white. NULL for D50.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateLab4ProfileTHR(cmsContext ContextID, final cmsCIExyY WhitePoint)
+	{
+		return cmsvirt.cmsCreateLab4ProfileTHR(ContextID, WhitePoint);
+	}
+	
+	/**
+	 * Creates a Lab -> Lab identity, marking it as v4 ICC profile.
+	 * @param WhitePoint Lab reference white. NULL for D50.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateLab4Profile(final cmsCIExyY WhitePoint)
+	{
+		return cmsvirt.cmsCreateLab4Profile(WhitePoint);
+	}
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateXYZProfileTHR(cmsContext ContextID)
+	{
+		return cmsvirt.cmsCreateXYZProfileTHR(ContextID);
+	}
+	
+	/**
+	 * Creates a XYZ -> XYZ identity, marking it as v4 ICC profile. WhitePoint used in Absolute colorimetric intent is D50.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateXYZProfile()
+	{
+		return cmsvirt.cmsCreateXYZProfile();
+	}
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreate_sRGBProfileTHR(cmsContext ContextID)
+	{
+		return cmsvirt.cmsCreate_sRGBProfileTHR(ContextID);
+	}
+	
+	/**
+	 * Create an ICC virtual profile for sRGB space. sRGB is a standard RGB color space created cooperatively by HP and Microsoft in 1996 for use on monitors, printers, 
+	 * and the Internet.
+	 * <p>
+	 * <table border=1>
+	 * <tr><th>sRGB white point is D65.</th></tr>
+	 * <tr><table border=1>
+	 * <th>xyY</th><td>0.3127, 0.3291, 1.0</td>
+	 * </table></tr>
+	 * </table>
+	 * <p>
+	 * <table border=1>
+	 * <tr><th>Primaries are <a href="http://en.wikipedia.org/wiki/Rec._709">ITU-R BT.709-5</a> (xYY)</th></tr>
+	 * <tr><table border=1>
+	 * <tr><th>R</th><td>0.6400, 0.3300, 1.0</td></tr>
+	 * <tr><th>G</th><td>0.3000, 0.6000, 1.0</td></tr>
+	 * <tr><th>B</th><td>0.1500, 0.0600, 1.0</td></tr>
+	 * </table></tr>
+	 * </table>
+	 * <p>
+	 * sRGB transfer functions are defined by:<br>
+	 * <code>
+	 * If R’<sub>sRGB</sub>,G’<sub>sRGB</sub>, B’<sub>sRGB</sub> < 0.04045<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R = R’<sub>sRGB</sub> / 12.92<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;G = G’<sub>sRGB</sub> / 12.92<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;B = B’<sub>sRGB</sub> / 12.92
+	 * <p>
+	 * else if R’<sub>sRGB</sub>,G’<sub>sRGB</sub>, B’<sub>sRGB</sub> >= 0.04045<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R = ((R’<sub>sRGB</sub> + 0.055) / 1.055)<sup>2.4</sup><br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;G = ((G’<sub>sRGB</sub> + 0.055) / 1.055)<sup>2.4</sup><br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;B = ((B’<sub>sRGB</sub> + 0.055) / 1.055)<sup>2.4</sup>
+	 * </code>
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreate_sRGBProfile()
+	{
+		return cmsvirt.cmsCreate_sRGBProfile();
+	}
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param nLUTPoints Resulting colormap resolution
+	 * @param Bright Bright increment. May be negative
+	 * @param Contrast Contrast increment. May be negative.
+	 * @param Hue Hue displacement in degree.
+	 * @param Saturation Saturation increment. May be negative
+	 * @param TempSrc Source white point temperatures
+	 * @param TempDest Destination white point temperatures
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateBCHSWabstractProfileTHR(cmsContext ContextID, int nLUTPoints, double Bright, double Contrast, double Hue, double Saturation, 
+			int TempSrc, int TempDest)
+	{
+		return cmsvirt.cmsCreateBCHSWabstractProfileTHR(ContextID, nLUTPoints, Bright, Contrast, Hue, Saturation, TempSrc, TempDest);
+	}
+	
+	/**
+	 * Creates an abstract devicelink operating in Lab for Bright/Contrast/Hue/Saturation and white point translation. White points are specified as temperatures ºK
+	 * @param nLUTPoints Resulting colormap resolution
+	 * @param Bright Bright increment. May be negative
+	 * @param Contrast Contrast increment. May be negative.
+	 * @param Hue Hue displacement in degree.
+	 * @param Saturation Saturation increment. May be negative
+	 * @param TempSrc Source white point temperatures
+	 * @param TempDest Destination white point temperatures
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateBCHSWabstractProfile(int nLUTPoints, double Bright, double Contrast, double Hue, double Saturation, int TempSrc, int TempDest)
+	{
+		return cmsvirt.cmsCreateBCHSWabstractProfile(nLUTPoints, Bright, Contrast, Hue, Saturation, TempSrc, TempDest);
+	}
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateNULLProfileTHR(cmsContext ContextID)
+	{
+		return cmsvirt.cmsCreateNULLProfileTHR(ContextID);
+	}
+	
+	/**
+	 * Creates a fake NULL profile. This profile return 1 channel as always 0. Is useful only for gamut checking tricks.
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsCreateNULLProfile()
+	{
+		return cmsvirt.cmsCreateNULLProfile();
+	}
+	
+	// Converts a transform to a devicelink profile
+	/**
+	 * Generates a device-link profile from a given color transform. This profile can then be used by any other function accepting profile handle. Depending on the 
+	 * specified version number, the implementation of the devicelink may vary. Accepted versions are in range 1.0…4.3
+	 * @param hTransform Handle to a color transform object.
+	 * @param Version The target devicelink version number.
+	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
+	 * @return A handle to an ICC profile object on success, NULL on error.
+	 */
+	public static cmsHPROFILE cmsTransform2DeviceLink(cmsHTRANSFORM hTransform, double Version, int dwFlags)
+	{
+		return cmsvirt.cmsTransform2DeviceLink(hTransform, Version, dwFlags);
+	}
+	
+	// Intents ----------------------------------------------------------------------------------------------
+	
+	// ICC Intents
+	public static final int INTENT_PERCEPTUAL                            = 0;
+	public static final int INTENT_RELATIVE_COLORIMETRIC                 = 1;
+	public static final int INTENT_SATURATION                            = 2;
+	public static final int INTENT_ABSOLUTE_COLORIMETRIC                 = 3;
+	
+	// Non-ICC intents
+	public static final int INTENT_PRESERVE_K_ONLY_PERCEPTUAL           = 10;
+	public static final int INTENT_PRESERVE_K_ONLY_RELATIVE_COLORIMETRIC= 11;
+	public static final int INTENT_PRESERVE_K_ONLY_SATURATION           = 12;
+	public static final int INTENT_PRESERVE_K_PLANE_PERCEPTUAL          = 13;
+	public static final int INTENT_PRESERVE_K_PLANE_RELATIVE_COLORIMETRIC=14;
+	public static final int INTENT_PRESERVE_K_PLANE_SATURATION          = 15;
+	
+	// Call with NULL as parameters to get the intent count
+	/**
+	 * Fills a table with id-numbers and descriptions for all supported intents. Little CMS plug-in architecture allows to implement user-defined intents; use this 
+	 * function to get info about such extended functionality. Call with NULL as parameters to get the intent count
+	 * @param nMax Max array elements to fill.
+	 * @param Codes Pointer to user-allocated array of int to hold the intent id-numbers
+	 * @param Descriptions Pointer to a user allocated array of String to hold the intent names.
+	 * @return Supported intents count.
+	 */
+	public static int cmsGetSupportedIntents(int nMax, int[] Codes, String[] Descriptions)
+	{
+		return cmscnvrt.cmsGetSupportedIntents(nMax, Codes, Descriptions);
+	}
+	
+	// Flags
+	
+	/** Inhibit 1-pixel cache*/
+	public static final int cmsFLAGS_NOCACHE                = 0x0040;
+	/** Inhibit optimizations*/
+	public static final int cmsFLAGS_NOOPTIMIZE             = 0x0100;
+	/** Don't transform anyway*/
+	public static final int cmsFLAGS_NULLTRANSFORM          = 0x0200;
+	
+	// Proofing flags
+	/** Out of Gamut alarm*/
+	public static final int cmsFLAGS_GAMUTCHECK             = 0x1000;
+	/** Do softproofing*/
+	public static final int cmsFLAGS_SOFTPROOFING           = 0x4000;
+	
+	// Misc
+	public static final int cmsFLAGS_BLACKPOINTCOMPENSATION = 0x2000;
+	/** Don't fix scum dot*/
+	public static final int cmsFLAGS_NOWHITEONWHITEFIXUP    = 0x0004;
+	/** Use more memory to give better accurancy*/
+	public static final int cmsFLAGS_HIGHRESPRECALC         = 0x0400;
+	/** Use less memory to minimize resouces*/
+	public static final int cmsFLAGS_LOWRESPRECALC          = 0x0800;
+	
+	// For devicelink creation
+	/** Create 8 bits devicelinks*/
+	public static final int cmsFLAGS_8BITS_DEVICELINK       = 0x0008;
+	/** Guess device class (for transform2devicelink)*/
+	public static final int cmsFLAGS_GUESSDEVICECLASS       = 0x0020;
+	/** Keep profile sequence for devicelink creation*/
+	public static final int cmsFLAGS_KEEP_SEQUENCE          = 0x0080;
+	
+	// Specific to a particular optimizations
+	/** Force CLUT optimization*/
+	public static final int cmsFLAGS_FORCE_CLUT             = 0x0002;
+	/** create postlinearization tables if possible*/
+	public static final int cmsFLAGS_CLUT_POST_LINEARIZATION= 0x0001;
+	/** create prelinearization tables if possible*/
+	public static final int cmsFLAGS_CLUT_PRE_LINEARIZATION = 0x0010;
+	
+	// Fine-tune control over number of gridpoints
+	public static int cmsFLAGS_GRIDPOINTS(int n)
+	{
+		return (n & 0xFF) << 16;
+	}
+	
+	// CRD special
+	public static final int cmsFLAGS_NODEFAULTRESOURCEDEF   = 0x01000000;
+	
+	// Transforms ---------------------------------------------------------------------------------------------------
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param Input Handle to a profile object capable to work in input direction
+	 * @param InputFormat A bit-field format specifier
+	 * @param Output Handle to a profile object capable to work in output direction
+	 * @param OutputFormat A bit-field format specifier
+	 * @param Intent A int holding the intent code
+	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
+	 * @return A handle to a transform object on success, NULL on error.
+	 */
+	public static cmsHTRANSFORM cmsCreateTransformTHR(cmsContext ContextID, cmsHPROFILE Input, int InputFormat, cmsHPROFILE Output, int OutputFormat, int Intent, 
+			int dwFlags)
+	{
+		return cmsxform.cmsCreateTransformTHR(ContextID, Input, InputFormat, Output, OutputFormat, Intent, dwFlags);
+	}
+	
+	/**
+	 * Creates a color transform for translating bitmaps.
+	 * @param Input Handle to a profile object capable to work in input direction
+	 * @param InputFormat A bit-field format specifier
+	 * @param Output Handle to a profile object capable to work in output direction
+	 * @param OutputFormat A bit-field format specifier
+	 * @param Intent A int holding the intent code
+	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
+	 * @return A handle to a transform object on success, NULL on error.
+	 */
+	public static cmsHTRANSFORM cmsCreateTransform(cmsHPROFILE Input, int InputFormat, cmsHPROFILE Output, int OutputFormat, int Intent, int dwFlags)
+	{
+		return cmsxform.cmsCreateTransform(Input, InputFormat, Output, OutputFormat, Intent, dwFlags);
+	}
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param Input Handle to a profile object capable to work in input direction
+	 * @param InputFormat A bit-field format specifier
+	 * @param Output Handle to a profile object capable to work in output direction
+	 * @param OutputFormat A bit-field format specifier
+	 * @param Intent A int holding the intent code
+	 * @param ProofingIntent A int holding the intent code
+	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
+	 * @return A handle to a transform object on success, NULL on error.
+	 */
+	public static cmsHTRANSFORM cmsCreateProofingTransformTHR(cmsContext ContextID, cmsHPROFILE Input, int InputFormat, cmsHPROFILE Output, int OutputFormat, 
+			cmsHPROFILE Proofing, int Intent, int ProofingIntent, int dwFlags)
+	{
+		return cmsxform.cmsCreateProofingTransformTHR(ContextID, Input, InputFormat, Output, OutputFormat, Proofing, Intent, ProofingIntent, dwFlags);
+	}
+	
+	/**
+	 * Same as cmsCreateTransform(), but including soft-proofing. The obtained transform emulates the device described by the "Proofing" profile. Useful to preview final 
+	 * result without rendering to the physical medium. To enable proofing and gamut check you need to include following flags:
+	 * <p>
+	 * <b>cmsFLAGS_GAMUTCHECK</b>: Color out of gamut are flagged to a fixed color defined by the function cmsSetAlarmCodes
+	 * <p>
+	 * <b>cmsFLAGS_SOFTPROOFING</b>: does emulate the Proofing device.
+	 * @param Input Handle to a profile object capable to work in input direction
+	 * @param InputFormat A bit-field format specifier
+	 * @param Output Handle to a profile object capable to work in output direction
+	 * @param OutputFormat A bit-field format specifier
+	 * @param Intent A int holding the intent code
+	 * @param ProofingIntent A int holding the intent code
+	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
+	 * @return A handle to a transform object on success, NULL on error.
+	 */
+	public static cmsHTRANSFORM cmsCreateProofingTransform(cmsHPROFILE Input, int InputFormat, cmsHPROFILE Output, int OutputFormat, cmsHPROFILE Proofing, int Intent, 
+			int ProofingIntent, int dwFlags)
+	{
+		return cmsxform.cmsCreateProofingTransform(Input, InputFormat, Output, OutputFormat, Proofing, Intent, ProofingIntent, dwFlags);
+	}
+	
+	/**
+	 * Same as anterior, but allowing a ContextID to be passed through.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param hProfiles Array of handles to open profile objects.
+	 * @param nProfiles Number of profiles in the array.
+	 * @param InputFormat A bit-field format specifier
+	 * @param OutputFormat A bit-field format specifier
+	 * @param Intent A int holding the intent code
+	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
+	 * @return A handle to a transform object on success, NULL on error.
+	 */
+	public static cmsHTRANSFORM cmsCreateMultiprofileTransformTHR(cmsContext ContextID, cmsHPROFILE[] hProfiles, int nProfiles, int InputFormat, int OutputFormat, 
+			int Intent, int dwFlags)
+	{
+		return cmsxform.cmsCreateMultiprofileTransformTHR(ContextID, hProfiles, nProfiles, InputFormat, OutputFormat, Intent, dwFlags);
+	}
+	
+	/**
+	 * @param hProfiles Array of handles to open profile objects.
+	 * @param nProfiles Number of profiles in the array.
+	 * @param InputFormat A bit-field format specifier
+	 * @param OutputFormat A bit-field format specifier
+	 * @param Intent A int holding the intent code
+	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
+	 * @return A handle to a transform object on success, NULL on error.
+	 */
+	public static cmsHTRANSFORM cmsCreateMultiprofileTransform(cmsHPROFILE[] hProfiles, int nProfiles, int InputFormat, int OutputFormat, int Intent, int dwFlags)
+	{
+		return cmsxform.cmsCreateMultiprofileTransform(hProfiles, nProfiles, InputFormat, OutputFormat, Intent, dwFlags);
+	}
+	
+	/**
+	 * Extended form of multiprofile color transform creation, exposing all parameters for each profile in the chain. All other transform cration functions are 
+	 * wrappers to this call.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param nProfiles Number of profiles in the array.
+	 * @param hProfiles Array of handles to open profile objects.
+	 * @param BPC Array of black point compensation states
+	 * @param Intents A int holding the intent code, as described in Intents section.
+	 * @param hGamutProfile Handle to a profile holding gamut information for gamut check. Only used if cmsFLAGS_GAMUTCHECK specified. Set to NULL for no gamut check.
+	 * @param nGamutPCSposition Position in the chain of Lab/XYZ PCS to check against gamut profile Only used if cmsFLAGS_GAMUTCHECK specified.
+	 * @param InputFormat A bit-field format specifier as described in Formatters section.
+	 * @param OutputFormat A bit-field format specifier as described in Formatters section.
+	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
+	 * @return A handle to a transform object on success, NULL on error.
+	 */
+	public static cmsHTRANSFORM cmsCreateExtendedTransform(cmsContext ContextID, int nProfiles, cmsHPROFILE[] hProfiles, boolean[] BPC, int[] Intents, 
+			double[] AdaptationStates, cmsHPROFILE hGamutProfile, int nGamutPCSposition, int InputFormat, int OutputFormat, int dwFlags)
+	{
+		return cmsxform.cmsCreateExtendedTransform(ContextID, nProfiles, hProfiles, BPC, Intents, AdaptationStates, hGamutProfile, nGamutPCSposition, InputFormat,
+				OutputFormat, dwFlags);
+	}
+	
+	/**
+	 * Closes a transform handle and frees any associated memory. This function does NOT free the profiles used to create the transform.
+	 * @param hTransform Handle to a color transform object.
+	 */
+	public static void cmsDeleteTransform(cmsHTRANSFORM hTransform)
+	{
+		cmsxform.cmsDeleteTransform(hTransform);
+	}
 	
 	/**
 	 * This function translates bitmaps according of parameters setup when creating the color transform.
@@ -2937,5 +3463,586 @@ public final class lcms2
 	public static void cmsDoTransform(cmsHTRANSFORM Transform, final Object InputBuffer, Object OutputBuffer, int Size)
 	{
 		cmsxform.cmsDoTransform(Transform, InputBuffer, OutputBuffer, Size);
+	}
+	
+	/**
+	 * Sets the global codes used to mark out-out-gamut on Proofing transforms. Values are meant to be encoded in 16 bits.
+	 * @param NewAlarm AlarmCodes: Array [16] of codes. ALL 16 VALUES MUST BE SPECIFIED, set to zero unused channels.
+	 */
+	public static void cmsSetAlarmCodes(short[] NewAlarm)
+	{
+		cmsxform.cmsSetAlarmCodes(NewAlarm);
+	}
+	
+	/**
+	 * Gets the current global codes used to mark out-out-gamut on Proofing transforms. Values are meant to be encoded in 16 bits.
+	 * @param NewAlarm Array [16] of codes. ALL 16 VALUES WILL BE OVERWRITTEN.
+	 */
+	public static void cmsGetAlarmCodes(short[] NewAlarm)
+	{
+		cmsxform.cmsGetAlarmCodes(NewAlarm);
+	}
+	
+	// Adaptation state for absolute colorimetric intent
+	/**
+	 * Sets adaptation state for absolute colorimetric intent, on all but cmsCreateExtendedTransform. Little CMS can handle incomplete 
+	 * adaptation states.
+	 * @param d Degree on adaptation 0=Not adapted, 1=Complete adaptation, in-between=Partial adaptation. Use negative values to return 
+	 * the global state without changing it.
+	 * @return Previous global adaptation state.
+	 */
+	public static double cmsSetAdaptationState(double d)
+	{
+		return cmsxform.cmsSetAdaptationState(d);
+	}
+	
+	/**
+	 * Returns the ContextID associated with a given transform.
+	 * @param hTransform Handle to a color transform object.
+	 * @return Pointer to a user-defined context cargo or NULL if no context
+	 */
+	public static cmsContext cmsGetTransformContextID(cmsHTRANSFORM hTransform)
+	{
+		return cmsxform.cmsGetTransformContextID(hTransform);
+	}
+	
+	// PostScript ColorRenderingDictionary and ColorSpaceArray ----------------------------------------------------
+	
+	public static final int cmsPS_RESOURCE_CSA = 0;
+	public static final int cmsPS_RESOURCE_CRD = cmsPS_RESOURCE_CSA + 1;
+	
+	// lcms2 unified method to access postscript color resources
+	/**
+	 * Little CMS 2 unified method to create postscript color resources. Serialization is performed by the given iohandler object.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param Type Either <b>cmsPS_RESOURCE_CSA</b> or <b>cmsPS_RESOURCE_CRD</b>
+	 * @param hProfile Handle to a profile object
+	 * @param Intent A int holding the intent code
+	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
+	 * @param io Pointer to a serialization object.
+	 * @return The resource size in bytes on success, 0 on error.
+	 */
+	public static int cmsGetPostScriptColorResource(cmsContext ContextID, int Type, cmsHPROFILE hProfile, int Intent, int dwFlags, 
+			cmsIOHANDLER io)
+	{
+		return cmsps2.cmsGetPostScriptColorResource(ContextID, Type, hProfile, Intent, dwFlags, io);
+	}
+	
+	/**
+	 * A wrapper on cmsGetPostScriptColorResource to simplify CSA generation.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param hProfile Handle to a profile object
+	 * @param Intent A int holding the intent code
+	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
+	 * @param Buffer Pointer to a user-allocated memory block or NULL. If specified, It should be big enough to hold the generated resource.
+	 * @param dwBufferLen Length of Buffer in bytes.
+	 * @return The resource size in bytes on success, 0 on error.
+	 */
+	public static int cmsGetPostScriptCSA(cmsContext ContextID, cmsHPROFILE hProfile, int Intent, int dwFlags, byte[] Buffer, 
+			int dwBufferLen)
+	{
+		return cmsps2.cmsGetPostScriptCSA(ContextID, hProfile, Intent, dwFlags, Buffer, dwBufferLen);
+	}
+	
+	/**
+	 * A wrapper on cmsGetPostScriptColorResource to simplify CRD generation.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param hProfile Handle to a profile object
+	 * @param Intent A int holding the intent code
+	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
+	 * @param Buffer Pointer to a user-allocated memory block or NULL. If specified, It should be big enough to hold the generated resource.
+	 * @param dwBufferLen Length of Buffer in bytes.
+	 * @return The resource size in bytes on success, 0 on error.
+	 */
+	public static int cmsGetPostScriptCRD(cmsContext ContextID, cmsHPROFILE hProfile, int Intent, int dwFlags, byte[] Buffer, 
+			int dwBufferLen)
+	{
+		return cmsps2.cmsGetPostScriptCRD(ContextID, hProfile, Intent, dwFlags, Buffer, dwBufferLen);
+	}
+	
+	// IT8.7 / CGATS.17-200x handling -----------------------------------------------------------------------------
+	
+	/**
+	 * Allocates an empty CGATS.17 object.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @return A handle to a CGATS.17 object on success, NULL on error.
+	 */
+	public static cmsHANDLE cmsIT8Alloc(cmsContext ContextID)
+	{
+		return cmscgats.cmsIT8Alloc(ContextID);
+	}
+	
+	/**
+	 * This function frees the CGATS.17 object. After a call to this function, all memory pointers associated with the object are freed and therefore no longer valid.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 */
+	public static void cmsIT8Free(cmsHANDLE hIT8)
+	{
+		cmscgats.cmsIT8Free(hIT8);
+	}
+	
+	// Tables
+	/**
+	 * This function returns the number of tables found in the current CGATS object.
+	 * @param A handle to a CGATS.17 object.
+	 * @return The number of tables on success, 0 on error.
+	 */
+	public static int cmsIT8TableCount(cmsHANDLE hIT8)
+	{
+		return cmscgats.cmsIT8TableCount(hIT8);
+	}
+	
+	/**
+	 * This function positions the IT8 object in a given table, identified by its position. Setting nTable to Table Count + 1 does allocate a new empty table
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param nTable The table number (0 based)
+	 * @return The current table number on success, -1 on error.
+	 */
+	public static int cmsIT8SetTable(cmsHANDLE hIT8, int nTable)
+	{
+		return cmscgats.cmsIT8SetTable(hIT8, nTable);
+	}
+	
+	// Persistence
+	/**
+	 * This function allocates a CGATS.17 object and fills it with the contents of cFileName. Used for reading existing CGATS files.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param cFileName The CGATS.17 file name to read/parse
+	 * @return A handle to a CGATS.17 on success, NULL on error.
+	 */
+	public static cmsHANDLE cmsIT8LoadFromFile(cmsContext ContextID, final String cFileName)
+	{
+		return cmscgats.cmsIT8LoadFromFile(ContextID, cFileName);
+	}
+	
+	/**
+	 * Same as anterior, but the IT8/CGATS.13 stream is read from a memory block.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @param Ptr Points to a block of contiguous memory containing the CGATS.17 stream.
+	 * @param len stream size measured in bytes.
+	 * @return A handle to a CGATS.17 on success, NULL on error.
+	 */
+	public static cmsHANDLE cmsIT8LoadFromMem(cmsContext ContextID, byte[] Ptr, int len)
+	{
+		return cmscgats.cmsIT8LoadFromMem(ContextID, Ptr, len);
+	}
+	
+	/*
+	public static cmsHANDLE cmsIT8LoadFromIOhandler(cmsContext ContextID, cmsIOHANDLER io)
+	{
+		return cmscgats.cmsIT8LoadFromIOhandler(ContextID, io);
+	}
+	*/
+	
+	/**
+	 * This function saves a CGATS.17 object to a file.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param cFileName Destination filename. Existing file will be overwritten if possible.
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsIT8SaveToFile(cmsHANDLE hIT8, final String cFileName)
+	{
+		return cmscgats.cmsIT8SaveToFile(hIT8, cFileName);
+	}
+	
+	/**
+	 * This function saves a CGATS.17 object to a contiguous memory block. Setting MemPtr to NULL forces the function to calculate the needed amount of memory.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param MemPtr Pointer to a user-allocated memory block or NULL. If specified, It should be big enough to hold the generated resource.
+	 * @param BytesNeeded Points to a user-allocated int which will receive the needed memory size in bytes.
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsIT8SaveToMem(cmsHANDLE hIT8, byte[] MemPtr, int[] BytesNeeded)
+	{
+		return cmscgats.cmsIT8SaveToMem(hIT8, MemPtr, BytesNeeded);
+	}
+	
+	// Properties
+	/**
+	 * This function returns the type of the IT8 object. Memory is handled by the CGATS.17 object and should not be freed by the user.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @return A pointer to internal block of memory containing the type on success, NULL on error.
+	 */
+	public static String cmsIT8GetSheetType(cmsHANDLE hIT8)
+	{
+		return cmscgats.cmsIT8GetSheetType(hIT8);
+	}
+	
+	/**
+	 * This function sets the type of a CGATS.17 object
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param Type The new type
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsIT8SetSheetType(cmsHANDLE hIT8, final String Type)
+	{
+		return cmscgats.cmsIT8SetSheetType(hIT8, Type);
+	}
+	
+	/**
+	 * This function is intended to provide a way automated IT8 creators can embed comments into the file. Comments have no effect, and its only purpose is to document 
+	 * any of the file meaning. On this function the calling order is important; as successive calls to cmsIT8SetComment do embed comments in the same order the 
+	 * function is being called.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param cComment The comment to inserted
+	 * @return TRUE on success, FALSE on error.
+	 */
+	public static boolean cmsIT8SetComment(cmsHANDLE hIT8, final String cComment)
+	{
+		return cmscgats.cmsIT8SetSheetType(hIT8, cComment);
+	}
+	
+	/**
+	 * Sets a property as a literal string in current table. The string is enclosed in quotes "".
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param cProp A string holding property name.
+	 * @param Str The literal string.
+	 * @return TRUE on success, FALSE on error.
+	 */
+	public static boolean cmsIT8SetPropertyStr(cmsHANDLE hIT8, final String cProp, final String Str)
+	{
+		return cmscgats.cmsIT8SetPropertyStr(hIT8, cProp, Str);
+	}
+	
+	/**
+	 * Sets a property as a double in current table.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param cProp A string holding property name.
+	 * @param Val The data for the intended property as double.
+	 * @return TRUE on success, FALSE on error.
+	 */
+	public static boolean cmsIT8SetPropertyDbl(cmsHANDLE hIT8, final String cProp, double Val)
+	{
+		return cmscgats.cmsIT8SetPropertyDbl(hIT8, cProp, Val);
+	}
+	
+	/**
+	 * Sets a property as an hexadecimal constant (appends 0x) in current table.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param cProp A string holding property name.
+	 * @param Val The value to be set (32 bits max)
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsIT8SetPropertyHex(cmsHANDLE hIT8, final String cProp, int Val)
+	{
+		return cmscgats.cmsIT8SetPropertyHex(hIT8, cProp, Val);
+	}
+	
+	/**
+	 * Sets a property with no interpretation in current table. No quotes "" are added. No checking is performed, and it is up to the programmer to make sure the string 
+	 * is valid.
+	 * <p>
+	 * Special prefixes:<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0b : Binary<br>
+	 * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0x : Hexadecimal
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param Key A string holding property name.
+	 * @param Buffer A string holding the uncooked value to place in the CGATS file.
+	 * @return TRUE on success, FALSE on error.
+	 */
+	public static boolean cmsIT8SetPropertyUncooked(cmsHANDLE hIT8, final String Key, final String Buffer)
+	{
+		return cmscgats.cmsIT8SetPropertyUncooked(hIT8, Key, Buffer);
+	}
+	
+	/**
+	 * Gets a property as a literal string in current table. Memory is handled by the CGATS.17 object and should not be freed by the user.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param cProp A string holding property name.
+	 * @return A pointer to internal block of memory containing the data for the intended property on success, NULL on error.
+	 */
+	public static String cmsIT8GetProperty(cmsHANDLE hIT8, final String cProp)
+	{
+		return cmscgats.cmsIT8GetProperty(hIT8, cProp);
+	}
+	
+	/**
+	 * Gets a property as a double in current table.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param cProp A string holding property name.
+	 * @return The data for the intended property interpreted as double on success, 0 on error.
+	 */
+	public static double cmsIT8GetPropertyDbl(cmsHANDLE hIT8, final String cProp)
+	{
+		return cmscgats.cmsIT8GetPropertyDbl(hIT8, cProp);
+	}
+	
+	/**
+	 * Enumerates all properties in current table.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param PropertyNames A pointer to a variable of type String[] which will receive the table of property name strings.
+	 * @return The number of properties in current table on success, 0 on error.
+	 */
+	public static int cmsIT8EnumProperties(cmsHANDLE hIT8, String[] PropertyNames)
+	{
+		return cmscgats.cmsIT8EnumProperties(hIT8, PropertyNames);
+	}
+	
+	// Datasets
+	/**
+	 * Gets a cell [row, col] as a literal string in current table. This function is fast since it has not to search columns or rows by name.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param row The row position of the cell.
+	 * @param col The column position of the cell.
+	 * @return A pointer to internal block of memory containing the data for the intended cell on success, NULL on error.
+	 */
+	public static String cmsIT8GetDataRowCol(cmsHANDLE hIT8, int row, int col)
+	{
+		return cmscgats.cmsIT8GetDataRowCol(hIT8, row, col);
+	}
+	
+	/**
+	 * Gets a cell [row, col] as a double in current table. This function is fast since it has not to search columns or rows by name.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param row The row position of the cell.
+	 * @param col The column position of the cell.
+	 * @return The data for the intended cell interpreted as double on success, 0 on error.
+	 */
+	public static double cmsIT8GetDataRowColDbl(cmsHANDLE hIT8, int row, int col)
+	{
+		return cmscgats.cmsIT8GetDataRowColDbl(hIT8, row, col);
+	}
+	
+	/**
+	 * Sets a cell [row, col] as a literal string in current table. This function is fast since it has not to search columns or rows by name.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param row The row position of the cell.
+	 * @param col The column position of the cell.
+	 * @param Val The value to be set, as a literal string.
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsIT8SetDataRowCol(cmsHANDLE hIT8, int row, int col, final String Val)
+	{
+		return cmscgats.cmsIT8SetDataRowCol(hIT8, row, col, Val);
+	}
+	
+	/**
+	 * Sets a cell [Patch, Sample] as a double in current table. This function is fast since it has not to search columns or rows by name.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param row The row position of the cell.
+	 * @param col The column position of the cell.
+	 * @param Val The value to be set, as a double
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsIT8SetDataRowColDbl(cmsHANDLE hIT8, int row, int col, double Val)
+	{
+		return cmscgats.cmsIT8SetDataRowColDbl(hIT8, row, col, Val);
+	}
+	
+	/**
+	 * Gets a cell [Patch, Sample] as a literal string (uncooked string) in current table. Memory is handled by the CGATS.17 object and 
+	 * should not be freed by the user.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param cPatch The intended patch name (row)
+	 * @param cSample The intended sample name (column)
+	 * @return A pointer to internal block of memory containing the data for the intended cell on success, NULL on error.
+	 */
+	public static String cmsIT8GetData(cmsHANDLE hIT8, final String cPatch, final String cSample)
+	{
+		return cmscgats.cmsIT8GetData(hIT8, cPatch, cSample);
+	}
+	
+	/**
+	 * Gets a cell [Patch, Sample] as a double in current table.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param cPatch The intended patch name (row)
+	 * @param cSample The intended sample name (column)
+	 * @return The data for the intended cell interpreted as double on success, 0 on error.
+	 */
+	public static double cmsIT8GetDataDbl(cmsHANDLE hIT8, final String cPatch, final String cSample)
+	{
+		return cmscgats.cmsIT8GetDataDbl(hIT8, cPatch, cSample);
+	}
+	
+	/**
+	 * Sets a cell [Patch, Sample] as a literal string (uncooked string) in current table.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param cPatch The intended patch name (row)
+	 * @param cSample The intended sample name (column)
+	 * @param Val The value to be set, as a literal
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsIT8SetData(cmsHANDLE hIT8, final String cPatch, final String cSample, final String Val)
+	{
+		return cmscgats.cmsIT8SetData(hIT8, cPatch, cSample, Val);
+	}
+	
+	/**
+	 * Sets a cell [Patch, Sample] as a cmsFloat64Number in current table.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param cPatch The intended patch name (row)
+	 * @param cSample The intended sample name (column)
+	 * @param Val The value to be set, as a double
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsIT8SetDataDbl(cmsHANDLE hIT8, final String cPatch, final String cSample, double Val)
+	{
+		return cmscgats.cmsIT8SetDataDbl(hIT8, cPatch, cSample, Val);
+	}
+	
+	/**
+	 * Returns the position (column) of a given data sample name in current table. First column is 0 (SAMPLE_ID).
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @return Column number if found, -1 if not found
+	 */
+	public static int cmsIT8FindDataFormat(cmsHANDLE hIT8, final String cSample)
+	{
+		return cmscgats.cmsIT8FindDataFormat(hIT8, cSample);
+	}
+	
+	/**
+	 * Sets column names in current table. First column is 0 (SAMPLE_ID). Special property NUMBER_OF_FIELDS must be set before calling 
+	 * this function.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param n Column to set name
+	 * @param Sample Name of data
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsIT8SetDataFormat(cmsHANDLE hIT8, int n, final String Sample)
+	{
+		return cmscgats.cmsIT8SetDataFormat(hIT8, n, Sample);
+	}
+	
+	/**
+	 * Returns an array with pointers to the column names in current table. SampleNames may be NULL to get only the number of column names. 
+	 * Memory is associated with the CGATS.17 object, and should not be freed by the user.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param SampleNames A pointer to a variable of type String[] which will hold the table.
+	 * @return The number of column names in table on success, -1 on error.
+	 */
+	public static int cmsIT8EnumDataFormat(cmsHANDLE hIT8, String[] SampleNames)
+	{
+		return cmscgats.cmsIT8EnumDataFormat(hIT8, SampleNames);
+	}
+	
+	/**
+	 * Fills buffer with the contents of SAMPLE_ID column for the set given in nPatch. That usually corresponds to patch name. Buffer may 
+	 * be NULL to get the internal memory block used by the CGATS.17 object. If specified, buffer gets a copy of such block. In this case 
+	 * it should have space for at least 1024 characters.
+	 * @param hIT8 A handle to a CGATS.17 object.
+	 * @param nPatch set number to retrieve name
+	 * @param buffer A memory buffer to receive patch name, or NULL to allow function to return internal memory block.
+	 * @return A pointer to the patch name, either the user-supplied buffer or an internal memory block. NULL if error.
+	 */
+	public static String cmsIT8GetPatchName(cmsHANDLE hIT8, int nPatch, StringBuffer buffer)
+	{
+		return cmscgats.cmsIT8GetPatchName(hIT8, nPatch, buffer);
+	}
+	
+	// The LABEL extension
+	public static int cmsIT8SetTableByLabel(cmsHANDLE hIT8, final String cSet, final String cField, final String ExpectedType)
+	{
+		return cmscgats.cmsIT8SetTableByLabel(hIT8, cSet, cField, ExpectedType);
+	}
+	
+	// Formatter for double
+	/**
+	 * Sets the format string for float numbers. It uses the “C” sprintf convention. The default format string is "%.10g"
+	 * @param A handle to a CGATS.17 object.
+	 */
+	public static void cmsIT8DefineDblFormat(cmsHANDLE hIT8, final String Formatter)
+	{
+		cmscgats.cmsIT8DefineDblFormat(hIT8, Formatter);
+	}
+	
+	// Gamut boundary description routines ------------------------------------------------------------------------------
+	
+	/**
+	 * Allocates an empty gamut boundary descriptor with no known points.
+	 * @param Pointer to a user-defined context cargo.
+	 * @return A handle to a gamut boundary descriptor on success, NULL on error.
+	 */
+	public static cmsHANDLE cmsGBDAlloc(cmsContext ContextID)
+	{
+		return cmssm.cmsGBDAlloc(ContextID);
+	}
+	
+	/**
+	 * Frees a gamut boundary descriptor and any associated resources.
+	 * @param hGBD Handle to a gamut boundary descriptor.
+	 */
+	public static void cmsGBDFree(cmsHANDLE hGBD)
+	{
+		cmssm.cmsGBDFree(hGBD);
+	}
+	
+	/**
+	 * Adds a new sample point for computing the gamut boundary descriptor. This function can be called as many times as known points. No 
+	 * memory or other resurces are wasted by adding new points. The gamut boundary descriptor cannot be checked until cmsGDBCompute() is 
+	 * called.
+	 * @param hGBD Handle to a gamut boundary descriptor.
+	 * @param Lab Pointer to a cmsCIELab value
+	 * @return TRUE on success, FALSE on error.
+	 */
+	public static boolean cmsGDBAddPoint(cmsHANDLE hGBD, final cmsCIELab Lab)
+	{
+		return cmssm.cmsGDBAddPoint(hGBD, Lab);
+	}
+	
+	/**
+	 * Computes the gamut boundary descriptor using all know points and interpolating any missing sector(s). Call this function after 
+	 * adding all know points with cmsGDBAddPoint() and before using cmsGDBCheckPoint().
+	 * @param hGDB Handle to a gamut boundary descriptor.
+	 * @param dwFlags reserved (unused). Set it to 0
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsGDBCompute(cmsHANDLE hGDB, int dwFlags)
+	{
+		return cmssm.cmsGDBCompute(hGDB, dwFlags);
+	}
+	
+	/**
+	 * Checks whatever a Lab value is inside a given gamut boundary descriptor.
+	 * @param hGBD Handle to a gamut boundary descriptor.
+	 * @param Lab Pointer to a cmsCIELab value
+	 * @return TRUE if point is inside gamut, FALSE otherwise.
+	 */
+	public static boolean cmsGDBCheckPoint(cmsHANDLE hGBD, final cmsCIELab Lab)
+	{
+		return cmssm.cmsGDBCheckPoint(hGBD, Lab);
+	}
+	
+	// Feature detection  ----------------------------------------------------------------------------------------------
+	
+	// Estimate the black point
+	/**
+	 * Estimate the black point of a given profile. Used by black point compensation algorithm.
+	 * @param BlackPoint Pointer to cmsCIEXYZ object to receive the detected black point.
+	 * @param hProfile Handle to a profile object
+	 * @param Intent A int holding the intent code
+	 * @param dwFlags reserved (unused). Set it to 0
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsDetectBlackPoint(cmsCIEXYZ BlackPoint, cmsHPROFILE hProfile, int Intent, int dwFlags)
+	{
+		return cmssamp.cmsDetectBlackPoint(BlackPoint, hProfile, Intent, dwFlags);
+	}
+	
+	// Estimate total area coverage
+	/**
+	 * When several colors are printed on top of each other, there is a limit to the amount of ink that can be put on paper. This maximum 
+	 * total dot percentage is referred to as either TIC (Total Ink Coverage) or TAC (Total Area Coverage). This function does estimate 
+	 * total area coverage for a given profile in %. Only works on output profiles. On RGB profiles, 400% is returned. TAC is detected 
+	 * by subsampling Lab color space on 6x74x74 points.
+	 * @param hProfile Handle to a profile object
+	 * @return Estimated area coverage in % on success, 0 on error.
+	 */
+	public static double cmsDetectTAC(cmsHPROFILE hProfile)
+	{
+		return cmsgmt.cmsDetectTAC(hProfile);
+	}
+	
+	// Poor man's gamut mapping
+	/**
+	 * @param Lab Pointer to a cmsCIELab value
+	 * @param amax Horizontal maximum boundary of gamut rectangle
+	 * @param amin Horizontal minimum boundary of gamut rectangle
+	 * @param bmax Vertical maximum boundary of gamut rectangle
+	 * @param bmin Vertical minimum boundary of gamut rectangle
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsDesaturateLab(cmsCIELab Lab, double amax, double amin, double bmax, double bmin)
+	{
+		return cmsgmt.cmsDetectTAC(Lab, amax, amin, bmax, bmin);
 	}
 }
