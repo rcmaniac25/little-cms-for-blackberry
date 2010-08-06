@@ -1,7 +1,6 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -23,26 +22,22 @@
 //
 //---------------------------------------------------------------------------------
 //
-package littlecms.internal;
+package littlecms.internal.helper;
 
-import littlecms.internal.helper.VirtualPointer;
-import littlecms.internal.lcms2.cmsHTRANSFORM;
-import littlecms.internal.lcms2_internal._cmsTRANSFORM;
+import java.io.PrintStream;
 
 /**
- * Transformations stuff
+ * Java version of printf functions.
  */
-class cmsxform
+public class TextFormatting
 {
-	//TODO: #32-94
-	
-	// Apply transform
-	public static void cmsDoTransform(cmsHTRANSFORM Transform, final VirtualPointer InputBuffer, VirtualPointer OutputBuffer, int Size)
+	public static int vsnprintf(StringBuffer buffer, int count, final String format, Object[] argptr)
 	{
-		_cmsTRANSFORM p = (_cmsTRANSFORM)Transform;
-	    
-	    p.xform.run(p, InputBuffer, OutputBuffer, Size);
+		return 0; //TODO
 	}
 	
-	//TODO: #109
+	public static int fprintf(PrintStream stream, final String format, Object[] argptr)
+	{
+		return 0; //TODO
+	}
 }

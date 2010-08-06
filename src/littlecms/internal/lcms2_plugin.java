@@ -27,6 +27,8 @@ package littlecms.internal;
 
 import java.util.Calendar;
 
+import littlecms.internal.helper.VirtualPointer;
+
 /**
  * This is the plug-in header file. Normal LittleCMS clients should not use it.
  * It is provided for plug-in writers that may want to access the support
@@ -223,6 +225,8 @@ public class lcms2_plugin extends lcms2
 	 * _cmsCalloc(cmsContext, int, int) --> _cmsCalloc(cmsContext, Object) //where Object would be an array, if it was primitives then Object[] would throw a cast exception
 	 * _cmsRealloc(cmsContext, Object, int) --> _cmsRealloc(cmsContext, Object, Object) //The first is the old, the second is the new
 	 * //_cmsFree doesn't need to be changed but _cmsDupMem would be nearly impossible to create unless the function had a duplication/clone function
+	 * 
+	 * Maybe work around this by using "VirtualPointer", it acts like a "void*" but with "VirtualPointer.Serializer"s any data type can be inside it
 	 */
 	/**
 	 * Allocate size bytes of uninitialized memory.
@@ -230,7 +234,7 @@ public class lcms2_plugin extends lcms2
 	 * @param size amount of memory to allocate in bytes
 	 * @return Pointer to newly allocated block, or NULL on error.
 	 */
-	public static Object _cmsMalloc(cmsContext ContextID, int size)
+	public static VirtualPointer _cmsMalloc(cmsContext ContextID, int size)
 	{
 		return cmserr._cmsMalloc(ContextID, size);
 	}
@@ -241,7 +245,7 @@ public class lcms2_plugin extends lcms2
 	 * @param size amount of memory to allocate in bytes
 	 * @return Pointer to newly allocated block, or NULL on error.
 	 */
-	public static Object _cmsMallocZero(cmsContext ContextID, int size)
+	public static VirtualPointer _cmsMallocZero(cmsContext ContextID, int size)
 	{
 		return cmserr._cmsMallocZero(ContextID, size);
 	}
@@ -253,7 +257,7 @@ public class lcms2_plugin extends lcms2
 	 * @param size Array element size in bytes
 	 * @return Pointer to newly allocated block, or NULL on error.
 	 */
-	public static Object _cmsCalloc(cmsContext ContextID, int num, int size)
+	public static VirtualPointer _cmsCalloc(cmsContext ContextID, int num, int size)
 	{
 		return cmserr._cmsCalloc(ContextID, num, size);
 	}
@@ -265,7 +269,7 @@ public class lcms2_plugin extends lcms2
 	 * @param NewSize number of bytes.
 	 * @return Pointer to newly allocated block, or NULL on error.
 	 */
-	public static Object _cmsRealloc(cmsContext ContextID, Object Ptr, int NewSize)
+	public static VirtualPointer _cmsRealloc(cmsContext ContextID, VirtualPointer Ptr, int NewSize)
 	{
 		return cmserr._cmsRealloc(ContextID, Ptr, NewSize);
 	}
@@ -275,7 +279,7 @@ public class lcms2_plugin extends lcms2
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @param Ptr pointer to memory block.
 	 */
-	public static void _cmsFree(cmsContext ContextID, Object Ptr)
+	public static void _cmsFree(cmsContext ContextID, VirtualPointer Ptr)
 	{
 		cmserr._cmsFree(ContextID, Ptr);
 	}
@@ -287,7 +291,7 @@ public class lcms2_plugin extends lcms2
 	 * @param size number of bytes to duplicate.
 	 * @return Pointer to newly allocated copy, or NULL on error.
 	 */
-	public static Object _cmsDupMem(cmsContext ContextID, final Object Org, int size)
+	public static VirtualPointer _cmsDupMem(cmsContext ContextID, final VirtualPointer Org, int size)
 	{
 		return cmserr._cmsDupMem(ContextID, Org, size);
 	}
@@ -296,6 +300,8 @@ public class lcms2_plugin extends lcms2
 	
 	public static class _cms_io_handler
 	{
+		public static final int SIZE = 4 + cmsMAX_PATH; //Only UsedSpace and PhysicalFile are really serializable
+		
 		public Object stream; // Associated stream, which is implemented differently depending on media.
 		
 		public cmsContext ContextID;
@@ -701,32 +707,32 @@ public class lcms2_plugin extends lcms2
 	{
 		public static interface pluginMallocPtr
 		{
-			public Object run(cmsContext ContextID, int size);
+			public VirtualPointer run(cmsContext ContextID, int size);
 		}
 		
 		public static interface pluginFreePtr
 		{
-			public void run(cmsContext ContextID, Object Ptr);
+			public void run(cmsContext ContextID, VirtualPointer Ptr);
 		}
 		
 		public static interface pluginReallocPtr
 		{
-			public Object run(cmsContext ContextID, Object Ptr, int NewSize);
+			public VirtualPointer run(cmsContext ContextID, VirtualPointer Ptr, int NewSize);
 		}
 		
 		public static interface pluginMallocZeroPtr
 		{
-			public Object run(cmsContext ContextID, int size);
+			public VirtualPointer run(cmsContext ContextID, int size);
 		}
 		
 		public static interface pluginCallocPtr
 		{
-			public Object run(cmsContext ContextID, int num, int size);
+			public VirtualPointer run(cmsContext ContextID, int num, int size);
 		}
 		
 		public static interface pluginDupPtr
 		{
-			public Object run(cmsContext ContextID, final Object Org, int size);
+			public VirtualPointer run(cmsContext ContextID, final VirtualPointer Org, int size);
 		}
 		
         // Required
@@ -960,6 +966,8 @@ public class lcms2_plugin extends lcms2
 	// know in advance what is the type contained in the tag.
 	public static class cmsTagTypeHandler
 	{
+		public static final int SIZE = 4;
+		
 		/** The signature of the type*/
 		public int Signature;
 		
@@ -994,6 +1002,15 @@ public class lcms2_plugin extends lcms2
         
         // The calling thread
         public cmsContext ContextID;
+        
+        public cmsTagTypeHandler(int sig, tagHandlerReadPtr read, tagHandlerWritePtr write, tagHandlerDupPtr dup, tagHandlerFreePtr free)
+        {
+        	this.Signature = sig;
+        	this.ReadPtr = read;
+        	this.WritePtr = write;
+        	this.DupPtr = dup;
+        	this.FreePtr = free;
+        }
 	}
 	
 	// Each plug-in implements a single type
@@ -1028,6 +1045,15 @@ public class lcms2_plugin extends lcms2
 	    public cmsTagDescriptor()
 	    {
 	    	SupportedTypes = new int[MAX_TYPES_IN_LCMS_PLUGIN];
+	    }
+	    
+	    public cmsTagDescriptor(int elemCount, int[] supportedTypes, tagDesDecideType decideType)
+	    {
+	    	this();
+	    	this.ElemCount = elemCount;
+	    	this.nSupportedTypes = supportedTypes.length;
+	    	System.arraycopy(supportedTypes, 0, this.SupportedTypes, 0, this.nSupportedTypes);
+	    	this.DecideType = decideType;
 	    }
 	}
 	

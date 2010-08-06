@@ -1,7 +1,40 @@
 TODO:
-Create lcms2_internal.java (While doing this, fill in "//IN" spots in lcms2.java)
+Implement actual code | As coding occurs, replace general types with VirtualPointer | Get VirtualPointer to a working state (should handle different types, be able to work like a actual generic [void*] pointer)
+**
+cmstypes
+cmswtpnt
+cmsplugin
+cmspack
+cmsmd5
+cmspcs
+cmsxform
+cmscgats
+cmsopt
+cmsgmt
+cmssamp
+cmsio1
+cmsintrp
+cmscnvrt
+cmslut
+cmsps2
+cmsvirt
+cmsgamma
+cmsnamed
+cmssm
+cmscam02
+**
 
-Implement actual code
+Implement serializers
 
 Figure out what the high-level structures should be, then...
 Create high-level structures that handle color management in a true OOP fashion.
+
+NOTES:
+VirtualPointer piece is cumbersome but allows internal system to act more like C/C++. If used properly it should be fast and have a low overhead (except when deserializeing items).
+
+Defines:
+CMS_USE_BIG_ENDIAN //Not supported because BlackBerry is little endian, just here so it is explicitly known that it isn't supported
+CMS_DONT_USE_FAST_FLOOR
+CMS_DONT_USE_PTHREADS
+CMS_USE_PROFILE_BLACK_POINT_TAG
+CMS_STRICT_CGATS

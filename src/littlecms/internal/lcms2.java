@@ -29,7 +29,8 @@ package littlecms.internal;
 
 import java.util.Calendar;
 
-import net.rim.device.api.io.Seekable; //TODO: Create a custom type that is seekable and can tell length so that it can work on older systems.
+import littlecms.internal.helper.Stream;
+
 import net.rim.device.api.util.Arrays;
 
 public class lcms2
@@ -251,7 +252,8 @@ public class lcms2
     public static final int cmsSigSolaris                           = 0x53554E57; // 'SUNW'
     public static final int cmsSigSGI                               = 0x53474920; // 'SGI '
     public static final int cmsSigTaligent                          = 0x54474E54; // 'TGNT'
-    public static final int cmsSigUnices                            = 0x2A6E6978; // '*nix'   // From argyll -- Not official
+    public static final int cmsSigUnices                            = 0x2A6E6978; // '*nix' // From argyll -- Not official
+    public static final int cmsSigRim                               = 0x52494D20; // 'RIM ' // Not official, created for this library
     
     // Reference gamut
     public static final int cmsSigPerceptualReferenceMediumGamut       = 0x70726d67; //'prmg'
@@ -322,6 +324,8 @@ public class lcms2
     /** ICC date time*/
     public static class cmsDateTimeNumber
     {
+    	public static final int SIZE = (2 * 6);
+    	
     	public short year;
         public short month;
         public short day;
@@ -333,6 +337,8 @@ public class lcms2
     /** ICC XYZ*/
     public static class cmsEncodedXYZNumber
     {
+    	public static final int SIZE = (2 * 3);
+    	
         public short X;
         public short Y;
         public short Z;
@@ -341,6 +347,8 @@ public class lcms2
     /** Profile ID as computed by MD5 algorithm*/
     public static class cmsProfileID
     {
+    	public static final int SIZE = 16;
+    	
     	private final byte[] data;
     	
     	public cmsProfileID()
@@ -426,6 +434,8 @@ public class lcms2
     /** Profile header -- it is 32-bit aligned, so no issues are expected on alignment*/
     public static class cmsICCHeader
     {
+    	public static final int SIZE = (4 * 6) + cmsDateTimeNumber.SIZE + (4 * 5) + 8 + 4 + cmsEncodedXYZNumber.SIZE + 4 + cmsProfileID.SIZE + 28;
+    	
     	/** Profile size in bytes*/
     	public int                   size;
     	/** CMM for this profile*/
@@ -461,11 +471,13 @@ public class lcms2
         /** Profile ID using MD5*/
         public cmsProfileID          profileID;
         /** Reserved for future use*/
-        public final byte[]                reserved;
+        public final byte[]          reserved;
         
         public cmsICCHeader()
         {
         	this.reserved = new byte[28];
+        	date = new cmsDateTimeNumber();
+        	illuminant = new cmsEncodedXYZNumber();
         }
     }
     
@@ -484,6 +496,8 @@ public class lcms2
     /** A tag entry in directory*/
     public static class cmsTagEntry
     {
+    	public static final int SIZE = 4 * 3;
+    	
     	/** The tag signature*/
     	public int      sig;
     	/** Start of tag*/
@@ -875,7 +889,7 @@ public class lcms2
 		return cmsplugin.cmsstrcasecmp(s1, s2);
 	}
 	
-	public static long cmsfilelength(Seekable f)
+	public static long cmsfilelength(Stream f)
 	{
 		return cmsplugin.cmsfilelength(f);
 	}
@@ -1274,7 +1288,7 @@ public class lcms2
 	}
 	
 	// The internal representation is none of your business.
-	//IN: lcms2_internal.java
+	public static class cmsToneCurve extends lcms2_internal._cms_curve_struct{}
 	
 	/**
 	 * Builds a tone curve from given segment information.
@@ -1496,7 +1510,8 @@ public class lcms2
 	// Implements pipelines of multi-processing elements -------------------------------------------------------------
 	
 	// Nothing to see here, move along
-	//IN: lcms2_internal.java
+	public static class cmsPipeline extends lcms2_internal._cmsPipeline_struct{}
+	public static class cmsStage extends lcms2_internal._cmsStage_struct{}
 	
 	// Those are hi-level pipelines
 	/**
@@ -1923,7 +1938,7 @@ public class lcms2
 	
 	// Multilocalized Unicode management ---------------------------------------------------------------------------------------
 	
-	//IN: lcms2_internal.java
+	public static class cmsMLU extends lcms2_internal._cms_MLU_struct{}
 	
 	public static final String cmsNoLanguage = "\0\0";
 	public static final String cmsNoCountry = "\0\0";
@@ -2070,7 +2085,7 @@ public class lcms2
 	
 	// Named color -----------------------------------------------------------------------------------------------------------------
 	
-	//IN: lcms2_internal.java
+	public static class cmsNAMEDCOLORLIST extends lcms2_internal._cms_NAMEDCOLORLIST_struct{}
 	
 	/**
 	 * Allocates an empty named color dictionary.
@@ -2373,7 +2388,7 @@ public class lcms2
 	/**
 	 * Gets the attribute flags
 	 * @param hProfile Handle to a profile object
-	 * @param Flags a pointer to a cmsUInt64Number to receive the flags.
+	 * @param Flags a pointer to a long to receive the flags.
 	 */
 	public static void cmsGetHeaderAttributes(cmsHPROFILE hProfile, long[] Flags)
 	{
@@ -2735,7 +2750,7 @@ public class lcms2
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @return A pointer to an iohandler object on success, NULL on error.
 	 */
-	public static cmsIOHANDLER cmsOpenIOhandlerFromStream(cmsContext ContextID, Seekable Stream)
+	public static cmsIOHANDLER cmsOpenIOhandlerFromStream(cmsContext ContextID, Stream Stream)
 	{
 		return cmsio0.cmsOpenIOhandlerFromStream(ContextID, Stream);
 	}
@@ -2818,7 +2833,7 @@ public class lcms2
 	 * @param sAccess "r" for normal operation, "w" for profile creation
 	 * @return A handle to an ICC profile object on success, NULL on error.
 	 */
-	public static cmsHPROFILE cmsOpenProfileFromStream(Seekable ICCProfile, final char sAccess)
+	public static cmsHPROFILE cmsOpenProfileFromStream(Stream ICCProfile, final char sAccess)
 	{
 		return cmsio0.cmsOpenProfileFromStream(ICCProfile, sAccess);
 	}
@@ -2830,7 +2845,7 @@ public class lcms2
 	 * @param sAccess "r" for normal operation, "w" for profile creation
 	 * @return A handle to an ICC profile object on success, NULL on error.
 	 */
-	public static cmsHPROFILE cmsOpenProfileFromStreamTHR(cmsContext ContextID, Seekable ICCProfile, final char sAccess)
+	public static cmsHPROFILE cmsOpenProfileFromStreamTHR(cmsContext ContextID, Stream ICCProfile, final char sAccess)
 	{
 		return cmsio0.cmsOpenProfileFromStreamTHR(ContextID, ICCProfile, sAccess);
 	}
@@ -2896,7 +2911,7 @@ public class lcms2
 	 * @param hProfile Handle to a profile object
 	 * @return TRUE on success, FALSE on error.
 	 */
-	public static boolean cmsSaveProfileToStream(cmsHPROFILE hProfile, Seekable Stream)
+	public static boolean cmsSaveProfileToStream(cmsHPROFILE hProfile, Stream Stream)
 	{
 		return cmsio0.cmsSaveProfileToStream(hProfile, Stream);
 	}

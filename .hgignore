@@ -10,3 +10,9 @@ syntax: glob
 bin
 deliverables
 doc
+
+# linker utility
+*.suo
+obj
+System.*
+linker.csproj.user
