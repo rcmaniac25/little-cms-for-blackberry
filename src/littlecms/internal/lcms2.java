@@ -801,6 +801,8 @@ public class lcms2
 	// Colorspaces
 	public static class cmsCIEXYZ
 	{
+		public static final int SIZE = (8 * 3);
+		
 		public double X;
 		public double Y;
 		public double Z;
@@ -808,6 +810,8 @@ public class lcms2
 	
 	public static class cmsCIExyY
 	{
+		public static final int SIZE = (8 * 3);
+		
 		public double x;
 		public double y;
 		public double Y;
@@ -815,6 +819,8 @@ public class lcms2
 	
 	public static class cmsCIELab
 	{
+		public static final int SIZE = (8 * 3);
+		
 		public double L;
 		public double a;
 		public double b;
@@ -822,6 +828,8 @@ public class lcms2
 	
 	public static class cmsCIELCh
 	{
+		public static final int SIZE = (8 * 3);
+		
 		public double L;
 		public double C;
 		public double h;
@@ -829,6 +837,8 @@ public class lcms2
 	
 	public static class cmsJCh
 	{
+		public static final int SIZE = (8 * 3);
+		
 		public double J;
 		public double C;
 		public double h;
@@ -836,6 +846,8 @@ public class lcms2
 	
 	public static class cmsCIEXYZTRIPLE
 	{
+		public static final int SIZE = (cmsCIEXYZ.SIZE * 3);
+		
 		public cmsCIEXYZ Red;
 		public cmsCIEXYZ Green;
 		public cmsCIEXYZ Blue;
@@ -843,6 +855,8 @@ public class lcms2
 	
 	public static class cmsCIExyYTRIPLE
 	{
+		public static final int SIZE = (cmsCIExyY.SIZE * 3);
+		
 		public cmsCIExyY Red;
 		public cmsCIExyY Green;
 		public cmsCIExyY Blue;

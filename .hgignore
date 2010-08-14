@@ -15,4 +15,5 @@ doc
 *.suo
 obj
 System.*
+mscorlib.*
 linker.csproj.user

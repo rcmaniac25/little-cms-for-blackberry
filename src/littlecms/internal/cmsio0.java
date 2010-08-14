@@ -1,3 +1,5 @@
+//#preprocessor
+
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
@@ -109,8 +111,10 @@ class cmsio0
 	{
 		FILENULL ResData = (FILENULL)iohandler.stream;
 		
-		cmserr._cmsFree(iohandler.ContextID, VirtualPointer.wrap(ResData));
-		cmserr._cmsFree(iohandler.ContextID, VirtualPointer.wrap(iohandler));
+//#ifdef RAW_C
+		cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(ResData));
+		cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(iohandler));
+//#endif
 	    return true;
 	}
 	
@@ -119,15 +123,16 @@ class cmsio0
 	{
 		cmsIOHANDLER iohandler = null;
 	    FILENULL fm = null;
+//#ifdef RAW_C
 	    VirtualPointer ioP, fmP;
 	    
-	    iohandler = (cmsIOHANDLER)(ioP = cmserr._cmsMallocZero(ContextID, /*sizeof(cmsIOHANDLER)*/cmsIOHANDLER.SIZE)).getDeserializedType(cmsIOHANDLER.class);
+	    iohandler = (cmsIOHANDLER)(ioP = cmserr._cmsMallocZero(ContextID, /*sizeof(cmsIOHANDLER)*/cmsIOHANDLER.SIZE)).getProcessor().readObject(cmsIOHANDLER.class);
 	    if(iohandler == null)
 	    {
 	    	return null;
 	    }
 	    
-	    fm = (FILENULL)(fmP = cmserr._cmsMallocZero(ContextID, /*sizeof(FILENULL)*/4)).getDeserializedType(FILENULL.class);
+	    fm = (FILENULL)(fmP = cmserr._cmsMallocZero(ContextID, /*sizeof(FILENULL)*/4)).getProcessor().readObject(FILENULL.class);
 	    if(fm == null)
 	    {
 	    	/* If fm is null then it is going to remain null
@@ -142,6 +147,10 @@ class cmsio0
 		    }
 		    return null;
 	    }
+//#else
+	    iohandler = new cmsIOHANDLER();
+	    fm = new FILENULL();
+//#endif
 	    
 	    fm.Pointer = 0;
 
@@ -296,8 +305,10 @@ class cmsio0
 	        }
 	    }
 	    
-	    cmserr._cmsFree(iohandler.ContextID, VirtualPointer.wrap(ResData));
-	    cmserr._cmsFree(iohandler.ContextID, VirtualPointer.wrap(iohandler));
+//#ifdef RAW_C
+	    cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(ResData));
+	    cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(iohandler));
+//#endif
 	    
 	    return true;
 	}
@@ -309,20 +320,27 @@ class cmsio0
 	{
 	    cmsIOHANDLER iohandler = null;
 	    FILEMEM fm = null;
+//#ifdef RAW_C
 	    VirtualPointer ioP, fmP;
+//#endif
 	    
 		lcms2_internal._cmsAssert(AccessMode != 0, "AccessMode != 0");
 		
-	    iohandler = (cmsIOHANDLER)(ioP = cmserr._cmsMallocZero(ContextID, /*sizeof(cmsIOHANDLER)*/cmsIOHANDLER.SIZE)).getDeserializedType(cmsIOHANDLER.class);
+//#ifdef RAW_C
+	    iohandler = (cmsIOHANDLER)(ioP = cmserr._cmsMallocZero(ContextID, /*sizeof(cmsIOHANDLER)*/cmsIOHANDLER.SIZE)).getProcessor().readObject(cmsIOHANDLER.class);
 	    if(iohandler == null)
 	    {
 	    	return null;
 	    }
+//#else
+	    iohandler = new cmsIOHANDLER();
+//#endif
 	    
 	    switch (AccessMode)
 	    {
 		    case 'r':
-		        fm = (FILEMEM)(fmP = cmserr._cmsMallocZero(ContextID, /*sizeof(FILEMEM)*/FILEMEM.SIZE)).getDeserializedType(FILEMEM.class);
+//#ifdef RAW_C
+		        fm = (FILEMEM)(fmP = cmserr._cmsMallocZero(ContextID, /*sizeof(FILEMEM)*/FILEMEM.SIZE)).getProcessor().readObject(FILEMEM.class);
 		        if(fm == null)
 		        {
 		        	/* If fm is null then it is going to remain null
@@ -337,10 +355,14 @@ class cmsio0
 	        	    }
 	        	    return null;
 		        }
+//#else
+		        fm = new FILEMEM();
+//#endif
 		        
 		        if(Buffer == null)
 		        {
 		        	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_READ, "Couldn't read profile from NULL pointer", null);
+//#ifdef RAW_C
 		        	if (fm != null)
 	        	    {
 		        		cmserr._cmsFree(ContextID, fmP);
@@ -349,14 +371,17 @@ class cmsio0
 	        	    {
 	        	    	cmserr._cmsFree(ContextID, ioP);
 	        	    }
+//#endif
 	        	    return null;
 		        }
 		        
 		        fm.Block = cmserr._cmsMalloc(ContextID, size);
 		        if(fm.Block == null)
 		        {
+//#ifdef RAW_C
 		        	cmserr._cmsFree(ContextID, fmP);
 		        	cmserr._cmsFree(ContextID, ioP);
+//#endif
 		            cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_READ, "Couldn't allocate %ld bytes for profile", new Object[]{new Integer(size)});
 		            return null;
 		        }
@@ -366,8 +391,9 @@ class cmsio0
 		        fm.Size    = size;
 		        fm.Pointer = 0;
 		        break;
-		    case 'w': 
-		    	fm = (FILEMEM)(fmP = cmserr._cmsMallocZero(ContextID, /*sizeof(FILEMEM)*/FILEMEM.SIZE)).getDeserializedType(FILEMEM.class);
+		    case 'w':
+//#ifdef RAW_C
+		    	fm = (FILEMEM)(fmP = cmserr._cmsMallocZero(ContextID, /*sizeof(FILEMEM)*/FILEMEM.SIZE)).getProcessor().readObject(FILEMEM.class);
 		        if (fm == null)
 		        {
 		        	if (fm != null)
@@ -380,6 +406,9 @@ class cmsio0
 	        	    }
 	        	    return null;
 		        }
+//#else
+		        fm = new FILEMEM();
+//#endif
 		        
 		        fm.Block = new VirtualPointer(Buffer, true);
 		        fm.FreeBlockOnClose = false;
@@ -488,7 +517,7 @@ class cmsio0
 		{
 			return false;
 		}
-		cmserr._cmsFree(iohandler.ContextID, VirtualPointer.wrap(iohandler));
+		cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(iohandler));
 	    return true;
 	}
 	
@@ -542,13 +571,17 @@ class cmsio0
 	{
 	    cmsIOHANDLER iohandler = null;
 	    Stream fm = null;
+//#ifdef RAW_C
 	    VirtualPointer ioP;
 		
-	    iohandler = (cmsIOHANDLER)(ioP = cmserr._cmsMallocZero(ContextID, /*sizeof(cmsIOHANDLER)*/cmsIOHANDLER.SIZE)).getDeserializedType(cmsIOHANDLER.class);
+	    iohandler = (cmsIOHANDLER)(ioP = cmserr._cmsMallocZero(ContextID, /*sizeof(cmsIOHANDLER)*/cmsIOHANDLER.SIZE)).getProcessor().readObject(cmsIOHANDLER.class);
 	    if (iohandler == null)
 	    {
 	    	return null;
 	    }
+//#else
+	    iohandler = new cmsIOHANDLER();
+//#endif
 	    
 	    switch (AccessMode)
 	    {
@@ -556,7 +589,9 @@ class cmsio0
 		        fm = Stream.fopen(FileName, 'r');
 		        if (fm == null)
 		        {
+//#ifdef RAW_C
 		        	cmserr._cmsFree(ContextID, ioP);
+//#endif
 		        	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, "File '%s' not found", new Object[]{FileName});
 		            return null;
 		        }
@@ -565,13 +600,17 @@ class cmsio0
 		        fm = Stream.fopen(FileName, 'w');
 		        if (fm == null)
 		        {
+//#ifdef RAW_C
 		        	cmserr._cmsFree(ContextID, ioP);
+//#endif
 		            cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, "Couldn't create '%s'", new Object[]{FileName});
 		            return null;
 		        }
 		        break;
 		    default:
+//#ifdef RAW_C
 		    	cmserr._cmsFree(ContextID, ioP);
+//#endif
 		    	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, "Unknow access mode '%c'", new Object[]{new Character(AccessMode)});
 		        return null;
 	    }
@@ -593,11 +632,15 @@ class cmsio0
 	{
 	    cmsIOHANDLER iohandler = null;
 		
-	    iohandler = (cmsIOHANDLER)cmserr._cmsMallocZero(ContextID, /*sizeof(cmsIOHANDLER)*/cmsIOHANDLER.SIZE).getDeserializedType(cmsIOHANDLER.class);
+//#ifdef RAW_C
+	    iohandler = (cmsIOHANDLER)cmserr._cmsMallocZero(ContextID, /*sizeof(cmsIOHANDLER)*/cmsIOHANDLER.SIZE).getProcessor().readObject(cmsIOHANDLER.class);
 	    if (iohandler == null)
 	    {
 	    	return null;
 	    }
+//#else
+	    iohandler = new cmsIOHANDLER();
+//#endif
 	    
 	    setupFileIOHandler(iohandler, ContextID, Stream);
 	    
@@ -618,11 +661,15 @@ class cmsio0
 	public static cmsHPROFILE cmsCreateProfilePlaceholder(cmsContext ContextID)
 	{
 		Date now = new Date();
-	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)cmserr._cmsMallocZero(ContextID, /*sizeof(_cmsICCPROFILE)*/_cmsICCPROFILE.SIZE).getDeserializedType(_cmsICCPROFILE.class);
+//#ifdef RAW_C
+	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)cmserr._cmsMallocZero(ContextID, /*sizeof(_cmsICCPROFILE)*/_cmsICCPROFILE.SIZE).getProcessor().readObject(_cmsICCPROFILE.class);
 	    if (Icc == null)
 	    {
 	    	return null;
 	    }
+//#else
+	    _cmsICCPROFILE Icc = new _cmsICCPROFILE();
+//#endif
 	    
 	    Icc.ContextID = ContextID;
 	    
@@ -777,11 +824,14 @@ class cmsio0
 	    
 	    // Read the header
 	    vp = new VirtualPointer(cmsICCHeader.SIZE);
-	    if (io.Read.run(io, vp.getBacking(), /*sizeof(cmsICCHeader)*/cmsICCHeader.SIZE, 1) != 1)
-	    {        
+	    byte[] backing = new byte[cmsICCHeader.SIZE];
+	    vp.readByteArray(backing, 0, cmsICCHeader.SIZE, false);
+	    if (io.Read.run(io, backing, /*sizeof(cmsICCHeader)*/cmsICCHeader.SIZE, 1) != 1)
+	    {
 	        return false; 
 	    }
-	    Header = (cmsICCHeader)vp.getDeserializedType(cmsICCHeader.class);
+	    vp.getProcessor().write(backing);
+	    Header = (cmsICCHeader)vp.getProcessor().readObject(cmsICCHeader.class);
 	    
 	    // Validate file as an ICC profile
 	    if (cmsplugin._cmsAdjustEndianess32(Header.magic) != lcms2.cmsMagicNumber)
@@ -918,8 +968,12 @@ class cmsio0
 	    Header.profileID.setID8(Icc.ProfileID.getID8());
 	    
 	    // Dump the header
-	    VirtualPointer vp = new VirtualPointer(cmsICCHeader.SIZE).serialize(Header, null, false);
-	    if (!Icc.IOhandler.Write.run(Icc.IOhandler, /*sizeof(cmsICCHeader)*/cmsICCHeader.SIZE, vp.getBacking()))
+	    VirtualPointer vp = new VirtualPointer(cmsICCHeader.SIZE);
+	    VirtualPointer.TypeProcessor proc = vp.getProcessor();
+	    proc.write(Header);
+	    byte[] data = new byte[cmsICCHeader.SIZE];
+	    vp.readByteArray(data, 0, cmsICCHeader.SIZE, false);
+	    if (!Icc.IOhandler.Write.run(Icc.IOhandler, /*sizeof(cmsICCHeader)*/cmsICCHeader.SIZE, data))
 	    {
 	    	return false;
 	    }
@@ -952,8 +1006,9 @@ class cmsio0
 	        Tag.offset = cmsplugin._cmsAdjustEndianess32(Icc.TagOffsets[i]);
 	        Tag.size   = cmsplugin._cmsAdjustEndianess32(Icc.TagSizes[i]);
 	        
-	        vp.serialize(Tag, null, false);
-	        if (!Icc.IOhandler.Write.run(Icc.IOhandler, /*sizeof(cmsTagEntry)*/cmsTagEntry.SIZE, tempetBacking()))
+	        proc.write(Tag);
+	        vp.readByteArray(data, 0, cmsTagEntry.SIZE, false);
+	        if (!Icc.IOhandler.Write.run(Icc.IOhandler, /*sizeof(cmsTagEntry)*/cmsTagEntry.SIZE, data))
 	        {
 	        	return false;
 	        }
@@ -1314,17 +1369,19 @@ class cmsio0
 	                	return false;
 	                }
 	                
-	                Mem = cmserr._cmsMalloc(Icc.ContextID, TagSize);                  
+	                Mem = cmserr._cmsMalloc(Icc.ContextID, TagSize);
 	                if (Mem == null)
 	                {
 	                	return false;
 	                }
 	                
-	                if (FileOrig.IOhandler.Read.run(FileOrig.IOhandler, Mem.getBacking(), TagSize, 1) != 1)
+	                byte[] tagData = new byte[TagSize];
+	                Mem.readByteArray(tagData, 0, TagSize, false);
+	                if (FileOrig.IOhandler.Read.run(FileOrig.IOhandler, tagData, TagSize, 1) != 1)
 	                {
 	                	return false;
 	                }
-	                if (!io.Write.run(io, TagSize, Mem.getBacking()))
+	                if (!io.Write.run(io, TagSize, tagData))
 	                {
 	                	return false;
 	                }
@@ -1346,7 +1403,9 @@ class cmsio0
 	        // Should this tag be saved as RAW? If so, tagsizes should be specified in advance (no further cooking is done)
 	        if (Icc.TagSaveAsRaw[i])
 	        {
-	            if (!io.Write.run(io, Icc.TagSizes[i], ((VirtualPointer)Data).getBacking()))
+	        	byte[] rawData = new byte[Icc.TagSizes[i]];
+	        	((VirtualPointer)Data).readByteArray(rawData, 0, Icc.TagSizes[i], false);
+	            if (!io.Write.run(io, Icc.TagSizes[i], rawData))
 	            {
 	            	return false;
 	            }
@@ -1431,7 +1490,7 @@ class cmsio0
 	    
 	    //Manual equivalent of "memmove(&Keep, Icc, sizeof(_cmsICCPROFILE));"
 	    VirtualPointer vp = new VirtualPointer(Icc);
-	    Keep = (_cmsICCPROFILE)vp.getDeserializedType(_cmsICCPROFILE.class);
+	    Keep = (_cmsICCPROFILE)vp.getProcessor().readObject(_cmsICCPROFILE.class);
 	    
 	    ContextID = cmsGetProfileContextID(hProfile);
 	    PrevIO = Icc.IOhandler = cmsOpenIOhandlerFromNULL(ContextID);
@@ -1597,7 +1656,7 @@ class cmsio0
 	    // Was open in write mode?   
 	    if (Icc.IsWrite)
 	    {
-	        Icc.IsWrite = false; // Assure no further writting
+	        Icc.IsWrite = false; // Assure no further writing
 	        rc &= cmsSaveProfileToFile(hProfile, Icc.IOhandler.PhysicalFile.toString());        
 	    }
 	    
@@ -1613,7 +1672,7 @@ class cmsio0
 	            }
 	            else
 	            {
-	            	cmserr._cmsFree(Icc.ContextID, VirtualPointer.wrap(Icc.TagPtrs[i]));
+	            	cmserr._cmsFree(Icc.ContextID, new VirtualPointer(Icc.TagPtrs[i]));
 	            }
 	        }
 	    }
@@ -1623,8 +1682,9 @@ class cmsio0
 	        rc &= cmsCloseIOhandler(Icc.IOhandler);
 	    }
 	    
-	    cmserr._cmsFree(Icc.ContextID, VirtualPointer.wrap(Icc)); // Free placeholder memory
-	    
+//#ifdef RAW_C
+	    cmserr._cmsFree(Icc.ContextID, new VirtualPointer(Icc)); // Free placeholder memory
+//#endif
 	    return rc;
 	}
 	
@@ -1707,7 +1767,7 @@ class cmsio0
 	    	return null;
 	    }
 	    
-	    TagSize  -= 8; // Already read by the type base logic
+	    TagSize -= 8; // Already read by the type base logic
 	    
 	    // Get type handler
 	    TypeHandler = cmstypes._cmsGetTagTypeHandler(BaseType);
@@ -1826,7 +1886,7 @@ class cmsio0
 	    {
 	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, "Unsupported tag '%x'", 
 	    			new Object[]{new Integer(sig)});
-	        return FALSE;
+	        return false;
 	    }
 	    
 	    // Now we need to know which type to use. It depends on the version. 
@@ -1933,7 +1993,7 @@ class cmsio0
 	        return Icc.TagSizes[i];
 	    }
 	    
-	    // The data has been already read, or written. But wait!, maybe the user choosed to save as
+	    // The data has been already read, or written. But wait!, maybe the user choose to save as
 	    // raw data. In this case, return the raw data directly
 	    if (Icc.TagSaveAsRaw[i])
 	    {
@@ -1945,7 +2005,7 @@ class cmsio0
 					TagSize = BufferSize;
 				}
 				
-				((VirtualPointer)Icc.TagPtrs[i]).readRaw(data, 0, TagSize);
+				((VirtualPointer)Icc.TagPtrs[i]).readByteArray(data, 0, TagSize, false);
 			}
 			
 	        return Icc.TagSizes[i];
@@ -1994,7 +2054,7 @@ class cmsio0
 	// Similar to the anterior. This function allows to write directly to the ICC profile any data, without
 	// checking anything. As a rule, mixing Raw with cooked doesn't work, so writing a tag as raw and then reading 
 	// it as cooked without serializing does result into an error. If that is wha you want, you will need to dump
-	// the profile to memry or disk and then reopen it.
+	// the profile to memory or disk and then reopen it.
 	public static boolean cmsWriteRawTag(cmsHPROFILE hProfile, int sig, final byte[] data, int Size)
 	{
 	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;  
@@ -2022,7 +2082,7 @@ class cmsio0
 	// Using this function you can collapse several tag entries to the same block in the profile
 	public static boolean cmsLinkTag(cmsHPROFILE hProfile, int sig, int dest)
 	{
-	     _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;  
+	     _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
 	    int i;
 	    int[] temp = new int[1];
 	    

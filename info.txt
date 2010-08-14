@@ -38,3 +38,5 @@ CMS_DONT_USE_FAST_FLOOR
 CMS_DONT_USE_PTHREADS
 CMS_USE_PROFILE_BLACK_POINT_TAG
 CMS_STRICT_CGATS
+USE_IO_BIT_CONVERTER //Use java.io to convert value types to bytes and back
+RAW_C //Code is similar, to near exact the same as C/C++

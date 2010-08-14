@@ -1,3 +1,5 @@
+//#preprocessor
+
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
@@ -113,7 +115,7 @@ class cmserr
 	// Generic allocate & zero
 	private static VirtualPointer _cmsMallocZeroDefaultFn(cmsContext ContextID, int size)
 	{
-		return _cmsMalloc(ContextID, size); //Becaus this is Java the allocated arrays are already zeroed out.
+		return _cmsMalloc(ContextID, size); //Because this is Java the allocated arrays are already zeroed out.
 	}
 	
 	// The default free function. The only check performed is against NULL pointers
@@ -138,10 +140,7 @@ class cmserr
 	    	return null; // Never realloc over MAX_MEMORY_FOR_ALLOC_MB or below 0
 	    }
 	    
-	    VirtualPointer nPtr = new VirtualPointer(size);
-	    byte[] PtrData = Ptr.getBacking();
-	    nPtr.writeRaw(PtrData, 0, Math.min(PtrData.length, size));
-	    return nPtr;
+	    return Ptr.resize(size);
 	}
 	
 	// The default calloc function. Allocates an array of num elements, each one of size bytes
@@ -178,8 +177,9 @@ class cmserr
 	    
 	    if (mem != null && Org != null)
 	    {
-	    	byte[] PtrData = Org.getBacking();
-	    	mem.writeRaw(PtrData, 0, Math.min(PtrData.length, size));
+	    	byte[] PtrData = new byte[size];
+	    	Org.readByteArray(PtrData, 0, size, false);
+	    	mem.getProcessor().write(PtrData);
 	    }
 	    
 	    return mem;
@@ -328,21 +328,29 @@ class cmserr
 	static _cmsSubAllocator_chunk _cmsCreateSubAllocChunk(cmsContext ContextID, int Initial)
 	{
 	    _cmsSubAllocator_chunk chunk;
+//#ifdef RAW_C
 	    VirtualPointer vp;
+//#endif
 	    
 	    // Create the container
-	    chunk = (_cmsSubAllocator_chunk)(vp = _cmsMallocZero(ContextID, /*sizeof(_cmsSubAllocator_chunk)*/_cmsSubAllocator_chunk.SIZE)).getDeserializedType(_cmsSubAllocator_chunk.class);
+//#ifdef RAW_C
+	    chunk = (_cmsSubAllocator_chunk)(vp = _cmsMallocZero(ContextID, /*sizeof(_cmsSubAllocator_chunk)*/_cmsSubAllocator_chunk.SIZE)).getProcessor().readObject(_cmsSubAllocator_chunk.class);
 	    if (chunk == null)
 	    {
 	    	return null;
 	    }
+//#else
+	    chunk = new _cmsSubAllocator_chunk();
+//#endif
 	    
 	    // Initialize values
 	    chunk.Block = _cmsMalloc(ContextID, Initial);
 	    if (chunk.Block == null)
 	    {
 	        // Something went wrong
+//#ifdef RAW_C
 	        _cmsFree(ContextID, vp);
+//#endif
 	        return null;
 	    }
 	    
@@ -364,21 +372,29 @@ class cmserr
 	public static _cmsSubAllocator _cmsCreateSubAlloc(cmsContext ContextID, int Initial)
 	{
 	    _cmsSubAllocator sub;
+//#ifdef RAW_C
 	    VirtualPointer vp;
+//#endif
 	    
 	    // Create the container
-	    sub = (_cmsSubAllocator)(vp = _cmsMallocZero(ContextID, /*sizeof(_cmsSubAllocator)*/_cmsSubAllocator.SIZE)).getDeserializedType(_cmsSubAllocator.class);
+//#ifdef RAW_C
+	    sub = (_cmsSubAllocator)(vp = _cmsMallocZero(ContextID, /*sizeof(_cmsSubAllocator)*/_cmsSubAllocator.SIZE)).getProcessor().readObject(_cmsSubAllocator.class);
 	    if (sub == null)
 	    {
 	    	return null;
 	    }
+//#else
+	    sub = new _cmsSubAllocator();
+//#endif
 	    
 	    sub.ContextID = ContextID;
 	    
 	    sub.h = _cmsCreateSubAllocChunk(ContextID, Initial);
 	    if (sub.h == null)
 	    {
+//#ifdef RAW_C
 	        _cmsFree(ContextID, vp);
+//#endif
 	        return null;
 	    }
 	    
@@ -397,11 +413,15 @@ class cmserr
 	        {
 	        	_cmsFree(sub.ContextID, chunk.Block);
 	        }
-	        _cmsFree(sub.ContextID, VirtualPointer.wrap(chunk));
+//#ifndef RAW_C
+	        _cmsFree(sub.ContextID, new VirtualPointer(chunk));
+//#endif
 	    }
 	    
 	    // Free the header
-	    _cmsFree(sub.ContextID, VirtualPointer.wrap(sub));
+//#ifndef RAW_C
+	    _cmsFree(sub.ContextID, new VirtualPointer(sub));
+//#endif
 	}
 	
 	// Get a pointer to small memory block.
@@ -511,31 +531,10 @@ class cmserr
 	    be = cmsplugin._cmsAdjustEndianess32(sig);
 	    
 	    // Move chars
-	    VirtualPointer vp = new VirtualPointer(4);
-	    vp.serialize(new Integer(sig), null, false);
-	    String.append((String)vp.deserialize(new Serializers.SerializerWrapper()
-	    {
-	    	//Complex-ish workaround to "memmove(String, &be, 4);". What can you do, VirtualPointer has the int formatting correct. This keeps all "to byte"/"from byte" operations the same.
-			public int inDeserialize(byte[] data, int offset, Object[] val)
-			{
-				StringBuffer buf = new StringBuffer(4);
-				for(int i = offset; i < (offset + 4); i++)
-				{
-					buf.append((char)data[i]);
-				}
-				val[0] = buf.toString();
-			}
-			
-			public int inSerialize(byte[] data, int offset, Object val)
-			{
-				//Never called
-				return VirtualPointer.Serializer.STATUS_SUCCESS;
-			}
-			
-			public int getSerializedSize(Object val)
-			{
-				return 4; //Always 4 bytes
-			}
-		}, false));
+	    //Complex-ish workaround to "memmove(String, &be, 4);". What can you do, VirtualPointer has the int formatting correct. This keeps all "to byte"/"from byte" operations the same.
+	    VirtualPointer vp = new VirtualPointer(5);
+	    VirtualPointer.TypeProcessor proc = vp.getProcessor();
+	    proc.write(sig, false);
+	    String.append(proc.readString(false, false));
 	}
 }
