@@ -824,13 +824,10 @@ class cmsio0
 	    
 	    // Read the header
 	    vp = new VirtualPointer(cmsICCHeader.SIZE);
-	    byte[] backing = new byte[cmsICCHeader.SIZE];
-	    vp.readByteArray(backing, 0, cmsICCHeader.SIZE, false);
-	    if (io.Read.run(io, backing, /*sizeof(cmsICCHeader)*/cmsICCHeader.SIZE, 1) != 1)
+	    if (io.vpRead(io, vp, /*sizeof(cmsICCHeader)*/cmsICCHeader.SIZE, 1) != 1)
 	    {
 	        return false; 
 	    }
-	    vp.getProcessor().write(backing);
 	    Header = (cmsICCHeader)vp.getProcessor().readObject(cmsICCHeader.class);
 	    
 	    // Validate file as an ICC profile
@@ -968,12 +965,8 @@ class cmsio0
 	    Header.profileID.setID8(Icc.ProfileID.getID8());
 	    
 	    // Dump the header
-	    VirtualPointer vp = new VirtualPointer(cmsICCHeader.SIZE);
-	    VirtualPointer.TypeProcessor proc = vp.getProcessor();
-	    proc.write(Header);
-	    byte[] data = new byte[cmsICCHeader.SIZE];
-	    vp.readByteArray(data, 0, cmsICCHeader.SIZE, false);
-	    if (!Icc.IOhandler.Write.run(Icc.IOhandler, /*sizeof(cmsICCHeader)*/cmsICCHeader.SIZE, data))
+	    VirtualPointer vp = new VirtualPointer(Header);
+	    if (!Icc.IOhandler.vpWrite(Icc.IOhandler, /*sizeof(cmsICCHeader)*/cmsICCHeader.SIZE, vp))
 	    {
 	    	return false;
 	    }
@@ -994,7 +987,8 @@ class cmsio0
 	    {
 	    	return false;
 	    }
-
+	    
+	    VirtualPointer.TypeProcessor proc = vp.getProcessor();
 	    for (int i = 0; i < Icc.TagCount; i++)
 	    {
 	        if (Icc.TagNames[i] == 0)
@@ -1007,8 +1001,7 @@ class cmsio0
 	        Tag.size   = cmsplugin._cmsAdjustEndianess32(Icc.TagSizes[i]);
 	        
 	        proc.write(Tag);
-	        vp.readByteArray(data, 0, cmsTagEntry.SIZE, false);
-	        if (!Icc.IOhandler.Write.run(Icc.IOhandler, /*sizeof(cmsTagEntry)*/cmsTagEntry.SIZE, data))
+	        if (!Icc.IOhandler.vpWrite(Icc.IOhandler, /*sizeof(cmsTagEntry)*/cmsTagEntry.SIZE, vp))
 	        {
 	        	return false;
 	        }
@@ -1375,13 +1368,11 @@ class cmsio0
 	                	return false;
 	                }
 	                
-	                byte[] tagData = new byte[TagSize];
-	                Mem.readByteArray(tagData, 0, TagSize, false);
-	                if (FileOrig.IOhandler.Read.run(FileOrig.IOhandler, tagData, TagSize, 1) != 1)
+	                if (FileOrig.IOhandler.vpRead(FileOrig.IOhandler, Mem, TagSize, 1) != 1)
 	                {
 	                	return false;
 	                }
-	                if (!io.Write.run(io, TagSize, tagData))
+	                if (!io.vpWrite(io, TagSize, Mem))
 	                {
 	                	return false;
 	                }
@@ -1403,9 +1394,7 @@ class cmsio0
 	        // Should this tag be saved as RAW? If so, tagsizes should be specified in advance (no further cooking is done)
 	        if (Icc.TagSaveAsRaw[i])
 	        {
-	        	byte[] rawData = new byte[Icc.TagSizes[i]];
-	        	((VirtualPointer)Data).readByteArray(rawData, 0, Icc.TagSizes[i], false);
-	            if (!io.Write.run(io, Icc.TagSizes[i], rawData))
+	            if (!io.vpWrite(io, Icc.TagSizes[i], (VirtualPointer)Data))
 	            {
 	            	return false;
 	            }

@@ -339,6 +339,33 @@ public class lcms2_plugin extends lcms2
 	    	public boolean run(_cms_io_handler iohandler, int size, final byte[] Buffer);
 	    }
 	    
+	    //Simple read/write helper classes so VirtualPointer can be used as buffers
+	    int vpRead(_cms_io_handler iohandler, VirtualPointer Buffer, int size, int count)
+	    {
+	    	if(Read != null)
+	    	{
+	    		byte[] temp = new byte[size * count];
+	    		int out = Read.run(iohandler, temp, size, count);
+	    		Buffer.getProcessor().write(temp);
+	    		return out;
+	    	}
+	    	throw new NullPointerException();
+	    }
+	    
+	    boolean vpWrite(_cms_io_handler iohandler, int size, final VirtualPointer Buffer)
+	    {
+	    	if(Write != null)
+	    	{
+	    		byte[] temp = new byte[size];
+	    		if(Buffer.readByteArray(temp, 0, size, false) != size)
+	    		{
+	    			return false;
+	    		}
+	    		return Write.run(iohandler, size, temp);
+	    	}
+	    	throw new NullPointerException();
+	    }
+	    
 	    public _cms_io_handler()
 	    {
 	    	PhysicalFile = new StringBuffer(cmsMAX_PATH);

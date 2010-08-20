@@ -52,6 +52,11 @@ public class VirtualPointer
         	return this.vp.data != null;
         }
         
+        public boolean lastOpSuccess()
+        {
+        	return this.stat == VirtualPointer.Serializer.STATUS_SUCCESS;
+        }
+        
         public int getStatus()
         {
         	return this.stat;
@@ -610,6 +615,7 @@ public class VirtualPointer
 		public static final int STATUS_SUCCESS = 1;
 		public static final int STATUS_NEED_MORE_DATA = 2;
 		public static final int STATUS_REQUIRES_OBJECT = 3;
+		public static final int STATUS_UNSUPPORTED = 4;
 		
 		public int getSerializedSize(Object val);
 		
@@ -767,6 +773,22 @@ public class VirtualPointer
 	    resize(ser.getSerializedSize(obj));
 	    this.getProcessor().write(obj, false, ser);
 	}
+    
+    public VirtualPointer set(int value, int size)
+    {
+    	if(size <= 0 || dataPos > data.length)
+    	{
+    		return this;
+    	}
+    	size = Math.min(data.length, size);
+    	//Set available data
+    	byte val = (byte)value;
+    	for(int i = dataPos; i < size; i++)
+    	{
+    		data[i] = val;
+    	}
+    	return this;
+    }
 	
     public VirtualPointer resize(int newsize)
     {

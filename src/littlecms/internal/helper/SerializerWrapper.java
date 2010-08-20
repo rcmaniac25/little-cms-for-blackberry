@@ -47,7 +47,7 @@ public abstract class SerializerWrapper implements VirtualPointer.Serializer
         }
         if (!canProcess(val))
         {
-            return VirtualPointer.Serializer.STATUS_FAIL;
+            return VirtualPointer.Serializer.STATUS_UNSUPPORTED;
         }
         return inSerialize(vp, val);
     }

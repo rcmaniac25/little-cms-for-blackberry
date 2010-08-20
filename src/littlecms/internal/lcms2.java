@@ -30,6 +30,7 @@ package littlecms.internal;
 import java.util.Calendar;
 
 import littlecms.internal.helper.Stream;
+import littlecms.internal.helper.VirtualPointer;
 
 import net.rim.device.api.util.Arrays;
 
@@ -309,15 +310,17 @@ public class lcms2
     // Common structures in ICC tags
     public static class cmsICCData
     {
+    	public static final int SIZE = 4 + 4 + VirtualPointer.SIZE;
+    	
     	public int len;
     	public int flag;
-    	public final byte[] data;
+    	public VirtualPointer data;
     	
     	public cmsICCData()
     	{
     		len = 0;
     		flag = 0;
-    		data = new byte[1];
+    		data = new VirtualPointer(1);
     	}
     }
     
