@@ -32,7 +32,10 @@ import littlecms.internal.lcms2_internal._cmsTRANSFORM;
 /**
  * Transformations stuff
  */
-class cmsxform
+//#ifdef CMS_INTERNAL_ACCESS & DEBUG
+public
+//#endif
+final class cmsxform
 {
 	//TODO: #32-94
 	

@@ -27,17 +27,25 @@
 //
 package littlecms.internal;
 
+import java.util.Calendar;
+
 import net.rim.device.api.util.Arrays;
 import littlecms.internal.helper.BitConverter;
 import littlecms.internal.helper.VirtualPointer;
 import littlecms.internal.lcms2.cmsCIEXYZ;
 import littlecms.internal.lcms2.cmsCIExyYTRIPLE;
+import littlecms.internal.lcms2.cmsDateTimeNumber;
 import littlecms.internal.lcms2.cmsICCData;
+import littlecms.internal.lcms2.cmsICCMeasurementConditions;
 import littlecms.internal.lcms2.cmsIOHANDLER;
 import littlecms.internal.lcms2.cmsMLU;
+import littlecms.internal.lcms2_internal._cmsStageCLutData;
+import littlecms.internal.lcms2_internal._cmsStageMatrixData;
+import littlecms.internal.lcms2_plugin._cmsTagBase;
 import littlecms.internal.lcms2_plugin.cmsPluginBase;
 import littlecms.internal.lcms2_plugin.cmsPluginTagType;
 import littlecms.internal.lcms2_plugin.cmsTagTypeHandler;
+import littlecms.internal.lcms2_plugin.cmsMAT3;
 
 /**
  * Tag Serialization  ----------------------------------------------------------------------------- 
@@ -50,7 +58,10 @@ import littlecms.internal.lcms2_plugin.cmsTagTypeHandler;
  * elements special type. 
  * --------------------------------------------------------------------------------------------------
  */
-class cmstypes
+//#ifdef CMS_INTERNAL_ACCESS & DEBUG
+public
+//#endif
+final class cmstypes
 {
 	// Some types are not internal, thus they need to return public (normal) types.
 	// RAW_C support implemented but return type is expected to be cmsUInt8Number[16] (byte[lcms2.cmsMAXCHANNELS]) so just do that.
@@ -1721,13 +1732,13 @@ class cmstypes
 	    StringBuffer Text = null;
 	    StringBuffer Wide = null;
 	    int len, len_aligned, len_filler_alignment;
-	    boolean rc = FALSE;
+	    boolean rc = false;
 	    byte[] Filler = new byte[68];
 	    
 	    // Get the len of string
 	    len = cmsMLUgetASCII(mlu, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, null, 0);
 	    
-	    // From ICC3.4: It has been found that textDescriptionType can contain misaligned data
+	    // From ICC3.4: It has been found that textDescription Type can contain misaligned data
 	    //(see clause 4.1 for the definition of “aligned”). Because the Unicode language
 	    // code and Unicode count immediately follow the ASCII description, their
 	    // alignment is not correct if the ASCII count is not a multiple of four. The
@@ -2067,5 +2078,2897 @@ class cmstypes
 	// the dateTimeNumber as UTC, show the equivalent local time (at current locale), or 
 	// display both UTC and local versions of the dateTimeNumber.
 	
-	//TODO #1253
+	private static Object Type_DateTime_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		VirtualPointer timestamp = new VirtualPointer(cmsDateTimeNumber.SIZE);
+	    Calendar NewDateTime;
+	    
+	    nItems[0] = 0;
+	    NewDateTime = Calendar.getInstance(); //This would normally use _cmsMalloc but because of the internal (I.O.W. no source code for RIM impl) nature of it and the way it is going to be used, it is easier to just do this.
+	    
+	    if (io.vpRead(io, timestamp, /*sizeof(cmsDateTimeNumber)*/cmsDateTimeNumber.SIZE, 1) != 1)
+	    {
+	    	return null;
+	    }
+	    
+	    cmsplugin._cmsDecodeDateTimeNumber(timestamp.getProcessor().readObject(cmsDateTimeNumber.class), NewDateTime);
+	    
+	    nItems[0] = 1;
+	    return NewDateTime;
+	}
+	
+	private static boolean Type_DateTime_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		Calendar DateTime = (Calendar)Ptr;
+	    cmsDateTimeNumber timestamp = new cmsDateTimeNumber();
+	    
+	    cmsplugin._cmsEncodeDateTimeNumber(timestamp, DateTime);
+	    if (!io.vpWrite(io, /*sizeof(cmsDateTimeNumber)*/cmsDateTimeNumber.SIZE, new VirtualPointer(timestamp)))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_DateTime_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmserr._cmsDupMem(self.ContextID, new VirtualPointer(Ptr), /*sizeof(Calendar)*/8).getProcessor().readObject(Calendar.class);
+	}
+	
+	private static void Type_DateTime_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		//Would free memory but using native built in type
+	}
+	
+	// ********************************************************************************
+	// Type icMeasurementType
+	// ********************************************************************************
+	
+	/*
+	The measurementType information refers only to the internal profile data and is
+	meant to provide profile makers an alternative to the default measurement 
+	specifications.
+	*/
+	
+	private static Object Type_Measurement_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		cmsICCMeasurementConditions mc = new cmsICCMeasurementConditions();
+		
+		int[] temp = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    mc.Observer = temp[0];
+	    if (!cmsplugin._cmsReadXYZNumber(io, mc.Backing))
+	    {
+	    	return null;
+	    }
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    mc.Geometry = temp[0];
+	    double[] temp2 = new double[1];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
+	    {
+	    	return null;
+	    }
+	    mc.Flare = temp2[0];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    mc.IlluminantType = temp[0];
+	    
+	    nItems[0] = 1;
+	    return cmserr._cmsDupMem(self.ContextID, new VirtualPointer(mc), /*sizeof(cmsICCMeasurementConditions)*/cmsICCMeasurementConditions.SIZE).getProcessor().readObject(cmsICCMeasurementConditions.class);
+	}
+	
+	private static boolean Type_Measurement_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		cmsICCMeasurementConditions mc =(cmsICCMeasurementConditions)Ptr;
+	    
+	    if (!cmsplugin._cmsWriteUInt32Number(io, mc.Observer))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteXYZNumber(io, mc.Backing))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, mc.Geometry))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, mc.Flare))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, mc.IlluminantType))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_Measurement_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmserr._cmsDupMem(self.ContextID, new VirtualPointer(Ptr), /*sizeof(cmsICCMeasurementConditions)*/cmsICCMeasurementConditions.SIZE).getProcessor().readObject(cmsICCMeasurementConditions.class);
+	}
+	
+	private static void Type_Measurement_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		//Would free memory but never actually allocating memory (except for dup/read functions which is not a real issue)
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigMultiLocalizedUnicodeType
+	// ********************************************************************************
+	
+	//
+	//   Do NOT trust SizeOfTag as there is an issue on the definition of profileSequenceDescTag. See the TechNote from 
+	//   Max Derhak and Rohit Patil about this: basically the size of the string table should be guessed and cannot be
+	//   taken from the size of tag if this tag is embedded as part of bigger structures (profileSequenceDescTag, for instance)
+	//
+	// FIXME: this doesn't work if sizeof(wchat_t) != 2  !!!
+	
+	private static Object Type_MLU_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		cmsMLU mlu;
+	    int Count, RecLen, NumOfWchar;       
+	    int SizeOfHeader;
+	    int Len, Offset;
+	    int i;
+	    VirtualPointer Block;
+	    int BeginOfThisString, EndOfThisString, LargestPosition;
+	    int[] temp = new int[1];
+	    
+	    nItems[0] = 0;
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;           
+	    }
+	    Count = temp[0];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;           
+	    }
+	    RecLen = temp[0];
+	    
+	    if (RecLen != 12)
+	    {
+	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "multiLocalizedUnicodeType of len != 12 is not supported.", null);
+	        return null;
+	    }
+	    
+	    mlu = cmsnamed.cmsMLUalloc(self.ContextID, Count);
+	    if (mlu == null)
+	    {
+	    	return null;
+	    }
+	    
+	    mlu.UsedEntries = Count;
+	    
+	    SizeOfHeader = 12 * Count + /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    LargestPosition = 0;
+	    
+	    short[] temp2 = new short[1];
+	    for (i = 0; i < Count; i++)
+	    {
+	        if (!cmsplugin._cmsReadUInt16Number(io, temp2))
+	        {
+	        	if (mlu != null)
+	    	    {
+	    	    	cmsnamed.cmsMLUfree(mlu);
+	    	    }
+	    	    return null;
+	        }
+	        mlu.Entries[i].Language = temp2[0];
+	        if (!cmsplugin._cmsReadUInt16Number(io, temp2))
+	        {
+	        	if (mlu != null)
+	    	    {
+	    	    	cmsnamed.cmsMLUfree(mlu);
+	    	    }
+	    	    return null;
+	        }
+	        mlu.Entries[i].Country = temp2[0];
+	        
+	        // Now deal with Len and offset.
+	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	        {
+	        	if (mlu != null)
+	    	    {
+	    	    	cmsnamed.cmsMLUfree(mlu);
+	    	    }
+	    	    return null;
+	        }
+	        Len = temp[0];
+	        mlu.Entries[i].Len = Len;
+	        
+	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	        {
+	        	if (mlu != null)
+	    	    {
+	    	    	cmsnamed.cmsMLUfree(mlu);
+	    	    }
+	    	    return null;
+	        }
+	        Offset = temp[0];
+	        
+	        BeginOfThisString = Offset - SizeOfHeader - 8;
+	        mlu.Entries[i].StrW = BeginOfThisString;
+	        
+	        // To guess maximum size, add offset + len
+	        EndOfThisString = BeginOfThisString + Len;
+	        if (EndOfThisString > LargestPosition)
+	        {
+	        	LargestPosition = EndOfThisString;
+	        }
+	    }
+	    
+	    // Now read the remaining of tag and fill all strings. Substract the directory
+	    SizeOfTag = LargestPosition;
+	    
+	    Block = cmserr._cmsMalloc(self.ContextID, SizeOfTag);
+	    if (Block == null)
+	    {
+	    	if (mlu != null)
+		    {
+		    	cmsnamed.cmsMLUfree(mlu);
+		    }
+		    return null;
+	    }
+	    
+	    NumOfWchar = SizeOfTag / /*sizeof(cmsUInt16Number)*/2;
+	    
+	    if (!cmsplugin._cmsReadUInt16Array(io, NumOfWchar, Block))
+	    {
+	    	if (mlu != null)
+		    {
+		    	cmsnamed.cmsMLUfree(mlu);
+		    }
+		    return null;
+	    }
+	    mlu.MemPool = Block;
+	    mlu.PoolSize = SizeOfTag;
+	    mlu.PoolUsed = SizeOfTag;
+	    
+	    nItems[0] = 1;
+	    return mlu;
+	}
+	
+	private static boolean Type_MLU_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		cmsMLU mlu =(cmsMLU)Ptr;
+	    int HeaderSize, Offset;
+	    int i;
+	    
+	    if (!cmsplugin._cmsWriteUInt32Number(io, mlu.UsedEntries))
+	    {
+	    	return false;           
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 12))
+	    {
+	    	return false;           
+	    }
+	          
+	    HeaderSize = 12 * mlu.UsedEntries + /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    
+	    for (i = 0; i < mlu.UsedEntries; i++)
+	    {
+	        if (!cmsplugin._cmsWriteUInt16Number(io, mlu.Entries[i].Language))
+	        {
+	        	return false;           
+	        }
+	        if (!cmsplugin._cmsWriteUInt16Number(io, mlu.Entries[i].Country))
+	        {
+	        	return false;  
+	        }
+	        if (!cmsplugin._cmsWriteUInt32Number(io, mlu.Entries[i].Len))
+	        {
+	        	return false;
+	        }
+	        
+	        Offset =  mlu.Entries[i].StrW + HeaderSize + 8;
+	        
+	        if (!cmsplugin._cmsWriteUInt32Number(io, Offset))
+	        {
+	        	return false;               
+	        }
+	    }
+	    
+	    if (!cmsplugin._cmsWriteUInt16Array(io, mlu.PoolUsed / /*sizeof(cmsUInt16Number)*/2, mlu.MemPool))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_MLU_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmsnamed.cmsMLUdup((cmsMLU)Ptr);
+	}
+	
+	private static void Type_MLU_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmsnamed.cmsMLUfree((cmsMLU)Ptr);
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigLut8Type
+	// ********************************************************************************
+	
+	// Decide which LUT type to use on writting
+	public static int DecideLUTtypeA2B(double ICCVersion, final Object Data)
+	{
+	    cmsPipeline Lut = (cmsPipeline)Data;
+	    
+	    if (ICCVersion < 4.0)
+	    {
+	        if (Lut.SaveAs8Bits)
+	        {
+	        	return lcms2.cmsSigLut8Type;
+	        }
+	        return lcms2.cmsSigLut16Type;
+	    }
+	    else
+	    {
+	         return lcms2.cmsSigLutAtoBType;
+	    }
+	}
+	
+	public static int DecideLUTtypeB2A(double ICCVersion, final Object Data)
+	{
+	    cmsPipeline Lut = (cmsPipeline)Data;
+	    
+	    if (ICCVersion < 4.0)
+	    {
+	        if (Lut.SaveAs8Bits)
+	        {
+	        	return lcms2.cmsSigLut8Type;
+	        }
+	        return lcms2.cmsSigLut16Type;
+	    }
+	    else
+	    {
+	         return lcms2.cmsSigLutBtoAType;
+	    }
+	}
+	
+	/*
+	This structure represents a colour transform using tables of 8-bit precision. 
+	This type contains four processing elements: a 3 by 3 matrix (which shall be 
+	the identity matrix unless the input colour space is XYZ), a set of one dimensional 
+	input tables, a multidimensional lookup table, and a set of one dimensional output 
+	tables. Data is processed using these elements via the following sequence:
+	(matrix) -> (1d input tables)  -> (multidimensional lookup table - CLUT) -> (1d output tables)
+	
+	Byte Position   Field Length (bytes)  Content Encoded as...
+	8                  1          Number of Input Channels (i)    uInt8Number
+	9                  1          Number of Output Channels (o)   uInt8Number
+	10                 1          Number of CLUT grid points (identical for each side) (g) uInt8Number
+	11                 1          Reserved for padding (fill with 00h)
+	
+	12..15             4          Encoded e00 parameter   s15Fixed16Number
+	*/
+	
+	// Read 8 bit tables as gamma functions
+	private static boolean Read8bitTables(cmsContext ContextID, cmsIOHANDLER io, cmsPipeline lut, int nChannels)
+	{
+	    cmsStage mpe;
+	    VirtualPointer Temp = null;
+	    int i, j;
+	    cmsToneCurve[] Tables = new cmsToneCurve[lcms2.cmsMAXCHANNELS];
+	    
+	    if (nChannels > lcms2.cmsMAXCHANNELS)
+	    {
+	    	return false;
+	    }
+	    
+	    Temp = cmserr._cmsMalloc(ContextID, 256);
+	    if (Temp == null)
+	    {
+	    	return false;
+	    }
+	    
+	    for (i = 0; i < nChannels; i++)
+	    {
+	        Tables[i] = cmsgamma.cmsBuildTabulatedToneCurve16(ContextID, 256, NULL);
+	        if (Tables[i] == null)
+	        {
+	        	for (i = 0; i < nChannels; i++)
+	    	    {
+	    	        if (Tables[i] != null)
+	    	        {
+	    	        	cmsgamma.cmsFreeToneCurve(Tables[i]);
+	    	        }
+	    	    }
+	    	    
+	    	    if (Temp != null)
+	    	    {
+	    	    	cmserr._cmsFree(ContextID, Temp);
+	    	    }
+	    	    return false;
+	        }
+	    }
+	    
+	    VirtualPointer.TypeProcessor proc = Temp.getProcessor();
+	    for (i = 0; i < nChannels; i++)
+	    {
+	        if (io.vpRead(io, Temp, 256, 1) != 1)
+	        {
+	        	for (i = 0; i < nChannels; i++)
+	    	    {
+	    	        if (Tables[i] != null)
+	    	        {
+	    	        	cmsgamma.cmsFreeToneCurve(Tables[i]);
+	    	        }
+	    	    }
+	    	    
+	    	    if (Temp != null)
+	    	    {
+	    	    	cmserr._cmsFree(ContextID, Temp);
+	    	    }
+	    	    return false;
+	        }
+	        
+	        for (j = 0; j < 256; j++)
+	        {
+	        	Tables[i].Table16[j] = lcms2_internal.FROM_8_TO_16(proc.readInt8(true));
+	        }
+	        Temp.setPosition(0);
+	    }
+	    
+	    cmserr._cmsFree(ContextID, Temp);
+	    
+	    mpe = cmslut.cmsStageAllocToneCurves(ContextID, nChannels, Tables);
+	    if (mpe == null)
+	    {
+	    	for (i = 0; i < nChannels; i++)
+		    {
+		        if (Tables[i] != null)
+		        {
+		        	cmsgamma.cmsFreeToneCurve(Tables[i]);
+		        }
+		    }
+		    
+		    if (Temp != null)
+		    {
+		    	cmserr._cmsFree(ContextID, Temp);
+		    }
+		    return false;
+	    }
+	    
+	    cmslut.cmsPipelineInsertStage(lut, lcms2.cmsAT_END, mpe);
+	    
+	    for (i = 0; i < nChannels; i++)
+	    {
+	    	cmsgamma.cmsFreeToneCurve(Tables[i]);
+	    }
+	    
+	    return true;
+	}
+	
+	private static boolean Write8bitTables(cmsContext ContextID, cmsIOHANDLER io, int n, _cmsStageToneCurvesData Tables)
+	{
+	    int j;
+	    int i;
+	    byte val;
+	    
+	    for (i = 0; i < n; i++)
+	    {
+	        if (Tables != null)
+	        {
+	            if (Tables.TheCurves[i].nEntries != 256)
+	            {
+	            	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_RANGE, "LUT8 needs 256 entries on prelinearization", null);
+	                return false;
+	            }
+	        }
+	        
+	        for (j = 0; j < 256; j++)
+	        {
+	            if (Tables != null)
+	            {
+	            	val = lcms2_internal.FROM_16_TO_8(Tables.TheCurves[i].Table16[j]);
+	            }
+	            else
+	            {
+	            	val = (byte)j;
+	            }
+	            
+	            if (!cmsplugin._cmsWriteUInt8Number(io, val))
+	            {
+	            	return false;
+	            }
+	        }
+	    }
+	    return true;
+	}
+	
+	private static int uipow(int a, int b)
+	{
+	    long rv = 1;
+	    long aL = a & 0xFFFFFFFFL;
+	    for (; b > 0; b--)
+	    {
+	    	rv *= aL;
+	    }
+	    return (int)rv;
+	}
+	
+	// That will create a MPE LUT with Matrix, pre tables, CLUT and post tables. 
+	// 8 bit lut may be scaled easely to v4 PCS, but we need also to properly adjust
+	// PCS on BToAxx tags and AtoB if abstract. We need to fix input direction.
+	
+	private static Object Type_LUT8_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		byte[] InputChannels = new byte[1], OutputChannels = new byte[1], CLUTpoints = new byte[1];
+	    VirtualPointer Temp = null;
+	    cmsPipeline NewLUT = null;
+	    cmsStage mpemat, mpeclut;
+	    int nTabSize, i;    
+	    double[] Matrix = new double[3*3];
+	    
+	    nItems[0] = 0;
+	    
+	    if (!cmsplugin._cmsReadUInt8Number(io, InputChannels))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    if (!cmsplugin._cmsReadUInt8Number(io, OutputChannels))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    if (!cmsplugin._cmsReadUInt8Number(io, CLUTpoints))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    
+	    // Padding
+	    if (!cmsplugin._cmsReadUInt8Number(io, null))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    
+	    // Do some checking
+	    
+	    if (InputChannels[0] > lcms2.cmsMAXCHANNELS)
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    if (OutputChannels[0] > lcms2.cmsMAXCHANNELS)
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    
+	    // Allocates an empty Pipeline
+	    NewLUT = cmslut.cmsPipelineAlloc(self.ContextID, InputChannels[0], OutputChannels[0]);
+	    if (NewLUT == null)
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    
+	    // Read the Matrix
+	    double[] temp = new double[1];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[0] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[1] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[2] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[3] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[4] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[5] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[6] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[7] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[8] = temp[0];
+	    
+	    // Only operates if not identity...
+	    cmsMAT3 temp2 = new cmsMAT3();
+	    cmsmtrx._cmsMAT3set(temp2, Matrix, 0);
+	    if ((InputChannels == 3) && !cmsmtrx._cmsMAT3isIdentity(temp2))
+	    {
+	        mpemat = cmslut.cmsStageAllocMatrix(self.ContextID, 3, 3, Matrix, null);
+	        if (mpemat == null)
+	        {
+	        	if (NewLUT != null)
+	    	    {
+	    	    	cmslut.cmsPipelineFree(NewLUT);
+	    	    }
+	    	    return null;
+	        }
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_BEGIN, mpemat);
+	    }
+	    
+	    // Get input tables
+	    if (!Read8bitTables(self.ContextID, io,  NewLUT, InputChannels[0]))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    
+	    // Get 3D CLUT
+	    nTabSize = (OutputChannels[0] * uipow(CLUTpoints[0], InputChannels[0]));
+	    if (nTabSize > 0)
+	    {
+	    	int PtrW = 0;
+	        short[] T;
+	        int Tsize;
+	        
+	        Tsize = nTabSize * /*sizeof(cmsUInt16Number)*/2;
+	        
+	        T  = new short[nTabSize];
+	        
+	        Temp = cmserr._cmsMalloc(self.ContextID, nTabSize);             
+	        if (Temp == null)
+	        {
+	        	if (NewLUT != null)
+	    	    {
+	    	    	cmslut.cmsPipelineFree(NewLUT);
+	    	    }
+	    	    return null;
+	        }
+	        
+	        if (io.vpRead(io, Temp, nTabSize, 1) != 1)
+	        {
+	        	if (NewLUT != null)
+	    	    {
+	    	    	cmslut.cmsPipelineFree(NewLUT);
+	    	    }
+	    	    return null;
+	        }
+	        
+	        for (i = 0; i < nTabSize; i++)
+	        {
+	            T[PtrW++] = lcms2_internal.FROM_8_TO_16(Temp.getProcessor().readInt8(true));
+	        }
+	        cmserr._cmsFree(self.ContextID, Temp);
+	        Temp = null;
+	        
+	        mpeclut = cmslut.cmsStageAllocCLut16bit(self.ContextID, CLUTpoints[0], InputChannels[0], OutputChannels[0], T);
+	        if (mpeclut == null)
+	        {
+	        	if (NewLUT != null)
+	    	    {
+	    	    	cmslut.cmsPipelineFree(NewLUT);
+	    	    }
+	    	    return null;
+	        }
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpeclut);
+	    }
+	    
+	    // Get output tables
+	    if (!Read8bitTables(self.ContextID, io,  NewLUT, OutputChannels[0]))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    
+	    nItems[0] = 1;
+	    return NewLUT;
+	}
+	
+	// We only allow a specific MPE structure: Matrix plus prelin, plus clut, plus post-lin.
+	private static boolean Type_LUT8_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		int j, nTabSize;
+	    byte val;
+	    cmsPipeline NewLUT = (cmsPipeline)Ptr;
+	    cmsStage mpe;
+	    _cmsStageToneCurvesData PreMPE = null, PostMPE = null;
+	    _cmsStageMatrixData MatMPE = null;
+	    _cmsStageCLutData clut = null;
+	    int clutPoints;
+	    
+	    // Disassemble the LUT into components.
+	    mpe = NewLUT.Elements;
+	    if (mpe.Type == lcms2.cmsSigMatrixElemType)
+	    {
+	        MatMPE = (_cmsStageMatrixData)mpe.Data;
+	        mpe = mpe.Next;
+	    }
+	    
+	    if (mpe != NULL && mpe.Type == lcms2.cmsSigCurveSetElemType)
+	    {
+	        PreMPE = (_cmsStageToneCurvesData)mpe.Data;
+	        mpe = mpe.Next;
+	    }
+	    
+	    if (mpe != NULL && mpe.Type == lcms2.cmsSigCLutElemType)
+	    {
+	        clut  = (_cmsStageCLutData)mpe.Data;
+	        mpe = mpe.Next;
+	    }
+	    
+	    if (mpe != NULL && mpe.Type == lcms2.cmsSigCurveSetElemType)
+	    {
+	        PostMPE = (_cmsStageToneCurvesData)mpe.Data;
+	        mpe = mpe.Next;
+	    }
+	    
+	    // That should be all
+	    if (mpe != null)
+	    {
+	        cmserr.cmsSignalError(mpe.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "LUT is not suitable to be saved as LUT8", null);
+	        return false;
+	    }
+	    
+	    if (clut == null)
+	    {
+	    	clutPoints = 0;
+	    }
+	    else
+	    {
+	    	clutPoints = clut.Params.nSamples[0];
+	    }
+	    
+	    if (!cmsplugin._cmsWriteUInt8Number(io, (byte)NewLUT.InputChannels))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt8Number(io, (byte)NewLUT.OutputChannels))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt8Number(io, (byte)clutPoints))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt8Number(io, 0))
+	    {
+	    	return false; // Padding
+	    }
+	    
+	    if (MatMPE != null)
+	    {
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[0]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[1]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[2]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[3]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[4]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[5]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[6]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[7]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[8]))
+		    {
+		    	return false;
+		    }
+	    }
+	    else
+	    {
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 1))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 1))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 1))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    // The prelinearization table
+	    if (!Write8bitTables(self.ContextID, io, NewLUT.InputChannels, PreMPE))
+	    {
+	    	return false;
+	    }
+	    
+	    nTabSize = (NewLUT.OutputChannels * uipow(clutPoints, NewLUT.InputChannels));
+	    
+	    // The 3D CLUT.
+	    if (clut != null)
+	    {
+	    	VirtualPointer.TypeProcessor proc = clut.Tab.getProcessor();
+	        for (j = 0; j < nTabSize; j++)
+	        {
+	            val = lcms2_internal.FROM_16_TO_8(proc.readInt16(true));
+	            if (!cmsplugin._cmsWriteUInt8Number(io, val))
+	    	    {
+	            	clut.Tab.setPosition(0);
+	    	    	return false;
+	    	    }
+	        }
+	        clut.Tab.setPosition(0);
+	    }
+	    
+	    // The postlinearization table
+	    if (!Write8bitTables(self.ContextID, io, NewLUT.OutputChannels, PostMPE))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_LUT8_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmslut.cmsPipelineDup((cmsPipeline)Ptr);
+	}
+	
+	private static void Type_LUT8_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmslut.cmsPipelineFree((cmsPipeline)Ptr);
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigLut16Type
+	// ********************************************************************************
+	
+	// Read 16 bit tables as gamma functions
+	private static boolean Read16bitTables(cmsContext ContextID, cmsIOHANDLER io, cmsPipeline lut, int nChannels, int nEntries)
+	{
+		cmsStage mpe;
+	    int i;
+	    cmsToneCurve[] Tables = new cmsToneCurve[lcms2.cmsMAXCHANNELS];
+	    
+	    // Maybe an empty table? (this is a lcms extension)
+	    if (nEntries <= 0)
+	    {
+	    	return true;
+	    }
+	    
+	    // Check for malicious profiles
+	    if (nChannels > lcms2.cmsMAXCHANNELS)
+	    {
+	    	return false;
+	    }
+	    
+	    for (i = 0; i < nChannels; i++)
+	    {
+	        Tables[i] = cmsgamma.cmsBuildTabulatedToneCurve16(ContextID, nEntries, null);
+	        if (Tables[i] == null)
+	        {
+	        	for (i = 0; i < nChannels; i++)
+	    	    {
+	    	        if (Tables[i] != null)
+	    	        {
+	    	        	cmsgamma.cmsFreeToneCurve(Tables[i]);
+	    	        }
+	    	    }
+	    	    
+	    	    return false;
+	        }
+	        
+	        if (!cmsplugin._cmsReadUInt16Array(io, nEntries, Tables[i].Table16))
+	        {
+	        	for (i = 0; i < nChannels; i++)
+	    	    {
+	    	        if (Tables[i] != null)
+	    	        {
+	    	        	cmsgamma.cmsFreeToneCurve(Tables[i]);
+	    	        }
+	    	    }
+	    	    
+	    	    return false;
+	        }
+	    }
+	    
+	    // Add the table (which may certainly be an identity, but this is up to the optimizer, not the reading code)
+	    mpe = cmslut.cmsStageAllocToneCurves(ContextID, nChannels, Tables);
+	    if (mpe == null)
+	    {
+	    	for (i = 0; i < nChannels; i++)
+		    {
+		        if (Tables[i] != null)
+		        {
+		        	cmsgamma.cmsFreeToneCurve(Tables[i]);
+		        }
+		    }
+		    
+		    return false;
+	    }
+	    
+	    cmslut.cmsPipelineInsertStage(lut, lcms2.cmsAT_END, mpe);
+	    
+	    for (i = 0; i < nChannels; i++)
+	    {
+	    	cmsgamma.cmsFreeToneCurve(Tables[i]);
+	    }
+	    
+	    return true;
+	}
+	
+	private static boolean Write16bitTables(cmsContext ContextID, cmsIOHANDLER io, _cmsStageToneCurvesData Tables)
+	{
+		int j;
+	    int i;
+	    short val;
+	    int nEntries = 256;
+	    
+	    nEntries = Tables.TheCurves[0].nEntries;
+	    
+	    for (i = 0; i < Tables.nCurves; i++)
+	    {
+	        for (j = 0; j < nEntries; j++)
+	        {
+	            if (Tables != null)
+	            {
+	            	val = Tables.TheCurves[i].Table16[j];
+	            }
+	            else
+	            {
+	            	val = cmslut._cmsQuantizeVal(j, nEntries);
+	            }
+	            
+	            if (!cmsplugin._cmsWriteUInt16Number(io, val))
+	            {
+	            	return false;
+	            }
+	        }
+	    }
+	    return true;
+	}
+	
+	private static Object Type_LUT16_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		byte[] InputChannels = new byte[1], OutputChannels = new byte[1], CLUTpoints = new byte[1];
+		cmsPipeline NewLUT = null;
+		cmsStage mpemat, mpeclut;
+	    int nTabSize;    
+	    double[] Matrix = new double[3*3];
+	    short[] InputEntries = new short[1], OutputEntries = new short[1];
+	    
+	    nItems[0] = 0;
+	    
+	    if (!cmsplugin._cmsReadUInt8Number(io, InputChannels))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    if (!cmsplugin._cmsReadUInt8Number(io, OutputChannels))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    if (!cmsplugin._cmsReadUInt8Number(io, CLUTpoints))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    
+	    // Padding
+	    if (!cmsplugin._cmsReadUInt8Number(io, null))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    
+	    // Do some checking
+	    if (CLUTpoints[0] > 100)
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    if (InputChannels[0] > lcms2.cmsMAXCHANNELS)
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    if (OutputChannels[0] > lcms2.cmsMAXCHANNELS)
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    
+	    // Allocates an empty LUT
+	    NewLUT = cmslut.cmsPipelineAlloc(self.ContextID, InputChannels[0], OutputChannels[0]);
+	    if (NewLUT == null)
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    
+	    // Read the Matrix
+	    double[] temp = new double[1];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[0] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[1] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[2] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[3] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[4] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[5] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[6] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[7] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    Matrix[8] = temp[0];
+	    
+	    // Only operates on 3 channels
+	    
+	    cmsMAT3 temp2 = new cmsMAT3();
+	    cmsmtrx._cmsMAT3set(temp2, Matrix, 0);
+	    if ((InputChannels == 3) && !cmsmtrx._cmsMAT3isIdentity(temp2))
+	    {
+	        mpemat = cmslut.cmsStageAllocMatrix(self.ContextID, 3, 3, Matrix, null);
+	        if (mpemat == null)
+	        {
+	        	if (NewLUT != null)
+	    	    {
+	    	    	cmslut.cmsPipelineFree(NewLUT);
+	    	    }
+	    	    return null;
+	        }
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpemat);
+	    }
+	    
+	    if (!cmsplugin._cmsReadUInt16Number(io, InputEntries))
+	    {
+	    	return null;
+	    }
+	    if (!cmsplugin._cmsReadUInt16Number(io, OutputEntries))
+	    {
+	    	return null;
+	    }
+	    
+	    // Get input tables
+	    if (!Read16bitTables(self.ContextID, io,  NewLUT, InputChannels[0], InputEntries[0]))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    
+	    // Get 3D CLUT
+	    nTabSize = (OutputChannels[0] * uipow(CLUTpoints[0], InputChannels[0]));
+	    if (nTabSize > 0)
+	    {
+	    	short[] T;
+	    	
+	        T  = new short[nTabSize];
+	        
+	        if (!cmsplugin._cmsReadUInt16Array(io, nTabSize, T))
+	        {
+	        	if (NewLUT != null)
+			    {
+			    	cmslut.cmsPipelineFree(NewLUT);
+			    }
+			    return null;
+	        }
+	        
+	        mpeclut = cmslut.cmsStageAllocCLut16bit(self.ContextID, CLUTpoints[0], InputChannels[0], OutputChannels[0], T);
+	        if (mpeclut == null)
+	        {
+	        	if (NewLUT != null)
+			    {
+			    	cmslut.cmsPipelineFree(NewLUT);
+			    }
+			    return null;
+	        }
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpeclut);
+	    }
+	    
+	    // Get output tables
+	    if (!Read16bitTables(self.ContextID, io,  NewLUT, OutputChannels[0], OutputEntries[0]))
+	    {
+	    	if (NewLUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(NewLUT);
+		    }
+		    return null;
+	    }
+	    
+	    nItems[0] = 1;
+	    return NewLUT;
+	}
+	
+	// We only allow some specific MPE structures: Matrix plus prelin, plus clut, plus post-lin. 
+	// Some empty defaults are created for missing parts
+	
+	private static boolean Type_LUT16_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		int nTabSize;
+	    cmsPipeline NewLUT = (cmsPipeline)Ptr;
+	    cmsStage mpe;
+	    _cmsStageToneCurvesData PreMPE = null, PostMPE = null;
+	    _cmsStageMatrixData MatMPE = null;
+	    _cmsStageCLutData clut = null;
+	    int InputChannels, OutputChannels, clutPoints;
+	    
+	    // Disassemble the LUT into components.
+	    mpe = NewLUT.Elements;
+	    if (mpe != NULL && mpe.Type == lcms2.cmsSigMatrixElemType)
+	    {
+	        MatMPE = (_cmsStageMatrixData)mpe.Data;
+	        mpe = mpe.Next;
+	    }
+	    
+	    if (mpe != NULL && mpe.Type == lcms2.cmsSigCurveSetElemType)
+	    {
+	        PreMPE = (_cmsStageToneCurvesData)mpe.Data;
+	        mpe = mpe.Next;
+	    }
+	    
+	    if (mpe != NULL && mpe.Type == lcms2.cmsSigCLutElemType)
+	    {
+	        clut  = (_cmsStageCLutData)mpe.Data;
+	        mpe = mpe.Next;
+	    }
+	    
+	    if (mpe != NULL && mpe.Type == lcms2.cmsSigCurveSetElemType)
+	    {
+	        PostMPE = (_cmsStageToneCurvesData)mpe.Data;
+	        mpe = mpe.Next;
+	    }
+	    
+	    // That should be all
+	    if (mpe != null)
+	    {
+	        cmserr.cmsSignalError(mpe.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "LUT is not suitable to be saved as LUT16", null);
+	        return false;
+	    }
+	    
+	    InputChannels  = cmslut.cmsPipelineInputChannels(NewLUT);
+	    OutputChannels = cmslut.cmsPipelineOutputChannels(NewLUT);
+	    
+	    if (clut == null)
+	    {
+	    	clutPoints = 0;
+	    }
+	    else
+	    {
+	    	clutPoints = clut.Params.nSamples[0];
+	    }
+	    
+	    if (!cmsplugin._cmsWriteUInt8Number(io, (byte)InputChannels))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt8Number(io, (byte)OutputChannels))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt8Number(io, (byte)clutPoints))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt8Number(io, 0))
+	    {
+	    	return false; // Padding
+	    }
+	    
+	    if (MatMPE != null)
+	    {
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[0]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[1]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[2]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[3]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[4]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[5]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[6]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[7]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[8]))
+		    {
+		    	return false;
+		    }
+	    }
+	    else
+	    {
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 1))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 1))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 1))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    if (PreMPE != null)
+	    {
+	        if (!cmsplugin._cmsWriteUInt16Number(io, (short)PreMPE.TheCurves[0].nEntries))
+	        {
+	        	return false;
+	        }
+	    }
+	    else
+	    {
+	    	if (!cmsplugin._cmsWriteUInt16Number(io, 0))
+	    	{
+	    		return false;
+	    	}
+	    }
+	    
+	    if (PostMPE != null)
+	    {
+	        if (!cmsplugin._cmsWriteUInt16Number(io, (short)PostMPE.TheCurves[0].nEntries))
+	        {
+	        	return false;
+	        }
+	    }
+	    else
+	    {
+	        if (!cmsplugin._cmsWriteUInt16Number(io, 0))
+	        {
+	        	return false;
+	        }
+	    }
+	    
+	    // The prelinearization table
+	    
+	    if (PreMPE != null)
+	    {
+	        if (!Write16bitTables(self ->ContextID, io, PreMPE))
+	        {
+	        	return false;
+	        }
+	    }
+	    
+	    nTabSize = (OutputChannels * uipow(clutPoints, InputChannels));
+	    
+	    // The 3D CLUT.
+	    if (clut != null)
+	    {
+	        if (!cmsplugin._cmsWriteUInt16Array(io, nTabSize, clut.Tab))
+	        {
+	        	return FALSE;
+	        }
+	    }
+	    
+	    // The postlinearization table
+	    if (PostMPE != NULL)
+	    {
+	        if (!Write16bitTables(self.ContextID, io, PostMPE))
+	        {
+	        	return false;
+	        }
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_LUT16_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmslut.cmsPipelineDup((cmsPipeline)Ptr);
+	}
+	
+	private static void Type_LUT16_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmslut.cmsPipelineFree((cmsPipeline)Ptr);
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigLutAToBType
+	// ********************************************************************************
+	
+	// V4 stuff. Read matrix for LutAtoB and LutBtoA
+	
+	private static cmsStage ReadMatrix(cmsTagTypeHandler self, cmsIOHANDLER io, int Offset)
+	{
+		double[] dMat = new double[3*3];
+	    double[] dOff = new double[3];
+	    cmsStage Mat;
+	    
+	    // Go to address 
+	    if (!io.Seek.run(io, Offset))
+	    {
+	    	return null;
+	    }
+	    
+	    // Read the Matrix
+	    double[] temp = new double[1];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    dMat[0] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    dMat[1] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    dMat[2] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    dMat[3] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    dMat[4] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    dMat[5] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    dMat[6] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    dMat[7] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    dMat[8] = temp[0];
+	    
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    dOff[0] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    dOff[1] = temp[0];
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    dOff[2] = temp[0];
+	    
+	    Mat = cmslut.cmsStageAllocMatrix(self ->ContextID, 3, 3, dMat, dOff);
+	    
+	    return Mat;
+	}
+	
+	//  V4 stuff. Read CLUT part for LutAtoB and LutBtoA
+	
+	private static cmsStage ReadCLUT(cmsTagTypeHandler self, cmsIOHANDLER io, int Offset, int InputChannels, int OutputChannels)
+	{
+		byte[] gridPoints8 = new byte[lcms2.cmsMAXCHANNELS]; // Number of grid points in each dimension.  
+	    int[] GridPoints = new int[lcms2.cmsMAXCHANNELS];
+	    int i;
+	    byte[] Precision = new byte[1];
+	    cmsStage CLUT;
+	    _cmsStageCLutData Data;
+	    
+	    if (!io.Seek.run(io, Offset))
+	    {
+	    	return null;
+	    }
+	    if (io.Read.run(io, gridPoints8, lcms2.cmsMAXCHANNELS, 1) != 1)
+	    {
+	    	return null;
+	    }
+	    
+	    for (i = 0; i < lcms2.cmsMAXCHANNELS; i++)
+	    {
+	    	GridPoints[i] = gridPoints8[i] & 0xFFFF;
+	    }
+	    
+	    if (!cmsplugin._cmsReadUInt8Number(io, Precision))
+	    {
+	    	return null;
+	    }
+	    
+	    if (!cmsplugin._cmsReadUInt8Number(io, null))
+	    {
+	    	return null;
+	    }
+	    if (!cmsplugin._cmsReadUInt8Number(io, null))
+	    {
+	    	return null;
+	    }
+	    if (!cmsplugin._cmsReadUInt8Number(io, null))
+	    {
+	    	return null;
+	    }
+	    
+	    CLUT = cmslut.cmsStageAllocCLut16bitGranular(self.ContextID, GridPoints, InputChannels, OutputChannels, null);
+	    Data = (_cmsStageCLutData)CLUT.Data;
+	    
+	    // Precision can be 1 or 2 bytes
+	    if (Precision[0] == 1)
+	    {
+	    	byte[] v = new byte[1];
+	    	
+	    	VirtualPointer.TypeProcessor proc = Data.Tab.getProcessor();
+	        for (i = 0; i < Data.nEntries; i++)
+	        {
+	        	if (io.Read.run(io, v, /*sizeof(cmsUInt8Number)*/1, 1) != 1)
+	        	{
+	        		Data.Tab.setPosition(0);
+	        		return null;
+	        	}
+	        	proc.write(lcms2_internal.FROM_8_TO_16(v), true);
+	        }
+	        Data.Tab.setPosition(0);
+	    }
+	    else
+	    {
+	        if (Precision[0] == 2)
+	        {
+	            if (!cmsplugin._cmsReadUInt16Array(io, Data.nEntries, Data.Tab))
+	            {
+	            	return null;
+	            }
+	        }
+	    }
+	    else
+	    {
+	        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknow precision of '%d'", new Object[]{new Integer(Precision[0])}); 
+	        return null;
+	    }
+	    
+	    return CLUT;
+	}
+	
+	private static cmsToneCurve ReadEmbeddedCurve(cmsTagTypeHandler self, cmsIOHANDLER io)
+	{
+	    int BaseType;
+	    int[] nItems = new int[1];
+	    
+	    BaseType = cmsplugin._cmsReadTypeBase(io);       
+	    switch (BaseType)
+	    {
+            case lcms2.cmsSigCurveType:
+                return (cmsToneCurve)Type_Curve_Read(self, io, nItems, 0);
+            case lcms2.cmsSigParametricCurveType:
+                return (cmsToneCurve)Type_ParametricCurve_Read(self, io, nItems, 0);
+            default: 
+	            {
+	                StringBuffer String = new StringBuffer(4);
+	                
+	                cmserr._cmsTagSignature2String(String, BaseType);
+	                cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknow curve type '%s'", new Object[]{String});
+	            }
+	            return null;
+	    }
+	}
+	
+	// Read a set of curves from specific offset
+	private static cmsStage ReadSetOfCurves(cmsTagTypeHandler self, cmsIOHANDLER io, int Offset, int nCurves)
+	{
+		cmsToneCurve[] Curves = new cmsToneCurve[lcms2.cmsMAXCHANNELS];
+		int i;
+	    cmsStage Lin;
+	    
+	    if (nCurves > lcms2.cmsMAXCHANNELS)
+	    {
+	    	return false;
+	    }
+	    
+	    if (!io.Seek.run(io, Offset))
+	    {
+	    	return false;
+	    }
+	    
+	    for (i = 0; i < nCurves; i++)
+	    {
+	        Curves[i] = ReadEmbeddedCurve(self, io);                     
+	        if (Curves[i] == null)
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsReadAlignment(io))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    Lin = cmslut.cmsStageAllocToneCurves(self.ContextID, nCurves, Curves);
+	    
+	    for (i = 0; i < nCurves; i++)
+	    {
+	    	cmsgamma.cmsFreeToneCurve(Curves[i]);
+	    }
+	    
+	    return Lin;
+	}
+	
+	// LutAtoB type 
+	
+	// This structure represents a colour transform. The type contains up to five processing 
+	// elements which are stored in the AtoBTag tag in the following order: a set of one 
+	// dimensional curves, a 3 by 3 matrix with offset terms, a set of one dimensional curves, 
+	// a multidimensional lookup table, and a set of one dimensional output curves.
+	// Data are processed using these elements via the following sequence:
+	//
+	//("A" curves) -> (multidimensional lookup table - CLUT) -> ("M" curves) -> (matrix) -> ("B" curves).
+	//
+	/*
+	It is possible to use any or all of these processing elements. At least one processing element 
+	must be included.Only the following combinations are allowed:
+	
+	B
+	M - Matrix - B
+	A - CLUT - B
+	A - CLUT - M - Matrix - B
+	
+	*/
+	
+	private static Object Type_LUTA2B_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		int      BaseOffset;
+	    byte     inputChan;      // Number of input channels
+	    byte     outputChan;     // Number of output channels
+	    int      offsetB;        // Offset to first "B" curve
+	    int      offsetMat;      // Offset to matrix
+	    int      offsetM;        // Offset to first "M" curve
+	    int      offsetC;        // Offset to CLUT
+	    int      offsetA;        // Offset to first "A" curve
+	    cmsStage mpe;
+	    cmsPipeline NewLUT = null;
+	    
+	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    
+	    byte[] temp = new byte[1];
+	    if (!cmsplugin._cmsReadUInt8Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    inputChan = temp[0];
+	    if (!cmsplugin._cmsReadUInt8Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    outputChan = temp[0];
+	    
+	    if (!cmsplugin._cmsReadUInt16Number(io, null))
+	    {
+	    	return null;
+	    }
+	    
+	    int[] temp2 = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
+	    {
+	    	return null;
+	    }
+	    offsetB = temp2[0];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
+	    {
+	    	return null;
+	    }
+	    offsetMat = temp2[0];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
+	    {
+	    	return null;
+	    }
+	    offsetM = temp2[0];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
+	    {
+	    	return null;
+	    }
+	    offsetC = temp2[0];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
+	    {
+	    	return null;
+	    }
+	    offsetA = temp2[0];
+	    
+	    // Allocates an empty LUT
+	    NewLUT = cmsPipelineAlloc(self.ContextID, inputChan, outputChan);
+	    if (NewLUT == null)
+	    {
+	    	return null;
+	    }
+	    
+	    if (offsetA!= 0)
+	    {
+	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetA, inputChan);
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	    }
+	    
+	    if (offsetC != 0)
+	    {
+	        mpe = ReadCLUT(self, io, BaseOffset + offsetC, inputChan, outputChan);
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	    }
+	    
+	    if (offsetM != 0)
+	    {
+	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetM, outputChan);
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	    }
+	    
+	    if (offsetMat != 0)
+	    {           
+	        mpe = ReadMatrix(self, io, BaseOffset + offsetMat);
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	    }
+	    
+	    if (offsetB != 0)
+	    {                                        
+	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetB, outputChan);
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	    }
+	    
+	    nItems[0] = 1;
+	    return NewLUT;
+	}
+	
+	// Write a set of curves
+	private static boolean WriteMatrix(cmsTagTypeHandler self, cmsIOHANDLER io, cmsStage mpe)
+	{   
+	    _cmsStageMatrixData m = (_cmsStageMatrixData)mpe.Data;
+	    
+	    // Write the Matrix
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Double[0]))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Double[1]))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Double[2]))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Double[3]))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Double[4]))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Double[5]))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Double[6]))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Double[7]))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Double[8]))
+	    {
+	    	return false;
+	    }
+	    
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Offset[0]))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Offset[1]))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Offset[2]))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	// Write a set of curves
+	private static boolean WriteSetOfCurves(cmsTagTypeHandler self, cmsIOHANDLER io, int Type, cmsStage mpe)
+	{   
+	    int i, n;
+	    int CurrentType;
+	    cmsToneCurve[] Curves;
+	    
+	    n      = cmslut.cmsStageOutputChannels(mpe);
+	    Curves = cmslut._cmsStageGetPtrToCurveSet(mpe);
+	    
+	    for (i = 0; i < n; i++)
+	    {
+	        // If this is a table-based curve, use curve type even on V4
+	        CurrentType = Type;
+	        
+	        if (Curves[i].nSegments == 0)
+	        {
+	        	CurrentType = lcms2.cmsSigCurveType;
+	        }
+	        else
+	        {
+	        	if (Curves[i].Segments[0].Type < 0)
+	        	{
+	        		CurrentType = lcms2.cmsSigCurveType;
+	        	}
+	        }
+	        
+	        if (!cmsplugin._cmsWriteTypeBase(io, CurrentType))
+	        {
+	        	return false;
+	        }
+	        
+	        switch (CurrentType)
+	        {
+	            case lcms2.cmsSigCurveType:
+	                if (!Type_Curve_Write(self, io, Curves[i], 1))
+	                {
+	                	return false;
+	                }
+	                break;
+	            case lcms2.cmsSigParametricCurveType:
+	                if (!Type_ParametricCurve_Write(self, io, Curves[i], 1))
+	                {
+	                	return false;
+	                }
+	                break;
+	            default:
+	                {
+	                	StringBuffer String = new StringBuffer(4);
+	                    
+	                    cmserr._cmsTagSignature2String(String, Type);
+	                    cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknow curve type '%s'", new Object[]{String});
+	                }
+	                return false;
+	        }
+	        
+	        if (!cmsplugin._cmsWriteAlignment(io))
+	        {
+	        	return false;
+	        }
+	    }
+	    
+	    return true;
+	}
+	
+	private static boolean WriteCLUT(cmsTagTypeHandler self, cmsIOHANDLER io, byte Precision, cmsStage mpe)
+	{
+		byte[] gridPoints = new byte[lcms2.cmsMAXCHANNELS]; // Number of grid points in each dimension.
+	    int i;    
+	    _cmsStageCLutData CLUT = ( _cmsStageCLutData)mpe.Data;
+	    
+	    for (i = 0; i < CLUT.Params.nInputs; i++)
+	    {
+	    	gridPoints[i] = (byte)CLUT.Params.nSamples[i];
+	    }
+	    
+	    if (!io.Write.run(io, lcms2.cmsMAXCHANNELS * /*sizeof(cmsUInt8Number)*/1, gridPoints))
+	    {
+	    	return false;
+	    }
+	    
+	    if (!cmsplugin._cmsWriteUInt8Number(io, Precision))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt8Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt8Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt8Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    
+	    // Precision can be 1 or 2 bytes
+	    if (Precision == 1)
+	    {
+	    	VirtualPointer.TypeProcessor proc = CLUT.Tab.getProcessor();
+	        for (i = 0; i < CLUT.nEntries; i++)
+	        {
+	            if (!cmsplugin._cmsWriteUInt8Number(io, lcms2_internal.FROM_16_TO_8(proc.readInt16(true))))
+	            {
+	            	CLUT.Tab.setPosition(0);
+	            	return false;                
+	            }
+	        }
+	        CLUT.Tab.setPosition(0);
+	    }
+	    else
+	    {
+	        if (Precision == 2)
+	        {
+	            if (!cmsplugin._cmsWriteUInt16Array(io, CLUT.nEntries, CLUT.Tab))
+	            {
+	            	return false;
+	            }
+	        }
+	        else
+	        {
+	        	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknow precision of '%d'", new Object[]{new Byte(Precision)});
+	            return false;
+	        }
+	    }
+	    
+	    if (!cmsplugin._cmsWriteAlignment(io))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static boolean Type_LUTA2B_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		cmsPipeline Lut = (cmsPipeline)Ptr;
+	    int inputChan, outputChan;
+	    cmsStage A = null, B = null, M = null;
+	    cmsStage Matrix = null;
+	    cmsStage CLUT = null;
+	    int offsetB = 0, offsetMat = 0, offsetM = 0, offsetC = 0, offsetA = 0;
+	    int BaseOffset, DirectoryPos, CurrentPos;
+	    
+	    // Get the base for all offsets
+	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    
+	    if (Lut.Elements != null)
+	    {
+	    	Object[] args = new Object[5 * 2]{new Integer(lcms2.cmsSigCurveSetElemType)};
+	        if (!cmslut.cmsPipelineCheckAndRetreiveStages(Lut, 1, args))
+	        {
+	        	//args[0] = new Integer(lcms2.cmsSigCurveSetElemType);
+	        	args[1] = new Integer(lcms2.cmsSigMatrixElemType);
+	        	args[2] = new Integer(lcms2.cmsSigCurveSetElemType);
+	            if (!cmslut.cmsPipelineCheckAndRetreiveStages(Lut, 3, args))
+	            {
+	            	//args[0] = new Integer(lcms2.cmsSigCurveSetElemType);
+		        	args[1] = new Integer(lcms2.cmsSigCLutElemType);
+		        	//args[2] = new Integer(lcms2.cmsSigCurveSetElemType);
+	                if (!cmslut.cmsPipelineCheckAndRetreiveStages(Lut, 3, args))
+	                {
+	                	//args[0] = new Integer(lcms2.cmsSigCurveSetElemType);
+			        	//args[1] = new Integer(lcms2.cmsSigCLutElemType);
+			        	//args[2] = new Integer(lcms2.cmsSigCurveSetElemType);
+			        	args[3] = new Integer(lcms2.cmsSigMatrixElemType);
+			        	args[4] = new Integer(lcms2.cmsSigCurveSetElemType);
+	                    if (!cmslut.cmsPipelineCheckAndRetreiveStages(Lut, 5, args))
+	                    {
+	                    	lcms2.cmsSignalError(self.ContextID, lcms2.cmsERROR_NOT_SUITABLE, "LUT is not suitable to be saved as LutAToB", null);
+	                    	return false;
+	                    }
+	                    else
+				        {
+				        	A = (cmsStage)args[5];
+				        	CLUT = (cmsStage)args[6];
+				        	M = (cmsStage)args[7];
+				        	Matrix = (cmsStage)args[8];
+				        	B = (cmsStage)args[9];
+				        }
+	                }
+	                else
+			        {
+			        	A = (cmsStage)args[3];
+			        	CLUT = (cmsStage)args[4];
+			        	B = (cmsStage)args[5];
+			        }
+	            }
+	            else
+		        {
+		        	M = (cmsStage)args[3];
+		        	Matrix = (cmsStage)args[4];
+		        	B = (cmsStage)args[5];
+		        }
+	        }
+	        else
+	        {
+	        	B = (cmsStage)args[1];
+	        }
+	    }
+	    
+	    // Get input, output channels
+	    inputChan  = cmslut.cmsPipelineInputChannels(Lut);
+	    outputChan = cmslut.cmsPipelineOutputChannels(Lut);
+	    
+	    // Write channel count
+	    if (!cmsplugin._cmsWriteUInt8Number(io, (byte)inputChan))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt8Number(io, (byte)outputChan))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt16Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    
+	    // Keep directory to be filled latter
+	    DirectoryPos = io.Tell.run(io);
+	    
+	    // Write the directory
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    {
+	    	return false;
+	    }
+
+	    if (A != null)
+	    {
+	        offsetA = io.Tell.run(io) - BaseOffset;
+	        if (!WriteSetOfCurves(self, io, lcms2.cmsSigParametricCurveType, A))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    if (CLUT != null)
+	    {
+	        offsetC = io.Tell.run(io) - BaseOffset;
+	        if (!WriteCLUT(self, io, Lut.SaveAs8Bits ? 1 : 2, CLUT))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    if (M != null)
+	    {
+	        offsetM = io.Tell.run(io) - BaseOffset;
+	        if (!WriteSetOfCurves(self, io, lcms2.cmsSigParametricCurveType, M))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    if (Matrix != null)
+	    {
+	        offsetMat = io.Tell.run(io) - BaseOffset;
+	        if (!WriteMatrix(self, io, Matrix))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    if (B != null)
+	    {
+	        offsetB = io.Tell.run(io) - BaseOffset;
+	        if (!WriteSetOfCurves(self, io, lcms2.cmsSigParametricCurveType, B))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    CurrentPos = io.Tell.run(io);
+	    
+	    if (!io.Seek.run(io, DirectoryPos))
+	    {
+	    	return false;
+	    }
+
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetB))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetMat))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetM))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetC))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetA))
+	    {
+	    	return false;
+	    }
+	    
+	    if (!io.Seek.run(io, CurrentPos))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_LUTA2B_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmslut.cmsPipelineDup((cmsPipeline)Ptr);
+	}
+	
+	private static void Type_LUTA2B_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmslut.cmsPipelineFree((cmsPipeline)Ptr);
+	}
+	
+	// LutBToA type
+	
+	private static Object Type_LUTB2A_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		byte     inputChan;      // Number of input channels
+	    byte     outputChan;     // Number of output channels
+		int      BaseOffset;     // Actual position in file
+	    int      offsetB;        // Offset to first "B" curve
+	    int      offsetMat;      // Offset to matrix
+	    int      offsetM;        // Offset to first "M" curve
+	    int      offsetC;        // Offset to CLUT
+	    int      offsetA;        // Offset to first "A" curve
+	    cmsStage mpe;
+	    cmsPipeline NewLUT = null;
+	    
+	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    
+	    byte[] temp = new byte[1];
+	    if (!cmsplugin._cmsReadUInt8Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    inputChan = temp[0];
+	    if (!cmsplugin._cmsReadUInt8Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    outputChan = temp[0];
+	    
+	    // Padding
+	    if (!cmsplugin._cmsReadUInt16Number(io, null))
+	    {
+	    	return null;
+	    }
+	    
+	    int[] temp2 = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
+	    {
+	    	return null;
+	    }
+	    offsetB = temp2[0];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
+	    {
+	    	return null;
+	    }
+	    offsetMat = temp2[0];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
+	    {
+	    	return null;
+	    }
+	    offsetM = temp2[0];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
+	    {
+	    	return null;
+	    }
+	    offsetC = temp2[0];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
+	    {
+	    	return null;
+	    }
+	    offsetA = temp2[0];
+	    
+	    // Allocates an empty LUT
+	    NewLUT = cmsPipelineAlloc(self.ContextID, inputChan, outputChan);
+	    if (NewLUT == null)
+	    {
+	    	return null;
+	    }
+	    
+	    if (offsetB != 0)
+	    {                                        
+	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetB, outputChan);
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	    }
+	    
+	    if (offsetMat != 0)
+	    {           
+	        mpe = ReadMatrix(self, io, BaseOffset + offsetMat);
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	    }
+	    
+	    if (offsetM != 0)
+	    {
+	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetM, outputChan);
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	    }
+	    
+	    if (offsetC != 0)
+	    {
+	        mpe = ReadCLUT(self, io, BaseOffset + offsetC, inputChan, outputChan);
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	    }
+	    
+	    if (offsetA!= 0)
+	    {
+	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetA, inputChan);
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	    }
+	    
+	    nItems[0] = 1;
+	    return NewLUT;
+	}
+	
+	/*
+	B
+	B - Matrix - M
+	B - CLUT - A
+	B - Matrix - M - CLUT - A
+	*/
+	
+	private static boolean Type_LUTB2A_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		cmsPipeline Lut = (cmsPipeline)Ptr;
+	    int inputChan, outputChan;
+	    cmsStage A = null, B = null, M = null;
+	    cmsStage Matrix = null;
+	    cmsStage CLUT = null;
+	    int offsetB = 0, offsetMat = 0, offsetM = 0, offsetC = 0, offsetA = 0;
+	    int BaseOffset, DirectoryPos, CurrentPos;
+	    
+	    
+	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    
+	    if (Lut.Elements != null)
+	    {
+	    	Object[] args = new Object[5 * 2]{new Integer(lcms2.cmsSigCurveSetElemType)};
+	        if (!cmslut.cmsPipelineCheckAndRetreiveStages(Lut, 1, args))
+	        {
+	        	//args[0] = new Integer(lcms2.cmsSigCurveSetElemType);
+	        	args[1] = new Integer(lcms2.cmsSigMatrixElemType);
+	        	args[2] = new Integer(lcms2.cmsSigCurveSetElemType);
+	            if (!cmslut.cmsPipelineCheckAndRetreiveStages(Lut, 3, args))
+	            {
+	            	//args[0] = new Integer(lcms2.cmsSigCurveSetElemType);
+		        	args[1] = new Integer(lcms2.cmsSigCLutElemType);
+		        	//args[2] = new Integer(lcms2.cmsSigCurveSetElemType);
+	                if (!cmslut.cmsPipelineCheckAndRetreiveStages(Lut, 3, args))
+	                {
+	                	//args[0] = new Integer(lcms2.cmsSigCurveSetElemType);
+	                	args[1] = new Integer(lcms2.cmsSigMatrixElemType);
+			        	//args[2] = new Integer(lcms2.cmsSigCurveSetElemType);
+			        	args[3] = new Integer(lcms2.cmsSigCLutElemType);
+			        	args[4] = new Integer(lcms2.cmsSigCurveSetElemType);
+	                    if (!cmslut.cmsPipelineCheckAndRetreiveStages(Lut, 5, args))
+	                    {
+	                    	lcms2.cmsSignalError(self.ContextID, lcms2.cmsERROR_NOT_SUITABLE, "LUT is not suitable to be saved as LutBToA", null);
+	                    	return false;
+	                    }
+	                    else
+				        {
+				        	B = (cmsStage)args[5];
+				        	Matrix = (cmsStage)args[6];
+				        	M = (cmsStage)args[7];
+				        	CLUT = (cmsStage)args[8];
+				        	A = (cmsStage)args[9];
+				        }
+	                }
+	                else
+			        {
+			        	B = (cmsStage)args[3];
+			        	CLUT = (cmsStage)args[4];
+			        	A = (cmsStage)args[5];
+			        }
+	            }
+	            else
+		        {
+		        	B = (cmsStage)args[3];
+		        	Matrix = (cmsStage)args[4];
+		        	M = (cmsStage)args[5];
+		        }
+	        }
+	        else
+	        {
+	        	B = (cmsStage)args[1];
+	        }
+	    }
+	    
+	    // Get input, output channels
+	    inputChan  = cmslut.cmsPipelineInputChannels(Lut);
+	    outputChan = cmslut.cmsPipelineOutputChannels(Lut);
+	    
+	    if (!cmsplugin._cmsWriteUInt8Number(io, (byte)inputChan))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt8Number(io, (byte)outputChan))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt16Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    
+	    DirectoryPos = io.Tell.run(io);
+	    
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    {
+	    	return false;
+	    }
+
+	    if (A != null)
+	    {
+	        offsetA = io.Tell.run(io) - BaseOffset;
+	        if (!WriteSetOfCurves(self, io, lcms2.cmsSigParametricCurveType, A))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    if (CLUT != null)
+	    {
+	        offsetC = io.Tell.run(io) - BaseOffset;
+	        if (!WriteCLUT(self, io, Lut.SaveAs8Bits ? 1 : 2, CLUT))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    if (M != null)
+	    {
+	        offsetM = io.Tell.run(io) - BaseOffset;
+	        if (!WriteSetOfCurves(self, io, lcms2.cmsSigParametricCurveType, M))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    if (Matrix != null)
+	    {
+	        offsetMat = io.Tell.run(io) - BaseOffset;
+	        if (!WriteMatrix(self, io, Matrix))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    if (B != null)
+	    {
+	        offsetB = io.Tell.run(io) - BaseOffset;
+	        if (!WriteSetOfCurves(self, io, lcms2.cmsSigParametricCurveType, B))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    CurrentPos = io.Tell.run(io);
+	    
+	    if (!io.Seek.run(io, DirectoryPos))
+	    {
+	    	return false;
+	    }
+
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetB))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetMat))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetM))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetC))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetA))
+	    {
+	    	return false;
+	    }
+	    
+	    if (!io.Seek.run(io, CurrentPos))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_LUTB2A_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmslut.cmsPipelineDup((cmsPipeline)Ptr);
+	}
+	
+	private static void Type_LUTB2A_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmslut.cmsPipelineFree((cmsPipeline)Ptr);
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigColorantTableType
+	// ********************************************************************************
+	/*
+	The purpose of this tag is to identify the colorants used in the profile by a 
+	unique name and set of XYZ or L*a*b* values to give the colorant an unambiguous 
+	value. The first colorant listed is the colorant of the first device channel of
+	a lut tag. The second colorant listed is the colorant of the second device channel
+	of a lut tag, and so on.
+	*/
+	
+	private static Object Type_ColorantTable_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		int i, Count;
+	    cmsNAMEDCOLORLIST List;
+	    VirtualPointer Name = new VirtualPointer(34);
+	    short[] PCS = new short[3];
+	    
+	    int[] temp = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    Count = temp[0];
+	    
+	    if (Count > lcms2.cmsMAXCHANNELS)
+	    {
+	        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_RANGE, "Too many colorants '%d'", new Object[]{new Integer(Count)});
+	        return null;
+	    }
+	    
+	    List = cmsnamed.cmsAllocNamedColorList(self.ContextID, Count, 0, "", "");
+	    for (i = 0; i < Count; i++)
+	    {
+	        if (io.vpRead(io, Name, 32, 1) != 1)
+	        {
+	        	nItems[0] = 0;
+	    	    cmsnamed.cmsFreeNamedColorList(List);
+	    	    return null;
+	        }
+	        
+	        if (!cmsplugin._cmsReadUInt16Array(io, 3, PCS))
+	        {
+	        	nItems[0] = 0;
+	    	    cmsnamed.cmsFreeNamedColorList(List);
+	    	    return null;
+	        }
+	        
+	        if (!cmsnamed.cmsAppendNamedColor(List, Name.getProcessor().readString(false, false), PCS, null))
+	        {
+	        	nItems[0] = 0;
+	    	    cmsnamed.cmsFreeNamedColorList(List);
+	    	    return null;
+	        }
+	    }
+
+	    nItems[0] = 1;
+	    return List;
+	}
+	
+	// Saves a colorant table. It is using the named color structure for simplicity sake
+	private static boolean Type_ColorantTable_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		cmsNAMEDCOLORLIST NamedColorList = (cmsNAMEDCOLORLIST)Ptr; 
+	    int i, nColors;
+	    
+	    nColors = cmsnamed.cmsNamedColorCount(NamedColorList);
+	    
+	    if (!cmsplugin._cmsWriteUInt32Number(io, nColors))
+	    {
+	    	return false;
+	    }
+
+	    for (i = 0; i < nColors; i++)
+	    {
+	    	StringBuffer root = new StringBuffer(new String(new char[33]));
+	        short[] PCS = new short[3];
+	        
+	        if (!cmsnamed.cmsNamedColorInfo(NamedColorList, i, root, null, null, PCS, null))
+	        {
+	        	return false;
+	        }
+	        root.setCharAt(32, '\0');
+	        
+	        if (!io.Write.run(io, 32, root.toString().getBytes()))
+	        {
+	        	return false;
+	        }
+	        if (!cmsplugin._cmsWriteUInt16Array(io, 3, PCS))
+	        {
+	        	return false;
+	        }
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_ColorantTable_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		cmsNAMEDCOLORLIST nc = (cmsNAMEDCOLORLIST)Ptr;
+	    return cmsnamed.cmsDupNamedColorList(nc);
+	}
+	
+	private static void Type_ColorantTable_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmsnamed.cmsFreeNamedColorList((cmsNAMEDCOLORLIST)Ptr);
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigNamedColor2Type
+	// ********************************************************************************
+	//
+	//The namedColor2Type is a count value and array of structures that provide color 
+	//coordinates for 7-bit ASCII color names. For each named color, a PCS and optional 
+	//device representation of the color are given. Both representations are 16-bit values. 
+	//The device representation corresponds to the header’s “color space of data” field. 
+	//This representation should be consistent with the “number of device components”
+	//field in the namedColor2Type. If this field is 0, device coordinates are not provided.
+	//The PCS representation corresponds to the header’s PCS field. The PCS representation 
+	//is always provided. Color names are fixed-length, 32-byte fields including null 
+	//termination. In order to maintain maximum portability, it is strongly recommended 
+	//that special characters of the 7-bit ASCII set not be used.
+	
+	private static Object Type_NamedColor_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		int vendorFlag;									// Bottom 16 bits for ICC use 
+		int count;										// Count of named colors 
+		int nDeviceCoords;								// Num of device coordinates 
+	    VirtualPointer prefix = new VirtualPointer(32);	// Prefix for each color name 
+	    VirtualPointer suffix = new VirtualPointer(32);	// Suffix for each color name 
+	    cmsNAMEDCOLORLIST v;
+	    int i;
+	    
+	    nItems[0] = 0;
+	    int[] temp = new int[1];
+	    if (!_cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    vendorFlag = temp[0];
+	    if (!_cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    count = temp[0];
+	    if (!_cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    nDeviceCoords = temp[0];
+	    
+	    if (io.vpRead(io, prefix, 32, 1) != 1)
+	    {
+	    	return null;
+	    }
+	    if (io.vpRead(io, suffix, 32, 1) != 1)
+	    {
+	    	return null;
+	    }
+	    
+	    prefix.writeRaw(0, 31);
+	    suffix.writeRaw(0, 31);
+	    
+	    v = cmsnamed.cmsAllocNamedColorList(self.ContextID, count, nDeviceCoords, prefix, suffix);
+	    if (v == null)
+	    {
+	    	return null;
+	    }
+	    
+	    if (nDeviceCoords > lcms2.cmsMAXCHANNELS)
+	    {
+	        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_RANGE, "Too many device coordinates '%d'", new Object[]{new Integer(nDeviceCoords)});
+	        return false;
+	    }
+	    for (i = 0; i < count; i++)
+	    {
+	        short[] PCS = new short[3];
+	        short[] Colorant = new short[lcms2.cmsMAXCHANNELS];
+	        VirtualPointer Root = new VirtualPointer(33);
+	        
+	        if (io.vpRead(io, Root, 32, 1) != 1)
+		    {
+		    	return null;
+		    }
+	        if (!cmsplugin._cmsReadUInt16Array(io, 3, PCS))
+	        {
+	        	cmsnamed.cmsFreeNamedColorList(v);
+	    	    return null;
+	        }
+	        if (!cmsplugin._cmsReadUInt16Array(io, nDeviceCoords, Colorant))
+	        {
+	        	cmsnamed.cmsFreeNamedColorList(v);
+	    	    return null;
+	        }
+	        
+	        if (!cmsnamed.cmsAppendNamedColor(v, Root.getProcessor().readString(false, false), PCS, Colorant))
+	        {
+	        	cmsnamed.cmsFreeNamedColorList(v);
+	    	    return null;
+	        }
+	    }
+	    
+	    nItems[0] = 1;
+	    return v;
+	}
+	
+	// Saves a named color list into a named color profile
+	private static boolean Type_NamedColor_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		cmsNAMEDCOLORLIST NamedColorList = (cmsNAMEDCOLORLIST)Ptr;
+		VirtualPointer prefix = new VirtualPointer(32); // Prefix for each color name 
+		VirtualPointer suffix = new VirtualPointer(32); // Suffix for each color name 
+	    int i, nColors;
+	    
+	    nColors = cmsnamed.cmsNamedColorCount(NamedColorList);
+	    
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, nColors))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, NamedColorList.ColorantCount))
+	    {
+	    	return false;
+	    }
+	    
+	    prefix.getProcessor().write(NamedColorList.Prefix, false, false, false);
+	    suffix.getProcessor().write(NamedColorList.Suffix, false, false, false);
+	    
+	    if (!io.vpWrite(io, 32, prefix))
+	    {
+	    	return false;
+	    }
+	    if (!io.vpWrite(io, 32, suffix))
+	    {
+	    	return false;
+	    }
+	    
+	    for (i = 0; i < nColors; i++)
+	    {
+	    	short[] PCS = new short[3];
+	    	short[] Colorant = new short[lcms2.cmsMAXCHANNELS];
+	    	StringBuffer Root = new StringBuffer(new String(new char[33]));
+	    	
+	    	if (!cmsnamed.cmsNamedColorInfo(NamedColorList, i, Root, null, null, PCS, Colorant))
+		    {
+		    	return false;
+		    }
+	    	if (!io.Write.run(io, 32, Root.toString().getBytes()))
+		    {
+		    	return false;
+		    }
+	    	if (!cmsplugin._cmsWriteUInt16Array(io, 3, PCS))
+		    {
+		    	return false;
+		    }
+	    	if (!cmsplugin._cmsWriteUInt16Array(io, NamedColorList.ColorantCount, Colorant))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_NamedColor_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		cmsNAMEDCOLORLIST nc = (cmsNAMEDCOLORLIST)Ptr;
+		
+	    return cmsnamed.cmsDupNamedColorList(nc);
+	}
+	
+	private static void Type_NamedColor_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmsnamed.cmsFreeNamedColorList((cmsNAMEDCOLORLIST)Ptr);
+	}
+	
+	//TODO #3046
 }

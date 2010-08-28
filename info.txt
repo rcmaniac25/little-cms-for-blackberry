@@ -1,12 +1,10 @@
 TODO:
-Implement actual code | As coding occurs, replace general types with VirtualPointer | Get VirtualPointer to a working state (should handle different types, be able to work like a actual generic [void*] pointer)
+Implement actual code | Update VirtualPointer so it can work with arrays, this will take some work and might not work right away so do some research
 **
 cmstypes
-	11-31 types
+	20-31 types //NamedColor
 cmswtpnt
-cmsplugin
 cmspack
-cmsmd5
 cmspcs
 cmsxform
 cmscgats

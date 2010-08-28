@@ -29,6 +29,7 @@ package littlecms.internal;
 
 import java.util.Calendar;
 
+import littlecms.internal.helper.BitConverter;
 import littlecms.internal.helper.Stream;
 import littlecms.internal.helper.VirtualPointer;
 
@@ -374,7 +375,7 @@ public class lcms2
     		short[] id = new short[8];
     		for(int i = 0, k = 0; i < 8; i++, k += 2)
     		{
-    			id[i] = getShort(this.data, k);
+    			id[i] = BitConverter.toInt16(this.data, k);
     		}
     		return id;
     	}
@@ -383,7 +384,8 @@ public class lcms2
     	{
     		for(int i = 0, k = 0; i < 8; i++, k += 2)
     		{
-    			getBytes(data[i], this.data, k);
+    			byte[] temp = BitConverter.getBytes(data[i]);
+    			System.arraycopy(temp, 0, this.data, k, 2);
     		}
     	}
     	
@@ -392,7 +394,7 @@ public class lcms2
     		int[] id = new int[4];
     		for(int i = 0, k = 0; i < 4; i++, k += 4)
     		{
-    			id[i] = getInt(this.data, k);
+    			id[i] = BitConverter.toInt32(this.data, k);
     		}
     		return id;
     	}
@@ -401,33 +403,10 @@ public class lcms2
     	{
     		for(int i = 0, k = 0; i < 4; i++, k += 4)
     		{
-    			getBytes(data[i], this.data, k);
+    			byte[] temp = BitConverter.getBytes(data[i]);
+    			System.arraycopy(temp, 0, this.data, k, 4);
     		}
     	}
-    }
-    
-    public static short getShort(byte[] data, int index)
-    {
-    	return (short)(((data[index + 1] & 0xFF) << 8) | (data[index] & 0xFF));
-    }
-    
-    public static void getBytes(short value, byte[] data, int index)
-    {
-    	data[index] = (byte)(value & 0xFF);
-    	data[index + 1] = (byte)((value >> 8) & 0xFF);
-    }
-    
-    public static int getInt(byte[] data, int index)
-    {
-    	return ((data[index + 3] & 0xFF) << 24) | ((data[index + 2] & 0xFF) << 16) | ((data[index + 1] & 0xFF) << 8) | (data[index] & 0xFF);
-    }
-    
-    public static void getBytes(int value, byte[] data, int index)
-    {
-    	data[index] = (byte)(value & 0xFF);
-    	data[index + 1] = (byte)((value >> 8) & 0xFF);
-    	data[index + 2] = (byte)((value >> 16) & 0xFF);
-    	data[index + 3] = (byte)((value >> 24) & 0xFF);
     }
     
     // ----------------------------------------------------------------------------------------------
@@ -878,6 +857,8 @@ public class lcms2
 	
 	public static class cmsICCMeasurementConditions
 	{
+		public static final int SIZE = 4 + cmsCIEXYZ.SIZE + 4 + 8 + 4;
+		
 		/** 0 = unknown, 1=CIE 1931, 2=CIE 1964*/
 		public int Observer;
 		/** Value of backing*/

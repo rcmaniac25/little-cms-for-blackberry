@@ -1,3 +1,5 @@
+//#preprocessor
+
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
@@ -25,7 +27,10 @@
 //
 package littlecms.internal;
 
-class cmspcs
+//#ifdef CMS_INTERNAL_ACCESS & DEBUG
+public
+//#endif
+final class cmspcs
 {
 	//  inter PCS conversions XYZ <-> CIE L* a* b*
 	/*

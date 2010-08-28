@@ -62,7 +62,10 @@ import littlecms.internal.lcms2_plugin.cmsTagTypeHandler;
  * header. Then, whole profile is serialized across NULL IOhandler and a second pass 
  * writes the bytes to the pertinent IOhandler.
  */
-class cmsio0
+//#ifdef CMS_INTERNAL_ACCESS & DEBUG
+public
+//#endif
+final class cmsio0
 {
 	public static class FILENULL
 	{
@@ -1510,28 +1513,24 @@ class cmsio0
 	        {
 	        	cmsCloseIOhandler(PrevIO);
 	        	//This is the equivilant of doing "memmove(&Icc, Keep, sizeof(_cmsICCPROFILE));" only it only copies over values that could have changed
-	        	System.arraycopy(Keep.TagSizes, 0, Icc.TagSizes, 0, lcms2_internal.MAX_TABLE_TAG);
-	    	    System.arraycopy(Keep.TagOffsets, 0, Icc.TagOffsets, 0, lcms2_internal.MAX_TABLE_TAG);
+	        	vp.getProcessor().readObject(_cmsICCPROFILE.class, false, Icc);
 	    	    return 0;
 	        }
 	        if (!_cmsWriteHeader(Icc, UsedSpace))
 	        {
 	        	cmsCloseIOhandler(PrevIO);
-	        	System.arraycopy(Keep.TagSizes, 0, Icc.TagSizes, 0, lcms2_internal.MAX_TABLE_TAG);
-	    	    System.arraycopy(Keep.TagOffsets, 0, Icc.TagOffsets, 0, lcms2_internal.MAX_TABLE_TAG);
+	        	vp.getProcessor().readObject(_cmsICCPROFILE.class, false, Icc);
 	    	    return 0;
 	        }
 	        if (!SaveTags(Icc, Keep))
 	        {
 	        	cmsCloseIOhandler(PrevIO);
-	        	System.arraycopy(Keep.TagSizes, 0, Icc.TagSizes, 0, lcms2_internal.MAX_TABLE_TAG);
-	    	    System.arraycopy(Keep.TagOffsets, 0, Icc.TagOffsets, 0, lcms2_internal.MAX_TABLE_TAG);
+	        	vp.getProcessor().readObject(_cmsICCPROFILE.class, false, Icc);
 	    	    return 0;
 	        }
 	    }
 	    
-	    System.arraycopy(Keep.TagSizes, 0, Icc.TagSizes, 0, lcms2_internal.MAX_TABLE_TAG);
-	    System.arraycopy(Keep.TagOffsets, 0, Icc.TagOffsets, 0, lcms2_internal.MAX_TABLE_TAG);
+	    vp.getProcessor().readObject(_cmsICCPROFILE.class, false, Icc);
 	    if (!cmsCloseIOhandler(PrevIO))
 	    {
 	    	return 0;

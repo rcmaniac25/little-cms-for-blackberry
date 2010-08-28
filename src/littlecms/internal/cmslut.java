@@ -1,6 +1,9 @@
+//#preprocessor
+
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
+//  Copyright (c) 1998-2010 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -24,54 +27,54 @@
 //
 package littlecms.internal;
 
-import littlecms.internal.helper.VirtualPointer;
-import littlecms.internal.helper.VirtualPointer.Serializer;
+import littlecms.internal.lcms2.cmsPipeline;
+import littlecms.internal.lcms2.cmsStage;
+import littlecms.internal.lcms2_internal._cmsStage_struct;
 
-/**
- * The serializers that are used
- */
-public final class Serializers
+//#ifdef CMS_INTERNAL_ACCESS & DEBUG
+public
+//#endif
+final class cmslut
 {
-	//This class is located in the "root" internal namespace instead of the helper namespace so that it can access some internal classes
+	//TODO #30-101
 	
-	private static boolean init;
-	
-	static
+	public static boolean cmsPipelineCheckAndRetreiveStages(final cmsPipeline Lut, int n, Object[] stages)
 	{
-		init = false;
-		
-		//Native
-		//TODO Calendar
-		//TODO StringBuffer
-		
-		//LCMS
-		//TODO FILENULL
-		//TODO FILEMEM
-		//TODO cmsIOHANDLER
-		//TODO _cmsICCPROFILE
-		//TODO cmsProfileID
-		//TODO StringBuffer
-		//TODO cmsICCHeader
-		//TODO cmsDateTimeNumber
-		//TODO cmsEncodedXYZNumber
-		//TODO Stream.FileStream
-		//TODO cmsTagEntry
-		//TODO _cmsSubAllocator_chunk
-		//TODO _cmsSubAllocator
-		//TODO _cmsTagTypeLinkedList
-		//TODO cmsTagTypeHandler
-		//TODO cmsCIEXYZ
-		//TODO cmsCIExyYTRIPLE
-		//TODO cmsICCData
-		//TODO cmsICCMeasurementConditions
-		//TODO cmsMAT3
-		//TODO cmsVEC3
-		
-		init = true;
+		int i;
+	    cmsStage mpe;
+	    int Type;
+	    int stageL = 0;
+	    
+	    // Make sure same number of elements
+	    if (cmsPipelineStageCount(Lut) != n)
+	    {
+	    	return false;
+	    }
+	    
+	    // Iterate across asked types
+	    mpe = Lut.Elements;
+	    for (i = 0; i < n; i++)
+	    {
+	        // Get asked type
+	    	Type = ((Integer)stages[stageL++]).intValue();
+	        if (mpe.Type != Type)
+	        {
+	            // Mismatch. We are done.
+	            return false;
+	        }
+	        mpe = (cmsStage)mpe.Next;
+	    }
+	    
+	    // Found a combination, fill pointers if not NULL
+	    mpe = Lut.Elements;
+	    for (i = 0; i < n; i++)
+	    {
+	    	stages[stageL++] = mpe; //Usually checks to make sure destination not null but no need to here
+	        mpe = (cmsStage)mpe.Next;
+	    }
+	    
+	    return true;
 	}
 	
-	public static boolean initialize()
-	{
-		return init; //This is simply to cause the static constructor to get invoked if not already invoked
-	}
+	//TODO #152
 }

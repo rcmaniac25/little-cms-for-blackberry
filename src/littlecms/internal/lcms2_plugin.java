@@ -28,6 +28,7 @@ package littlecms.internal;
 import java.util.Calendar;
 
 import littlecms.internal.helper.VirtualPointer;
+import littlecms.internal.lcms2_internal._cmsTRANSFORM;
 
 /**
  * This is the plug-in header file. Normal LittleCMS clients should not use it.
@@ -395,7 +396,7 @@ public class lcms2_plugin extends lcms2
 	 * @param n Pointer to an object to receive the result.
 	 * @return TRUE on success, FALSE on error.
 	 */
-	public static boolean _cmsReadUInt8Number(cmsIOHANDLER io,  byte[] n)
+	public static boolean _cmsReadUInt8Number(cmsIOHANDLER io, byte[] n)
 	{
 		return cmsplugin._cmsReadUInt8Number(io, n);
 	}
@@ -570,6 +571,8 @@ public class lcms2_plugin extends lcms2
 	// ICC base tag
 	public static class _cmsTagBase
 	{
+		public static final int SIZE = 4 + 4;
+		
 		public int sig;
 		public byte[] reserved;
 		

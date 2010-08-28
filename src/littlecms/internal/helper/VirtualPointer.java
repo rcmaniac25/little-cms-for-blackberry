@@ -576,12 +576,22 @@ public class VirtualPointer
         
         public Object readObject(Class clazz, boolean inc)
         {
-            return readObject(VirtualPointer.getSerializer(clazz), inc);
+            return readObject(VirtualPointer.getSerializer(clazz), inc, null);
         }
         
         public Object readObject(Serializer ser, boolean inc)
         {
-            Object[] obj = null;
+            return readObject(ser, inc, null);
+        }
+        
+        public Object readObject(Class clazz, boolean inc, Object org)
+        {
+            return readObject(VirtualPointer.getSerializer(clazz), inc, org);
+        }
+        
+        public Object readObject(Serializer ser, boolean inc, Object org)
+        {
+            Object[] obj = org == null ? null : new Object[]{org};
             int pos = vp.dataPos;
             this.stat = ser.deserialize(this.vp, obj);
             if (this.stat == VirtualPointer.Serializer.STATUS_REQUIRES_OBJECT)
@@ -1060,6 +1070,20 @@ public class VirtualPointer
         }
     }
     
+    public int readRaw()
+    {
+    	byte[] buf = new byte[1];
+    	readRaw(buf, 0, 1);
+    	return buf[0] & 0xFF;
+    }
+    
+    public int readRaw(int directPos)
+    {
+    	byte[] buf = new byte[1];
+    	readRaw(buf, 0, 1, directPos);
+    	return buf[0] & 0xFF;
+    }
+    
     public void readRaw(byte[] buffer, int offset, int len)
     {
         readRaw(buffer, offset, len, -1);
@@ -1075,6 +1099,16 @@ public class VirtualPointer
         {
             System.arraycopy(this.data, directPos, buffer, offset, len);
         }
+    }
+    
+    public void writeRaw(int val)
+    {
+    	writeRaw(new byte[]{(byte)val}, 0, 1);
+    }
+    
+    public void writeRaw(int val, int directPos)
+    {
+    	writeRaw(new byte[]{(byte)val}, 0, 1, directPos);
     }
     
     public void writeRaw(byte[] buffer, int offset, int len)
@@ -1102,6 +1136,11 @@ public class VirtualPointer
     public void setPosition(int pos)
     {
         dataPos = pos;
+    }
+    
+    public void movePosition(int offset)
+    {
+    	dataPos += offset;
     }
     
     int getAllocLen()

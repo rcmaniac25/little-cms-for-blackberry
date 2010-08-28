@@ -1,3 +1,5 @@
+//#preprocessor
+
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
@@ -30,7 +32,10 @@ import littlecms.internal.lcms2_plugin.cmsMAT3;
 import littlecms.internal.lcms2_plugin.cmsVEC3;
 import littlecms.internal.lcms2_internal;
 
-class cmsmtrx
+//#ifdef CMS_INTERNAL_ACCESS & DEBUG
+public
+//#endif
+final class cmsmtrx
 {
 	public static void DSWAP(double[] val, int x, int y)
 	{
@@ -39,7 +44,19 @@ class cmsmtrx
 		val[y] = tmp;
 	}
 	
-	// Initiate a vector 
+	// Initiate a vector
+	public static void _cmsVEC3set(cmsVEC3 r, final double[] value, int offset)
+	{
+		_cmsVEC3init(r, value[offset], value[offset + 1], value[offset + 2]);
+	}
+	
+	public static void _cmsVEC3get(cmsVEC3 r, double[] value, int offset)
+	{
+		value[offset] = r.n[lcms2_plugin.VX];
+		value[offset + 1] = r.n[lcms2_plugin.VY];
+		value[offset + 2] = r.n[lcms2_plugin.VZ];
+	}
+	
 	public static void _cmsVEC3init(cmsVEC3 r, double x, double y, double z)
 	{
 	    r.n[lcms2_plugin.VX] = x;
@@ -88,6 +105,20 @@ class cmsmtrx
 	}
 	
 	// 3x3 Identity
+	public static void _cmsMAT3set(cmsMAT3 a, final double[] value, int offset)
+	{
+		_cmsVEC3set(a.v[0], value, offset);
+		_cmsVEC3set(a.v[1], value, offset + 3);
+		_cmsVEC3set(a.v[2], value, offset + 6);
+	}
+	
+	public static void _cmsMAT3get(cmsMAT3 a, double[] value, int offset)
+	{
+		_cmsVEC3get(a.v[0], value, offset);
+		_cmsVEC3get(a.v[1], value, offset + 3);
+		_cmsVEC3get(a.v[2], value, offset + 6);
+	}
+	
 	public static void _cmsMAT3identity(cmsMAT3 a)
 	{
 	    _cmsVEC3init(a.v[0], 1.0, 0.0, 0.0);

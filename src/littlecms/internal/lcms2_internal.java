@@ -31,7 +31,10 @@ import java.util.Calendar;
 
 import littlecms.internal.helper.VirtualPointer;
 
-class lcms2_internal extends lcms2_plugin
+//#ifdef CMS_INTERNAL_ACCESS & DEBUG
+public
+//#endif
+final class lcms2_internal extends lcms2_plugin
 {
 	// Some needed constants
 	public static final double M_PI = Math.PI;
@@ -496,7 +499,7 @@ class lcms2_internal extends lcms2_plugin
 	public static class _cmsStageToneCurvesData
 	{
 		public int nCurves;
-		public cmsToneCurve TheCurves;
+		public cmsToneCurve[] TheCurves;
 	}
 	
 	// Matrix

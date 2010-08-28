@@ -37,7 +37,10 @@ import littlecms.internal.lcms2_internal._cmsSubAllocator_chunk;
 import littlecms.internal.lcms2_plugin.cmsPluginBase;
 import littlecms.internal.lcms2_plugin.cmsPluginMemHandler;
 
-class cmserr
+//#ifdef CMS_INTERNAL_ACCESS & DEBUG
+public
+//#endif
+final class cmserr
 {
 	// I am so tired about incompatibilities on those functions that here are some replacements
 	// that hopefully would be fully portable.
