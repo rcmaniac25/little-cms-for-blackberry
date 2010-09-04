@@ -40,11 +40,86 @@ final class cmsxform
 	//TODO: #32-94
 	
 	// Apply transform
-	public static void cmsDoTransform(cmsHTRANSFORM Transform, final VirtualPointer InputBuffer, VirtualPointer OutputBuffer, int Size)
+	public static void cmsDoTransform(cmsHTRANSFORM Transform, final Object InputBuffer, Object OutputBuffer, int Size)
 	{
 		_cmsTRANSFORM p = (_cmsTRANSFORM)Transform;
 	    
-	    p.xform.run(p, InputBuffer, OutputBuffer, Size);
+		VirtualPointer inBuf = buffer2vp(InputBuffer);
+		VirtualPointer outBuf = buffer2vp(OutputBuffer);
+	    p.xform.run(p, inBuf, outBuf, Size);
+	    vp2buffer(outBuf, OutputBuffer);
+	}
+	
+	private static VirtualPointer buffer2vp(final Object buffer)
+	{
+		if(buffer == null)
+		{
+			return null;
+		}
+		if(!buffer.getClass().isArray())
+		{
+			return ref2vp(buffer);
+		}
+		Class clazz = buffer.getClass();
+		Class nClass = null;
+		try
+		{
+			nClass = Class.forName(getBaseClass(clazz.getName()));
+		}
+		catch (ClassNotFoundException e)
+		{
+		}
+		if(nClass.isArray())
+		{
+			return null;
+		}
+		//TODO
+		return null;
+	}
+	
+	private static VirtualPointer ref2vp(final Object ref)
+	{
+		//TODO
+		return null;
+	}
+	
+	private static String getBaseClass(String clazz)
+	{
+		//Not sure if this will work, will know later
+		boolean array = false;
+		boolean obj = false;
+		int len = clazz.length();
+		for(int i = 0; i < len; i++)
+		{
+			if(!array)
+			{
+				if(clazz.charAt(i) == '[')
+				{
+					array = true;
+				}
+			}
+			else if(!obj)
+			{
+				if(clazz.charAt(i) != '[')
+				{
+					obj = true;
+				}
+			}
+			else
+			{
+				return clazz.substring(i);
+			}
+		}
+		return clazz;
+	}
+	
+	private static void vp2buffer(VirtualPointer vp, Object buffer)
+	{
+		if(vp == null)
+		{
+			return;
+		}
+		//TODO
 	}
 	
 	//TODO: #109

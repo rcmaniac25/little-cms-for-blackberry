@@ -665,12 +665,25 @@ final class lcms2_internal extends lcms2_plugin
 	
 	// LUT optimization ------------------------------------------------------------------------------------------------
 
-	public static short _cmsQuantizeVal(double i, int MaxSamples);
-	public static int _cmsReasonableGridpointsByColorspace(int Colorspace, int dwFlags);
+	public static short _cmsQuantizeVal(double i, int MaxSamples)
+	{
+		return cmslut._cmsQuantizeVal(i, MaxSamples);
+	}
 	
-	public static boolean _cmsEndPointsBySpace(int Space, short[] White, short[] Black, int[] nOutputs);
+	public static int _cmsReasonableGridpointsByColorspace(int Colorspace, int dwFlags)
+	{
+		return cmspcs._cmsReasonableGridpointsByColorspace(Colorspace, dwFlags);
+	}
 	
-	public static boolean _cmsOptimizePipeline(cmsPipeline Lut, int Intent, int[] InputFormat, int[] OutputFormat, int[] dwFlags);
+	public static boolean _cmsEndPointsBySpace(int Space, short[] White, short[] Black, int[] nOutputs)
+	{
+		return cmspcs._cmsEndPointsBySpace(Space, White, Black, nOutputs);
+	}
+	
+	public static boolean _cmsOptimizePipeline(cmsPipeline Lut, int Intent, int[] InputFormat, int[] OutputFormat, int[] dwFlags)
+	{
+		return cmsopt._cmsOptimizePipeline(Lut, Intent, InputFormat, OutputFormat, dwFlags);
+	}
 	
 	// Hi level LUT building ----------------------------------------------------------------------------------------------
 
@@ -771,24 +784,24 @@ final class lcms2_internal extends lcms2_plugin
 	
 	// --------------------------------------------------------------------------------------------------
 	
-	public cmsHTRANSFORM _cmsChain2Lab(cmsContext ContextID, int nProfiles, int InputFormat, int OutputFormat, final int[] Intents, final cmsHPROFILE[] hProfiles, 
+	public static cmsHTRANSFORM _cmsChain2Lab(cmsContext ContextID, int nProfiles, int InputFormat, int OutputFormat, final int[] Intents, final cmsHPROFILE[] hProfiles, 
 			final boolean[] BPC, final double[] AdaptationStates, int dwFlags)
 	{
 		return cmsgmt._cmsChain2Lab(ContextID, nProfiles, InputFormat, OutputFormat, Intents, hProfiles, BPC, AdaptationStates, dwFlags);
 	}
 	
-	public cmsToneCurve _cmsBuildKToneCurve(cmsContext ContextID, int nPoints, int nProfiles, final int[] Intents, final cmsHPROFILE[] hProfiles, final boolean[] BPC, 
+	public static cmsToneCurve _cmsBuildKToneCurve(cmsContext ContextID, int nPoints, int nProfiles, final int[] Intents, final cmsHPROFILE[] hProfiles, final boolean[] BPC, 
 			final double[] AdaptationStates, int dwFlags)
 	{
 		return cmsgmt._cmsBuildKToneCurve(ContextID, nPoints, nProfiles, Intents, hProfiles, BPC, AdaptationStates, dwFlags);
 	}
 	
-	public boolean _cmsAdaptationMatrix(cmsMAT3 r, final cmsMAT3 ConeMatrix, final cmsCIEXYZ FromIll, final cmsCIEXYZ ToIll)
+	public static boolean _cmsAdaptationMatrix(cmsMAT3 r, final cmsMAT3 ConeMatrix, final cmsCIEXYZ FromIll, final cmsCIEXYZ ToIll)
 	{
 		return cmswtpnt._cmsAdaptationMatrix(r, ConeMatrix, FromIll, ToIll);
 	}
 	
-	public boolean _cmsBuildRGB2XYZtransferMatrix(cmsMAT3 r, final cmsCIExyY WhitePoint, final cmsCIExyYTRIPLE Primaries)
+	public static boolean _cmsBuildRGB2XYZtransferMatrix(cmsMAT3 r, final cmsCIExyY WhitePoint, final cmsCIExyYTRIPLE Primaries)
 	{
 		return cmswtpnt._cmsBuildRGB2XYZtransferMatrix(r, WhitePoint, Primaries);
 	}

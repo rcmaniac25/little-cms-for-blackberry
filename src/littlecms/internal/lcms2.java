@@ -353,7 +353,7 @@ public class lcms2
     {
     	public static final int SIZE = 16;
     	
-    	private final byte[] data;
+    	final byte[] data;
     	
     	public cmsProfileID()
     	{
@@ -788,6 +788,18 @@ public class lcms2
 		public double X;
 		public double Y;
 		public double Z;
+		
+		public cmsCIEXYZ()
+		{
+			this(0, 0, 0);
+		}
+		
+		public cmsCIEXYZ(double X, double Y, double Z)
+		{
+			this.X = X;
+			this.Y = Y;
+			this.Z = Z;
+		}
 	}
 	
 	public static class cmsCIExyY
@@ -868,16 +880,29 @@ public class lcms2
         /** 0..1.0*/
         public double Flare;
         public int IlluminantType;
+        
+        public cmsICCMeasurementConditions()
+        {
+        	Backing = new cmsCIEXYZ();
+        }
 	}
 	
 	public static class cmsICCViewingConditions
 	{
+		public static final int SIZE = (cmsCIEXYZ.SIZE * 2) + 4;
+		
 		/** Not the same struct as CAM02,*/
 		public cmsCIEXYZ IlluminantXYZ;
 		/** This is for storing the tag*/
 		public cmsCIEXYZ SurroundXYZ;
         /** viewing condition*/
         public int IlluminantType;
+        
+        public cmsICCViewingConditions()
+        {
+        	IlluminantXYZ = new cmsCIEXYZ();
+        	SurroundXYZ = new cmsCIEXYZ();
+        }
 	}
 	
 	// Support of non-standard functions --------------------------------------------------------------------------------------
@@ -1938,8 +1963,9 @@ public class lcms2
 	
 	public static class cmsMLU extends lcms2_internal._cms_MLU_struct{}
 	
-	public static final String cmsNoLanguage = "\0\0";
-	public static final String cmsNoCountry = "\0\0";
+	//Use of static was determined by RIM development doc that stated that if "static final" then String would be allocated multiple times and need to be loaded multiple times but by using just "static" only one instance is used and always the same memory
+	public static String cmsNoLanguage = "\0\0";
+	public static String cmsNoCountry = cmsNoLanguage; //Reference since they are the same value and immutable.
 	
 	/**
 	 * Allocates an empty multilocalized unicode object.
@@ -2064,6 +2090,8 @@ public class lcms2
 	
 	public static class cmsScreeningChannel
 	{
+		public static final int SIZE = (2 * 8) + 4;
+		
 	    public double Frequency;
 	    public double ScreenAngle;
 	    public int SpotShape;
@@ -2071,6 +2099,8 @@ public class lcms2
 	
 	public static class cmsScreening
 	{
+		public static final int SIZE = (cmsMAXCHANNELS * cmsScreeningChannel.SIZE) + (2 * 4);
+		
 		public int Flag;
 		public int nChannels;
 		public cmsScreeningChannel[] Channels;
@@ -2189,17 +2219,22 @@ public class lcms2
 		public int deviceModel;
 		public long attributes;
 		public int technology;
-		public int ProfileID;
+		public cmsProfileID ProfileID;
 		public cmsMLU Manufacturer;
 		public cmsMLU Model;
 		public cmsMLU Description;
+		
+		public cmsPSEQDESC()
+		{
+			ProfileID = new cmsProfileID();
+		}
 	}
 	
 	public static class cmsSEQ
 	{
 		public int n;
 		public cmsContext ContextID;
-		public cmsPSEQDESC seq;
+		public cmsPSEQDESC[] seq;
 	}
 	
 	/**
@@ -2208,7 +2243,7 @@ public class lcms2
 	 * @param n Number of profiles in the sequence
 	 * @return A pointer to a profile sequence object on success, NULL on error.
 	 */
-	public static cmsSEQ cmsAllocProfileSequenceDescription(cmsContext ContextID, cmsUInt32Number n)
+	public static cmsSEQ cmsAllocProfileSequenceDescription(cmsContext ContextID, int n)
 	{
 		return cmsnamed.cmsAllocProfileSequenceDescription(ContextID, n);
 	}

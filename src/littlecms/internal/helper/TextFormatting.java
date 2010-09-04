@@ -40,4 +40,9 @@ public class TextFormatting
 	{
 		return 0; //TODO
 	}
+	
+	public static int printf(final String format, Object[] argptr)
+	{
+		return fprintf(System.out, format, argptr);
+	}
 }

@@ -1063,7 +1063,7 @@ public class lcms2_plugin extends lcms2
 		/** In how many types this tag can come (MAX_TYPES_IN_LCMS_PLUGIN maximum)*/
 		public int nSupportedTypes;
 	    public int[] SupportedTypes;
-
+	    
 	    // For writing
 	    public static interface tagDesDecideType
 	    {
@@ -1077,11 +1077,11 @@ public class lcms2_plugin extends lcms2
 	    	SupportedTypes = new int[MAX_TYPES_IN_LCMS_PLUGIN];
 	    }
 	    
-	    public cmsTagDescriptor(int elemCount, int[] supportedTypes, tagDesDecideType decideType)
+	    public cmsTagDescriptor(int elemCount, int typeCount, int[] supportedTypes, tagDesDecideType decideType)
 	    {
 	    	this();
 	    	this.ElemCount = elemCount;
-	    	this.nSupportedTypes = supportedTypes.length;
+	    	this.nSupportedTypes = typeCount;
 	    	System.arraycopy(supportedTypes, 0, this.SupportedTypes, 0, this.nSupportedTypes);
 	    	this.DecideType = decideType;
 	    }

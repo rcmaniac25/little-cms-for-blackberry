@@ -786,16 +786,19 @@ public class VirtualPointer
     
     public VirtualPointer set(int value, int size)
     {
-    	if(size <= 0 || dataPos > data.length)
+    	synchronized (this.data)
     	{
-    		return this;
-    	}
-    	size = Math.min(data.length, size);
-    	//Set available data
-    	byte val = (byte)value;
-    	for(int i = dataPos; i < size; i++)
-    	{
-    		data[i] = val;
+	    	if(size <= 0 || this.dataPos > this.data.length)
+	    	{
+	    		return this;
+	    	}
+	    	size = Math.min(this.data.length, size);
+	    	//Set available data
+	    	byte val = (byte)value;
+	    	for(int i = this.dataPos; i < size; i++)
+	    	{
+	    		this.data[i] = val;
+	    	}
     	}
     	return this;
     }

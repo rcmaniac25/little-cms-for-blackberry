@@ -1,16 +1,12 @@
 TODO:
 Implement actual code | Update VirtualPointer so it can work with arrays, this will take some work and might not work right away so do some research
 **
-cmstypes
-	20-31 types //NamedColor
-cmswtpnt
 cmspack
 cmspcs
 cmsxform
 cmscgats
 cmsopt
 cmsgmt
-cmssamp
 cmsio1
 cmsintrp
 cmscnvrt
@@ -30,6 +26,7 @@ Create high-level structures that handle color management in a true OOP fashion.
 
 NOTES:
 VirtualPointer piece is cumbersome but allows internal system to act more like C/C++. If used properly it should be fast and have a low overhead (except when deserializeing items).
+Strings follow the guidelines listed in "http://docs.blackberry.com/en/developers/deliverables/3299/JDE_4.5_Fundamentals_Guide.pdf" which state not to use static final for Strings because then Strings need to be loaded multiple times and multiple instances of the same String exist.
 
 Defines:
 CMS_USE_BIG_ENDIAN //Not supported because BlackBerry is little endian, just here so it is explicitly known that it isn't supported

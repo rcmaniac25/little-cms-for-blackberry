@@ -80,7 +80,7 @@ public abstract class Stream
 	
 	public static Stream fopen(final String filename, final char mode)
 	{
-		return new FileStream(filename, mode);
+		return new FileStream(filename, mode, 0);
 	}
 	
 	private static class FileStream extends Stream
@@ -95,7 +95,7 @@ public abstract class Stream
 		private long pos;
 //#endif
 		
-		public FileStream(final String filename, final char mode)
+		public FileStream(final String filename, final char mode, final long pos)
 		{
 			int iMode = Connector.READ_WRITE;
 			switch(mode)
@@ -113,10 +113,16 @@ public abstract class Stream
 				if((iMode & Connector.READ) != 0)
 				{
 					in = file.openInputStream();
+//#ifdef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+					if(pos != 0)
+					{
+						in.read(new byte[(int)pos], 0, (int)pos);
+					}
+//#endif
 				}
 				if((iMode & Connector.WRITE) != 0)
 				{
-					out = file.openOutputStream();
+					out = file.openOutputStream(pos);
 				}
 			}
 			catch (IOException e)
@@ -126,13 +132,33 @@ public abstract class Stream
 			if((iMode & Connector.READ) != 0)
 			{
 				inSeek = (Seekable)in;
+				if(pos != 0)
+				{
+					try
+					{
+						inSeek.setPosition(pos);
+					}
+					catch (IOException e)
+					{
+						//Couldn't use Seekable, do it old fashioned way
+						try
+						{
+							in = file.openInputStream();
+							inSeek = (Seekable)in;
+							in.read(new byte[(int)pos], 0, (int)pos);
+						}
+						catch (IOException e2)
+						{
+						}
+					}
+				}
 			}
 			if((iMode & Connector.WRITE) != 0)
 			{
 				outSeek = (Seekable)out;
 			}
 //#else
-			pos = 0;
+			this.pos = pos;
 //#endif
 		}
 		

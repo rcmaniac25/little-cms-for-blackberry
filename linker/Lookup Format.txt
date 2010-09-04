@@ -1,0 +1,48 @@
+Look-Up-File (LUF)
+
+All lookup files are built using operations and attibutes. Every operation and attribute starts with '$'.
+
+Types:
+OP-Operation
+AT-Attribute
+
+Operations:
+An operation has a start and end. Operation starts are prefixed with 'S', operation ends are prefixed with 'E'.
+
+Types of Operations:
+LUF-Definition of a LUF file
+TYP-Definition of a type
+FIE-Definition of a field
+DEL-Definition of a delegate/interface
+PRE-Definition of a preprocessor
+
+Attributes:
+An attribute is a, well, an attribute of something. An attribute is one line and MUST always be at the beginning of a element, never placed at random locations.
+
+Types of attributes:
+NAME-The name of the item
+TYPE-The type of an item (predefined types: boolean, byte, short, int, long, float, double, Object, *[])
+PREPROC-Straight text duplicate of preprocessor
+ATT-Raw type attributes (such as final)
+
+Operations and their attributes/operations:
+LUF:
+Supported OPs: TYP, DEL, PRE
+
+TYP:
+Supported ATs: NAME
+Supported OPs: FIE, TYP, DEL
+
+FIE:
+Supported ATs: NAME, TYPE, ATT
+--Note: if name is "$ret" then it is considered a return type. This is only valid on DEL types.
+--Note2: if the last FIE in a TYP is the same TYPE as as TYP then the output is changed. Instead of creating a different element every index it
+	creates a temporary element and passes the previous instance into it. This is because it treats the last element as a "next" pointer.
+
+DEL:
+Supported ATs: NAME
+Supported OPs: FIE
+
+PRE:
+Supported ATs: PREPROC
+--Note: PREPROC can be used as an OP but is really an AT, thus start and end are not needed. This should only be done with multi-line preprocessors

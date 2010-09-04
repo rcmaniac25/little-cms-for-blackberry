@@ -1,0 +1,230 @@
+$OP SLUF
+
+$OP STYP
+	$AT NAME cmsTagTypeHandler
+	
+	$OP SFIE
+		$AT NAME Signature
+		$AT TYPE int
+	$OP EFIE
+
+	$OP SDEL
+		$AT NAME tagHandlerReadPtr
+
+		$OP SFIE
+			$AT NAME $ret
+			$AT TYPE Object
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME self
+			$AT TYPE cmsTagTypeHandler
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME io
+			$AT TYPE cmsIOHANDLER
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME nItems
+			$AT TYPE int[]
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME int
+			$AT TYPE SizeOfTag
+		$OP EFIE
+	$OP EDEL
+
+	$OP SDEL
+		$AT NAME tagHandlerWritePtr
+
+		$OP SFIE
+			$AT NAME $ret
+			$AT TYPE boolean
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME self
+			$AT TYPE cmsTagTypeHandler
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME io
+			$AT TYPE cmsIOHANDLER
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME Ptr
+			$AT TYPE int
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME nItems
+			$AT TYPE int
+		$OP EFIE
+	$OP EDEL
+
+	$OP SDEL
+		$AT NAME tagHandlerDupPtr
+
+		$OP SFIE
+			$AT NAME $ret
+			$AT TYPE Object
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME self
+			$AT TYPE cmsTagTypeHandler
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME Ptr
+			$AT ATT final
+			$AT TYPE Object
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME n
+			$AT TYPE int
+		$OP EFIE
+	$OP EDEL
+
+	$OP SDEL
+		$AT NAME tagHandlerFreePtr
+
+		$OP SFIE
+			$AT NAME self
+			$AT TYPE cmsTagTypeHandler
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME Ptr
+			$AT TYPE Object
+		$OP EFIE
+	$OP EDEL
+
+	$OP SFIE
+		$AT NAME ReadPtr
+		$AT TYPE tagHandlerReadPtr
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME WritePtr
+		$AT TYPE tagHandlerWritePtr
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME DupPtr
+		$AT TYPE tagHandlerDupPtr
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME FreePtr
+		$AT TYPE tagHandlerFreePtr
+	$OP EFIE
+$OP ETYP
+
+$OP STYP
+	$AT NAME cmsTagDescriptor
+	
+	$OP SDEL
+		$AT NAME tagDesDecideType
+
+		$OP SFIE
+			$AT NAME $ret
+			$AT TYPE int
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME ICCVersion
+			$AT TYPE double
+		$OP EFIE
+
+		$OP SFIE
+			$AT NAME Data
+			$AT ATT final
+			$AT TYPE Object
+		$OP EFIE
+	$OP EDEL
+
+	$OP SFIE
+		$AT NAME ElemCount
+		$AT TYPE int
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME nSupportedTypes
+		$AT TYPE int
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME SupportedTypes
+		$AT TYPE int[]
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME DecideType
+		$AT TYPE tagDesDecideType
+	$OP EFIE
+$OP ETYP
+
+$OP STYP
+	$AT NAME _cmsTagTypeLinkedList
+	
+	$OP SFIE
+		$AT NAME Handler
+		$AT TYPE cmsTagTypeHandler
+	$OP EFIE
+	
+	$OP SFIE
+		$AT NAME Next
+		$AT TYPE _cmsTagTypeLinkedList
+	$OP EFIE
+$OP ETYP
+
+$OP STYP
+	$AT NAME _cmsTagLinkedList
+	
+	$OP SFIE
+		$AT NAME Signature
+		$AT TYPE int
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME Descriptor
+		$AT TYPE cmsTagDescriptor
+	$OP EFIE
+	
+	$OP SFIE
+		$AT NAME Next
+		$AT TYPE _cmsTagLinkedList
+	$OP EFIE
+$OP ETYP
+
+$OP SPRE
+	$AT PREPROC TYPE_MPE_HANDLER(t, x)  { (t), READ_FN(x), WRITE_FN(x), GenericMPEdup, GenericMPEfree }
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC TYPE_HANDLER(t, x)  { (t), READ_FN(x), WRITE_FN(x), DUP_FN(x), FREE_FN(x) }
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC READ_FN(x)  Type_##x##_Read
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC WRITE_FN(x) Type_##x##_Write
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC FREE_FN(x)  Type_##x##_Free
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC DUP_FN(x)   Type_##x##_Dup
+$OP EPRE
+
+$OP ELUF

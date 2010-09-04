@@ -39,11 +39,13 @@ import littlecms.internal.lcms2.cmsICCData;
 import littlecms.internal.lcms2.cmsICCMeasurementConditions;
 import littlecms.internal.lcms2.cmsIOHANDLER;
 import littlecms.internal.lcms2.cmsMLU;
+import littlecms.internal.lcms2.cmsScreening;
 import littlecms.internal.lcms2_internal._cmsStageCLutData;
 import littlecms.internal.lcms2_internal._cmsStageMatrixData;
 import littlecms.internal.lcms2_plugin._cmsTagBase;
 import littlecms.internal.lcms2_plugin.cmsPluginBase;
 import littlecms.internal.lcms2_plugin.cmsPluginTagType;
+import littlecms.internal.lcms2_plugin.cmsTagDescriptor;
 import littlecms.internal.lcms2_plugin.cmsTagTypeHandler;
 import littlecms.internal.lcms2_plugin.cmsMAT3;
 
@@ -67,6 +69,13 @@ final class cmstypes
 	// RAW_C support implemented but return type is expected to be cmsUInt8Number[16] (byte[lcms2.cmsMAXCHANNELS]) so just do that.
 	// If RAW_C processing is desired then remove the comment marker "//-" or in the case of the preprocessor components replace '-' with '#'
 	
+	static
+	{
+		setupMPEtypes();
+		setupTypes();
+		setupTags();
+	}
+	
 	// Some broken types
 	public static final int cmsCorbisBrokenXYZtype = 0x17A505B8;
 	public static final int cmsMonacoBrokenCurveType = 0x9478ee00;
@@ -78,6 +87,12 @@ final class cmstypes
 		
 		public cmsTagTypeHandler Handler;
 		public _cmsTagTypeLinkedList Next;
+		
+		public _cmsTagTypeLinkedList(cmsTagTypeHandler Handler, _cmsTagTypeLinkedList Next)
+		{
+			this.Handler = Handler;
+			this.Next = Next;
+		}
 	}
 	
 	// Register a new type handler. This routine is shared between normal types and MPE
@@ -2353,7 +2368,7 @@ final class cmstypes
 	    }
 	    if (!cmsplugin._cmsWriteUInt32Number(io, 12))
 	    {
-	    	return false;           
+	    	return false;
 	    }
 	          
 	    HeaderSize = 12 * mlu.UsedEntries + /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
@@ -2404,7 +2419,7 @@ final class cmstypes
 	// ********************************************************************************
 	
 	// Decide which LUT type to use on writting
-	public static int DecideLUTtypeA2B(double ICCVersion, final Object Data)
+	private static int DecideLUTtypeA2B(double ICCVersion, final Object Data)
 	{
 	    cmsPipeline Lut = (cmsPipeline)Data;
 	    
@@ -2422,7 +2437,7 @@ final class cmstypes
 	    }
 	}
 	
-	public static int DecideLUTtypeB2A(double ICCVersion, final Object Data)
+	private static int DecideLUTtypeB2A(double ICCVersion, final Object Data)
 	{
 	    cmsPipeline Lut = (cmsPipeline)Data;
 	    
@@ -4825,17 +4840,17 @@ final class cmstypes
 	    
 	    nItems[0] = 0;
 	    int[] temp = new int[1];
-	    if (!_cmsReadUInt32Number(io, temp))
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    vendorFlag = temp[0];
-	    if (!_cmsReadUInt32Number(io, temp))
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    count = temp[0];
-	    if (!_cmsReadUInt32Number(io, temp))
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	    {
 	    	return null;
 	    }
@@ -4970,5 +4985,3153 @@ final class cmstypes
 		cmsnamed.cmsFreeNamedColorList((cmsNAMEDCOLORLIST)Ptr);
 	}
 	
-	//TODO #3046
+	// ********************************************************************************
+	// Type cmsSigProfileSequenceDescType
+	// ********************************************************************************
+	
+	private static boolean ReadEmbeddedText(cmsTagTypeHandler self, cmsIOHANDLER io, cmsMLU[] mlu, int SizeOfTag)
+	{
+		int BaseType;
+	    int[] nItems = new int[1];
+	    
+	    BaseType = cmsplugin._cmsReadTypeBase(io); 
+	    
+	    switch (BaseType)
+	    {
+	    	case lcms2.cmsSigTextType:
+	        	if (mlu[0] != null)
+	        	{
+	        		cmsnamed.cmsMLUfree(mlu[0]);
+	        	}
+	        	mlu[0] = (cmsMLU)Type_Text_Read(self, io, nItems, SizeOfTag);
+	        	return (mlu[0] != null);
+	    	case lcms2.cmsSigTextDescriptionType:
+	        	if (mlu[0] != null)
+	        	{
+	        		cmsnamed.cmsMLUfree(mlu[0]);
+	        	}
+	        	mlu[0] =  (cmsMLU)Type_Text_Description_Read(self, io, nItems, SizeOfTag);
+	        	return (mlu[0] != null);
+	        	
+	        	/*
+	        	TBD: Size is needed for MLU, and we have no idea on which is the available size
+	        	*/
+	    	case lcms2.cmsSigMultiLocalizedUnicodeType:
+	    		if (mlu[0] != null)
+	    		{
+	    			cmsnamed.cmsMLUfree(mlu[0]);
+	    		}
+	    		mlu[0] =  (cmsMLU)Type_MLU_Read(self, io, nItems, SizeOfTag);
+	    		return (mlu[0] != null);
+    		default:
+    			return false;
+	    }
+	}
+	
+	private static Object Type_ProfileSequenceDesc_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		cmsSEQ OutSeq;
+	    int i, Count;
+	    
+	    nItems[0] = 0;
+	    
+	    int[] temp = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    Count = temp[0];
+	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
+	    
+	    OutSeq = cmsnamed.cmsAllocProfileSequenceDescription(self.ContextID, Count);
+	    if (OutSeq == null)
+	    {
+	    	return null;
+	    }
+	    
+	    OutSeq.n = Count;
+	    
+	    // Get structures as well
+	    
+	    cmsMLU[] temp2 = new cmsMLU[1];
+	    long[] temp3 = new long[1];
+	    for (i = 0; i < Count; i++)
+	    {
+	        cmsPSEQDESC sec = OutSeq.seq[i];
+	        
+	        temp[0] = sec.deviceMfg;
+	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
+		    {
+		    	return null;
+		    }
+	        sec.deviceMfg = temp[0];
+	        SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
+	        
+	        temp[0] = sec.deviceModel;
+	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
+		    {
+		    	return null;
+		    }
+	        sec.deviceModel = temp[0];
+	        SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
+	        
+	        temp3[0] = sec.attributes;
+	        if (!cmsplugin._cmsReadUInt64Number(io, temp3))
+		    {
+		    	return null;
+		    }
+	        sec.attributes = temp3[0];
+	        SizeOfTag -= /*sizeof(cmsUInt64Number)*/8;
+	        
+	        temp[0] = sec.technology;
+	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
+		    {
+		    	return null;
+		    }
+	        sec.technology = temp[0];
+	        SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
+	        
+	        temp2[0] = sec.Manufacturer;
+	        if (!ReadEmbeddedText(self, io, temp2, SizeOfTag))
+		    {
+		    	return null;
+		    }
+	        sec.Manufacturer = temp2[0];
+	        temp2[0] = sec.Model;
+	        if (!ReadEmbeddedText(self, io, temp2, SizeOfTag))
+		    {
+		    	return null;
+		    }
+	        sec.Model = temp2[0];
+	    }
+	    
+	    nItems[0] = 1;
+	    return OutSeq;
+	}
+	
+	// Aux--Embed a text description type. It can be of type text description or multilocalized unicode
+	private static boolean SaveDescription(cmsTagTypeHandler self, cmsIOHANDLER io, cmsMLU Text)
+	{
+	    if (Text == null)
+	    {
+	        // Placeholder for a null entry     
+	        if (!cmsplugin._cmsWriteTypeBase(io, lcms2.cmsSigTextDescriptionType))
+	        {
+	        	return false;
+	        }
+	        return Type_Text_Description_Write(self, io, null, 1);
+	    }
+	    
+	    if (Text.UsedEntries <= 1)
+	    {
+	        if (!cmsplugin._cmsWriteTypeBase(io, lcms2.cmsSigTextDescriptionType))
+	        {
+	        	return false;
+	        }
+	        return Type_Text_Description_Write(self, io, Text, 1);
+	    }
+	    else
+	    {
+	        if (!cmsplugin._cmsWriteTypeBase(io, lcms2.cmsSigMultiLocalizedUnicodeType))
+	        {
+	        	return false;
+	        }
+	        return Type_MLU_Write(self, io, Text, 1);
+	    }
+	}
+	
+	private static boolean Type_ProfileSequenceDesc_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		cmsSEQ Seq = (cmsSEQ)Ptr;
+	    int i;
+	    
+	    if (!cmsplugin._cmsWriteUInt32Number(io, Seq.n))
+	    {
+	    	return false;
+	    }
+	    
+	    for (i = 0; i < Seq.n; i++)
+	    {
+	        cmsPSEQDESC sec = Seq.seq[i];
+	        
+	        if (!cmsplugin._cmsWriteUInt32Number(io, sec.deviceMfg))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWriteUInt32Number(io, sec.deviceModel))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWriteUInt64Number(io, sec.attributes))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWriteUInt32Number(io, sec.technology))
+		    {
+		    	return false;
+		    }
+	        
+	        if (!SaveDescription(self, io, sec.Manufacturer))
+		    {
+		    	return false;
+		    }
+	        if (!SaveDescription(self, io, sec.Model))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_ProfileSequenceDesc_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmsnamed.cmsDupProfileSequenceDescription((cmsSEQ)Ptr);
+	}
+	
+	private static void Type_ProfileSequenceDesc_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmsnamed.cmsFreeProfileSequenceDescription((cmsSEQ)Ptr);
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigProfileSequenceIdType
+	// ********************************************************************************
+	/*
+	In certain workflows using ICC Device Link Profiles, it is necessary to identify the 
+	original profiles that were combined to create the Device Link Profile.
+	This type is an array of structures, each of which contains information for 
+	identification of a profile used in a sequence
+	*/
+	
+	private static boolean ReadSeqID_fun(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
+	{
+	    cmsSEQ OutSeq = (cmsSEQ)Cargo;
+	    cmsPSEQDESC seq = OutSeq.seq[n];
+	    
+	    if (io.Read.run(io, seq.ProfileID.data, 16, 1) != 1)
+	    {
+	    	return false;
+	    }
+	    cmsMLU[] temp = new cmsMLU[]{seq.Description};
+	    if (!ReadEmbeddedText(self, io, temp, SizeOfTag))
+	    {
+	    	return false;
+	    }
+	    seq.Description = temp[0];
+	    
+	    return true;
+	}
+	
+	private static final PositionTableEntryFn ReadSeqID = new PositionTableEntryFn()
+	{
+		public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
+		{
+			return ReadSeqID_fun(self, io, Cargo, n, SizeOfTag);
+		}
+	};
+	
+	private static Object Type_ProfileSequenceId_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		cmsSEQ OutSeq;
+	    int Count;
+	    int BaseOffset;
+	    
+	    nItems[0] = 0;
+
+	    // Get actual position as a basis for element offsets
+	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    
+	    // Get table count
+	    int[] temp = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    Count = temp[0];
+	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
+	    
+	    // Allocate an empty structure
+	    OutSeq = cmsnamed.cmsAllocProfileSequenceDescription(self.ContextID, Count);
+	    if (OutSeq == null)
+	    {
+	    	return null;
+	    }
+	    
+	    // Read the position table
+	    if (!ReadPositionTable(self, io, Count, BaseOffset, OutSeq, ReadSeqID))
+	    {
+	    	cmsnamed.cmsFreeProfileSequenceDescription(OutSeq);
+	        return null;
+	    }
+	    
+	    // Success
+	    nItems[0] = 1;
+	    return OutSeq;
+	}
+	
+	private boolean WriteSeqID_fun(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
+	{
+	    cmsSEQ Seq = (cmsSEQ)Cargo;
+	    
+	    if (!io.Write.run(io, 16, Seq.seq[n].ProfileID.data))
+	    {
+	    	return false;
+	    }
+	    
+	    // Store here the MLU
+	    if (!SaveDescription(self, io, Seq.seq[n].Description))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static final PositionTableEntryFn WriteSeqID = new PositionTableEntryFn()
+	{
+		public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
+		{
+			return WriteSeqID_fun(self, io, Cargo, n, SizeOfTag);
+		}
+	};
+	
+	private static boolean Type_ProfileSequenceId_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+	    cmsSEQ Seq = (cmsSEQ)Ptr;
+	    int BaseOffset;
+	    
+	    // Keep the base offset
+	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    
+	    // This is the table count
+	    if (!cmsplugin._cmsWriteUInt32Number(io, Seq.n))
+	    {
+	    	return false;
+	    }
+	    
+	    // This is the position table and content
+	    if (!WritePositionTable(self, io, 0, Seq.n, BaseOffset, Seq, WriteSeqID))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_ProfileSequenceId_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmsnamed.cmsDupProfileSequenceDescription((cmsSEQ)Ptr);
+	}
+	
+	private static void Type_ProfileSequenceId_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmsnamed.cmsFreeProfileSequenceDescription((cmsSEQ)Ptr);
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigUcrBgType
+	// ********************************************************************************
+	/*
+	This type contains curves representing the under color removal and black
+	generation and a text string which is a general description of the method used
+	for the ucr/bg.
+	*/
+	
+	private static Object Type_UcrBg_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		cmsUcrBg n = new cmsUcrBg();
+	    int CountUcr, CountBg;
+	    VirtualPointer ASCIIString;
+	    
+	    nItems[0] = 0;
+	    
+	    // First curve is Under color removal
+	    int[] temp = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    CountUcr = temp[0];
+	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
+	    
+	    n.Ucr = cmsgamma.cmsBuildTabulatedToneCurve16(self.ContextID, CountUcr, null);
+	    if (n.Ucr == null)
+	    {
+	    	return null;
+	    }
+	    
+	    if (!cmsplugin._cmsReadUInt16Array(io, CountUcr, n.Ucr.Table16))
+	    {
+	    	return null;
+	    }
+	    SizeOfTag -= CountUcr * /*sizeof(cmsUInt16Number)*/2;
+	    
+	    // Second curve is Black generation
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    CountBg = temp[0];
+	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
+	    
+	    n.Bg = cmsBuildTabulatedToneCurve16(self.ContextID, CountBg, null);
+	    if (n.Bg == null)
+	    {
+	    	return null;
+	    }
+	    if (!cmsplugin._cmsReadUInt16Array(io, CountBg, n.Bg.Table16))
+	    {
+	    	return null;
+	    }
+	    SizeOfTag -= CountBg * /*sizeof(cmsUInt16Number)*/2;
+	    
+	    // Now comes the text. The length is specified by the tag size
+	    n.Desc = cmsnamed.cmsMLUalloc(self.ContextID, 1);
+	    ASCIIString = cmsplugin._cmsMalloc(self.ContextID, /*sizeof(cmsUInt8Number)*/1*(SizeOfTag + 1));
+	    if (io.vpRead(io, ASCIIString, /*sizeof(char)*/1, SizeOfTag) != SizeOfTag)
+	    {
+	    	return null;
+	    }
+	    ASCIIString.writeRaw(0, SizeOfTag);
+	    cmsnamed.cmsMLUsetASCII(n.Desc, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, ASCIIString.getProcessor().readString(false, false));
+	    cmsplugin._cmsFree(self.ContextID, ASCIIString);
+	    
+	    nItems[0] = 1;
+	    return n;
+	}
+	
+	private static boolean Type_UcrBg_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		cmsUcrBg Value = (cmsUcrBg)Ptr;
+	    int TextSize;
+	    StringBuffer Text;
+	    
+	    // First curve is Under color removal
+	    if (!cmsplugin._cmsWriteUInt32Number(io, Value.Ucr.nEntries))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt16Array(io, Value.Ucr.nEntries, Value.Ucr.Table16))
+	    {
+	    	return false;
+	    }
+	    
+	    // Then black generation    
+	    if (!cmsplugin._cmsWriteUInt32Number(io, Value.Bg.nEntries))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt16Array(io, Value.Bg.nEntries, Value.Bg.Table16))
+	    {
+	    	return false;
+	    }
+	    
+	    // Now comes the text. The length is specified by the tag size
+	    TextSize = cmsnamed.cmsMLUgetASCII(Value.Desc, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, null, 0);
+	    Text = new StringBuffer(TextSize);
+	    if (cmsnamed.cmsMLUgetASCII(Value.Desc, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, Text, TextSize) != TextSize)
+	    {
+	    	return false;
+	    }
+	    
+	    if (!io.Write.run(io, TextSize, Text.toString().getBytes()))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_UcrBg_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		cmsUcrBg Src = (cmsUcrBg)Ptr;
+	    cmsUcrBg NewUcrBg = new cmsUcrBg();
+	    
+	    NewUcrBg.Bg   = cmsgamma.cmsDupToneCurve(Src.Bg);
+	    NewUcrBg.Ucr  = cmsgamma.cmsDupToneCurve(Src.Ucr);
+	    NewUcrBg.Desc = cmsnamed.cmsMLUdup(Src.Desc);
+	    
+	    return NewUcrBg;
+	}
+	
+	private static void Type_UcrBg_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmsUcrBg Src = (cmsUcrBg)Ptr;
+		
+		if (Src.Ucr != null)
+		{
+			cmsgamma.cmsFreeToneCurve(Src.Ucr);
+		}
+		if (Src.Bg != null)
+		{
+			cmsgamma.cmsFreeToneCurve(Src.Bg);
+		}
+		if (Src.Desc != null)
+		{
+			cmsnamed.cmsMLUfree(Src.Desc);
+		}
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigCrdInfoType
+	// ********************************************************************************
+	
+	/*
+	This type contains the PostScript product name to which this profile corresponds
+	and the names of the companion CRDs. Recall that a single profile can generate
+	multiple CRDs. It is implemented as a MLU being the language code "PS" and then
+	country varies for each element:
+	
+	                nm: PostScript product name
+	                #0: Rendering intent 0 CRD name
+	                #1: Rendering intent 1 CRD name
+	                #2: Rendering intent 2 CRD name
+	                #3: Rendering intent 3 CRD name
+	*/
+	
+	// Auxiliar, read an string specified as count + string
+	private static boolean ReadCountAndSting(cmsTagTypeHandler self, cmsIOHANDLER io, cmsMLU mlu, int[] SizeOfTag, final String Section)
+	{
+	    int Count;
+	    VirtualPointer Text;
+	    
+	    if (SizeOfTag[0] < /*sizeof(cmsUInt32Number)*/4)
+	    {
+	    	return false;
+	    }
+	    
+	    int[] temp = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return false;
+	    }
+	    Count = temp[0];
+	    
+	    if (SizeOfTag[0] < Count + /*sizeof(cmsUInt32Number)*/4)
+	    {
+	    	return false;
+	    }
+	    Text = cmserr._cmsMalloc(self.ContextID, Count+1);
+	    if (Text == null)
+	    {
+	    	return false;
+	    }
+	    
+	    if (io.vpRead(io, Text, /*sizeof(cmsUInt8Number)*/1, Count) != Count)
+	    {
+	    	cmserr._cmsFree(self.ContextID, Text);
+	        return false;
+	    }
+	    
+	    Text.writeRaw(0, Count);
+	    
+	    cmsnamed.cmsMLUsetASCII(mlu, "PS", Section, Text.getProcessor().readString(false, false));
+	    cmserr._cmsFree(self.ContextID, Text);
+	    
+	    SizeOfTag[0] -= (Count + /*sizeof(cmsUInt32Number)*/4);
+	    return true;    
+	}
+	
+	private static boolean WriteCountAndSting(cmsTagTypeHandler self, cmsIOHANDLER io, cmsMLU mlu, final String Section)
+	{
+		int TextSize;
+		StringBuffer Text;    
+	    
+	    TextSize = cmsnamed.cmsMLUgetASCII(mlu, "PS", Section, null, 0);
+	    Text = new StringBuffer(TextSize);
+	    
+	    if (!cmsplugin._cmsWriteUInt32Number(io, TextSize))
+	    {
+	    	return false;
+	    }
+	    
+	    if (cmsnamed.cmsMLUgetASCII(mlu, "PS", Section, Text, TextSize) == 0)
+	    {
+	    	return false;
+	    }
+	    
+	    if (!io.Write.run(io, TextSize, Text.toString().getBytes()))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_CrdInfo_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		cmsMLU mlu = cmsnamed.cmsMLUalloc(self.ContextID, 5);
+		
+	    nItems[0] = 0;
+	    int[] tSize = new int[]{SizeOfTag};
+	    if (!ReadCountAndSting(self, io, mlu, tSize, "nm"))
+	    {
+	    	cmsnamed.cmsMLUfree(mlu);
+		    return null;
+	    }
+	    if (!ReadCountAndSting(self, io, mlu, tSize, "#0"))
+	    {
+	    	cmsnamed.cmsMLUfree(mlu);
+		    return null;
+	    }
+	    if (!ReadCountAndSting(self, io, mlu, tSize, "#1"))
+	    {
+	    	cmsnamed.cmsMLUfree(mlu);
+		    return null;
+	    }
+	    if (!ReadCountAndSting(self, io, mlu, tSize, "#2"))
+	    {
+	    	cmsnamed.cmsMLUfree(mlu);
+		    return null;
+	    }
+	    if (!ReadCountAndSting(self, io, mlu, tSize, "#3"))
+	    {
+	    	cmsnamed.cmsMLUfree(mlu);
+		    return null;
+	    }
+	    
+	    nItems[0] = 1;
+	    return mlu;
+	}
+	
+	private static boolean Type_CrdInfo_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		cmsMLU mlu = (cmsMLU)Ptr;
+		
+	    if (!WriteCountAndSting(self, io, mlu, "nm"))
+	    {
+	    	return false;
+	    }
+	    if (!WriteCountAndSting(self, io, mlu, "#0"))
+	    {
+	    	return false;
+	    }
+	    if (!WriteCountAndSting(self, io, mlu, "#1"))
+	    {
+	    	return false;
+	    }
+	    if (!WriteCountAndSting(self, io, mlu, "#2"))
+	    {
+	    	return false;
+	    }
+	    if (!WriteCountAndSting(self, io, mlu, "#3"))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_CrdInfo_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmsnamed.cmsMLUdup((cmsMLU)Ptr);
+	}
+	
+	private static void Type_CrdInfo_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmsMLUfree.cmsMLUfree((cmsMLU)Ptr);
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigScreeningType
+	// ********************************************************************************
+	//
+	//The screeningType describes various screening parameters including screen
+	//frequency, screening angle, and spot shape.
+	
+	private static Object Type_Screening_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		cmsScreening sc = null;
+	    int i;
+	    
+	    sc = new cmsScreening();
+	    
+	    nItems[0] = 0;
+	    
+	    int[] temp = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    sc.Flag = temp[0];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    sc.nChannels = temp[0];
+	    
+	    double[] temp2 = new double[1];
+	    for (i = 0; i < sc.nChannels; i++)
+	    {
+	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
+		    {
+		    	return null;
+		    }
+	        sc.Channels[i].Frequency = temp2[0];
+	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
+		    {
+		    	return null;
+		    }
+	        sc.Channels[i].ScreenAngle = temp2[0];
+	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
+		    {
+		    	return null;
+		    }
+	        sc.Channels[i].SpotShape = temp[0];
+	    }
+	    
+	    nItems[0] = 1;
+	    
+	    return sc;
+	}
+	
+	private static boolean Type_Screening_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		cmsScreening sc = (cmsScreening)Ptr; 
+	    int i;
+	    
+	    if (!cmsplugin._cmsWriteUInt32Number(io, sc.Flag))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, sc.nChannels))
+	    {
+	    	return false;
+	    }
+	    
+	    for (i = 0; i < sc.nChannels; i++)
+	    {
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, sc.Channels[i].Frequency))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, sc.Channels[i].ScreenAngle))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWriteUInt32Number(io, sc.Channels[i].SpotShape))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_Screening_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmserr._cmsDupMem(self.ContextID, new VirtualPointer(Ptr), /*sizeof(cmsScreening)*/cmsScreening.SIZE).getProcessor().readObject(cmsScreening.class);
+	}
+	
+	private static void Type_Screening_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		//Would free memory but never actually allocating memory (except for dup/read functions which is not a real issue)
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigViewingConditionsType
+	// ********************************************************************************
+	//
+	//This type represents a set of viewing condition parameters including: 
+	//CIE ’absolute’ illuminant white point tristimulus values and CIE ’absolute’ 
+	//surround tristimulus values.
+	
+	private static Object Type_ViewingConditions_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		cmsICCViewingConditions vc = null;
+	    
+	    vc = new cmsICCViewingConditions();
+	    
+	    nItems[0] = 0;
+	    
+	    if (!cmsplugin._cmsReadXYZNumber(io, vc.IlluminantXYZ))
+	    {
+	    	return null;
+	    }
+	    if (!cmsplugin._cmsReadXYZNumber(io, vc.SurroundXYZ))
+	    {
+	    	return null;
+	    }
+	    int[] temp = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    vc.IlluminantType = temp[0];
+	    
+	    nItems[0] = 1;
+	    
+	    return vc;
+	}
+	
+	private static boolean Type_ViewingConditions_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		cmsICCViewingConditions sc = (cmsICCViewingConditions)Ptr; 
+        
+	    if (!cmsplugin._cmsWriteXYZNumber(io, sc.IlluminantXYZ))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteXYZNumber(io, sc.SurroundXYZ))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, sc.IlluminantType))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_ViewingConditions_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmserr._cmsDupMem(self.ContextID, new VirtualPointer(Ptr), /*sizeof(cmsICCViewingConditions)*/cmsScreening.SIZE).getProcessor().readObject(cmsICCViewingConditions.class);
+	}
+	
+	private static void Type_ViewingConditions_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		//Would free memory but never actually allocating memory (except for dup/read functions which is not a real issue)
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigMultiProcessElementType
+	// ********************************************************************************
+	
+	private static Object GenericMPEdup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmslut.cmsStageDup((cmsStage)Ptr);
+	}
+	
+	private static void GenericMPEfree(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmslut.cmsStageFree((cmsStage)Ptr);
+	}
+	
+	// Each curve is stored in one or more curve segments, with break-points specified between curve segments.
+	// The first curve segment always starts at –Infinity, and the last curve segment always ends at +Infinity. The
+	// first and last curve segments shall be specified in terms of a formula, whereas the other segments shall be
+	// specified either in terms of a formula, or by a sampled curve.
+	
+	// Read an embedded segmented curve
+	private static cmsToneCurve ReadSegmentedCurve(cmsTagTypeHandler self, cmsIOHANDLER io)
+	{
+		int ElementSig;
+	    int i, j;
+	    short nSegments;
+	    cmsCurveSegment[] Segments;
+	    cmsToneCurve Curve;
+	    float PrevBreak = -1E22F; // - infinite
+	    
+	    // Take signature and channels for each element.
+	    int[] temp = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    ElementSig = temp[0];
+	    
+	    // That should be a segmented curve
+	    if (ElementSig != lcms2.cmsSigSegmentedCurve)
+	    {
+	    	return null;
+	    }
+	    
+	    if (!cmsplugin._cmsReadUInt32Number(io, null))
+	    {
+	    	return null;
+	    }
+	    /*
+	    short[] temp2 = new short[1];
+	    if (!cmsplugin._cmsReadUInt16Number(io, temp2))
+	    {
+	    	return null;
+	    }
+	    nSegments = temp2[0];
+	    if (!cmsplugin._cmsReadUInt16Number(io, null))
+	    {
+	    	return null;
+	    }
+	    */
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    nSegments = (short)temp[0];
+	    Segments = new cmsCurveSegment[nSegments];
+	    
+	    // Read breakpoints
+	    //float[] temp3 = new float[1];
+	    for (i = 0; i < nSegments - 1; i++)
+	    {
+	    	Segments[i].x0 = PrevBreak;
+	    	//if (!cmsplugin._cmsReadFloat32Number(io, temp3))
+    		if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    	{
+	    		return null;
+	    	}
+	    	//Segments[i].x1 = temp3[0];
+    		Segments[i].x1 = Float.intBitsToFloat(temp[0]);
+	    	PrevBreak = Segments[i].x1;
+	    }
+	    
+	    Segments[nSegments-1].x0 = PrevBreak;
+	    Segments[nSegments-1].x1 = 1E22F; // A big float number
+	    
+	    // Read segments
+	    for (i = 0; i < nSegments; i++)
+	    {
+	    	if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    	{
+	    		return null;
+	    	}
+	    	ElementSig = temp[0];
+	    	if (!cmsplugin._cmsReadUInt32Number(io, null))
+	    	{
+	    		return null;
+	    	}
+	    	
+	    	switch (ElementSig)
+	    	{
+	    		case lcms2.cmsSigFormulaCurveSeg:
+		    		{
+		    			short Type;
+		    			int[] ParamsByType = {4, 5, 5 };
+		    			
+		    			/*
+		                if (!cmsplugin._cmsReadUInt16Number(io, temp2))
+		                {
+		                	return null;
+		                }
+		                Type = temp2[0];
+		                if (!cmsplugin._cmsReadUInt16Number(io, null))
+		                {
+		                	return null;
+		                }
+		                */
+		    			if (!cmsplugin._cmsReadUInt32Number(io, temp))
+		                {
+		                	return null;
+		                }
+		    			Type = (short)temp[0];
+		                
+		                Segments[i].Type = Type + 6;
+		                if (Type > 2)
+		                {
+		                	return null;
+		                }
+		                
+		                for (j = 0; j < ParamsByType[Type]; j++)
+		                {
+		                	float f;
+		                	/*
+		                	if (!cmsplugin._cmsReadFloat32Number(io, temp3))
+		                	{
+		                		return null;
+		                	}
+		                	f = temp3[0];
+		                	*/
+		                	if (!cmsplugin._cmsReadUInt32Number(io, temp))
+		                	{
+		                		return null;
+		                	}
+		                	f = Float.intBitsToFloat(temp[0]);
+		                    Segments[i].Params[j] = f;
+		                }
+	                }
+	                break;
+                case lcms2.cmsSigSampledCurveSeg:
+                	{
+                		int Count;
+                		
+                		if (!cmsplugin._cmsReadUInt32Number(io, temp))
+		                {
+		                	return null;
+		                }
+                		Count = temp[0];
+                		
+                		Segments[i].nGridPoints = Count;
+                		Segments[i].SampledPoints = new float[Count];
+                		
+                		for (j = 0; j < Count; j++)
+                		{
+                			/*
+                			if (!cmsplugin._cmsReadFloat32Number(io, temp3))
+                			{
+                				return null;
+                			}
+                			Segments[i].SampledPoints[j] = temp3[0];
+                			*/
+                			if (!cmsplugin._cmsReadUInt32Number(io, temp))
+                			{
+                				return null;
+                			}
+                			Segments[i].SampledPoints[j] = Float.intBitsToFloat(temp[0]);
+                		}
+	                }
+	                break;
+	            default:
+	                {
+	                	StringBuffer String = new StringBuffer(4);
+	                	
+	                	cmserr._cmsTagSignature2String(String, ElementSig);
+	                	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknown curve element type '%s' found.", new Object[]{String});
+	                }
+	                return null;
+	         }
+	    }
+	    
+	    Curve = cmsgamma.cmsBuildSegmentedToneCurve(self.ContextID, nSegments, Segments);
+	    
+	    return Curve;
+	}
+	
+	private static boolean ReadMPECurve_fun(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
+	{
+	      cmsToneCurve[] GammaTables = (cmsToneCurve[])Cargo;
+	      
+	      GammaTables[n] = ReadSegmentedCurve(self, io);
+	      return (GammaTables[n] != null);
+	}
+	
+	private static final PositionTableEntryFn ReadMPECurve = new PositionTableEntryFn()
+	{
+		public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
+		{
+			return ReadMPECurve_fun(self, io, Cargo, n, SizeOfTag);
+		}
+	};
+	
+	private static Object Type_MPEcurve_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		cmsStage mpe = null;
+	    short InputChans, OutputChans;
+	    int i, BaseOffset;
+	    cmsToneCurve[] GammaTables;
+	    
+	    nItems[0] = 0;
+	    
+	    // Get actual position as a basis for element offsets
+	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    
+	    short[] temp = new short[1];
+	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    InputChans = temp[0];
+	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    OutputChans = temp[0];
+	    
+	    if (InputChans != OutputChans)
+	    {
+	    	return null;
+	    }
+	    
+	    GammaTables = new cmsToneCurve[InputChans];
+	    
+	    if (ReadPositionTable(self, io, InputChans, BaseOffset, GammaTables, ReadMPECurve))
+	    {
+	        mpe = cmslut.cmsStageAllocToneCurves(self.ContextID, InputChans, GammaTables);
+	    }
+	    else
+	    {
+	        mpe = null;
+	    }
+	    
+	    for (i = 0; i < InputChans; i++)
+	    {
+	        if (GammaTables[i] != null)
+	        {
+	        	cmsgamma.cmsFreeToneCurve(GammaTables[i]);
+	        }
+	    }
+	    
+	    nItems[0] = (mpe != null) ? 1 : 0;
+	    return mpe;
+	}
+	
+	// Write a single segmented curve. NO CHECK IS PERFORMED ON VALIDITY
+	private static boolean WriteSegmentedCurve(cmsIOHANDLER io, cmsToneCurve g)
+	{
+	    cmsUInt32Number i, j;
+	    cmsCurveSegment[] Segments = g.Segments;
+	    int nSegments = g.nSegments;
+	    
+	    if (!cmsplugin._cmsWriteUInt32Number(io, lcms2.cmsSigSegmentedCurve))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)nSegments))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt16Number(io, 0))
+	    {
+	    	return false;
+	    }
+	    
+	    // Write the break-points
+	    for (i = 0; i < nSegments - 1; i++)
+	    {
+	        if (!cmsplugin._cmsWriteFloat32Number(io, Segments[i].x1))
+	        {
+	        	return false;
+	        }
+	    }
+	    
+	    // Write the segments
+	    for (i = 0; i < g.nSegments; i++)
+	    {
+	        cmsCurveSegment ActualSeg = Segments[i];
+	        
+	        if (ActualSeg.Type == 0)
+	        {
+	            // This is a sampled curve
+	            if (!cmsplugin._cmsWriteUInt32Number(io, lcms2.cmsSigSampledCurveSeg))
+	            {
+	            	return false;
+	            }
+	            if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	            {
+	            	return false;
+	            }
+	            if (!cmsplugin._cmsWriteUInt32Number(io, ActualSeg.nGridPoints))
+	            {
+	            	return false;
+	            }
+	            
+	            for (j = 0; j < g.Segments[i].nGridPoints; j++)
+	            {
+	                if (!cmsplugin._cmsWriteFloat32Number(io, ActualSeg.SampledPoints[j]))
+		            {
+		            	return false;
+		            }
+	            }
+	        }
+	        else
+	        {
+	            int Type;
+	            int[] ParamsByType = { 4, 5, 5 };
+	            
+	            // This is a formula-based
+	            if (!cmsplugin._cmsWriteUInt32Number(io, lcms2.cmsSigFormulaCurveSeg))
+		        {
+		        	return false;
+		        }
+	            if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+		        {
+		        	return false;
+		        }
+	            
+	            // We only allow 1, 2 and 3 as types
+	            Type = ActualSeg.Type - 6;
+	            if (Type > 2 || Type < 0)
+		        {
+		        	return false;
+		        }
+	            
+	            if (!cmsplugin._cmsWriteUInt16Number(io, (short)Type))
+		        {
+		        	return false;
+		        }
+	            if (!cmsplugin._cmsWriteUInt16Number(io, 0))
+		        {
+		        	return false;
+		        }
+	            
+	            for (j = 0; j < ParamsByType[Type]; j++)
+	            {
+	                if (!cmsplugin._cmsWriteFloat32Number(io, (float)ActualSeg.Params[j]))
+	    	        {
+	    	        	return false;
+	    	        }
+	            }
+	        }
+	        
+	        // It seems there is no need to align. Code is here, and for safety commented out
+	        /*
+	        if (!cmsplugin._cmsWriteAlignment(io))
+	        {
+	        	return false;
+	        }
+	        */
+	    }
+	    
+	    return true;
+	}
+	
+	private static boolean WriteMPECurve_fun(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
+	{
+		_cmsStageToneCurvesData Curves  = (_cmsStageToneCurvesData)Cargo;
+		
+	    return WriteSegmentedCurve(io, Curves.TheCurves[n]);
+	}
+	
+	private static final PositionTableEntryFn WriteMPECurve = new PositionTableEntryFn()
+	{
+		public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
+		{
+			return WriteMPECurve_fun(self, io, Cargo, n, SizeOfTag);
+		}
+	};
+	
+	// Write a curve, checking first for validity
+	private static boolean Type_MPEcurve_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		int BaseOffset;
+	    cmsStage mpe = (cmsStage)Ptr;
+	    _cmsStageToneCurvesData Curves = (_cmsStageToneCurvesData)mpe.Data;
+	    
+	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    
+	    // Write the header. Since those are curves, input and output channels are same
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.InputChannels))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.InputChannels))
+	    {
+	    	return false;
+	    }
+	    
+	    if (!WritePositionTable(self, io, 0, mpe.InputChannels, BaseOffset, Curves, WriteMPECurve))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	// The matrix is organized as an array of PxQ+Q elements, where P is the number of input channels to the
+	// matrix, and Q is the number of output channels. The matrix elements are each float32Numbers. The array
+	// is organized as follows:
+	// array = [e11, e12, …, e1P, e21, e22, …, e2P, …, eQ1, eQ2, …, eQP, e1, e2, …, eQ]
+	
+	private static Object Type_MPEmatrix_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		cmsStage mpe;
+	    short InputChans, OutputChans;
+	    int nElems, i;  
+	    double[] Matrix;
+	    double[] Offsets;
+	    
+	    short[] temp = new short[1];
+	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    InputChans = temp[0];
+	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    OutputChans = temp[0];
+	    
+	    nElems = InputChans * OutputChans;
+	    
+	    // Input and output chans may be ANY (up to 0xffff)
+	    Matrix = new double[nElems];
+	    
+	    Offsets = new double[OutputChans];
+	    
+	    float[] temp2 = new float[1];
+	    for (i = 0; i < nElems; i++)
+	    {
+	        if (!cmsplugin._cmsReadFloat32Number(io, temp2))
+		    {
+		    	return null;
+		    }
+	        Matrix[i] = temp2[0];
+	    }
+	    
+	    for (i = 0; i < OutputChans; i++)
+	    {
+	        if (!cmsplugin._cmsReadFloat32Number(io, temp2))
+		    {
+		    	return null;
+		    }
+	        Offsets[i] = temp2[0];
+	    }
+	    
+	    mpe = cmslut.cmsStageAllocMatrix(self.ContextID, OutputChans, InputChans, Matrix, Offsets);
+	    
+	    nItems[0] = 1;
+	    
+	    return mpe;
+	}
+	
+	private static boolean Type_MPEmatrix_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		int i, nElems;
+	    cmsStage mpe = (cmsStage)Ptr;
+	    _cmsStageMatrixData Matrix = (_cmsStageMatrixData)mpe.Data;
+	    
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.InputChannels))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.OutputChannels))
+	    {
+	    	return false;
+	    }
+	    
+	    nElems = mpe.InputChannels * mpe.OutputChannels;
+	    
+	    for (i = 0; i < nElems; i++)
+	    {
+	        if (!cmsplugin._cmsWriteFloat32Number(io, (float)Matrix.Double[i]))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    for (i = 0; i < mpe.OutputChannels; i++)
+	    {
+	        if (Matrix.Offset == null)
+	        {
+	        	if (!cmsplugin._cmsWriteFloat32Number(io, 0))
+	    	    {
+	    	    	return false;
+	    	    }
+	        }
+	        else
+	        {
+	        	if (!cmsplugin._cmsWriteFloat32Number(io, (float)Matrix.Offset[i]))
+	       	    {
+	       	    	return false;
+	       	    }
+	        }
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_MPEclut_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		cmsStage mpe = null;
+	    short InputChans, OutputChans;
+	    byte[] Dimensions8 = new byte[16];
+	    int i, nMaxGrids;
+	    int[] GridPoints = new int[lcms2_plugin.MAX_INPUT_DIMENSIONS];
+	    _cmsStageCLutData clut;
+	    
+	    short[] temp = new short[1];
+	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    InputChans = temp[0];
+	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    OutputChans = temp[0];
+	    
+	    if (io.Read.run(io, Dimensions8, /*sizeof(cmsUInt8Number)*/1, 16) != 16)
+	    {
+	    	nItems[0] = 0;
+		    if (mpe != null)
+		    {
+		    	cmslut.cmsStageFree(mpe);
+		    }
+		    return null;
+	    }
+	    
+	    // Copy MAX_INPUT_DIMENSIONS at most. Expand to cmsUInt32Number
+	    nMaxGrids = InputChans > lcms2_plugin.MAX_INPUT_DIMENSIONS ? lcms2_plugin.MAX_INPUT_DIMENSIONS : InputChans;
+	    for (i = 0; i < nMaxGrids; i++)
+	    {
+	    	GridPoints[i] = Dimensions8[i];
+	    }
+	    
+	    // Allocate the true CLUT
+	    mpe = cmslut.cmsStageAllocCLutFloatGranular(self.ContextID, GridPoints, InputChans, OutputChans, null);
+	    if (mpe == null)
+	    {
+	    	nItems[0] = 0;
+		    if (mpe != null)
+		    {
+		    	cmslut.cmsStageFree(mpe);
+		    }
+		    return null;
+	    }
+	    
+	    // Read the data
+	    clut = (_cmsStageCLutData)mpe.Data;
+	    float[] temp2 = new float[1];
+	    VirtualPointer.TypeProcessor proc = clut.Tab.getProcessor();
+	    int pos = clut.Tab.getPosition();
+	    for (i = 0; i < clut.nEntries; i++)
+	    {
+	        if (!cmsplugin._cmsReadFloat32Number(io, temp2))
+	        {
+	        	nItems[0] = 0;
+	    	    if (mpe != null)
+	    	    {
+	    	    	cmslut.cmsStageFree(mpe);
+	    	    }
+	    	    return null;
+	        }
+	        proc.write(tamp2[0], true);
+	    }
+	    clut.Tab.setPosition(pos);
+	    
+	    nItems[0] = 1;    
+	    return mpe;
+	}
+	
+	// Write a CLUT in floating point
+	private static boolean Type_MPEclut_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		byte[] Dimensions8 = new byte[16];
+	    int i;
+	    cmsStage mpe = (cmsStage)Ptr;
+	    _cmsStageCLutData clut = (_cmsStageCLutData)mpe.Data;
+	    
+	    // Check for maximum number of channels
+	    if (mpe.InputChannels > 15)
+	    {
+	    	return false;
+	    }
+	    
+	    // Only floats are supported in MPE
+	    if (!clut.HasFloatValues)
+	    {
+	    	return false;
+	    }
+	    
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.InputChannels))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.OutputChannels))
+	    {
+	    	return false;
+	    }
+	    
+	    for (i = 0; i < mpe.InputChannels; i++)
+	    {
+	    	Dimensions8[i] = (byte)clut.Params.nSamples[i];
+	    }
+	    
+	    if (!io.Write.run(io, 16, Dimensions8))
+	    {
+	    	return false;
+	    }
+	    
+	    VirtualPointer.TypeProcessor proc = clut.Tab.getProcessor();
+	    int pos = clut.Tab.getPosition();
+	    for (i = 0; i < clut.nEntries; i++)
+	    {
+	        if (!cmsplugin._cmsWriteFloat32Number(io, proc.readFloat(true)))
+		    {
+		    	return false;
+		    }
+	    }
+	    clut.Tab.setPosition(pos);
+
+	    return true;
+	}
+	
+	private static _cmsTagTypeLinkedList SupportedMPEtypes;
+	
+	private static void setupMPEtypes()
+	{
+		cmsTagTypeHandler.tagHandlerDupPtr genDup = new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return GenericMPEdup(self, Ptr, n);
+			}
+		};
+		cmsTagTypeHandler.tagHandlerFreePtr genFree = new new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				GenericMPEfree(self, Ptr);
+			}
+		};
+		
+		_cmsTagTypeLinkedList tempMPETypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigCLutElemType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_MPEclut_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_MPEclut_Write(self, io, Ptr, nItems);
+			}
+		}, genDup, genFree), null);
+		tempMPETypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigMatrixElemType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_MPEmatrix_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_MPEmatrix_Write(self, io, Ptr, nItems);
+			}
+		}, genDup, genFree), tempMPETypes);
+		tempMPETypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigCurveSetElemType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_MPEcurve_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_MPEcurve_Write(self, io, Ptr, nItems);
+			}
+		}, genDup, genFree), tempMPETypes);
+		
+		tempMPETypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigEAcsElemType, null, null, null, null), tempMPETypes);		// Ignore those elements for now
+		SupportedMPEtypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigBAcsElemType, null, null, null, null), tempMPETypes);	// (That's what the spec says)
+	}
+	
+	private static final int DEFAULT_MPE_TYPE_COUNT = 5;
+	
+	private static boolean ReadMPEElem_fun(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
+	{
+	    int ElementSig;
+	    cmsTagTypeHandler TypeHandler;
+	    cmsStage mpe = null;
+	    int nItems;
+	    cmsPipeline NewLUT = (cmsPipeline)Cargo;
+	    
+	    // Take signature and channels for each element.
+	    int[] temp = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return false;
+	    }
+	    ElementSig = temp[0];
+	    
+	    // The reserved placeholder
+	    if (!cmsplugin._cmsReadUInt32Number(io, NULL))
+	    {
+	    	return false;
+	    }
+	    
+	    // Read diverse MPE types
+	    TypeHandler = GetHandler(ElementSig, SupportedMPEtypes);
+	    if (TypeHandler == NULL)
+	    {
+	        StringBuffer String = new StringBuffer(4);
+	        
+	        cmserr._cmsTagSignature2String(String, ElementSig);
+	        
+	        // An unknown element was found. 
+	        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknown MPE type '%s' found.", new Object[]{String});
+	        return false;
+	    }
+	    
+	    // If no read method, just ignore the element (valid for cmsSigBAcsElemType and cmsSigEAcsElemType)
+	    // Read the MPE. No size is given
+	    if (TypeHandler.ReadPtr != null)
+	    {
+	        // This is a real element which should be read and processed
+	    	temp[0] = nItems;
+	        mpe = (cmsStage)TypeHandler.ReadPtr.run(self, io, temp, SizeOfTag);
+	        nItems = temp[0];
+	        if (mpe == null)
+		    {
+		    	return false;
+		    }
+	        
+	        // All seems ok, insert element
+	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	    }
+	    
+	    return true;
+	}
+	
+	private static final PositionTableEntryFn ReadMPEElem = new PositionTableEntryFn()
+	{
+		public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
+		{
+			return ReadMPEElem_fun(self, io, Cargo, n, SizeOfTag);
+		}
+	};
+	
+	// This is the main dispatcher for MPE
+	private static Object Type_MPE_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		short InputChans, OutputChans;
+	    int[] ElementCount = new int[1];
+	    cmsPipeline NewLUT = null;
+	    int BaseOffset;
+	    
+	    // Get actual position as a basis for element offsets
+	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    
+	    // Read channels and element count
+	    short[] temp = new short[1];
+	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    InputChans = temp[0];
+	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    OutputChans = temp[0];
+	    
+	    // Allocates an empty LUT
+	    NewLUT = cmslut.cmsPipelineAlloc(self.ContextID, InputChans, OutputChans);
+	    if (NewLUT == null)
+	    {
+	    	return null
+	    }
+	    
+	    if (!cmsplugin._cmsReadUInt32Number(io, ElementCount))
+	    {
+	    	return null
+	    }
+	    
+	    if (!ReadPositionTable(self, io, ElementCount[0], BaseOffset, NewLUT, ReadMPEElem))
+	    {
+	        if (NewLUT != null)
+	        {
+	        	cmslut.cmsPipelineFree(NewLUT);
+	        }
+	        nItems[0] = 0;
+	        return null;
+	    }
+	    
+	    // Success
+	    nItems[0] = 1;
+	    return NewLUT;
+	}
+	
+	// This one is a liitle bit more complex, so we don't use position tables this time.
+	private static boolean Type_MPE_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		int i, BaseOffset, DirectoryPos, CurrentPos;
+	    int inputChan, outputChan;
+	    int ElemCount, Before;
+	    int[] ElementOffsets = null, ElementSizes = null;
+	    int ElementSig;
+	    cmsPipeline Lut = (cmsPipeline)Ptr;
+	    cmsStage Elem = Lut.Elements;
+	    cmsTagTypeHandler TypeHandler;
+	    
+	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    
+	    inputChan  = cmslut.cmsPipelineInputChannels(Lut);
+	    outputChan = cmslut.cmsPipelineOutputChannels(Lut);
+	    ElemCount  = cmslut.cmsPipelineStageCount(Lut);
+	    
+	    ElementOffsets = new int[ElemCount];
+	    
+	    ElementSizes = new int[ElemCount];
+	    
+	    // Write the head
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)inputChan))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)outputChan))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, (short)ElemCount))
+	    {
+	    	return false;
+	    }
+	    
+	    DirectoryPos = io.Tell.run(io);
+	    
+	    // Write a fake directory to be filled latter on
+	    for (i = 0; i < ElemCount; i++)
+	    {
+	        if (!cmsplugin._cmsWriteUInt32Number(io, 0)) // Offset 
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWriteUInt32Number(io, 0)) // size
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    // Write each single tag. Keep track of the size as well.
+	    for (i = 0; i < ElemCount; i++)
+	    {
+	        ElementOffsets[i] = io.Tell.run(io) - BaseOffset;
+	        
+	        ElementSig = Elem.Type;
+	        
+	        TypeHandler = GetHandler(ElementSig, SupportedMPEtypes);
+	        if (TypeHandler == null)
+	        {
+	        	StringBuffer String = new StringBuffer(4);
+	                
+                cmserr._cmsTagSignature2String(String, ElementSig);
+                
+                // An unknow element was found.
+                cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Found unknown MPE type '%s'", new Object[]{String});
+                return false;
+	        }
+	        
+	        if (!cmsplugin._cmsWriteUInt32Number(io, ElementSig))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+		    {
+		    	return false;
+		    }
+	        Before = io.Tell.run(io);
+	        if (!TypeHandler.WritePtr.run(self, io, Elem, 1))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWriteAlignment(io))
+		    {
+		    	return false;
+		    }
+	        
+	        ElementSizes[i] = io.Tell.run(io) - Before;
+	        
+	        Elem = Elem.Next;
+	    }
+	    
+	    // Write the directory
+	    CurrentPos = io.Tell.run(io);
+	    
+	    if (!io.Seek.run(io, DirectoryPos))
+	    {
+	    	return false;
+	    }
+	    
+	    for (i = 0; i < ElemCount; i++)
+	    {
+	        if (!cmsplugin._cmsWriteUInt32Number(io, ElementOffsets[i]))
+		    {
+		    	return false;
+		    }
+	        if (!cmsplugin._cmsWriteUInt32Number(io, ElementSizes[i]))
+		    {
+		    	return false;
+		    }
+	    }
+	    
+	    if (!io.Seek.run(io, CurrentPos))
+	    {
+	    	return false;
+	    }
+	    
+	    return true;
+	}
+	
+	private static Object Type_MPE_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmslut.cmsPipelineDup((cmsPipeline)Ptr);
+	}
+	
+	private static void Type_MPE_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmslut.cmsPipelineFree((cmsPipeline)Ptr);
+	}
+	
+	// ********************************************************************************
+	// Type cmsSigVcgtType
+	// ********************************************************************************
+	
+	private static final int cmsVideoCardGammaTableType = 0;
+	private static final int cmsVideoCardGammaFormulaType = 1;
+	
+	// Used internally
+	private static class _cmsVCGTGAMMA
+	{
+		public double Gamma;
+		public double Min;
+		public double Max;
+	}
+	
+	private static Object Type_vcgt_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		int TagType, n, i;
+	    cmsToneCurve[] Curves;
+	    
+	    nItems[0] = 0;
+	    
+	    // Read tag type
+	    int[] temp = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    {
+	    	return null;
+	    }
+	    TagType = temp[0];
+	    
+	    // Allocate space for the array
+	    Curves = new cmsToneCurve[3];
+	    
+	    short[] temp2 = new short[1];
+	    // There are two possible flavors
+	    switch (TagType)
+	    {
+		    // Gamma is stored as a table
+		    case cmsVideoCardGammaTableType: 
+		    {
+		    	short nChannels, nElems, nBytes;
+		    	
+		    	// Check channel count, which should be 3 (we don't support monochrome this time)
+		    	if (!cmsplugin._cmsReadUInt16Number(io, temp2))
+		    	{
+		    		// Regret, free all resources
+		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+		    	    return null;
+		    	}
+		    	nChannels = temp2[0];
+		    	
+		    	if (nChannels != 3)
+		    	{
+		    		cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unsupported number of channels for VCGT '%d'", new Object[]{new Short(nChannels)});
+		    		// Regret, free all resources
+		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+		    	    return null;
+		    	}
+		    	
+		    	// Get Table element count and bytes per element
+		    	if (!cmsplugin._cmsReadUInt16Number(io, temp2))
+		    	{
+		    		// Regret, free all resources
+		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+		    	    return null;
+		    	}
+		    	nElems = temp2[0];
+		    	if (!cmsplugin._cmsReadUInt16Number(io, temp2))
+		    	{
+		    		// Regret, free all resources
+		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+		    	    return null;
+		    	}
+		    	nBytes = temp2[0];
+		    	
+		    	// Populate tone curves
+		    	for (n = 0; n < 3; n++)
+		    	{
+		    		Curves[n] = cmsgamma.cmsBuildTabulatedToneCurve16(self.ContextID, nElems, null);
+		    		if (Curves[n] == null)
+			    	{
+			    		// Regret, free all resources
+			    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+			    	    return null;
+			    	}
+		    		
+		    		// On depending on byte depth
+		    		switch (nBytes)
+		    		{
+			    		// One byte, 0..255
+			    		case 1:
+			    			byte[] v = new byte[1];
+			    			for (i = 0; i < nElems; i++)
+			    			{
+			    				if (!cmsplugin._cmsReadUInt8Number(io, v))
+			    		    	{
+			    		    		// Regret, free all resources
+			    		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+			    		    	    return null;
+			    		    	}
+			    				Curves[n].Table16[i] = lcms2_internal.FROM_8_TO_16(v[0]);
+		    				}
+			    			break;
+		    			// One word 0..65535
+		    			case 2:
+		    				if (!cmsplugin._cmsReadUInt16Array(io, nElems, Curves[n].Table16))
+		    		    	{
+		    		    		// Regret, free all resources
+		    		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+		    		    	    return null;
+		    		    	}
+		    				break;
+						// Unsupported
+						default:
+							cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unsupported bit depth for VCGT '%d'", new Object[]{new Integer(nBytes * 8)});
+							// Regret, free all resources
+	    		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+	    		    	    return null;
+		    		}
+		    	} // For all 3 channels
+		    }
+		    break;
+		    
+		    // In this case, gamma is stored as a formula
+		    case cmsVideoCardGammaFormulaType:
+		    {
+		    	_cmsVCGTGAMMA[] Colorant = new _cmsVCGTGAMMA[3];
+		    	
+		    	double[] Params = new double[10];
+		    	// Populate tone curves
+		    	for (n = 0; n < 3; n++)
+		    	{
+		    		if (!_cmsRead15Fixed16Number(io, Params))
+			    	{
+			    		// Regret, free all resources
+			    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+			    	    return null;
+			    	}
+		    		Colorant[n].Gamma = Params[0];
+		    		if (!_cmsRead15Fixed16Number(io, Params))
+			    	{
+			    		// Regret, free all resources
+			    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+			    	    return null;
+			    	}
+		    		Colorant[n].Min = Params[0];
+		    		if (!_cmsRead15Fixed16Number(io, Params))
+			    	{
+			    		// Regret, free all resources
+			    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+			    	    return null;
+			    	}
+		    		Colorant[n].Max = Params[0];
+		    		
+		            // Parametric curve type 5 is:
+		            // Y = (aX + b)^Gamma + e | X >= d
+		            // Y = cX + f             | X < d
+		    		
+		            // vcgt formula is:
+		            // Y = (Max – Min) * (X ^ Gamma) + Min
+		            
+		            // So, the translation is
+		            // a = (Max – Min) ^ ( 1 / Gamma) 
+		            // e = Min
+		            // b=c=d=f=0
+		    		
+		    		Params[0] = Colorant[n].Gamma;
+		    		Params[1] = pow((Colorant[n].Max - Colorant[n].Min), (1.0 / Colorant[n].Gamma));
+		    		Params[2] = 0;
+		    		Params[3] = 0;
+		    		Params[4] = 0;
+		    		Params[5] = Colorant[n].Min;
+		    		Params[6] = 0;
+		    		
+		    		Curves[n] = cmsgamma.cmsBuildParametricToneCurve(self.ContextID, 5, Params);
+		    		if (Curves[n] == null)
+			    	{
+			    		// Regret, free all resources
+			    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+			    	    return null;
+			    	}
+		    	}
+		    }
+		    break;
+		    
+		    // Unsupported
+		    default:
+		    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unsupported tag type for VCGT '%d'", new Object[]{new Integer(TagType)});
+	    		// Regret, free all resources
+	    		cmsgamma.cmsFreeToneCurveTriple(Curves);
+	    	    return null;
+	    }
+	    
+	    nItems[0] = 1;
+	    return Curves;
+	}
+	
+	// We don't support all flavors, only 16bits tables and formula
+	private static boolean Type_vcgt_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		cmsToneCurve[] Curves = (cmsToneCurve[])Ptr;
+		int i, j;
+		
+		if (cmsgamma.cmsGetToneCurveParametricType(Curves[0]) == 5 &&
+			cmsgamma.cmsGetToneCurveParametricType(Curves[1]) == 5 &&
+			cmsgamma.cmsGetToneCurveParametricType(Curves[2]) == 5)
+		{
+			if (!cmsplugin._cmsWriteUInt32Number(io, cmsVideoCardGammaFormulaType))
+			{
+				return false;
+			}
+			
+			// Save parameters
+			_cmsVCGTGAMMA v = new _cmsVCGTGAMMA();
+			for (i = 0; i < 3; i++)
+			{
+				v.Gamma = Curves[i].Segments[0].Params[0];
+				v.Min   = Curves[i].Segments[0].Params[5];
+				v.Max   = pow(Curves[i].Segments[0].Params[1], v.Gamma) + v.Min;
+				
+				if (!cmsplugin._cmsWrite15Fixed16Number(io, v.Gamma))
+				{
+					return false;
+				}
+				if (!cmsplugin._cmsWrite15Fixed16Number(io, v.Min))
+				{
+					return false;
+				}
+				if (!cmsplugin._cmsWrite15Fixed16Number(io, v.Max))
+				{
+					return false;
+				}
+			}
+		}
+		else
+		{
+			// Always store as a table of 256 words
+			if (!cmsplugin._cmsWriteUInt32Number(io, cmsVideoCardGammaTableType))
+			{
+				return false;
+			}
+			if (!cmsplugin._cmsWriteUInt16Number(io, 3))
+			{
+				return false;
+			}
+			if (!cmsplugin._cmsWriteUInt16Number(io, 256))
+			{
+				return false;
+			}
+			if (!cmsplugin._cmsWriteUInt16Number(io, 2))
+			{
+				return false;
+			}
+			
+			for (i = 0; i < 3; i++)
+			{
+				for (j = 0; j < 256; j++)
+				{
+					float v = cmsgamma.cmsEvalToneCurveFloat(Curves[i], (float)(j / 255.0));
+					short n = lcms2_internal._cmsQuickSaturateWord(v * 65535.0);
+					
+					if (!cmsplugin._cmsWriteUInt16Number(io, n))
+					{
+						return false;
+					}
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	private static Object Type_vcgt_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		cmsToneCurve[] OldCurves = (cmsToneCurve[])Ptr;
+		cmsToneCurve[] NewCurves;
+		
+		NewCurves = new cmsToneCurve[3];
+		
+		NewCurves[0] = cmsgamma.cmsDupToneCurve(OldCurves[0]);
+	    NewCurves[1] = cmsgamma.cmsDupToneCurve(OldCurves[1]);
+		NewCurves[2] = cmsgamma.cmsDupToneCurve(OldCurves[2]);
+		
+	    return NewCurves;
+	}
+	
+	private static void Type_vcgt_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmsgamma.cmsFreeToneCurveTriple((cmsToneCurve[])Ptr);
+	}
+	
+	// ********************************************************************************
+	// Type support main routines
+	// ********************************************************************************
+	
+	// This is the list of built-in types
+	private static _cmsTagTypeLinkedList SupportedTagTypes;
+	
+	private static void setupTypes()
+	{
+		_cmsTagTypeLinkedList tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigVcgtType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_vcgt_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_vcgt_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_vcgt_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_vcgt_Free(self, Ptr);
+			}
+		}), null);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigProfileSequenceIdType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_ProfileSequenceId_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_ProfileSequenceId_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_ProfileSequenceId_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_ProfileSequenceId_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsMonacoBrokenCurveType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_Curve_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_Curve_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_Curve_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_Curve_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsCorbisBrokenXYZtype, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_XYZ_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_XYZ_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_XYZ_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_XYZ_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigXYZType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_XYZ_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_XYZ_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_XYZ_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_XYZ_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigViewingConditionsType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_ViewingConditions_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_ViewingConditions_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_ViewingConditions_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_ViewingConditions_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigScreeningType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_Screening_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_Screening_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_Screening_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_Screening_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigMultiProcessElementType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_MPE_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_MPE_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_MPE_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_MPE_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigCrdInfoType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_CrdInfo_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_CrdInfo_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_CrdInfo_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_CrdInfo_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigUcrBgType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_UcrBg_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_UcrBg_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_UcrBg_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_UcrBg_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigLutBtoAType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_LUTB2A_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_LUTB2A_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_LUTB2A_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_LUTB2A_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigLutAtoBType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_LUTA2B_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_LUTA2B_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_LUTA2B_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_LUTA2B_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigDataType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_Data_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_Data_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_Data_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_Data_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigMeasurementType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_Measurement_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_Measurement_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_Measurement_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_Measurement_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigSignatureType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_Signature_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_Signature_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_Signature_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_Signature_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigProfileSequenceDescType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_ProfileSequenceDesc_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_ProfileSequenceDesc_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_ProfileSequenceDesc_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_ProfileSequenceDesc_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigMultiLocalizedUnicodeType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_MLU_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_MLU_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_MLU_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_MLU_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigNamedColor2Type, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_NamedColor_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_NamedColor_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_NamedColor_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_NamedColor_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigColorantTableType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_ColorantTable_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_ColorantTable_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_ColorantTable_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_ColorantTable_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigLut16Type, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_LUT16_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_LUT16_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_LUT16_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_LUT16_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigLut8Type, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_LUT8_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_LUT8_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_LUT8_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_LUT8_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigDateTimeType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_DateTime_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_DateTime_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_DateTime_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_DateTime_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigParametricCurveType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_ParametricCurve_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_ParametricCurve_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_ParametricCurve_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_ParametricCurve_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigCurveType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_Curve_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_Curve_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_Curve_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_Curve_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigTextDescriptionType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_Text_Description_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_Text_Description_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_Text_Description_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_Text_Description_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigTextType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_Text_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_Text_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_Text_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_Text_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigU16Fixed16ArrayType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_U16Fixed16_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_U16Fixed16_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_U16Fixed16_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_U16Fixed16_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigS15Fixed16ArrayType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_S15Fixed16_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_S15Fixed16_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_S15Fixed16_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_S15Fixed16_Free(self, Ptr);
+			}
+		}), tempTypes);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigColorantOrderType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_ColorantOrderType_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_ColorantOrderType_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_ColorantOrderType_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_ColorantOrderType_Free(self, Ptr);
+			}
+		}), tempTypes);
+		SupportedTagTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigChromaticityType, new cmsTagTypeHandler.tagHandlerReadPtr
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			{
+				return Type_Chromaticity_Read(self, io, nItems, int);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
+			{
+				return Type_Chromaticity_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_Chromaticity_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_Chromaticity_Free(self, Ptr);
+			}
+		}), tempTypes);
+	}
+	
+	private static final int DEFAULT_TAG_TYPE_COUNT = 30;
+	
+	// Both kind of plug-ins share same structure
+	public static boolean _cmsRegisterTagTypePlugin(cmsPluginBase Data)
+	{
+	    return RegisterTypesPlugin(Data, SupportedTagTypes, DEFAULT_TAG_TYPE_COUNT);
+	}
+	
+	public static boolean _cmsRegisterMultiProcessElementPlugin(cmsPluginBase Data)
+	{
+	    return RegisterTypesPlugin(Data, SupportedMPEtypes, DEFAULT_MPE_TYPE_COUNT);
+	}
+	
+	// Wrapper for tag types
+	public cmsTagTypeHandler _cmsGetTagTypeHandler(int sig)
+	{
+	    return GetHandler(sig, SupportedTagTypes);
+	}
+	
+	// ********************************************************************************
+	// Tag support main routines
+	// ********************************************************************************
+	
+	private static class _cmsTagLinkedList
+	{
+		public int Signature;
+        public cmsTagDescriptor Descriptor;
+        public _cmsTagLinkedList Next;
+        
+        public _cmsTagLinkedList(int Signature, cmsTagDescriptor Descriptor, _cmsTagLinkedList Next)
+        {
+        	this.Signature = Signature;
+        	this.Descriptor = Descriptor;
+        	this.Next = Next;
+        }
+	}
+
+	// This is the list of built-in tags
+	private static _cmsTagLinkedList SupportedTags;
+	
+	private static void setupTags()
+	{
+		_cmsTagLinkedList tempTag = new _cmsTagLinkedList(lcms2.cmsSigProfileSequenceIdTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigProfileSequenceIdType}, null), null);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigVcgtTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigVcgtType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigScreeningTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigScreeningType}, null), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigViewingConditionsTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigViewingConditionsType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigScreeningDescTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigTextDescriptionType}, null), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToD3Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigMultiProcessElementType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToD2Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigMultiProcessElementType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToD1Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigMultiProcessElementType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToD0Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigMultiProcessElementType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigDToB3Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigMultiProcessElementType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigDToB2Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigMultiProcessElementType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigDToB1Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigMultiProcessElementType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigDToB0Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigMultiProcessElementType}, null), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigCrdInfoTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigCrdInfoType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigUcrBgTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigUcrBgType}, null), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigViewingCondDescTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextDescriptionType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextType}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideTextDescType(ICCVersion, Data);
+			}
+		}), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPs2RenderingIntentTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigDataType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPs2CSATag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigDataType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPs2CRD3Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigDataType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPs2CRD2Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigDataType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPs2CRD1Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigDataType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPs2CRD0Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigDataType}, null), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigMeasurementTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigMeasurementType}, null), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigSaturationRenderingIntentGamutTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigSignatureType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPerceptualRenderingIntentGamutTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigSignatureType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigColorimetricIntentImageStateTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigSignatureType}, null), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigTechnologyTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigSignatureType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigProfileSequenceDescTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigProfileSequenceDescType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigProfileDescriptionTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextDescriptionType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextType}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideTextDescType(ICCVersion, Data);
+			}
+		}), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPreview2Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideLUTtypeB2A(ICCVersion, Data);
+			}
+		}), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPreview1Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideLUTtypeB2A(ICCVersion, Data);
+			}
+		}), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPreview0Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideLUTtypeB2A(ICCVersion, Data);
+			}
+		}), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigNamedColor2Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigNamedColor2Type}, null), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigMediaWhitePointTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigMediaBlackPointTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, null), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigLuminanceTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigXYZType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigGrayTRCTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigCurveType, lcms2.cmsSigParametricCurveType}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideCurveType(ICCVersion, Data);
+			}
+		}), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigGamutTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideLUTtypeB2A(ICCVersion, Data);
+			}
+		}), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigDeviceModelDescTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextDescriptionType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextType}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideTextDescType(ICCVersion, Data);
+			}
+		}), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigDeviceMfgDescTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextDescriptionType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextType}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideTextDescType(ICCVersion, Data);
+			}
+		}), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigDateTimeTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigDateTimeType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigCopyrightTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextDescriptionType}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideTextType(ICCVersion, Data);
+			}
+		}), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigColorantTableOutTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigColorantTableType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigColorantTableTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigColorantTableType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigColorantOrderTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigColorantOrderType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigChromaticityTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigChromaticityType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigChromaticAdaptationTag, new cmsTagDescriptor(9, 1, new int{lcms2.cmsSigS15Fixed16ArrayType}, null), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigCharTargetTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigTextType}, null), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigCalibrationDateTimeTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigDateTimeType}, null), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBlueTRCTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigCurveType, lcms2.cmsSigParametricCurveType, lcms2.cmsMonacoBrokenCurveType}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideCurveType(ICCVersion, Data);
+			}
+		}), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigGreenTRCTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigCurveType, lcms2.cmsSigParametricCurveType, lcms2.cmsMonacoBrokenCurveType}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideCurveType(ICCVersion, Data);
+			}
+		}), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigRedTRCTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigCurveType, lcms2.cmsSigParametricCurveType, lcms2.cmsMonacoBrokenCurveType}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideCurveType(ICCVersion, Data);
+			}
+		}), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBlueColorantTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideXYZtype(ICCVersion, Data);
+			}
+		}), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigGreenColorantTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideXYZtype(ICCVersion, Data);
+			}
+		}), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigRedColorantTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideXYZtype(ICCVersion, Data);
+			}
+		}), tempTag);
+		
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToA2Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideLUTtypeB2A(ICCVersion, Data);
+			}
+		}), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToA1Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideLUTtypeB2A(ICCVersion, Data);
+			}
+		}), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToA0Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideLUTtypeB2A(ICCVersion, Data);
+			}
+		}), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigAToB2Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutAtoBType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideLUTtypeA2B(ICCVersion, Data);
+			}
+		}), tempTag);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigAToB1Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutAtoBType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideLUTtypeA2B(ICCVersion, Data);
+			}
+		}), tempTag);
+		SupportedTags = new _cmsTagLinkedList(lcms2.cmsSigAToB0Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutAtoBType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		{
+			public int run(double ICCVersion, final Object Data)
+			{
+				return DecideLUTtypeA2B(ICCVersion, Data);
+			}
+		}), tempTag);
+	}
+	
+	/*
+    Not supported                 Why
+    =======================       =========================================                
+    cmsSigOutputResponseTag   ==> WARNING, POSSIBLE PATENT ON THIS SUBJECT!                
+    cmsSigNamedColorTag       ==> Deprecated                                 
+    cmsSigDataTag             ==> Ancient, unused             
+    cmsSigDeviceSettingsTag   ==> Deprecated, useless     
+	 */
+	
+	private static final int DEFAULT_TAG_COUNT = 61;
+	
+	private static void findLinkedListAtIndex(_cmsTagLinkedList list, int index)
+	{
+		for(int i = index; i >= 0 && list != null; i--)
+		{
+			list = list.Next;
+		}
+		return null;
+	}
+	
+	public static boolean _cmsRegisterTagPlugin(cmsPluginBase Data)
+	{
+	    cmsPluginTag Plugin = (cmsPluginTag)Data;
+	    _cmsTagLinkedList pt, Anterior;
+	    
+	    if (Data == null)
+	    {
+	    	findLinkedListAtIndex(SupportedTags, DEFAULT_TAG_COUNT-1).Next = null;
+	        return true;
+	    }
+	    
+	    pt = Anterior = SupportedTags; 
+	    while (pt != null)
+	    {
+	        if (Plugin.Signature == pt.Signature)
+	        {
+	            pt.Descriptor = Plugin.Descriptor; // Replace old behaviour
+	            return true;
+	        }   
+	        
+	        Anterior = pt;          
+	        pt = pt.Next;
+	    }
+	    
+	    pt = new _cmsTagLinkedList();
+	    
+	    pt.Signature  = Plugin.Signature;
+	    pt.Descriptor = Plugin.Descriptor;  
+	    pt.Next       = null;
+	    
+	    if (Anterior != null)
+	    {
+	    	Anterior.Next = pt;
+	    }
+	    
+	    return true;
+	}
+	
+	// Return a descriptor for a given tag or NULL
+	public cmsTagDescriptor _cmsGetTagDescriptor(int sig)
+	{
+	    _cmsTagLinkedList pt;
+	    
+	    for (pt = SupportedTags; pt != null; pt = pt.Next)
+	    {
+	    	if (sig == pt.Signature)
+	    	{
+	    		return pt.Descriptor;
+	    	}
+	    }
+	    
+	    return null;
+	}
 }
