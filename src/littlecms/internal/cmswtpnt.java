@@ -38,14 +38,27 @@ public
 //#endif
 final class cmswtpnt
 {
+	private static boolean XYZcalled, xyZcalled;
+	
 	// D50 - Widely used
 	public static cmsCIEXYZ cmsD50_XYZ()
 	{
+		if(XYZcalled)
+		{
+			return lcms2.cmsD50_XYZ;
+		}
+		XYZcalled = true;
 		return new cmsCIEXYZ(lcms2.cmsD50X, lcms2.cmsD50Y, lcms2.cmsD50Z);
 	}
 	
 	public static cmsCIExyY cmsD50_xyY()
 	{
+		if(xyZcalled)
+		{
+			return lcms2.cmsD50_xyY;
+		}
+		xyZcalled = true;
+		
 		cmsCIExyY D50xyY = new cmsCIExyY();
 		
 		cmspcs.cmsXYZ2xyY(D50xyY, cmsD50_XYZ());

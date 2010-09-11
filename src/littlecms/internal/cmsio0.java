@@ -74,53 +74,6 @@ final class cmsio0
 		public int Pointer; // Points to current location
 	}
 	
-	private static int NULLRead(cmsIOHANDLER iohandler, byte[] Buffer, int size, int count)
-	{   
-	    FILENULL ResData = (FILENULL)iohandler.stream;
-	    
-	    int len = size * count;
-	    ResData.Pointer += len;
-	    return count;
-	}
-	
-	private static boolean NULLSeek(cmsIOHANDLER iohandler, int offset)
-	{
-		FILENULL ResData = (FILENULL)iohandler.stream;
-
-	    ResData.Pointer = offset; 
-	    return true;
-	}
-
-	private static int NULLTell(cmsIOHANDLER iohandler)
-	{
-		FILENULL ResData = (FILENULL)iohandler.stream;
-	    return ResData.Pointer;
-	}
-	
-	private static boolean NULLWrite(cmsIOHANDLER iohandler, int size, final byte[] Ptr)
-	{
-		FILENULL ResData = (FILENULL)iohandler.stream;
-		
-	    ResData.Pointer += size;
-	    if (ResData.Pointer > iohandler.UsedSpace)
-	    {
-	    	iohandler.UsedSpace = ResData.Pointer;
-	    }
-	    
-	    return true;
-	}
-	
-	private static boolean NULLClose(cmsIOHANDLER iohandler)
-	{
-		FILENULL ResData = (FILENULL)iohandler.stream;
-		
-//#ifdef RAW_C
-		cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(ResData));
-		cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(iohandler));
-//#endif
-	    return true;
-	}
-	
 	// The NULL IOhandler creator
 	public static cmsIOHANDLER cmsOpenIOhandlerFromNULL(cmsContext ContextID)
 	{
@@ -162,39 +115,66 @@ final class cmsio0
 	    iohandler.UsedSpace = 0;
 	    iohandler.PhysicalFile.setLength(0);
 	    
+	    //NULLRead
 	    iohandler.Read = new _cms_io_handler._ioRead()
 	    {
 			public int run(_cms_io_handler iohandler, byte[] Buffer, int size, int count)
 			{
-				return NULLRead((cmsIOHANDLER)iohandler, Buffer, size, count);
+				FILENULL ResData = (FILENULL)iohandler.stream;
+			    
+			    int len = size * count;
+			    ResData.Pointer += len;
+			    return count;
 			}
 		};
+		//NULLSeek
 	    iohandler.Seek = new _cms_io_handler._ioSeek()
 	    {
 			public boolean run(_cms_io_handler iohandler, int offset)
 			{
-				return NULLSeek((cmsIOHANDLER)iohandler, offset);
+				FILENULL ResData = (FILENULL)iohandler.stream;
+				
+			    ResData.Pointer = offset; 
+			    return true;
 			}
 		};
+		//NULLClose
 	    iohandler.Close = new _cms_io_handler._ioClose()
 	    {
 			public boolean run(_cms_io_handler iohandler)
 			{
-				return NULLClose((cmsIOHANDLER)iohandler);
+				FILENULL ResData = (FILENULL)iohandler.stream;
+				
+//#ifdef RAW_C
+				cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(ResData));
+				cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(iohandler));
+//#endif
+			    return true;
 			}
 		};
+		//NULLTell
 	    iohandler.Tell = new _cms_io_handler._ioTell()
 	    {
 			public int run(_cms_io_handler iohandler)
 			{
-				return NULLTell((cmsIOHANDLER)iohandler);
+				FILENULL ResData = (FILENULL)iohandler.stream;
+			    return ResData.Pointer;
 			}
 		};
+		//NULLWrite
 	    iohandler.Write = new _cms_io_handler._ioWrite()
 	    {
 			public boolean run(_cms_io_handler iohandler, int size, byte[] Buffer)
 			{
-				return NULLWrite((cmsIOHANDLER)iohandler, size, Buffer);
+				FILENULL ResData = (FILENULL)iohandler.stream;
+				
+			    ResData.Pointer += size;
+			    if (ResData.Pointer > iohandler.UsedSpace)
+			    {
+			    	iohandler.UsedSpace = ResData.Pointer;
+			    }
+			    
+			    return true;
 			}
 		};
 	    
@@ -217,103 +197,6 @@ final class cmsio0
 	    public int Pointer;
 	    /** As title*/
 	    public boolean FreeBlockOnClose;
-	}
-	
-	private static int MemoryRead(cmsIOHANDLER iohandler, byte[] Buffer, int size, int count)
-	{   
-		FILEMEM ResData = (FILEMEM)iohandler.stream;
-		
-		VirtualPointer Ptr;
-		int len = size * count;
-		
-		if (ResData.Pointer + len > ResData.Size)
-		{
-	        len = (ResData.Size - ResData.Pointer);
-	        cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_READ, "Read from memory error. Got %d bytes, block should be of %d bytes",
-	        		new Object[]{new Integer(len), new Integer(count * size)});
-	        return 0;
-	    }
-		
-	    Ptr = ResData.Block;
-	    Ptr.readRaw(Buffer, 0, len, ResData.Pointer);
-	    ResData.Pointer += len;
-	    
-	    return count;
-	}
-	
-	// SEEK_CUR is assumed
-	private static boolean MemorySeek(cmsIOHANDLER iohandler, int offset)
-	{
-		FILEMEM ResData = (FILEMEM)iohandler.stream;
-		
-	    if(offset > ResData.Size)
-	    {
-	    	cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_SEEK, "Too few data; probably corrupted profile", null);        
-	        return false;
-	    }
-	    
-	    ResData.Pointer = offset;
-	    return true;
-	}
-	
-	// Tell for memory
-	private static int MemoryTell(cmsIOHANDLER iohandler)
-	{
-		FILEMEM ResData = (FILEMEM)iohandler.stream;
-		
-		if(ResData == null)
-		{
-			return 0;
-		}
-	    return ResData.Pointer;
-	}
-	
-	// Writes data to memory, also keeps used space for further reference. 
-	private static boolean MemoryWrite(cmsIOHANDLER iohandler, int size, final byte[] Ptr)
-	{
-		FILEMEM ResData = (FILEMEM)iohandler.stream;
-		
-		if(ResData == null)
-		{
-			return false; // Housekeeping
-		}
-		
-	    if(size == 0)
-	    {
-	    	return true; // Write zero bytes is ok, but does nothing
-	    }
-	    
-	    ResData.Block.writeRaw(Ptr, 0, size, ResData.Pointer);
-	    ResData.Pointer += size;
-	    
-	    if(ResData.Pointer > iohandler.UsedSpace)
-	    {
-	    	iohandler.UsedSpace = ResData.Pointer;
-	    }
-	    
-	    iohandler.UsedSpace += size;
-	    
-	    return true;
-	}
-	
-	private static boolean MemoryClose(cmsIOHANDLER iohandler)
-	{
-		FILEMEM ResData = (FILEMEM)iohandler.stream;
-		
-	    if(ResData.FreeBlockOnClose)
-	    {
-	        if(ResData.Block != null)
-	        {
-	        	cmserr._cmsFree(iohandler.ContextID, ResData.Block);
-	        }
-	    }
-	    
-//#ifdef RAW_C
-	    cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(ResData));
-	    cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(iohandler));
-//#endif
-	    
-	    return true;
 	}
 	
 	// Create a iohandler for memory block. AccessMode=='r' assumes the iohandler is going to read, and makes
@@ -428,39 +311,116 @@ final class cmsio0
 	    iohandler.UsedSpace = 0;
 	    iohandler.PhysicalFile.setLength(0);
 	    
+	    //MemoryRead
 	    iohandler.Read = new _cms_io_handler._ioRead()
 	    {
 			public int run(_cms_io_handler iohandler, byte[] Buffer, int size, int count)
 			{
-				return MemoryRead((cmsIOHANDLER)iohandler, Buffer, size, count);
+				FILEMEM ResData = (FILEMEM)iohandler.stream;
+				
+				VirtualPointer Ptr;
+				int len = size * count;
+				
+				if (ResData.Pointer + len > ResData.Size)
+				{
+			        len = (ResData.Size - ResData.Pointer);
+			        cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_READ, "Read from memory error. Got %d bytes, block should be of %d bytes",
+			        		new Object[]{new Integer(len), new Integer(count * size)});
+			        return 0;
+			    }
+				
+			    Ptr = ResData.Block;
+			    Ptr.readRaw(Buffer, 0, len, ResData.Pointer);
+			    ResData.Pointer += len;
+			    
+			    return count;
 			}
 		};
+		// SEEK_CUR is assumed
+		//MemorySeek
 	    iohandler.Seek = new _cms_io_handler._ioSeek()
 	    {
 			public boolean run(_cms_io_handler iohandler, int offset)
 			{
-				return MemorySeek((cmsIOHANDLER)iohandler, offset);
+				FILEMEM ResData = (FILEMEM)iohandler.stream;
+				
+			    if(offset > ResData.Size)
+			    {
+			    	cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_SEEK, "Too few data; probably corrupted profile", null);        
+			        return false;
+			    }
+			    
+			    ResData.Pointer = offset;
+			    return true;
 			}
 		};
+		//MemoryClose
 	    iohandler.Close = new _cms_io_handler._ioClose()
 	    {
 			public boolean run(_cms_io_handler iohandler)
 			{
-				return MemoryClose((cmsIOHANDLER)iohandler);
+				FILEMEM ResData = (FILEMEM)iohandler.stream;
+				
+			    if(ResData.FreeBlockOnClose)
+			    {
+			        if(ResData.Block != null)
+			        {
+			        	cmserr._cmsFree(iohandler.ContextID, ResData.Block);
+			        }
+			    }
+			    
+//#ifdef RAW_C
+			    cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(ResData));
+			    cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(iohandler));
+//#endif
+			    
+			    return true;
 			}
 		};
+		// Tell for memory
+		//MemoryTell
 	    iohandler.Tell = new _cms_io_handler._ioTell()
 	    {
 			public int run(_cms_io_handler iohandler)
 			{
-				return MemoryTell((cmsIOHANDLER)iohandler);
+				FILEMEM ResData = (FILEMEM)iohandler.stream;
+				
+				if(ResData == null)
+				{
+					return 0;
+				}
+			    return ResData.Pointer;
 			}
 		};
+		// Writes data to memory, also keeps used space for further reference.
+		//MemoryWrite
 	    iohandler.Write = new _cms_io_handler._ioWrite()
 	    {
-			public boolean run(_cms_io_handler iohandler, int size, byte[] Buffer)
+			public boolean run(_cms_io_handler iohandler, int size, byte[] Ptr)
 			{
-				return MemoryWrite((cmsIOHANDLER)iohandler, size, Buffer);
+				FILEMEM ResData = (FILEMEM)iohandler.stream;
+				
+				if(ResData == null)
+				{
+					return false; // Housekeeping
+				}
+				
+			    if(size == 0)
+			    {
+			    	return true; // Write zero bytes is ok, but does nothing
+			    }
+			    
+			    ResData.Block.writeRaw(Ptr, 0, size, ResData.Pointer);
+			    ResData.Pointer += size;
+			    
+			    if(ResData.Pointer > iohandler.UsedSpace)
+			    {
+			    	iohandler.UsedSpace = ResData.Pointer;
+			    }
+			    
+			    iohandler.UsedSpace += size;
+			    
+			    return true;
 			}
 		};
 	    
@@ -469,61 +429,6 @@ final class cmsio0
 	
 	// File-based stream -------------------------------------------------------
 	
-	// Read count elements of size bytes each. Return number of elements read
-	private static int FileRead(cmsIOHANDLER iohandler, byte[] Buffer, int size, int count)
-	{
-	    int nReaded = (int)((Stream)iohandler.stream).read(Buffer, 0, size, count);
-
-	    if (nReaded != count)
-	    {
-	    	cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_FILE, "Read error. Got %d bytes, block should be of %d bytes", 
-	    			new Object[]{new Integer(nReaded * size), new Integer(count * size)});
-	    	return 0;
-	    }
-	    
-	    return nReaded;
-	}
-	
-	// Postion file pointer in the file
-	private static boolean FileSeek(cmsIOHANDLER iohandler, int offset)
-	{
-		if (((Stream)iohandler.stream).seek(offset, Stream.SEEK_SET) != 0)
-		{
-			cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_FILE, "Seek error; probably corrupted file", null);
-			return false;
-		}
-		return true;
-	}
-	
-	// Returns file pointer position
-	private static int FileTell(cmsIOHANDLER iohandler)
-	{
-		return (int)((Stream)iohandler.stream).getPosition();
-	}
-	
-	// Writes data to stream, also keeps used space for further reference. Returns TRUE on success, FALSE on error
-	private static boolean FileWrite(cmsIOHANDLER iohandler, int size, final byte[] Ptr)
-	{
-		if (size == 0)
-		{
-			return true;  // We allow to write 0 bytes, but nothing is written
-		}
-		
-		iohandler.UsedSpace += size;
-		return ((Stream)iohandler.stream).write(Ptr, 0, size, 1) == 1;
-	}
-	
-	// Closes the file
-	private static boolean FileClose(cmsIOHANDLER iohandler)
-	{
-		if (((Stream)iohandler.stream).close() != 0)
-		{
-			return false;
-		}
-		cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(iohandler));
-	    return true;
-	}
-	
 	//Simple helper function since cmsOpenIOhandlerFromFile and cmsOpenIOhandlerFromStream do the same thing but cmsOpenIOhandlerFromFile creates the stream itself
 	private static void setupFileIOHandler(cmsIOHANDLER iohandler, cmsContext ContextID, Object stream)
 	{
@@ -531,39 +436,76 @@ final class cmsio0
 	    iohandler.stream = stream;
 	    iohandler.UsedSpace = 0;
 	    
+	    // Read count elements of size bytes each. Return number of elements read
+	    //FileRead
 	    iohandler.Read = new _cms_io_handler._ioRead()
 	    {
 			public int run(_cms_io_handler iohandler, byte[] Buffer, int size, int count)
 			{
-				return FileRead((cmsIOHANDLER)iohandler, Buffer, size, count);
+				int nReaded = (int)((Stream)iohandler.stream).read(Buffer, 0, size, count);
+				
+			    if (nReaded != count)
+			    {
+			    	cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_FILE, "Read error. Got %d bytes, block should be of %d bytes", 
+			    			new Object[]{new Integer(nReaded * size), new Integer(count * size)});
+			    	return 0;
+			    }
+			    
+			    return nReaded;
 			}
 		};
+		// Position file pointer in the file
+		//FileSeek
 	    iohandler.Seek = new _cms_io_handler._ioSeek()
 	    {
 			public boolean run(_cms_io_handler iohandler, int offset)
 			{
-				return FileSeek((cmsIOHANDLER)iohandler, offset);
+				if (((Stream)iohandler.stream).seek(offset, Stream.SEEK_SET) != 0)
+				{
+					cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_FILE, "Seek error; probably corrupted file", null);
+					return false;
+				}
+				return true;
 			}
 		};
+		// Closes the file
+		//FileClose
 	    iohandler.Close = new _cms_io_handler._ioClose()
 	    {
 			public boolean run(_cms_io_handler iohandler)
 			{
-				return FileClose((cmsIOHANDLER)iohandler);
+				if (((Stream)iohandler.stream).close() != 0)
+				{
+					return false;
+				}
+//#ifdef RAW_C
+				cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(iohandler));
+//#endif
+			    return true;
 			}
 		};
+		// Returns file pointer position
+		//FileTell
 	    iohandler.Tell = new _cms_io_handler._ioTell()
 	    {
 			public int run(_cms_io_handler iohandler)
 			{
-				return FileTell((cmsIOHANDLER)iohandler);
+				return (int)((Stream)iohandler.stream).getPosition();
 			}
 		};
+		// Writes data to stream, also keeps used space for further reference. Returns TRUE on success, FALSE on error
+		//FileWrite
 	    iohandler.Write = new _cms_io_handler._ioWrite()
 	    {
-			public boolean run(_cms_io_handler iohandler, int size, byte[] Buffer)
+			public boolean run(_cms_io_handler iohandler, int size, byte[] Ptr)
 			{
-				return FileWrite((cmsIOHANDLER)iohandler, size, Buffer);
+				if (size == 0)
+				{
+					return true;  // We allow to write 0 bytes, but nothing is written
+				}
+				
+				iohandler.UsedSpace += size;
+				return ((Stream)iohandler.stream).write(Ptr, 0, size, 1) == 1;
 			}
 		};
 	}

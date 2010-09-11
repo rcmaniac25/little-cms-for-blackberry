@@ -1,9 +1,6 @@
 TODO:
 Implement actual code | Update VirtualPointer so it can work with arrays, this will take some work and might not work right away so do some research
 **
-cmspack
-cmspcs
-cmsxform
 cmscgats
 cmsopt
 cmsgmt
@@ -35,4 +32,5 @@ CMS_DONT_USE_PTHREADS
 CMS_USE_PROFILE_BLACK_POINT_TAG
 CMS_STRICT_CGATS
 USE_IO_BIT_CONVERTER //Use java.io to convert value types to bytes and back
-RAW_C //Code is similar, to near exact the same as C/C++
+RAW_C //Code is similar, to near exact the same as C/C++, not fully used (obviously cumbersome)
+CMS_REALLOC_PTR //By default a C pointer passed into a function is independent of the original pointer unless it is a pointer to the pointer. Since VirtualPointer is a Java class that operation is reversed. This definition reverses the process back to the C process but depending on if the dev is willing to use more memory and the operation is really necessary it can be changed.

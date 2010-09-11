@@ -929,12 +929,12 @@ public class lcms2_plugin extends lcms2
 	
 	public static interface cmsFormatter16
 	{
-		public Object run(_cmsTRANSFORM CMMcargo, short[] Values, Object Buffer, int Stride);
+		public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride);
 	}
 	
 	public static interface cmsFormatterFloat
 	{
-		public Object run(_cmsTRANSFORM CMMcargo, float[] Values, Object Buffer, int Stride);
+		public VirtualPointer run(_cmsTRANSFORM CMMcargo, float[] Values, VirtualPointer Buffer, int Stride);
 	}
 	
 	// This type holds a pointer to a formatter that can be either 16 bits or cmsFloat32Number
@@ -965,6 +965,11 @@ public class lcms2_plugin extends lcms2
 		public void set(Object fmt)
 		{
 			this.fmt = fmt;
+		}
+		
+		public boolean hasValue()
+		{
+			return this.fmt != null;
 		}
 	}
 	

@@ -105,139 +105,114 @@ final class cmserr
 	
 	// This is the default memory allocation function. It does a very coarse 
 	// check of amout of memory, just to prevent exploits
-	private static VirtualPointer _cmsMallocDefaultFn(cmsContext ContextID, int size)
+	private static final cmsPluginMemHandler.pluginMallocPtr _cmsMallocDefaultFn = new cmsPluginMemHandler.pluginMallocPtr()
 	{
-	    if (size > MAX_MEMORY_FOR_ALLOC || size < 0)
-	    {
-	    	return null; // Never allow over maximum
-	    }
-	    
-	    return new VirtualPointer(size);
-	}
+		public VirtualPointer run(cmsContext ContextID, int size)
+		{
+			if (size > MAX_MEMORY_FOR_ALLOC || size < 0)
+		    {
+		    	return null; // Never allow over maximum
+		    }
+		    
+		    return new VirtualPointer(size);
+		}
+	};
 	
 	// Generic allocate & zero
-	private static VirtualPointer _cmsMallocZeroDefaultFn(cmsContext ContextID, int size)
+	private static final cmsPluginMemHandler.pluginMallocZeroPtr _cmsMallocZeroDefaultFn = new cmsPluginMemHandler.pluginMallocZeroPtr()
 	{
-		return _cmsMalloc(ContextID, size); //Because this is Java the allocated arrays are already zeroed out.
-	}
+		public VirtualPointer run(cmsContext ContextID, int size)
+		{
+			return _cmsMalloc(ContextID, size); //Because this is Java the allocated arrays are already zeroed out.
+		}
+	};
 	
 	// The default free function. The only check performed is against NULL pointers
-	private static void _cmsFreeDefaultFn(cmsContext ContextID, VirtualPointer Ptr)
-	{
-	    // free(NULL) is defined a no-op by C99, therefore it is safe to
-	    // avoid the check, but it is here just in case...
-		
-	    if (Ptr != null)
-	    {
-	    	Ptr.free();
-	    	Ptr = null;
-	    }
-	}
-	
-	// The default realloc function. Again it check for exploits. If Ptr is NULL, 
-	// realloc behaves the same way as malloc and allocates a new block of size bytes. 
-	private static VirtualPointer _cmsReallocDefaultFn(cmsContext ContextID, VirtualPointer Ptr, int size)
-	{
-	    if (size > MAX_MEMORY_FOR_ALLOC || size < 0)
-	    {
-	    	return null; // Never realloc over MAX_MEMORY_FOR_ALLOC_MB or below 0
-	    }
-	    
-	    return Ptr.resize(size);
-	}
-	
-	// The default calloc function. Allocates an array of num elements, each one of size bytes
-	// all memory is initialized to zero.
-	private static VirtualPointer _cmsCallocDefaultFn(cmsContext ContextID, int num, int size)
-	{
-	    int Total = num * size;
-	    
-	    // Check for overflow
-	    if (Total < num || Total < size)
-	    {
-	        return null;
-	    }
-	    
-	    if (Total > MAX_MEMORY_FOR_ALLOC || Total < 0)
-	    {
-	    	return null; // Never alloc over MAX_MEMORY_FOR_ALLOC_MB or below 0
-	    }
-	    
-	    return _cmsMallocZero(ContextID, Total);
-	}
-	
-	// Generic block duplication
-	private static VirtualPointer _cmsDupDefaultFn(cmsContext ContextID, final VirtualPointer Org, int size)
-	{
-		VirtualPointer mem;
-	    
-	    if (size > MAX_MEMORY_FOR_ALLOC || size < 0)
-	    {
-	    	return null; // Never dup over MAX_MEMORY_FOR_ALLOC_MB or below 0
-	    }
-	    
-	    mem = _cmsMalloc(ContextID, size);
-	    
-	    if (mem != null && Org != null)
-	    {
-	    	byte[] PtrData = new byte[size];
-	    	Org.readByteArray(PtrData, 0, size, false);
-	    	mem.getProcessor().write(PtrData);
-	    }
-	    
-	    return mem;
-	}
-	
-	private static final cmsPluginMemHandler.pluginMallocPtr _cmsMallocDefaultImpl = new cmsPluginMemHandler.pluginMallocPtr()
-	{
-		public VirtualPointer run(cmsContext ContextID, int size)
-		{
-			return _cmsMallocDefaultFn(ContextID, size);
-		}
-	};
-	private static final cmsPluginMemHandler.pluginMallocZeroPtr _cmsMallocZeroDefaultImpl = new cmsPluginMemHandler.pluginMallocZeroPtr()
-	{
-		public VirtualPointer run(cmsContext ContextID, int size)
-		{
-			return _cmsMallocZeroDefaultFn(ContextID, size);
-		}
-	};
-	private static final cmsPluginMemHandler.pluginFreePtr _cmsFreeDefaultImpl = new cmsPluginMemHandler.pluginFreePtr()
+	private static final cmsPluginMemHandler.pluginFreePtr _cmsFreeDefaultFn = new cmsPluginMemHandler.pluginFreePtr()
 	{
 		public void run(cmsContext ContextID, VirtualPointer Ptr)
 		{
-			_cmsFreeDefaultFn(ContextID, Ptr);
+			// free(NULL) is defined a no-op by C99, therefore it is safe to
+		    // avoid the check, but it is here just in case...
+			
+		    if (Ptr != null)
+		    {
+		    	Ptr.free();
+		    	Ptr = null;
+		    }
 		}
 	};
-	private static final cmsPluginMemHandler.pluginReallocPtr _cmsReallocDefaultImpl = new cmsPluginMemHandler.pluginReallocPtr()
+	
+	// The default realloc function. Again it check for exploits. If Ptr is NULL, 
+	// realloc behaves the same way as malloc and allocates a new block of size bytes. 
+	private static final cmsPluginMemHandler.pluginReallocPtr _cmsReallocDefaultFn = new cmsPluginMemHandler.pluginReallocPtr()
 	{
-		public VirtualPointer run(cmsContext ContextID, VirtualPointer Ptr, int NewSize)
+		public VirtualPointer run(cmsContext ContextID, VirtualPointer Ptr, int size)
 		{
-			return _cmsReallocDefaultFn(ContextID, Ptr, NewSize);
+			if (size > MAX_MEMORY_FOR_ALLOC || size < 0)
+		    {
+		    	return null; // Never realloc over MAX_MEMORY_FOR_ALLOC_MB or below 0
+		    }
+		    
+		    return Ptr.resize(size);
 		}
 	};
-	private static final cmsPluginMemHandler.pluginCallocPtr _cmsCallocDefaultImpl = new cmsPluginMemHandler.pluginCallocPtr()
+	
+	// The default calloc function. Allocates an array of num elements, each one of size bytes
+	// all memory is initialized to zero.
+	private static final cmsPluginMemHandler.pluginCallocPtr _cmsCallocDefaultFn = new cmsPluginMemHandler.pluginCallocPtr()
 	{
 		public VirtualPointer run(cmsContext ContextID, int num, int size)
 		{
-			return _cmsCallocDefaultFn(ContextID, num, size);
+			int Total = num * size;
+		    
+		    // Check for overflow
+		    if (Total < num || Total < size)
+		    {
+		        return null;
+		    }
+		    
+		    if (Total > MAX_MEMORY_FOR_ALLOC || Total < 0)
+		    {
+		    	return null; // Never alloc over MAX_MEMORY_FOR_ALLOC_MB or below 0
+		    }
+		    
+		    return _cmsMallocZero(ContextID, Total);
 		}
 	};
-	private static final cmsPluginMemHandler.pluginDupPtr _cmsDupDefaultImpl = new cmsPluginMemHandler.pluginDupPtr()
+	
+	// Generic block duplication
+	private static final cmsPluginMemHandler.pluginDupPtr _cmsDupDefaultFn = new cmsPluginMemHandler.pluginDupPtr()
 	{
 		public VirtualPointer run(cmsContext ContextID, VirtualPointer Org, int size)
 		{
-			return _cmsDupDefaultFn(ContextID, Org, size);
+			VirtualPointer mem;
+		    
+		    if (size > MAX_MEMORY_FOR_ALLOC || size < 0)
+		    {
+		    	return null; // Never dup over MAX_MEMORY_FOR_ALLOC_MB or below 0
+		    }
+		    
+		    mem = _cmsMalloc(ContextID, size);
+		    
+		    if (mem != null && Org != null)
+		    {
+		    	byte[] PtrData = new byte[size];
+		    	Org.readByteArray(PtrData, 0, size, false);
+		    	mem.getProcessor().write(PtrData);
+		    }
+		    
+		    return mem;
 		}
 	};
 	
 	// Pointers to malloc and _cmsFree functions in current environment
-	private static cmsPluginMemHandler.pluginMallocPtr MallocPtr = _cmsMallocDefaultImpl;
-	private static cmsPluginMemHandler.pluginMallocZeroPtr MallocZeroPtr = _cmsMallocZeroDefaultImpl;
-	private static cmsPluginMemHandler.pluginFreePtr FreePtr = _cmsFreeDefaultImpl;
-	private static cmsPluginMemHandler.pluginReallocPtr ReallocPtr = _cmsReallocDefaultImpl; 
-	private static cmsPluginMemHandler.pluginCallocPtr CallocPtr = _cmsCallocDefaultImpl;
-	private static cmsPluginMemHandler.pluginDupPtr DupPtr = _cmsDupDefaultImpl;
+	private static cmsPluginMemHandler.pluginMallocPtr MallocPtr = _cmsMallocDefaultFn;
+	private static cmsPluginMemHandler.pluginMallocZeroPtr MallocZeroPtr = _cmsMallocZeroDefaultFn;
+	private static cmsPluginMemHandler.pluginFreePtr FreePtr = _cmsFreeDefaultFn;
+	private static cmsPluginMemHandler.pluginReallocPtr ReallocPtr = _cmsReallocDefaultFn; 
+	private static cmsPluginMemHandler.pluginCallocPtr CallocPtr = _cmsCallocDefaultFn;
+	private static cmsPluginMemHandler.pluginDupPtr DupPtr = _cmsDupDefaultFn;
 	
 	// Plug-in replacement entry
 	public static boolean _cmsRegisterMemHandlerPlugin(cmsPluginBase Data)
@@ -247,12 +222,12 @@ final class cmserr
 	    // NULL forces to reset to defaults
 	    if (Data == null)
 	    {
-	        MallocPtr    = _cmsMallocDefaultImpl;
-	        MallocZeroPtr= _cmsMallocZeroDefaultImpl;
-	        FreePtr      = _cmsFreeDefaultImpl;
-	        ReallocPtr   = _cmsReallocDefaultImpl; 
-	        CallocPtr    = _cmsCallocDefaultImpl;
-	        DupPtr       = _cmsDupDefaultImpl;
+	        MallocPtr    = _cmsMallocDefaultFn;
+	        MallocZeroPtr= _cmsMallocZeroDefaultFn;
+	        FreePtr      = _cmsFreeDefaultFn;
+	        ReallocPtr   = _cmsReallocDefaultFn; 
+	        CallocPtr    = _cmsCallocDefaultFn;
+	        DupPtr       = _cmsDupDefaultFn;
 	        return true;
 	    }
 	    
@@ -482,30 +457,25 @@ final class cmserr
 	
 	// ---------------------------------------------------------------------------------------------------------
 	
-	private static cmsLogErrorHandlerFunction DefaultLogErrorHandlerImpl = new cmsLogErrorHandlerFunction()
+	// The default error logger does nothing.
+	private static cmsLogErrorHandlerFunction DefaultLogErrorHandlerFunction = new cmsLogErrorHandlerFunction()
 	{
 		public void run(cmsContext ContextID, int ErrorCode, String Text)
 		{
-			DefaultLogErrorHandlerFunction(ContextID, ErrorCode, Text);
+			// TextFormatting.fprintf(System.err, "[lcms]: %s\n", new Object[]{Text});
+			// System.err.flush();
 		}
 	};
 	
 	// The current handler in actual environment
-	private static cmsLogErrorHandlerFunction LogErrorHandler = DefaultLogErrorHandlerImpl;
-	
-	// The default error logger does nothing.
-	private static void DefaultLogErrorHandlerFunction(cmsContext ContextID, int ErrorCode, final String Text)
-	{
-		// TextFormatting.fprintf(System.err, "[lcms]: %s\n", new Object[]{Text});
-		// System.err.flush();
-	}
+	private static cmsLogErrorHandlerFunction LogErrorHandler = DefaultLogErrorHandlerFunction;
 	
 	// Change log error
 	public static void cmsSetLogErrorHandler(cmsLogErrorHandlerFunction Fn)
 	{
 	    if (Fn == null)
 	    {
-	    	LogErrorHandler = DefaultLogErrorHandlerImpl;
+	    	LogErrorHandler = DefaultLogErrorHandlerFunction;
 	    }
 	    else
 	    {

@@ -505,7 +505,7 @@ public class lcms2
     public static final int cmsMAXCHANNELS = 16;
     
     
-    // Format of pixel is defined by one cmsUInt32Number, using bit fields as follows
+    // Format of pixel is defined by one int, using bit fields as follows
     //
     //                A O TTTTT U Y F P X S EEE CCCC BBB
     //
@@ -534,26 +534,33 @@ public class lcms2
     public static final int BYTES_SHIFT_VALUE = 0;
     
     public static int FLOAT_SH(int a){            return ((a) << FLOAT_SHIFT_VALUE);}
+    public static int FLOAT_SH(boolean a){        return FLOAT_SH(a ? 1 : 0);}
     public static int OPTIMIZED_SH(int s){        return ((s) << OPTIMIZED_SHIFT_VALUE);}
+    public static int OPTIMIZED_SH(boolean s){    return OPTIMIZED_SH(s ? 1 : 0);}
     public static int COLORSPACE_SH(int s){       return ((s) << COLORSPACE_SHIFT_VALUE);}
     public static int SWAPFIRST_SH(int s){        return ((s) << SWAPFIRST_SHIFT_VALUE);}
+    public static int SWAPFIRST_SH(boolean s){    return SWAPFIRST_SH(s ? 1 : 0);}
     public static int FLAVOR_SH(int s){           return ((s) << FLAVOR_SHIFT_VALUE);}
+    public static int FLAVOR_SH(boolean s){       return FLAVOR_SH(s ? 1 : 0);}
     public static int PLANAR_SH(int p){           return ((p) << PLANAR_SHIFT_VALUE);}
+    public static int PLANAR_SH(boolean p){       return PLANAR_SH(p ? 1 : 0);}
     public static int ENDIAN16_SH(int e){         return ((e) << ENDIAN16_SHIFT_VALUE);}
+    public static int ENDIAN16_SH(boolean e){     return ENDIAN16_SH(e ? 1 : 0);}
     public static int DOSWAP_SH(int e){           return ((e) << DOSWAP_SHIFT_VALUE);}
+    public static int DOSWAP_SH(boolean e){       return DOSWAP_SH(e ? 1 : 0);}
     public static int EXTRA_SH(int e){            return ((e) << EXTRA_SHIFT_VALUE);}
     public static int CHANNELS_SH(int c){         return ((c) << CHANNELS_SHIFT_VALUE);}
     public static int BYTES_SH(int b){            return ((b) << BYTES_SHIFT_VALUE);}
     
     // These macros unpack format specifiers into integers
-    public static int T_FLOAT(int a){            return (((a) >> FLOAT_SHIFT_VALUE) & 1);}
-    public static int T_OPTIMIZED(int o){        return (((o) >> OPTIMIZED_SHIFT_VALUE) & 1);}
+    public static boolean T_FLOAT(int a){        return (((a) >> FLOAT_SHIFT_VALUE) & 1) != 0;}
+    public static boolean T_OPTIMIZED(int o){    return (((o) >> OPTIMIZED_SHIFT_VALUE) & 1) != 0;}
     public static int T_COLORSPACE(int s){       return (((s) >> COLORSPACE_SHIFT_VALUE) & 31);}
-    public static int T_SWAPFIRST(int s){        return (((s) >> SWAPFIRST_SHIFT_VALUE) & 1);}
-    public static int T_FLAVOR(int s){           return (((s) >> FLAVOR_SHIFT_VALUE) & 1);}
-    public static int T_PLANAR(int p){           return (((p) >> PLANAR_SHIFT_VALUE) & 1);}
-    public static int T_ENDIAN16(int e){         return (((e) >> ENDIAN16_SHIFT_VALUE) & 1);}
-    public static int T_DOSWAP(int e){           return (((e) >> DOSWAP_SHIFT_VALUE) & 1);}
+    public static boolean T_SWAPFIRST(int s){    return (((s) >> SWAPFIRST_SHIFT_VALUE) & 1) != 0;}
+    public static boolean T_FLAVOR(int s){       return (((s) >> FLAVOR_SHIFT_VALUE) & 1) != 0;}
+    public static boolean T_PLANAR(int p){       return (((p) >> PLANAR_SHIFT_VALUE) & 1) != 0;}
+    public static boolean T_ENDIAN16(int e){     return (((e) >> ENDIAN16_SHIFT_VALUE) & 1) != 0;}
+    public static boolean T_DOSWAP(int e){       return (((e) >> DOSWAP_SHIFT_VALUE) & 1) != 0;}
     public static int T_EXTRA(int e){            return (((e) >> EXTRA_SHIFT_VALUE) & 7);}
     public static int T_CHANNELS(int c){         return (((c) >> CHANNELS_SHIFT_VALUE) & 15);}
     public static int T_BYTES(int b){            return (((b) >> BYTES_SHIFT_VALUE) & 7);}

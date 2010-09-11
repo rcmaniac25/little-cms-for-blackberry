@@ -486,7 +486,7 @@ final class cmsplugin
 	
 	public static boolean _cmsWriteXYZNumber(cmsIOHANDLER io, final cmsCIEXYZ XYZ)
 	{
-	    cmsEncodedXYZNumber xyz;
+	    cmsEncodedXYZNumber xyz = new cmsEncodedXYZNumber();
 	    
 	    lcms2_internal._cmsAssert(io != null, "io != null");
 	    lcms2_internal._cmsAssert(XYZ != null, "XYZ != null");

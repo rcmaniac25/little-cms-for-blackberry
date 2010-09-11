@@ -10,36 +10,32 @@ namespace linker
     {
         static void Main(string[] args)
         {
+            if (args.Length < 2)
+            {
 #if ORIGINAL_LINKER
-            if (args.Length < 2)
-            {
                 Console.WriteLine("linker <tag/type> <input file>");
-                return;
-            }
-            bool tag = args[0].ToLower().Equals("tag");
-            FileStream inFs = new FileStream(args[1], FileMode.Open);
-            string outPath = string.Format("{0}Output.txt", Path.Combine(Path.GetDirectoryName(args[1]), Path.GetFileNameWithoutExtension(args[1])));
-            FileStream outFs = new FileStream(outPath, FileMode.Create);
-            convert(inFs, outFs, tag);
-            outFs.Flush();
-            outFs.Close();
-            inFs.Close();
 #else
-            if (args.Length < 2)
-            {
                 Console.WriteLine("linker <lookup file> <input file>");
+#endif
                 return;
             }
+#if ORIGINAL_LINKER
+            bool tag = args[0].ToLower().Equals("tag");
+#else
             FileStream lookFs = new FileStream(args[0], FileMode.Open);
+#endif
             FileStream inFs = new FileStream(args[1], FileMode.Open);
             string outPath = string.Format("{0}Output.txt", Path.Combine(Path.GetDirectoryName(args[1]), Path.GetFileNameWithoutExtension(args[1])));
             FileStream outFs = new FileStream(outPath, FileMode.Create);
+#if ORIGINAL_LINKER
+            convert(inFs, outFs, tag);
+#else
             process(inFs, outFs, lookFs);
             lookFs.Close();
+#endif
             outFs.Flush();
             outFs.Close();
             inFs.Close();
-#endif
         }
 
 #if ORIGINAL_LINKER
@@ -280,7 +276,10 @@ namespace linker
                 lines.Add(line);
                 while ((line = sr.ReadLine()) != null && !line.Equals("$OP ELUF", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    lines.Add(line);
+                    if (!line.StartsWith("##"))
+                    {
+                        lines.Add(line);
+                    }
                 }
                 //Remove blank lines
                 int i = 0;
@@ -397,6 +396,10 @@ namespace linker
 
                 //Object
                 lines[0] = "$AT TYPE Object";
+                predefinedElements.Add(new FIE(null, lines));
+
+                //String
+                lines[0] = "$AT TYPE String";
                 predefinedElements.Add(new FIE(null, lines));
             }
         }
@@ -768,7 +771,7 @@ namespace linker
                 StringBuilder bu = new StringBuilder(new string('\t', tab));
 
                 //Write delegate
-                sw.WriteLine("new {0}", this.name);
+                sw.WriteLine("new {0}()", this.name);
                 sw.WriteLine("{0}{{", bu.ToString());
 
                 tab++;
@@ -798,7 +801,7 @@ namespace linker
                         sw.Write(fie.Strict);
                         sw.Write(' ');
                     }
-                    sw.Write("{0} {1}", fie.Type, fie.Name.Substring(fie.Name.LastIndexOf('.') + 1).Trim());
+                    sw.Write("{0}{1} {2}", fie.Type, fie.Array != null ? fie.Array : string.Empty, fie.Name.Substring(fie.Name.LastIndexOf('.') + 1).Trim());
                     if (i != (this.args.Count - 1))
                     {
                         sw.Write(", ");
@@ -863,11 +866,11 @@ namespace linker
                 this.name = proc.Name;
             }
 
-            public PREPROC Preprocessor
+            public bool SkipPreproc
             {
                 get
                 {
-                    return proc;
+                    return proc.Format == null;
                 }
             }
 
@@ -997,7 +1000,7 @@ namespace linker
                 {
                     //Predefined types
                     double d;
-                    if (double.TryParse(typeData, out d) || this.Type.Equals("Object"))
+                    if (double.TryParse(typeData, out d) || this.Type.Equals("Object") || !char.IsLetter(typeData[0]))
                     {
                         sw.Write(typeData);
                     }
@@ -1059,6 +1062,11 @@ namespace linker
             public PREPROC(string input)
             {
                 input = input.Trim();
+                bool skip = input.StartsWith("$$");
+                if (skip)
+                {
+                    input = input.Substring(2).Trim();
+                }
                 int index = input.IndexOf('(');
                 this.Name = input.Substring(0, index).Trim();
                 string[] args = input.Substring(index + 1, (input.IndexOf(')', index) - index) - 1).Trim().Split(',');
@@ -1071,67 +1079,70 @@ namespace linker
                 inputNames = new List<string>(args);
                 this.Code = input.Substring(this.Name.Length + index + 3).Trim();
 
-                //Now convert the code to a format
-                StringBuilder bu = new StringBuilder();
-                string[] stringReplace1 = new string[this.inputNames.Count];
-                string[] stringReplace2 = new string[this.inputNames.Count];
-                for (int i = 0; i < this.inputNames.Count; i++)
+                if (!skip)
                 {
-                    stringReplace1[i] = string.Format("##{0}##", this.inputNames[i]);
-                    stringReplace2[i] = string.Format("({0})", this.inputNames[i]);
-                }
-                for (int i = 0; i < this.Code.Length; i++)
-                {
-                    char c = this.Code[i];
-                    if (c == '{')
+                    //Now convert the code to a format
+                    StringBuilder bu = new StringBuilder();
+                    string[] stringReplace1 = new string[this.inputNames.Count];
+                    string[] stringReplace2 = new string[this.inputNames.Count];
+                    for (int i = 0; i < this.inputNames.Count; i++)
                     {
-                        bu.Append("{{");
+                        stringReplace1[i] = string.Format("##{0}##", this.inputNames[i]);
+                        stringReplace2[i] = string.Format("({0})", this.inputNames[i]);
                     }
-                    else if (c == '}')
+                    for (int i = 0; i < this.Code.Length; i++)
                     {
-                        bu.Append("}}");
-                    }
-                    else
-                    {
-                        bool replace = false;
-                        for (int k = 0; k < stringReplace1.Length; k++)
+                        char c = this.Code[i];
+                        if (c == '{')
                         {
-                            if (this.Code.IndexOf(stringReplace1[k], i) == i)
+                            bu.Append("{{");
+                        }
+                        else if (c == '}')
+                        {
+                            bu.Append("}}");
+                        }
+                        else
+                        {
+                            bool replace = false;
+                            for (int k = 0; k < stringReplace1.Length; k++)
                             {
-                                bu.AppendFormat("{{{0}}}", k);
-                                replace = true;
-                                i += this.inputNames[k].Length + 3;
-                                break;
-                            }
-                            else if (this.Code.IndexOf(stringReplace2[k], i) == i)
-                            {
-                                //Could be part of another preprocessor
-                                if (i > 0)
+                                if (this.Code.IndexOf(stringReplace1[k], i) == i)
                                 {
-                                    if (!char.IsLetter(this.Code[i - 1]))
-                                    {
-                                        bu.AppendFormat("{{{0}}}", k);
-                                        replace = true;
-                                        i += this.inputNames[k].Length + 1;
-                                    }
-                                    else
-                                    {
-                                        //Part of another preprocessor, need to replace the inner args
-                                        bu.AppendFormat("({{{0}}})", k);
-                                        replace = true;
-                                        i += this.inputNames[k].Length + 1;
-                                    }
+                                    bu.AppendFormat("{{{0}}}", k);
+                                    replace = true;
+                                    i += this.inputNames[k].Length + 3;
                                     break;
                                 }
+                                else if (this.Code.IndexOf(stringReplace2[k], i) == i)
+                                {
+                                    //Could be part of another preprocessor
+                                    if (i > 0)
+                                    {
+                                        if (!char.IsLetter(this.Code[i - 1]))
+                                        {
+                                            bu.AppendFormat("{{{0}}}", k);
+                                            replace = true;
+                                            i += this.inputNames[k].Length + 1;
+                                        }
+                                        else
+                                        {
+                                            //Part of another preprocessor, need to replace the inner args
+                                            bu.AppendFormat("({{{0}}})", k);
+                                            replace = true;
+                                            i += this.inputNames[k].Length + 1;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!replace)
+                            {
+                                bu.Append(c);
                             }
                         }
-                        if (!replace)
-                        {
-                            bu.Append(c);
-                        }
                     }
+                    this.Format = bu.ToString();
                 }
-                this.Format = bu.ToString();
             }
         }
 
@@ -1173,6 +1184,55 @@ namespace linker
             while ((line = sr.ReadLine()) != null)
             {
                 elements.Add(line.Trim());
+            }
+
+            //Strip out comments
+            bool multiLine = false;
+            for (int i = 0; i < elements.Count; i++)
+            {
+                bool change = false;
+                int index = elements[i].IndexOf("/*");
+                if (!multiLine)
+                {
+                    if (index >= 0)
+                    {
+                        multiLine = true;
+                        elements[i] = elements[i].Substring(0, index);
+                        change = true;
+                    }
+                    else
+                    {
+                        index = elements[i].IndexOf("//");
+                        if (index >= 0)
+                        {
+                            elements[i] = elements[i].Substring(0, index);
+                            change = true;
+                        }
+                    }
+                    if (change && string.IsNullOrWhiteSpace(elements[i]))
+                    {
+                        elements.RemoveAt(i);
+                        i--;
+                    }
+                }
+                else
+                {
+                    index = elements[i].IndexOf("*/");
+                    if (index >= 0)
+                    {
+                        elements[i] = elements[i].Substring(index);
+                        if (string.IsNullOrWhiteSpace(elements[i]))
+                        {
+                            elements.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                    else
+                    {
+                        elements.RemoveAt(i);
+                        i--;
+                    }
+                }
             }
 
             //Double check that the type is a redundent type and setup so it runs properly
@@ -1225,7 +1285,7 @@ namespace linker
 
             int tab = 1;
             int opCount = 0;
-            TYP elementTyp = (TYP)lookup.getOp(elementType);
+            TYP elementTyp = (TYP)lookup.getOp(elementType.Contains("[") ? elementType.Substring(0, elementType.IndexOf('[')) : elementType);
             if (elementTyp == null)
             {
                 Console.WriteLine("FAIL: Couldn't find element type: {0}", elementType);
@@ -1234,6 +1294,10 @@ namespace linker
             //Write each element
             for (int i = 0; i < elements.Length; i++)
             {
+                if (i == 46)
+                {
+                }
+
                 //Write tab
                 sw.Write(new string('\t', tab));
 
@@ -1263,7 +1327,7 @@ namespace linker
                     {
                         if (opCount == 0)
                         {
-                            sw.WriteLine("{0} = new {1}[]{{", elementName, elementType);
+                            sw.WriteLine("{0} = new {1}[]{{", elementName, array ? elementType.Substring(0,elementType.IndexOf('[')) : elementType);
                             tab++;
 
                             //Rewrite tab
@@ -1305,7 +1369,7 @@ namespace linker
 
                             //Rewrite the tab and finish the array
                             sw.Write(new string('\t', tab));
-                            sw.Write("}};");
+                            sw.Write("};");
                         }
                         else
                         {
@@ -1431,17 +1495,30 @@ namespace linker
                             if (preProcValue != null)
                             {
                                 PRE pre = (PRE)lookup.getOp(preProcName);
-                                MemoryStream mem = new MemoryStream();
-                                int tab = 0;
-                                StreamWriter sw = new StreamWriter(mem);
-                                pre.process(sw, lookup, preProcValue, ref tab);
-                                sw.Flush();
-                                mem.Position = 0;
-                                for (long k = 0; k < mem.Length; k++)
+                                if (pre == null)
                                 {
-                                    bu.Append((char)mem.ReadByte());
+                                    Console.WriteLine("WARNING: Cannot find {0} for preprocessor. Skipping", preProcName);
+                                    return null;
                                 }
-                                mem.Close();
+                                else if (pre.SkipPreproc)
+                                {
+                                    bu.Append(preProcName);
+                                    bu.Append(preProcValue);
+                                }
+                                else
+                                {
+                                    MemoryStream mem = new MemoryStream();
+                                    int tab = 0;
+                                    StreamWriter sw = new StreamWriter(mem);
+                                    pre.process(sw, lookup, preProcValue, ref tab);
+                                    sw.Flush();
+                                    mem.Position = 0;
+                                    for (long k = 0; k < mem.Length; k++)
+                                    {
+                                        bu.Append((char)mem.ReadByte());
+                                    }
+                                    mem.Close();
+                                }
                             }
                             else
                             {
@@ -1481,7 +1558,7 @@ namespace linker
                         break;
                     case 1:
                         char c = element[i];
-                        if (!char.IsLetter(c))
+                        if (!char.IsLetterOrDigit(c))
                         {
                             switch (c)
                             {
@@ -1516,6 +1593,11 @@ namespace linker
                 if (element.EndsWith(","))
                 {
                     element = element.Substring(1, element.LastIndexOf(',') - 1).Trim();
+                    //Could still have '}'
+                    if (element.EndsWith("}"))
+                    {
+                        element = element.Substring(0, element.LastIndexOf('}')).Trim();
+                    }
                 }
                 else
                 {

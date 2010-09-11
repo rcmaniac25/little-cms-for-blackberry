@@ -7,6 +7,7 @@
   <Compile OutputCompilerMessages="false" ConvertImages="false" CreateWarningForNoExportedRoutine="true" CompressResources="false" AliasList="">
     <PreprocessorDefines>
       <PreprocessorTag IsActive="true" PreprocessorDefine="CMS_DONT_USE_PTHREADS" Scope="0"/>
+      <PreprocessorTag IsActive="true" PreprocessorDefine="CMS_REALLOC_PTR" Scope="0"/>
     </PreprocessorDefines>
   </Compile>
   <Packaging OutputFileName="lcms2_4bb" OutputFolder="deliverables" PreBuildStep="" PostBuildStep="" CleanStep="" GenerateALXFile="true">

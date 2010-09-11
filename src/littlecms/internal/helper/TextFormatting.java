@@ -36,6 +36,14 @@ public class TextFormatting
 		return 0; //TODO
 	}
 	
+	/* Ignore
+	public static int snprintf(StringBuffer buffer, int buff_size, final String format, Object[] argptr)
+	{
+		//C version is "int snprintf(char* buffer, int buff_size, const char* format, ...)" and simply calls vsnprintf after getting the va_arg. Simply pass the value.
+		return vsnprintf(buffer, buff_size, format, argptr);
+	}
+	*/
+	
 	public static int fprintf(PrintStream stream, final String format, Object[] argptr)
 	{
 		return 0; //TODO

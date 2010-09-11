@@ -29,6 +29,10 @@ package littlecms.internal;
 
 import java.util.Calendar;
 
+//#ifdef BlackBerrySDK4.5.0
+import net.rim.device.api.util.MathUtilities;
+//#endif
+
 import littlecms.internal.helper.VirtualPointer;
 
 //#ifdef CMS_INTERNAL_ACCESS & DEBUG
@@ -61,12 +65,26 @@ final class lcms2_internal extends lcms2_plugin
 	{
 		public 
 //#ifdef CMS_DONT_USE_PTHREADS
-			int
+			int 
 //#else
 			Object 
 //#endif
 			lock;
 	}
+	
+	public static void LCMS_CREATE_LOCK(LCMS_RWLOCK_T lock)
+	{
+//#ifndef CMS_DONT_USE_PTHREADS
+		lock.lock = new Object();
+//#endif
+	}
+	public static void LCMS_FREE_LOCK(LCMS_RWLOCK_T lock)
+	{
+//#ifndef CMS_DONT_USE_PTHREADS
+		lock.lock = null;
+//#endif
+	}
+	//LCMS_READ_LOCK, LCMS_WRITE_LOCK, and LCMS_UNLOCK can't be dedicated functions
 	
 	// A fast way to convert from/to 16 <-> 8 bits
 	public static short FROM_8_TO_16(int rgb)
@@ -77,6 +95,226 @@ final class lcms2_internal extends lcms2_plugin
 	{
 		return (byte)((((rgb) * 65281 + 8388608) >> 24) & 0xFF);
 	}
+	
+//#ifdef BlackBerrySDK4.5.0
+	public static double pow(double base, double power)
+	{
+		return MathUtilities.exp(power * MathUtilities.log(base));
+	}
+	
+	//Following code taken from J4ME (http://code.google.com/p/j4me/)
+	public static final double PIover2 = Math.PI / 2;
+	public static final double PIover4 = Math.PI / 4;
+	public static final double PIover6 = Math.PI / 6;
+	public static final double PIover12 = Math.PI / 12;
+	/**
+	 * Constant used in the <code>atan</code> calculation.
+	 */
+	private static final double ATAN_CONSTANT = 1.732050807569;
+	
+	public static double atan (double a)
+	{
+		// Special cases.
+		if ( Double.isNaN(a) )
+		{
+			return Double.NaN;
+		}
+		
+		if ( a == 0.0 )
+		{
+			return a;
+		}
+		
+		// Compute the arc tangent.
+		boolean negative = false;
+		boolean greaterThanOne = false;
+		int i = 0;
+		
+		if ( a < 0.0 )
+		{
+			a = -a;
+			negative = true;
+		}
+		
+		if ( a > 1.0 )
+		{
+			a = 1.0 / a;
+			greaterThanOne = true;
+		}
+		
+		double t;
+		
+		for ( ; a > PIover12; a *= t )
+		{
+			i++;
+			t = a + ATAN_CONSTANT;
+			t = 1.0 / t;
+			a *= ATAN_CONSTANT;
+			a--;
+		}
+		
+		double aSquared = a * a;
+		
+		double arcTangent = aSquared + 1.4087812;
+		arcTangent = 0.55913709 / arcTangent;
+		arcTangent += 0.60310578999999997;
+		arcTangent -= 0.051604539999999997 * aSquared;
+		arcTangent *= a;
+		
+		for ( ; i > 0; i-- )
+		{
+			arcTangent += PIover6;
+		}
+		
+		if ( greaterThanOne )
+		{
+			arcTangent = PIover2 - arcTangent;
+		}
+		
+		if ( negative )
+		{
+			arcTangent = -arcTangent;
+		}
+		
+		return arcTangent;
+	}
+	
+	public static double atan2(double y, double x)
+	{
+		// Special cases.
+		if ( Double.isNaN(y) || Double.isNaN(x) )
+		{
+			return Double.NaN;
+		}
+		else if ( Double.isInfinite(y) )
+		{
+			if ( y > 0.0 ) // Positive infinity
+			{
+				if ( Double.isInfinite(x) )
+				{
+					if ( x > 0.0 )
+					{
+						return PIover4;
+					}
+					else
+					{
+						return 3.0 * PIover4;
+					}
+				}
+				else if ( x != 0.0 )
+				{
+					return PIover2;
+				}
+			}
+			else  // Negative infinity
+			{
+				if ( Double.isInfinite(x) )
+				{
+					if ( x > 0.0 )
+					{
+						return -PIover4;
+					}
+					else
+					{
+						return -3.0 * PIover4;
+					}
+				}
+				else if ( x != 0.0 )
+				{
+					return -PIover2;
+				}
+			}
+		}
+		else if ( y == 0.0 )
+		{
+			if ( x > 0.0 )
+			{
+				return y;
+			}
+			else if ( x < 0.0 )
+			{
+				return Math.PI;
+			}
+		}
+		else if ( Double.isInfinite(x) )
+		{
+			if ( x > 0.0 )  // Positive infinity
+			{
+				if ( y > 0.0 )
+				{
+					return 0.0;
+				}
+				else if ( y < 0.0 )
+				{
+					return -0.0;
+				}
+			}
+			else  // Negative infinity
+			{
+				if ( y > 0.0 )
+				{
+					return Math.PI;
+				}
+				else if ( y < 0.0 )
+				{
+					return -Math.PI;
+				}
+			}
+		}
+		else if ( x == 0.0 )
+		{
+			if ( y > 0.0 )
+			{
+				return PIover2;
+			}
+			else if ( y < 0.0 )
+			{
+				return -PIover2;
+			}
+		}
+		
+		
+		// Implementation a simple version ported from a PASCAL implementation:
+		//   http://everything2.com/index.pl?node_id=1008481
+		
+		double arcTangent;
+		
+		// Use arctan() avoiding division by zero.
+		if ( Math.abs(x) > Math.abs(y) )
+		{
+			arcTangent = atan(y / x);
+		}
+		else
+		{
+			arcTangent = atan(x / y); // -PI/4 <= a <= PI/4
+
+			if ( arcTangent < 0 )
+			{
+				arcTangent = -PIover2 - arcTangent; // a is negative, so we're adding
+			}
+			else
+			{
+				arcTangent = PIover2 - arcTangent;
+			}
+		}
+		
+		// Adjust result to be from [-PI, PI]
+		if ( x < 0 )
+		{
+			if ( y < 0 )
+			{
+				arcTangent = arcTangent - Math.PI;
+			}
+			else
+			{
+				arcTangent = arcTangent + Math.PI;
+			}
+		}
+		
+		return arcTangent;
+	}
+	//END CODE FROM J4ME
+//#endif
 	
 	public static void _cmsAssert(boolean test, String exp)
 	{
@@ -115,9 +353,6 @@ final class lcms2_internal extends lcms2_plugin
 	
 	// -----------------------------------------------------------------------------------------------------------
 	
-//#ifndef CMS_DONT_USE_FAST_FLOOR
-	private public static final double _lcms_double2fixmagic = 68719476736.0 * 1.5;  // 2^36 * 1.5, (52-16=36) uses limited precision to floor
-//#endif
 	// Fast floor conversion logic. Thanks to Sree Kotay and Stuart Nixon 
 	// note than this only works in the range ..-32767...+32767 because 
 	// mantissa is interpreted as 15.16 fixed point.
@@ -127,6 +362,8 @@ final class lcms2_internal extends lcms2_plugin
 //#ifdef CMS_DONT_USE_FAST_FLOOR
 	    return (int)Math.floor(val);
 //#else
+	    final double _lcms_double2fixmagic = 68719476736.0 * 1.5;  // 2^36 * 1.5, (52-16=36) uses limited precision to floor
+	    
 	    //Always in little endian format
 	    return (int)(Double.doubleToLongBits(val + _lcms_double2fixmagic) & 0xFFFFFFFFL);
 //#endif
@@ -414,7 +651,7 @@ final class lcms2_internal extends lcms2_plugin
 	
 	public static void _cmsTagSignature2String(StringBuffer String, int sig)
 	{
-		return cmserr._cmsTagSignature2String(String, sig);
+		cmserr._cmsTagSignature2String(String, sig);
 	}
 	
 	// Interpolation ---------------------------------------------------------------------------------------------------------
@@ -779,6 +1016,7 @@ final class lcms2_internal extends lcms2_plugin
 	    {
 	    	CacheIn = new short[cmsMAXCHANNELS];
 	    	CacheOut = new short[cmsMAXCHANNELS];
+	    	rwlock = new LCMS_RWLOCK_T();
 	    }
 	}
 	

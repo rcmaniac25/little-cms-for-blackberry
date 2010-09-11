@@ -971,23 +971,24 @@ public class VirtualPointer
     {
         if (buffer == null)
         {
-            if (data == null || dataPos >= data.length || len <= 0)
+        	/* 
+        	 * Little insider ability. By default if data read is past the bounds of the allocated memory it returns what it can and fills the rest with random data
+        	 * because nobody knows what is outside the allocated data. BUT by passing in a null buffer it will return how much data can actually be read out.
+        	 */
+            if (data == null || dataPos >= data.length || len < 0)
             {
                 return 0;
             }
             else if (len + dataPos > data.length)
             {
-                return Math.min(data.length - dataPos, len);
+                //return Math.min(data.length - dataPos, len); //Wait, why? len is greater so it will just return the other option.
+            	return data.length - dataPos;
             }
             return len;
         }
         if (data == null)
         {
-            Random rand = new Random();
-            for(int i = offset; i < offset + len; i++)
-            {
-            	buffer[i] = (byte)rand.nextInt(255);
-            }
+        	readRandom(new Random(), buffer, offset, len);
             return 0;
         }
         else
@@ -1003,19 +1004,11 @@ public class VirtualPointer
                         System.arraycopy(data, dataPos, buffer, offset, len);
                     }
                 }
-                Random rand = new Random();
                 int count;
                 byte[] randData = new byte[(count = len >= 0 ? dif : dif + len)];
-                for(int i = 0; i < count; i++)
-                {
-                	randData[i] = (byte)rand.nextInt(255);
-                }
+                readRandom(new Random(), randData, 0, count);
                 System.arraycopy(randData, 0, buffer, len >= 0 ? len + offset : offset, randData.length);
-                if (inc)
-                {
-                    dataPos += (len + dif);
-                }
-                return len + dif;
+                len += dif;
             }
             else
             {
@@ -1023,12 +1016,22 @@ public class VirtualPointer
                 {
             		System.arraycopy(data, dataPos, buffer, offset, len);
                 }
-                if (inc)
-                {
-                    dataPos += len;
-                }
-                return len;
             }
+            if (inc)
+            {
+                dataPos += len;
+            }
+            return len;
+        }
+    }
+    
+    //Simple helper function to deal with random data creation.
+    private static void readRandom(Random rand, byte[] data, int off, int len)
+    {
+    	len += off;
+    	for(int i = off; i < len; i++)
+        {
+    		data[i] = (byte)rand.nextInt(256);
         }
     }
     
@@ -1104,6 +1107,26 @@ public class VirtualPointer
         }
     }
     
+    public void readRaw(VirtualPointer buffer, int offset, int len)
+    {
+        readRaw(buffer, offset, len, -1);
+    }
+    
+    public void readRaw(VirtualPointer buffer, int offset, int len, int directPos)
+    {
+        if (directPos < 0)
+        {
+            directPos = this.dataPos;
+        }
+        synchronized (this.data)
+        {
+        	synchronized (buffer.data)
+        	{
+        		System.arraycopy(this.data, directPos, buffer.data, offset + buffer.dataPos, len);
+        	}
+        }
+    }
+    
     public void writeRaw(int val)
     {
     	writeRaw(new byte[]{(byte)val}, 0, 1);
@@ -1128,6 +1151,40 @@ public class VirtualPointer
         synchronized (this.data)
         {
         	System.arraycopy(buffer, offset, this.data, directPos, len);
+        }
+    }
+    
+    public void writeRaw(VirtualPointer buffer, int offset, int len)
+    {
+        readRaw(buffer, offset, len, -1);
+    }
+    
+    public void writeRaw(VirtualPointer buffer, int offset, int len, int directPos)
+    {
+        if (directPos < 0)
+        {
+            directPos = this.dataPos;
+        }
+        synchronized (this.data)
+        {
+        	synchronized (buffer.data)
+        	{
+        		System.arraycopy(buffer.data, offset + buffer.dataPos, this.data, directPos, len);
+        	}
+        }
+    }
+    
+    //Cheap memmove within the same virtual pointer, for memmove to/from another buffer then use read/writeRaw.
+    public void memmove(int dst, int src, int len)
+    {
+    	/*
+    	byte[] temp = new byte[len];
+    	readRaw(temp, src, len);
+    	writeRaw(temp, dst, len);
+    	*/
+    	synchronized (this.data)
+        {
+        	System.arraycopy(this.data, src + this.dataPos, this.data, dst + this.dataPos, len);
         }
     }
     

@@ -1,5 +1,36 @@
 $OP SLUF
 
+##KEYWORD
+$OP STYP
+	$AT NAME KEYWORD
+
+	$OP SFIE
+		$AT NAME id
+		$AT TYPE String
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME sy
+		$AT TYPE int
+	$OP EFIE
+$OP ETYP
+
+##PROPERTY
+$OP STYP
+	$AT NAME PROPERTY
+
+	$OP SFIE
+		$AT NAME id
+		$AT TYPE String
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME as
+		$AT TYPE int
+	$OP EFIE
+$OP ETYP
+
+##cmsTagTypeHandler
 $OP STYP
 	$AT NAME cmsTagTypeHandler
 	
@@ -126,6 +157,7 @@ $OP STYP
 	$OP EFIE
 $OP ETYP
 
+##cmsTagDescriptor
 $OP STYP
 	$AT NAME cmsTagDescriptor
 	
@@ -170,6 +202,7 @@ $OP STYP
 	$OP EFIE
 $OP ETYP
 
+##_cmsTagTypeLinkedList
 $OP STYP
 	$AT NAME _cmsTagTypeLinkedList
 	
@@ -184,6 +217,7 @@ $OP STYP
 	$OP EFIE
 $OP ETYP
 
+##_cmsTagLinkedList
 $OP STYP
 	$AT NAME _cmsTagLinkedList
 	
@@ -202,6 +236,151 @@ $OP STYP
 		$AT TYPE _cmsTagLinkedList
 	$OP EFIE
 $OP ETYP
+
+##cmsFormatters16
+$OP STYP
+	$AT NAME cmsFormatters16
+	
+	$OP SFIE
+		$AT NAME Type
+		$AT TYPE int
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME Mask
+		$AT TYPE int
+	$OP EFIE
+	
+	$OP SFIE
+		$AT NAME Frm
+		$AT TYPE cmsFormatter16
+	$OP EFIE
+$OP ETYP
+
+##cmsFormattersFloat
+$OP STYP
+	$AT NAME cmsFormattersFloat
+	
+	$OP SFIE
+		$AT NAME Type
+		$AT TYPE int
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME Mask
+		$AT TYPE int
+	$OP EFIE
+	
+	$OP SFIE
+		$AT NAME Frm
+		$AT TYPE cmsFormatterFloat
+	$OP EFIE
+$OP ETYP
+
+##cmsFormatter16
+$OP SDEL
+	$AT NAME cmsFormatter16
+
+	$OP SFIE
+		$AT NAME $ret
+		$AT TYPE VirtualPointer
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME CMMcargo
+		$AT TYPE _cmsTRANSFORM
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME Values
+		$AT TYPE short[]
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME Buffer
+		$AT TYPE VirtualPointer
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME Stride
+		$AT TYPE int
+	$OP EFIE
+$OP EDEL
+
+##cmsFormatterFloat
+$OP SDEL
+	$AT NAME cmsFormatterFloat
+
+	$OP SFIE
+		$AT NAME $ret
+		$AT TYPE VirtualPointer
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME CMMcargo
+		$AT TYPE _cmsTRANSFORM
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME Values
+		$AT TYPE float[]
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME Buffer
+		$AT TYPE VirtualPointer
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME Stride
+		$AT TYPE int
+	$OP EFIE
+$OP EDEL
+
+##Preprocessors
+$OP SPRE
+	$AT PREPROC FLOAT_SH(a)  ((a) << lcms2.FLOAT_SHIFT_VALUE)
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC OPTIMIZED_SH(s)  ((s) << lcms2.OPTIMIZED_SHIFT_VALUE)
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC COLORSPACE_SH(s)  ((s) << lcms2.COLORSPACE_SHIFT_VALUE)
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC SWAPFIRST_SH(s)  ((s) << lcms2.SWAPFIRST_SHIFT_VALUE)
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC FLAVOR_SH(s)  ((s) << lcms2.FLAVOR_SHIFT_VALUE)
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC PLANAR_SH(e)  ((e) << lcms2.PLANAR_SHIFT_VALUE)
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC ENDIAN16_SH(e)  ((e) << lcms2.ENDIAN16_SHIFT_VALUE)
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC DOSWAP_SH(e)  ((e) << lcms2.DOSWAP_SHIFT_VALUE)
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC EXTRA_SH(e)  ((e) << lcms2.EXTRA_SHIFT_VALUE)
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC CHANNELS_SH(c)  ((c) << lcms2.CHANNELS_SHIFT_VALUE)
+$OP EPRE
+
+$OP SPRE
+	$AT PREPROC BYTES_SH(b)  ((b) << lcms2.BYTES_SHIFT_VALUE)
+$OP EPRE
 
 $OP SPRE
 	$AT PREPROC TYPE_MPE_HANDLER(t, x)  { (t), READ_FN(x), WRITE_FN(x), GenericMPEdup, GenericMPEfree }

@@ -1,6 +1,6 @@
 Look-Up-File (LUF)
 
-All lookup files are built using operations and attibutes. Every operation and attribute starts with '$'.
+All lookup files are built using operations and attibutes. Every operation and attribute starts with '$'. A comment can be created by placing "##" at the beginning of the line (inline comments are not supported).
 
 Types:
 OP-Operation
@@ -21,7 +21,7 @@ An attribute is a, well, an attribute of something. An attribute is one line and
 
 Types of attributes:
 NAME-The name of the item
-TYPE-The type of an item (predefined types: boolean, byte, short, int, long, float, double, Object, *[])
+TYPE-The type of an item (predefined types: boolean, byte, short, int, long, float, double, Object, String, *[] {in certain instances})
 PREPROC-Straight text duplicate of preprocessor
 ATT-Raw type attributes (such as final)
 
@@ -45,4 +45,5 @@ Supported OPs: FIE
 
 PRE:
 Supported ATs: PREPROC
---Note: PREPROC can be used as an OP but is really an AT, thus start and end are not needed. This should only be done with multi-line preprocessors
+--Note: PREPROC can be used as an OP but is really an AT, thus start and end are not needed. This should only be done with multi-line preprocessors.
+--Note2: If "$$" is placed directly after the attribute header ("$AT PREPROC $${code}") then the preprocessor will not be processed. This also means that the values inside it will not be processed.

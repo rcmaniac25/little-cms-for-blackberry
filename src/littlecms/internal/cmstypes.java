@@ -5204,30 +5204,25 @@ final class cmstypes
 	identification of a profile used in a sequence
 	*/
 	
-	private static boolean ReadSeqID_fun(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
-	{
-	    cmsSEQ OutSeq = (cmsSEQ)Cargo;
-	    cmsPSEQDESC seq = OutSeq.seq[n];
-	    
-	    if (io.Read.run(io, seq.ProfileID.data, 16, 1) != 1)
-	    {
-	    	return false;
-	    }
-	    cmsMLU[] temp = new cmsMLU[]{seq.Description};
-	    if (!ReadEmbeddedText(self, io, temp, SizeOfTag))
-	    {
-	    	return false;
-	    }
-	    seq.Description = temp[0];
-	    
-	    return true;
-	}
-	
 	private static final PositionTableEntryFn ReadSeqID = new PositionTableEntryFn()
 	{
 		public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
 		{
-			return ReadSeqID_fun(self, io, Cargo, n, SizeOfTag);
+			cmsSEQ OutSeq = (cmsSEQ)Cargo;
+		    cmsPSEQDESC seq = OutSeq.seq[n];
+		    
+		    if (io.Read.run(io, seq.ProfileID.data, 16, 1) != 1)
+		    {
+		    	return false;
+		    }
+		    cmsMLU[] temp = new cmsMLU[]{seq.Description};
+		    if (!ReadEmbeddedText(self, io, temp, SizeOfTag))
+		    {
+		    	return false;
+		    }
+		    seq.Description = temp[0];
+		    
+		    return true;
 		}
 	};
 	
@@ -5270,29 +5265,24 @@ final class cmstypes
 	    return OutSeq;
 	}
 	
-	private boolean WriteSeqID_fun(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
-	{
-	    cmsSEQ Seq = (cmsSEQ)Cargo;
-	    
-	    if (!io.Write.run(io, 16, Seq.seq[n].ProfileID.data))
-	    {
-	    	return false;
-	    }
-	    
-	    // Store here the MLU
-	    if (!SaveDescription(self, io, Seq.seq[n].Description))
-	    {
-	    	return false;
-	    }
-	    
-	    return true;
-	}
-	
 	private static final PositionTableEntryFn WriteSeqID = new PositionTableEntryFn()
 	{
 		public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
 		{
-			return WriteSeqID_fun(self, io, Cargo, n, SizeOfTag);
+			cmsSEQ Seq = (cmsSEQ)Cargo;
+		    
+		    if (!io.Write.run(io, 16, Seq.seq[n].ProfileID.data))
+		    {
+		    	return false;
+		    }
+		    
+		    // Store here the MLU
+		    if (!SaveDescription(self, io, Seq.seq[n].Description))
+		    {
+		    	return false;
+		    }
+		    
+		    return true;
 		}
 	};
 	
@@ -5987,19 +5977,14 @@ final class cmstypes
 	    return Curve;
 	}
 	
-	private static boolean ReadMPECurve_fun(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
-	{
-	      cmsToneCurve[] GammaTables = (cmsToneCurve[])Cargo;
-	      
-	      GammaTables[n] = ReadSegmentedCurve(self, io);
-	      return (GammaTables[n] != null);
-	}
-	
 	private static final PositionTableEntryFn ReadMPECurve = new PositionTableEntryFn()
 	{
 		public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
 		{
-			return ReadMPECurve_fun(self, io, Cargo, n, SizeOfTag);
+			cmsToneCurve[] GammaTables = (cmsToneCurve[])Cargo;
+		      
+		      GammaTables[n] = ReadSegmentedCurve(self, io);
+		      return (GammaTables[n] != null);
 		}
 	};
 	
@@ -6169,18 +6154,13 @@ final class cmstypes
 	    return true;
 	}
 	
-	private static boolean WriteMPECurve_fun(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
-	{
-		_cmsStageToneCurvesData Curves  = (_cmsStageToneCurvesData)Cargo;
-		
-	    return WriteSegmentedCurve(io, Curves.TheCurves[n]);
-	}
-	
 	private static final PositionTableEntryFn WriteMPECurve = new PositionTableEntryFn()
 	{
 		public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
 		{
-			return WriteMPECurve_fun(self, io, Cargo, n, SizeOfTag);
+			_cmsStageToneCurvesData Curves  = (_cmsStageToneCurvesData)Cargo;
+			
+		    return WriteSegmentedCurve(io, Curves.TheCurves[n]);
 		}
 	};
 	
@@ -6446,60 +6426,81 @@ final class cmstypes
 	
 	private static void setupMPEtypes()
 	{
-		cmsTagTypeHandler.tagHandlerDupPtr genDup = new cmsTagTypeHandler.tagHandlerDupPtr
+		_cmsTagTypeLinkedList tempMPETypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigCLutElemType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
-			{
-				return GenericMPEdup(self, Ptr, n);
-			}
-		};
-		cmsTagTypeHandler.tagHandlerFreePtr genFree = new new cmsTagTypeHandler.tagHandlerFreePtr
-		{
-			public void run(cmsTagTypeHandler self, Object Ptr)
-			{
-				GenericMPEfree(self, Ptr);
-			}
-		};
-		
-		_cmsTagTypeLinkedList tempMPETypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigCLutElemType, new cmsTagTypeHandler.tagHandlerReadPtr
-		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_MPEclut_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_MPEclut_Write(self, io, Ptr, nItems);
 			}
-		}, genDup, genFree), null);
-		tempMPETypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigMatrixElemType, new cmsTagTypeHandler.tagHandlerReadPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return GenericMPEdup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				GenericMPEfree(self, Ptr);
+			}
+		}), null);
+		tempMPETypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigMatrixElemType, new cmsTagTypeHandler.tagHandlerReadPtr()
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_MPEmatrix_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_MPEmatrix_Write(self, io, Ptr, nItems);
 			}
-		}, genDup, genFree), tempMPETypes);
-		tempMPETypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigCurveSetElemType, new cmsTagTypeHandler.tagHandlerReadPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return GenericMPEdup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				GenericMPEfree(self, Ptr);
+			}
+		}), tempMPETypes);
+		tempMPETypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigCurveSetElemType, new cmsTagTypeHandler.tagHandlerReadPtr()
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_MPEcurve_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_MPEcurve_Write(self, io, Ptr, nItems);
 			}
-		}, genDup, genFree), tempMPETypes);
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return GenericMPEdup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				GenericMPEfree(self, Ptr);
+			}
+		}), tempMPETypes);
 		
 		tempMPETypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigEAcsElemType, null, null, null, null), tempMPETypes);		// Ignore those elements for now
 		SupportedMPEtypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigBAcsElemType, null, null, null, null), tempMPETypes);	// (That's what the spec says)
@@ -6507,66 +6508,61 @@ final class cmstypes
 	
 	private static final int DEFAULT_MPE_TYPE_COUNT = 5;
 	
-	private static boolean ReadMPEElem_fun(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
-	{
-	    int ElementSig;
-	    cmsTagTypeHandler TypeHandler;
-	    cmsStage mpe = null;
-	    int nItems;
-	    cmsPipeline NewLUT = (cmsPipeline)Cargo;
-	    
-	    // Take signature and channels for each element.
-	    int[] temp = new int[1];
-	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
-	    {
-	    	return false;
-	    }
-	    ElementSig = temp[0];
-	    
-	    // The reserved placeholder
-	    if (!cmsplugin._cmsReadUInt32Number(io, NULL))
-	    {
-	    	return false;
-	    }
-	    
-	    // Read diverse MPE types
-	    TypeHandler = GetHandler(ElementSig, SupportedMPEtypes);
-	    if (TypeHandler == NULL)
-	    {
-	        StringBuffer String = new StringBuffer(4);
-	        
-	        cmserr._cmsTagSignature2String(String, ElementSig);
-	        
-	        // An unknown element was found. 
-	        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknown MPE type '%s' found.", new Object[]{String});
-	        return false;
-	    }
-	    
-	    // If no read method, just ignore the element (valid for cmsSigBAcsElemType and cmsSigEAcsElemType)
-	    // Read the MPE. No size is given
-	    if (TypeHandler.ReadPtr != null)
-	    {
-	        // This is a real element which should be read and processed
-	    	temp[0] = nItems;
-	        mpe = (cmsStage)TypeHandler.ReadPtr.run(self, io, temp, SizeOfTag);
-	        nItems = temp[0];
-	        if (mpe == null)
-		    {
-		    	return false;
-		    }
-	        
-	        // All seems ok, insert element
-	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
-	    }
-	    
-	    return true;
-	}
-	
 	private static final PositionTableEntryFn ReadMPEElem = new PositionTableEntryFn()
 	{
 		public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
 		{
-			return ReadMPEElem_fun(self, io, Cargo, n, SizeOfTag);
+			int ElementSig;
+		    cmsTagTypeHandler TypeHandler;
+		    cmsStage mpe = null;
+		    int nItems;
+		    cmsPipeline NewLUT = (cmsPipeline)Cargo;
+		    
+		    // Take signature and channels for each element.
+		    int[] temp = new int[1];
+		    if (!cmsplugin._cmsReadUInt32Number(io, temp))
+		    {
+		    	return false;
+		    }
+		    ElementSig = temp[0];
+		    
+		    // The reserved placeholder
+		    if (!cmsplugin._cmsReadUInt32Number(io, NULL))
+		    {
+		    	return false;
+		    }
+		    
+		    // Read diverse MPE types
+		    TypeHandler = GetHandler(ElementSig, SupportedMPEtypes);
+		    if (TypeHandler == NULL)
+		    {
+		        StringBuffer String = new StringBuffer(4);
+		        
+		        cmserr._cmsTagSignature2String(String, ElementSig);
+		        
+		        // An unknown element was found. 
+		        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknown MPE type '%s' found.", new Object[]{String});
+		        return false;
+		    }
+		    
+		    // If no read method, just ignore the element (valid for cmsSigBAcsElemType and cmsSigEAcsElemType)
+		    // Read the MPE. No size is given
+		    if (TypeHandler.ReadPtr != null)
+		    {
+		        // This is a real element which should be read and processed
+		    	temp[0] = nItems;
+		        mpe = (cmsStage)TypeHandler.ReadPtr.run(self, io, temp, SizeOfTag);
+		        nItems = temp[0];
+		        if (mpe == null)
+			    {
+			    	return false;
+			    }
+		        
+		        // All seems ok, insert element
+		        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+		    }
+		    
+		    return true;
 		}
 	};
 	
@@ -7052,750 +7048,750 @@ final class cmstypes
 	
 	private static void setupTypes()
 	{
-		_cmsTagTypeLinkedList tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigVcgtType, new cmsTagTypeHandler.tagHandlerReadPtr
+		_cmsTagTypeLinkedList tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigVcgtType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_vcgt_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_vcgt_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_vcgt_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_vcgt_Free(self, Ptr);
 			}
 		}), null);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigProfileSequenceIdType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigProfileSequenceIdType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_ProfileSequenceId_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_ProfileSequenceId_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_ProfileSequenceId_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_ProfileSequenceId_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsMonacoBrokenCurveType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsMonacoBrokenCurveType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_Curve_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_Curve_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_Curve_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_Curve_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsCorbisBrokenXYZtype, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsCorbisBrokenXYZtype, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_XYZ_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_XYZ_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_XYZ_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_XYZ_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigXYZType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigXYZType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_XYZ_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_XYZ_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_XYZ_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_XYZ_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigViewingConditionsType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigViewingConditionsType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_ViewingConditions_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_ViewingConditions_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_ViewingConditions_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_ViewingConditions_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigScreeningType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigScreeningType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_Screening_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_Screening_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_Screening_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_Screening_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigMultiProcessElementType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigMultiProcessElementType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_MPE_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_MPE_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_MPE_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_MPE_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigCrdInfoType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigCrdInfoType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_CrdInfo_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_CrdInfo_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_CrdInfo_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_CrdInfo_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigUcrBgType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigUcrBgType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_UcrBg_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_UcrBg_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_UcrBg_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_UcrBg_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigLutBtoAType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigLutBtoAType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_LUTB2A_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_LUTB2A_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_LUTB2A_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_LUTB2A_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigLutAtoBType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigLutAtoBType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_LUTA2B_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_LUTA2B_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_LUTA2B_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_LUTA2B_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigDataType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigDataType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_Data_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_Data_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_Data_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_Data_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigMeasurementType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigMeasurementType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_Measurement_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_Measurement_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_Measurement_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_Measurement_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigSignatureType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigSignatureType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_Signature_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_Signature_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_Signature_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_Signature_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigProfileSequenceDescType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigProfileSequenceDescType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_ProfileSequenceDesc_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_ProfileSequenceDesc_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_ProfileSequenceDesc_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_ProfileSequenceDesc_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigMultiLocalizedUnicodeType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigMultiLocalizedUnicodeType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_MLU_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_MLU_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_MLU_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_MLU_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigNamedColor2Type, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigNamedColor2Type, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_NamedColor_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_NamedColor_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_NamedColor_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_NamedColor_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigColorantTableType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigColorantTableType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_ColorantTable_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_ColorantTable_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_ColorantTable_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_ColorantTable_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigLut16Type, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigLut16Type, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_LUT16_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_LUT16_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_LUT16_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_LUT16_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigLut8Type, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigLut8Type, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_LUT8_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_LUT8_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_LUT8_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_LUT8_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigDateTimeType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigDateTimeType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_DateTime_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_DateTime_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_DateTime_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_DateTime_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigParametricCurveType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigParametricCurveType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_ParametricCurve_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_ParametricCurve_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_ParametricCurve_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_ParametricCurve_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigCurveType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigCurveType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_Curve_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_Curve_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_Curve_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_Curve_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigTextDescriptionType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigTextDescriptionType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_Text_Description_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_Text_Description_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_Text_Description_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_Text_Description_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigTextType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigTextType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_Text_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_Text_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_Text_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_Text_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigU16Fixed16ArrayType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigU16Fixed16ArrayType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_U16Fixed16_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_U16Fixed16_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_U16Fixed16_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_U16Fixed16_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigS15Fixed16ArrayType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigS15Fixed16ArrayType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_S15Fixed16_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_S15Fixed16_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_S15Fixed16_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_S15Fixed16_Free(self, Ptr);
 			}
 		}), tempTypes);
-		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigColorantOrderType, new cmsTagTypeHandler.tagHandlerReadPtr
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigColorantOrderType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_ColorantOrderType_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_ColorantOrderType_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_ColorantOrderType_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
 				Type_ColorantOrderType_Free(self, Ptr);
 			}
 		}), tempTypes);
-		SupportedTagTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigChromaticityType, new cmsTagTypeHandler.tagHandlerReadPtr
+		SupportedTagTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigChromaticityType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
-			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int nItems, SizeOfTag int)
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, SizeOfTag int)
 			{
 				return Type_Chromaticity_Read(self, io, nItems, int);
 			}
-		}, new cmsTagTypeHandler.tagHandlerWritePtr
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
 		{
 			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, int Ptr, int nItems)
 			{
 				return Type_Chromaticity_Write(self, io, Ptr, nItems);
 			}
-		}, new cmsTagTypeHandler.tagHandlerDupPtr
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
 		{
 			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
 			{
 				return Type_Chromaticity_Dup(self, Ptr, n);
 			}
-		}, new cmsTagTypeHandler.tagHandlerFreePtr
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
 		{
 			public void run(cmsTagTypeHandler self, Object Ptr)
 			{
@@ -7865,7 +7861,7 @@ final class cmstypes
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigCrdInfoTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigCrdInfoType}, null), tempTag);
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigUcrBgTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigUcrBgType}, null), tempTag);
 		
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigViewingCondDescTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextDescriptionType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextType}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigViewingCondDescTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextDescriptionType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextType}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
@@ -7888,7 +7884,7 @@ final class cmstypes
 		
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigTechnologyTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigSignatureType}, null), tempTag);
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigProfileSequenceDescTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigProfileSequenceDescType}, null), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigProfileDescriptionTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextDescriptionType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextType}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigProfileDescriptionTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextDescriptionType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextType}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
@@ -7896,21 +7892,21 @@ final class cmstypes
 			}
 		}), tempTag);
 		
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPreview2Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPreview2Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
 				return DecideLUTtypeB2A(ICCVersion, Data);
 			}
 		}), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPreview1Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPreview1Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
 				return DecideLUTtypeB2A(ICCVersion, Data);
 			}
 		}), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPreview0Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigPreview0Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
@@ -7920,11 +7916,12 @@ final class cmstypes
 		
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigNamedColor2Tag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigNamedColor2Type}, null), tempTag);
 		
+		// Allow corbis  and its broken XYZ type
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigMediaWhitePointTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, null), tempTag);
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigMediaBlackPointTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, null), tempTag);
 		
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigLuminanceTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigXYZType}, null), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigGrayTRCTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigCurveType, lcms2.cmsSigParametricCurveType}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigGrayTRCTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigCurveType, lcms2.cmsSigParametricCurveType}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
@@ -7932,7 +7929,7 @@ final class cmstypes
 			}
 		}), tempTag);
 		
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigGamutTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigGamutTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
@@ -7940,14 +7937,14 @@ final class cmstypes
 			}
 		}), tempTag);
 		
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigDeviceModelDescTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextDescriptionType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextType}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigDeviceModelDescTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextDescriptionType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextType}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
 				return DecideTextDescType(ICCVersion, Data);
 			}
 		}), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigDeviceMfgDescTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextDescriptionType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextType}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigDeviceMfgDescTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextDescriptionType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextType}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
@@ -7956,7 +7953,7 @@ final class cmstypes
 		}), tempTag);
 		
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigDateTimeTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigDateTimeType}, null), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigCopyrightTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextDescriptionType}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigCopyrightTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigTextType, lcms2.cmsSigMultiLocalizedUnicodeType, lcms2.cmsSigTextDescriptionType}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
@@ -7973,21 +7970,21 @@ final class cmstypes
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigCharTargetTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigTextType}, null), tempTag);
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigCalibrationDateTimeTag, new cmsTagDescriptor(1, 1, new int{lcms2.cmsSigDateTimeType}, null), tempTag);
 		
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBlueTRCTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigCurveType, lcms2.cmsSigParametricCurveType, lcms2.cmsMonacoBrokenCurveType}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBlueTRCTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigCurveType, lcms2.cmsSigParametricCurveType, lcms2.cmsMonacoBrokenCurveType}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
 				return DecideCurveType(ICCVersion, Data);
 			}
 		}), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigGreenTRCTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigCurveType, lcms2.cmsSigParametricCurveType, lcms2.cmsMonacoBrokenCurveType}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigGreenTRCTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigCurveType, lcms2.cmsSigParametricCurveType, lcms2.cmsMonacoBrokenCurveType}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
 				return DecideCurveType(ICCVersion, Data);
 			}
 		}), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigRedTRCTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigCurveType, lcms2.cmsSigParametricCurveType, lcms2.cmsMonacoBrokenCurveType}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigRedTRCTag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigCurveType, lcms2.cmsSigParametricCurveType, lcms2.cmsMonacoBrokenCurveType}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
@@ -7995,21 +7992,21 @@ final class cmstypes
 			}
 		}), tempTag);
 		
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBlueColorantTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBlueColorantTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
 				return DecideXYZtype(ICCVersion, Data);
 			}
 		}), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigGreenColorantTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigGreenColorantTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
 				return DecideXYZtype(ICCVersion, Data);
 			}
 		}), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigRedColorantTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigRedColorantTag, new cmsTagDescriptor(1, 2, new int{lcms2.cmsSigXYZType, lcms2.cmsCorbisBrokenXYZtype}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
@@ -8017,42 +8014,42 @@ final class cmstypes
 			}
 		}), tempTag);
 		
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToA2Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToA2Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
 				return DecideLUTtypeB2A(ICCVersion, Data);
 			}
 		}), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToA1Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToA1Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
 				return DecideLUTtypeB2A(ICCVersion, Data);
 			}
 		}), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToA0Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigBToA0Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutBtoAType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
 				return DecideLUTtypeB2A(ICCVersion, Data);
 			}
 		}), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigAToB2Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutAtoBType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigAToB2Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutAtoBType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
 				return DecideLUTtypeA2B(ICCVersion, Data);
 			}
 		}), tempTag);
-		tempTag = new _cmsTagLinkedList(lcms2.cmsSigAToB1Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutAtoBType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigAToB1Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutAtoBType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
 				return DecideLUTtypeA2B(ICCVersion, Data);
 			}
 		}), tempTag);
-		SupportedTags = new _cmsTagLinkedList(lcms2.cmsSigAToB0Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutAtoBType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType
+		SupportedTags = new _cmsTagLinkedList(lcms2.cmsSigAToB0Tag, new cmsTagDescriptor(1, 3, new int{lcms2.cmsSigLut16Type, lcms2.cmsSigLutAtoBType, lcms2.cmsSigLut8Type}, new cmsTagDescriptor.tagDesDecideType()
 		{
 			public int run(double ICCVersion, final Object Data)
 			{
