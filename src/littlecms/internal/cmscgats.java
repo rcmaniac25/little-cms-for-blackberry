@@ -27,10 +27,15 @@
 //
 package littlecms.internal;
 
+import net.rim.device.api.util.Arrays;
+//#ifndef BlackBerrySDK4.5.0
+import net.rim.device.api.util.MathUtilities;
+//#endif
 import littlecms.internal.helper.Stream;
-import littlecms.internal.helper.TextFormatting;
+import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
 import littlecms.internal.lcms2.cmsContext;
+import littlecms.internal.lcms2.cmsHANDLE;
 
 /**
  * IT8.7 / CGATS.17-200x handling
@@ -131,7 +136,7 @@ final class cmscgats
     }
     
     // This struct hold all information about an open IT8 handler.
-    private static class cmsIT8
+    private static class cmsIT8 implements cmsHANDLE
     {
     	public char[] SheetType; // The first row of the IT8 (the type)
     	
@@ -157,7 +162,7 @@ final class cmscgats
         public KEYVALUE[] ValidKeywords;
         public KEYVALUE[] ValidSampleID;
         
-        public int Source; // Points to loc. being parsed
+        public VirtualPointer Source; // Points to loc. being parsed
         public int lineno; // line counter for error reporting
         
         public FILECTX[] FileStack; // Stack of files being parsed
@@ -383,23 +388,13 @@ final class cmscgats
     // Checks whatsever if c is a valid identifier middle char.
     private static boolean isidchar(int c)
     {
-       return isalnum(c) || ismiddle(c);
-    }
-    
-    private static boolean isalnum(int c)
-    {
-    	return Character.isDigit((char)c) || (((c >= 'a') || (c <= 'z')) || ((c >= 'A') || (c <= 'Z')));
+       return Utility.isalnum(c) || ismiddle(c);
     }
     
     // Checks whatsever if c is a valid identifier first char.
     private static boolean isfirstidchar(int c)
     {
-         return !isdigit(c) && ismiddle(c);
-    }
-    
-    private static boolean isdigit(int c)
-    {
-    	return Character.isDigit((char)c);
+         return !Utility.isdigit(c) && ismiddle(c);
     }
     
     // Guess whether the supplied path looks like an absolute path
@@ -407,7 +402,7 @@ final class cmscgats
     {
     	//TODO: This will not work on BlackBerry, redo
     	
-        char[] ThreeChars = new char[3];
+        char[] ThreeChars = new char[4];
         
         if(path == null)
         {
@@ -418,7 +413,8 @@ final class cmscgats
         	return false;
         }
         
-        path.getChars(0, 3, ThreeChars, 0);
+        Utility.strncpy(ThreeChars, path, 3);
+        ThreeChars[3] = 0;
         
         return ThreeChars[0] == DIR_CHAR;
     }
@@ -434,14 +430,14 @@ final class cmscgats
         // Already absolute?
         if (isabsolutepath(relPath))
         {
-        	relPath.getChars(0, MaxLen - 1, temp, 0);
-        	buffer.append(temp);
+        	Utility.strncpy(buffer, relPath, MaxLen);
+        	buffer.setCharAt(MaxLen-1, '\0');
             return true;
         }
         
         // No, search for last
-        basePath.getChars(0, MaxLen - 1, temp, 0);
-        buffer.append(temp);
+        Utility.strncpy(buffer, basePath, MaxLen);
+        buffer.setCharAt(MaxLen-1, '\0');
         
         len = buffer.toString().lastIndexOf(DIR_CHAR);
         if (len == -1)
@@ -455,9 +451,7 @@ final class cmscgats
         }
         
         // No need to assure zero terminator over here
-        len = MaxLen - len;
-        relPath.getChars(0, len, temp, 0);
-        buffer.append(temp, 0, len);
+        Utility.strncpy(buffer, len + 1, relPath, 0, MaxLen - len);
         
         return true;
     }
@@ -467,7 +461,7 @@ final class cmscgats
     {
         if (str.indexOf('%') != -1)
         {
-        	return "**** CORRUPTED FORMAT STRING ***";
+        	return Utility.LCMS_Resources.getString(LCMSResource.CGATS_BAD_FORMAT_STR);
         }
         return str;
     }
@@ -478,9 +472,9 @@ final class cmscgats
     	StringBuffer Buffer = new StringBuffer(new String(new char[256]));
     	StringBuffer ErrMsg = new StringBuffer(new String(new char[1024]));
         
-        TextFormatting.vsnprintf(Buffer, 255, Txt, args);
+        Utility.vsnprintf(Buffer, 255, Txt, args);
         
-        TextFormatting.vsnprintf(ErrMsg, 1023, "%s: Line %d, %s", new Object[]{it8.FileStack[it8.IncludeSP].FileName, new Integer(it8.lineno), Buffer});
+        Utility.vsnprintf(ErrMsg, 1023, Utility.LCMS_Resources.getString(LCMSResource.CGATS_SynError_FORMAT), new Object[]{it8.FileStack[it8.IncludeSP].FileName, new Integer(it8.lineno), Buffer});
         it8.sy = SSYNERROR;
         cmserr.cmsSignalError(it8.ContextID, lcms2.cmsERROR_CORRUPTION_DETECTED, "%s", new Object[]{ErrMsg});
         return false;
@@ -496,5 +490,2345 @@ final class cmscgats
     	return true;
     }
     
-    //TODO #478
+    // Read Next character from stream
+    private static void NextCh(cmsIT8 it8)
+    {
+        if (it8.FileStack[it8.IncludeSP].Stream != null)
+        {
+            it8.ch = it8.FileStack[it8.IncludeSP].Stream.readByte();
+            
+            if (it8.FileStack[it8.IncludeSP].Stream.eof())
+            {
+                if (it8.IncludeSP > 0)
+                {
+                    it8.FileStack[it8.IncludeSP--].Stream.close();
+                    it8.ch = ' '; // Whitespace to be ignored
+                }
+                else
+                {
+                	it8.ch = 0; // EOF
+                }
+            }              
+        }
+        else
+        {
+            it8.ch = it8.Source.getProcessor().readInt8() & 0xFF;
+            if (it8.ch != 0)
+            {
+            	it8.Source.movePosition(1);
+            }
+        }
+    }
+    
+    // Try to see if current identifier is a keyword, if so return the referred symbol
+    private static int BinSrchKey(final String id)
+    {
+        int l = 1;
+        int r = NUMKEYS;
+        int x, res;
+        
+        while (r >= l)
+        {
+            x = (l+r)/2;
+            res = lcms2.cmsstrcasecmp(id, TabKeys[x-1].id);
+            if (res == 0)
+            {
+            	return TabKeys[x-1].sy;
+            }
+            if (res < 0)
+            {
+            	r = x - 1;
+            }
+            else
+            {
+            	l = x + 1;
+            }
+        }
+        
+        return SNONE;
+    }
+    
+    // 10 ^n
+    private static double xpow10(int n)
+    {
+//#ifndef BlackBerrySDK4.5.0
+    	return MathUtilities.pow(10, n);
+//#else
+    	return Utility.pow(10, n);
+//#endif
+    }
+    
+//  Reads a Real number, tries to follow from integer number
+    private static void ReadReal(cmsIT8 it8, int inum)
+    {
+    	it8.dnum = inum;
+    	
+        while (Utility.isdigit(it8.ch))
+        {
+            it8.dnum = it8.dnum * 10.0 + (it8.ch - '0');
+            NextCh(it8);
+        }
+        
+        if (it8.ch == '.') // Decimal point
+        {
+            double frac = 0.0; // fraction
+            int prec = 0; // precision
+            
+            NextCh(it8); // Eats dec. point
+            
+            while (Utility.isdigit(it8.ch))
+            {
+                frac = frac * 10.0 + (it8.ch - '0');
+                prec++;
+                NextCh(it8);
+            }
+            
+            it8.dnum = it8.dnum + (frac / xpow10(prec));
+        }
+        
+        // Exponent, example 34.00E+20
+        if (Character.toUpperCase((char)it8.ch) == 'E')
+        {
+            int e;
+            int sgn;
+            
+            NextCh(it8); sgn = 1;
+            
+            if (it8.ch == '-')
+            {
+                sgn = -1; NextCh(it8);
+            }
+            else
+            {
+                if (it8.ch == '+')
+                {
+                    sgn = +1;
+                    NextCh(it8);
+                }
+                
+                e = 0;
+                while (Utility.isdigit(it8.ch))
+                {
+                    if (e * 10.0 < Integer.MAX_VALUE)
+                    {
+                    	e = e * 10 + (it8.ch - '0');
+                    }
+                    
+                    NextCh(it8);
+                }
+                
+                e = sgn*e;
+                it8.dnum = it8.dnum * xpow10(e);
+            }
+        }
+    }
+    
+    // Reads next symbol
+    private static void InSymbol(cmsIT8 it8)
+    {
+        char[] idptr = null;
+        int idptrPos = 0;
+        int k;
+        int key;
+        int sng;
+        
+        do
+        {
+            while (isseparator(it8.ch))
+            {
+            	NextCh(it8);
+            }
+            
+            if (isfirstidchar(it8.ch)) // Identifier
+            {
+                k = 0;
+                idptr = it8.id;
+                idptrPos = 0;
+                
+                do
+                {
+                    if (++k < MAXID)
+                    {
+                    	idptr[idptrPos++] = (char)it8.ch;
+                    }
+                    
+                    NextCh(it8);
+                } while (isidchar(it8.ch));
+                
+                idptr[idptrPos] = '\0';
+                
+                key = BinSrchKey(Utility.cstringCreation(it8.id));
+                if (key == SNONE)
+                {
+                	it8.sy = SIDENT;
+                }
+                else
+                {
+                	it8.sy = key;
+                }
+            }
+            else // Is a number?
+            {
+                if (Utility.isdigit(it8.ch) || it8.ch == '.' || it8.ch == '-' || it8.ch == '+')
+                {
+                    int sign = 1;
+                    
+                    if (it8.ch == '-')
+                    {
+                        sign = -1;
+                        NextCh(it8);
+                    }
+                    
+                    it8.inum = 0;
+                    it8.sy = SINUM;
+                    
+                    if (it8.ch == '0') // 0xnnnn (Hexa) or 0bnnnn (Binary)
+                    {
+                        NextCh(it8);
+                        if (Character.toUpperCase((char)it8.ch) == 'X')
+                        {
+                            int j;
+                            
+                            NextCh(it8);
+                            while (Utility.isxdigit(it8.ch))
+                            {
+                                it8.ch = Character.toUpperCase((char)it8.ch);
+                                if (it8.ch >= 'A' && it8.ch <= 'F')
+                                {
+                                	j = it8.ch -'A'+10;
+                                }
+                                else
+                                {
+                                	j = it8.ch - '0';
+                                }
+                                
+                                if (it8.inum * 16L > (long)Integer.MAX_VALUE)
+                                {
+                                    SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_BAD_HEX_NUM), null);
+                                    return;
+                                }
+                                
+                                it8.inum = it8.inum * 16 + j;
+                                NextCh(it8);
+                            }
+                            return;
+                        }
+                        
+                        if (Character.toUpperCase((char)it8.ch) == 'B') // Binary
+                        {
+                            int j;
+                            
+                            NextCh(it8);
+                            while (it8.ch == '0' || it8.ch == '1')
+                            {
+                                j = it8.ch - '0';
+                                
+                                if (it8.inum * 2L > (long)Integer.MAX_VALUE)
+                                {
+                                    SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_BAD_BIN_NUM), null);
+                                    return;
+                                }
+                                
+                                it8.inum = it8.inum * 2 + j;
+                                NextCh(it8);
+                            }
+                            return;
+                        }
+                    }
+                    
+                    while (Utility.isdigit(it8.ch))
+                    {
+                        if (it8.inum * 10L > (long)Integer.MAX_VALUE)
+                        {
+                            ReadReal(it8, it8.inum);
+                            it8.sy = SDNUM;
+                            it8.dnum *= sign;
+                            return;
+                        }
+                        
+                        it8.inum = it8.inum * 10 + (it8.ch - '0');
+                        NextCh(it8);
+                    }
+                    
+                    if (it8.ch == '.')
+                    {
+                        ReadReal(it8, it8.inum);
+                        it8.sy = SDNUM;
+                        it8.dnum *= sign;
+                        return;
+                    }
+                    
+                    it8.inum *= sign;
+                    
+                    // Special case. Numbers followed by letters are taken as identifiers
+                    
+                    if (isidchar(it8.ch))
+                    {
+                        if (it8.sy == SINUM)
+                        {
+                        	Utility.sprintf(it8.id, "%d", new Object[]{new Integer(it8.inum)});
+                        }
+                        else
+                        {
+                        	Utility.sprintf(it8.id, Utility.cstringCreation(it8.DoubleFormatter), new Object[]{new Double(it8.dnum)});
+                        }
+                        
+                        idptrPos = k = (int)Utility.strlen(it8.id);
+                        do
+                        {
+                            if (++k < MAXID)
+                            {
+                            	idptr[idptrPos++] = (char)it8.ch;
+                            }
+                            
+                            NextCh(it8);
+                        } while (isidchar(it8.ch));
+                        
+                        idptr[idptrPos] = '\0';                    
+                        it8.sy = SIDENT;
+                    }
+                    return;
+                }
+                else
+                {
+                    switch (it8.ch)
+                    {
+			            // EOF marker -- ignore it
+			            case 0x1A:
+			                NextCh(it8);
+			                break;
+			            // Eof stream markers
+			            case 0:
+			            case -1:
+			                it8.sy = SEOF;
+			                break;
+			            // Next line            
+			            case '\n':
+			                NextCh(it8);
+			                it8.sy = SEOLN;
+			                it8.lineno++;
+			                break;
+			            // Comment
+			            case '#':
+			                NextCh(it8);
+			                while (it8.ch != 0 && it8.ch != '\n')
+			                {
+			                	NextCh(it8);
+			                }
+			                
+			                it8.sy = SCOMMENT;
+			                break;
+			            // String.
+			            case '\'':
+			            case '\"':
+			                idptr = it8.str;
+			                sng = it8.ch;
+			                k = 0;
+			                NextCh(it8);
+			                
+			                while (k < MAXSTR && it8.ch != sng)
+			                {
+			                    if (it8.ch == '\n'|| it8.ch == '\r')
+			                    {
+			                    	k = MAXSTR+1;
+			                    }
+			                    else
+			                    {                                    
+			                        idptr[idptrPos++] = (char)it8.ch;
+			                        NextCh(it8);
+			                        k++;
+			                    }
+			                }
+			                
+			                it8.sy = SSTRING;
+			                idptr[idptrPos] = '\0';
+			                NextCh(it8);
+			                break;
+			            default:
+			                SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_UNRECOGNIZED_CHAR), new Object[]{new Integer(it8.ch)});            
+			                return;
+	                }
+                }
+            }
+        } while (it8.sy == SCOMMENT);
+        
+        // Handle the include special token
+        
+        if (it8.sy == SINCLUDE)
+        {
+	        FILECTX FileNest;
+	        
+	        if(it8.IncludeSP >= (MAXINCLUDE-1))
+	        {
+	            SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_TO_MANY_RECUR), null);
+	            return;
+	        }
+	        
+	        InSymbol(it8);
+	        if (!Check(it8, SSTRING, Utility.LCMS_Resources.getString(LCMSResource.CGATS_FILE_EXPECTED)))
+	        {
+	        	return;
+	        }
+	        
+	        FileNest = it8.FileStack[it8.IncludeSP + 1];
+	        if(FileNest == null)
+	        {
+	            FileNest = it8.FileStack[it8.IncludeSP + 1] = new FILECTX();
+	            //if(FileNest == NULL)
+	            //  TODO: how to manage out-of-memory conditions?
+	        }
+	        
+	        if (BuildAbsolutePath(Utility.cstringCreation(it8.str), it8.FileStack[it8.IncludeSP].FileName.toString(), FileNest.FileName, lcms2.cmsMAX_PATH-1) == false)
+	        {
+	            SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_FILE_TOO_LONG), null);
+	            return;
+	        }
+	        
+	        FileNest.Stream = Stream.fopen(FileNest.FileName.toString(), 'r');
+	        if (FileNest.Stream == null)
+	        {
+                SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.FILE_NOT_FOUND), new Object[]{FileNest.FileName});
+                return;
+	        }
+	        it8.IncludeSP++;
+	        
+	        it8.ch = ' ';
+	        InSymbol(it8);
+        }
+    }
+    
+    // Checks end of line separator
+    private static boolean CheckEOLN(cmsIT8 it8)
+    {
+        if (!Check(it8, SEOLN, Utility.LCMS_Resources.getString(LCMSResource.CGATS_EXPECTED_SEP)))
+        {
+        	return false;
+        }
+        while (it8.sy == SEOLN)
+        {
+        	InSymbol(it8);
+        }
+        return true;
+    }
+    
+    // Skip a symbol
+    
+    private static void Skip(cmsIT8 it8, int sy)
+    {
+        if (it8.sy == sy && it8.sy != SEOF)
+        {
+        	InSymbol(it8);
+        }
+    }
+    
+    // Skip multiple EOLN
+    private static void SkipEOLN(cmsIT8 it8)
+    {
+        while (it8.sy == SEOLN)
+        {
+        	InSymbol(it8);
+        }
+    }
+    
+    // Returns a string holding current value
+    private static boolean GetVal(cmsIT8 it8, char[] Buffer, int max, final String ErrorTitle)
+    {
+        switch (it8.sy)
+        {
+	        case SIDENT:  Utility.strncpy(Buffer, it8.id, max);
+	                      Buffer[max-1]=0;
+	                      break;
+	        case SINUM:   Utility.vsnprintf(Buffer, max, "%d", new Object[]{new Integer(it8.inum)}); break;
+	        case SDNUM:   Utility.vsnprintf(Buffer, max, Utility.cstringCreation(it8.DoubleFormatter), new Object[]{new Double(it8.dnum)}); break;
+	        case SSTRING: Utility.strncpy(Buffer, it8.str, max);
+	                      Buffer[max-1] = 0;
+	                      break;
+	        default:
+	             return SynError(it8, "%s", new Object[]{ErrorTitle});
+        }
+        
+        Buffer[max] = 0;
+        return true;
+    }
+    
+    // ---------------------------------------------------------- Table
+    
+    private static TABLE GetTable(cmsIT8 it8)
+    {
+       if ((it8.nTable >= it8.TablesCount))
+       {
+    	   SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_TABLE_OUT_SEQ), new Object[]{new Integer(it8.nTable)});
+    	   return it8.Tab[0];
+       }
+       
+       return it8.Tab[it8.nTable];
+    }
+    
+    // ---------------------------------------------------------- Memory management
+    
+    // Frees an allocator and owned memory
+    public static void cmsIT8Free(cmsHANDLE hIT8)
+    {
+    	cmsIT8 it8 = (cmsIT8)hIT8;
+    	
+        if (it8 == null)
+        {
+        	return;
+        }
+        
+        if (it8.MemorySink != null)
+        {
+            OWNEDMEM p;
+            OWNEDMEM n;
+            
+            for (p = it8.MemorySink; p != null; p = n)
+            {
+                n = p.Next;
+                if (p.Ptr != null && p.Ptr instanceof VirtualPointer)
+                {
+                	cmserr._cmsFree(it8.ContextID, (VirtualPointer)p.Ptr);
+                }
+            }
+        }
+        
+        if (it8.MemoryBlock != null)
+        {
+        	cmserr._cmsFree(it8.ContextID, it8.MemoryBlock);    
+        }
+    }
+    
+    // Allocates a chunk of data, keep linked list
+    private static VirtualPointer AllocBigBlock(cmsIT8 it8, int size)
+    {
+        OWNEDMEM ptr1;
+        VirtualPointer ptr = cmserr._cmsMallocZero(it8.ContextID, size);
+        
+        if (ptr != null)
+        {
+            ptr1 = new OWNEDMEM();
+            
+            ptr1.Ptr       = ptr;
+            ptr1.Next      = it8.MemorySink;
+            it8.MemorySink = ptr1;
+        }
+        
+        return ptr;
+    }
+    
+    // Suballocator.
+    private static VirtualPointer AllocChunk(cmsIT8 it8, int size)
+    {
+        int Free = it8.Allocator.BlockSize - it8.Allocator.Used;
+        VirtualPointer ptr;
+        
+        size = lcms2_internal._cmsALIGNLONG(size);
+        
+        if (size > Free)
+        {
+            if (it8.Allocator.BlockSize == 0)
+            {
+            	it8.Allocator.BlockSize = 20*1024;
+            }
+            else
+            {
+            	it8.Allocator.BlockSize *= 2;
+            }
+            
+            if (it8.Allocator.BlockSize < size)
+            {
+            	it8.Allocator.BlockSize = size;
+            }
+            
+            it8.Allocator.Used = 0;
+            it8.Allocator.Block = AllocBigBlock(it8, it8.Allocator.BlockSize);
+        }
+        
+        ptr = new VirtualPointer(it8.Allocator.Block, it8.Allocator.Used);
+        it8.Allocator.Used += size;
+        
+        return ptr;
+    }
+    
+    // Allocates a string
+    private static VirtualPointer AllocString(cmsIT8 it8, final String str)
+    {
+        int Size = Utility.strlen(str)+1;
+        VirtualPointer ptr;
+        
+        ptr = AllocChunk(it8, Size);
+        if (ptr != null)
+        {
+        	Utility.strncpy(ptr, str, Size-1);
+        }
+        
+        return ptr;
+    }
+    
+    // Searches through linked list
+    
+    private static boolean IsAvailableOnList(KEYVALUE p, final String Key, final String Subkey, KEYVALUE[] LastPtr)
+    {
+        if (LastPtr != null)
+        {
+        	LastPtr[0] = p;
+        }
+        
+        for (;  p != null; p = p.Next)
+        {
+        	if (LastPtr != null)
+            {
+            	LastPtr[0] = p;
+            }
+            if (Key.charAt(0) != '#') // Comments are ignored
+            {
+                if (cmserr.cmsstrcasecmp(Key, p.Keyword) == 0)
+                {
+                	break;
+                }
+            }
+        }
+        
+        if (p == null)
+        {
+        	return false;
+        }
+        
+        if (Subkey == null)
+        {
+        	return true;
+        }
+        
+        for (; p != null; p = p.NextSubkey)
+        {
+        	if (LastPtr != null)
+            {
+            	LastPtr[0] = p;
+            }
+        	
+            if (cmserr.cmsstrcasecmp(Subkey, p.Subkey) == 0)
+            {
+            	return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    // Add a property into a linked list
+    private static KEYVALUE AddToList(cmsIT8 it8, KEYVALUE[] Head, final String Key, final String Subkey, final String xValue, int WriteAs)
+    {
+        KEYVALUE[] p = new KEYVALUE[1];
+        KEYVALUE last;
+        
+        // Check if property is already in list 
+        
+        if (IsAvailableOnList(Head[0], Key, Subkey, p))
+        {
+            // This may work for editing properties
+        	
+            //return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_DUP_KEY), new Object[]{Key});                                        
+        }
+        else
+        {
+            last = p[0];
+            
+            // Allocate the container
+            p[0] = new KEYVALUE(); //Normally uses AllocChunk but it is cumbersome to work with
+            
+            // Store name and value
+            p[0].Keyword = AllocString(it8, Key).getProcessor().readString();
+            p[0].Subkey = (Subkey == null) ? null : AllocString(it8, Subkey).getProcessor().readString();
+            
+            // Keep the container in our list
+            if (Head[0] == null)
+            {
+                Head[0] = p[0];
+            }
+            else
+            {
+                if (Subkey != null && last != null)
+                {
+                    last.NextSubkey = p[0];
+                    
+                    // If Subkey is not null, then last is the last property with the same key,
+                    // but not necessarily is the last property in the list, so we need to move
+                    // to the actual list end
+                    while (last.Next != null)
+                    {
+                    	last = last.Next;
+                    }
+                }
+                
+                if (last != null)
+                {
+                	last.Next = p[0];
+                }
+            }
+            
+            p[0].Next = null;
+            p[0].NextSubkey = null;
+        }
+        
+        p[0].WriteAs = WriteAs;
+        
+        if (xValue != null)
+        {
+            p[0].Value = AllocString(it8, xValue);
+        }
+        else
+        {
+            p[0].Value = null;
+        }
+        
+        return p[0];
+    }
+    
+    private static KEYVALUE AddAvailableProperty(cmsIT8 it8, final String Key, int as)
+    {
+        return AddToList(it8, it8.ValidKeywords, Key, null, null, as);
+    }
+    
+    private static KEYVALUE AddAvailableSampleID(cmsIT8 it8, final String Key)
+    {
+        return AddToList(it8, it8.ValidSampleID, Key, null, null, WRITE_UNCOOKED);
+    }
+    
+    private static void AllocTable(cmsIT8 it8)
+    {
+        TABLE t;
+        
+        t = it8.Tab[it8.TablesCount];
+        if(t == null)
+        {
+        	t = it8.Tab[it8.TablesCount] = new TABLE();
+        }
+        
+        t.HeaderList = null;
+        t.DataFormat = null;
+        t.Data       = null;
+        
+        it8.TablesCount++;
+    }
+    
+    public static int cmsIT8SetTable(cmsHANDLE IT8, int nTable)
+    {
+         cmsIT8 it8 = (cmsIT8)IT8;
+         
+         if (nTable >= it8.TablesCount)
+         {
+             if (nTable == it8.TablesCount)
+             {
+                 AllocTable(it8);
+             }
+             else
+             {
+                 SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_TABLE_OUT_SEQ), new Object[]{new Integer(nTable)});
+                 return -1;
+             }
+         }
+         
+         it8.nTable = nTable;
+         
+         return nTable;
+    }
+    
+    // Init an empty container
+    public static cmsHANDLE cmsIT8Alloc(cmsContext ContextID)
+    {
+        cmsIT8 it8;
+        int i;
+        
+        it8 = new cmsIT8();
+        
+        AllocTable(it8);
+        
+        it8.MemoryBlock = null;
+        it8.MemorySink  = null;
+        
+        it8.nTable = 0;
+        
+        it8.ContextID = ContextID;
+        it8.Allocator.Used = 0;
+        it8.Allocator.Block = null;
+        it8.Allocator.BlockSize = 0;  
+        
+        it8.ValidKeywords = null;
+        it8.ValidSampleID = null;
+        
+        it8.sy = SNONE;
+        it8.ch = ' ';
+        it8.Source = null;
+        it8.inum = 0;
+        it8.dnum = 0.0;
+        
+        it8.FileStack[0] = new FILECTX();
+        it8.IncludeSP = 0;
+        it8.lineno = 1;
+        
+        System.arraycopy(it8.DoubleFormatter, 0, DEFAULT_DBL_FORMAT.toCharArray(), 0, DEFAULT_DBL_FORMAT.length());
+        it8.DoubleFormatter[DEFAULT_DBL_FORMAT.length()] = 0;
+        System.arraycopy(it8.SheetType, 0, "CGATS.17".toCharArray(), 0, 8);
+        it8.SheetType[8] = 0;
+        
+        // Initialize predefined properties & data
+        
+        for (i = 0; i < NUMPREDEFINEDPROPS; i++)
+        {
+        	AddAvailableProperty(it8, PredefinedProperties[i].id, PredefinedProperties[i].as);
+        }
+        
+        for (i = 0; i < NUMPREDEFINEDSAMPLEID; i++)
+        {
+        	AddAvailableSampleID(it8, PredefinedSampleID[i]);
+        }
+        
+        return it8;
+    }
+    
+    public static String cmsIT8GetSheetType(cmsHANDLE hIT8)
+    {
+    	cmsIT8 it8 = (cmsIT8)hIT8;
+    	
+    	return Utility.cstringCreation(it8.SheetType);
+    }
+    
+    public static boolean cmsIT8SetSheetType(cmsHANDLE hIT8, final String Type)
+    {
+    	cmsIT8 it8 = (cmsIT8)hIT8;
+    	
+    	Utility.strncpy(it8.SheetType, Type.toCharArray(), MAXSTR-1);
+    	it8.SheetType[MAXSTR-1] = 0;
+    	return true;
+    }
+    
+    public static boolean cmsIT8SetComment(cmsHANDLE hIT8, final String Val)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        
+        if (Val == null)
+        {
+        	return false;
+        }
+        if (Val.length() == 0 || Utility.strlen(Val) == 0)
+        {
+        	return false;
+        }
+        
+        return AddToList(it8, GetTable(it8).HeaderList, "# ", null, Val, WRITE_UNCOOKED) != null;
+    }
+    
+    // Sets a property
+    public static boolean cmsIT8SetPropertyStr(cmsHANDLE hIT8, final String Key, final String Val)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        
+        if (Val == null)
+        {
+        	return false;
+        }
+        if (Val.length() == 0 || Utility.strlen(Val) == 0)
+        {
+        	return false;
+        }
+        
+        return AddToList(it8, GetTable(it8).HeaderList, Key, null, Val, WRITE_STRINGIFY) != null;
+    }
+    
+    public static boolean cmsIT8SetPropertyDbl(cmsHANDLE hIT8, final String cProp, double Val)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        char[] Buffer = new char[1024];
+        
+        Utility.sprintf(Buffer, Utility.cstringCreation(it8.DoubleFormatter), new Object[]{new Double(Val)});
+        
+        return AddToList(it8, GetTable(it8).HeaderList, cProp, null, Utility.cstringCreation(Buffer), WRITE_UNCOOKED) != null;    
+    }
+    
+    public static boolean cmsIT8SetPropertyHex(cmsHANDLE hIT8, final String cProp, int Val)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        char[] Buffer = new char[1024];
+        
+        Utility.sprintf(Buffer, "%d", new Object[]{new Double(Val)});
+        
+        return AddToList(it8, GetTable(it8).HeaderList, cProp, null, Utility.cstringCreation(Buffer), WRITE_HEXADECIMAL) != null;    
+    }
+    
+    public static boolean cmsIT8SetPropertyUncooked(cmsHANDLE hIT8, final String Key, final String Buffer)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        
+        return AddToList(it8, GetTable(it8).HeaderList, Key, null, Buffer, WRITE_UNCOOKED) != null;
+    }
+    
+    public static boolean cmsIT8SetPropertyMulti(cmsHANDLE hIT8, final String Key, final String SubKey, final String Buffer)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        
+        return AddToList(it8, GetTable(it8).HeaderList, Key, SubKey, Buffer, WRITE_PAIR) != null;
+    }
+    
+    // Gets a property
+    public static String cmsIT8GetProperty(cmsHANDLE hIT8, final String Key)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        KEYVALUE[] p = new KEYVALUE[1];
+        
+        if (IsAvailableOnList(GetTable(it8).HeaderList[0], Key, null, p))
+        {
+            return (String)p[0].Value;
+        }
+        return null;
+    }
+    
+    public static double cmsIT8GetPropertyDbl(cmsHANDLE hIT8, final String cProp)
+    {
+        final String v = cmsIT8GetProperty(hIT8, cProp);
+
+        if (v != null)
+        {
+        	return Double.parseDouble(v);
+        }
+        else
+        {
+        	return 0.0;
+        }
+    }
+    
+    public static String cmsIT8GetPropertyMulti(cmsHANDLE hIT8, final String Key, final String SubKey)
+    {
+    	cmsIT8 it8 = (cmsIT8)hIT8;
+        KEYVALUE[] p = new KEYVALUE[1];
+        
+        if (IsAvailableOnList(GetTable(it8).HeaderList[0], Key, SubKey, p))
+        {
+            return (String)p[0].Value;
+        }
+        return null;
+    }
+    
+    // ----------------------------------------------------------------- Datasets
+    
+    private static void AllocateDataFormat(cmsIT8 it8)
+    {
+        TABLE t = GetTable(it8);
+        
+        if (t.DataFormat != null)
+        {
+        	return; // Already allocated
+        }
+        
+        t.nSamples = (int)cmsIT8GetPropertyDbl(it8, "NUMBER_OF_FIELDS");
+        
+        if (t.nSamples <= 0)
+        {
+            SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_ALLOC_DAT_FORM_UNK_COUNT), null);
+            t.nSamples = 10;
+        }
+        
+        t.DataFormat = new VirtualPointer[t.nSamples + 1];
+        /*
+        if (t.DataFormat == null)
+        {
+            SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_ALLOC_DAT_FORM_CANT_ALLOC), null);
+        }
+        */
+    }
+    
+    private static VirtualPointer GetDataFormat(cmsIT8 it8, int n)
+    {
+        TABLE t = GetTable(it8);
+        
+        if (t.DataFormat != null)
+        {
+        	return t.DataFormat[n];
+        }
+        return null;
+    }
+    
+    private static boolean SetDataFormat(cmsIT8 it8, int n, final String label)
+    {
+        TABLE t = GetTable(it8);
+        
+        if (t.DataFormat == null)
+        {
+        	AllocateDataFormat(it8);
+        }
+        
+        if (n > t.nSamples)
+        {
+            SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_EXCEED_KEY_COUNT), null);
+            return false;
+        }
+        
+        if (t.DataFormat != null)
+        {
+            t.DataFormat[n] = AllocString(it8, label);
+        }
+        
+        return true;
+    }
+    
+    public static boolean cmsIT8SetDataFormat(cmsHANDLE h, int n, final String Sample)
+    {
+    	cmsIT8 it8 = (cmsIT8)h;
+    	return SetDataFormat(it8, n, Sample);
+    }
+    
+    private static void AllocateDataSet(cmsIT8 it8)
+    {
+        TABLE t = GetTable(it8);
+        
+        if (t.Data != null)
+        {
+        	return; // Already allocated
+        }
+        
+        t.nSamples = Integer.parseInt(cmsIT8GetProperty(it8, "NUMBER_OF_FIELDS"));
+        t.nPatches = Integer.parseInt(cmsIT8GetProperty(it8, "NUMBER_OF_SETS"));
+        
+        t.Data = new VirtualPointer[(t.nSamples + 1) * (t.nPatches + 1)];
+        /*
+        if (t.Data == null)
+        {
+            SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_ALLOC_DAT_CANT_ALLOC), null);
+        }
+        */
+    }
+    
+    private static VirtualPointer GetData(cmsIT8 it8, int nSet, int nField)
+    {
+        TABLE t = GetTable(it8);
+        int nSamples = t.nSamples;
+        int nPatches = t.nPatches;
+        
+        if (nSet >= nPatches || nField >= nSamples)
+        {
+        	return null;
+        }
+        
+        if (t.Data == null)
+        {
+        	return null;
+        }
+        return t.Data[nSet * nSamples + nField];
+    }
+    
+    private static boolean SetData(cmsIT8 it8, int nSet, int nField, final String Val)
+    {
+        TABLE t = GetTable(it8);
+
+        if (t.Data == null)
+        {
+        	AllocateDataSet(it8);
+        }
+        
+        if (t.Data == null)
+        {
+        	return false;
+        }
+        
+        if (nSet > t.nPatches || nSet < 0)
+        {
+        	return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_DATA_OUTOFRANGE_FORMAT_PATCH), new Object[]{new Integer(nSet), new Integer(t.nPatches)});            
+        }
+        
+        if (nField > t.nSamples || nField < 0)
+        {
+        	return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_DATA_OUTOFRANGE_FORMAT_SAMPLES), new Object[]{new Integer(nField), new Integer(t.nSamples)});
+        }
+        
+        t.Data[nSet * t.nSamples + nField] = AllocString(it8, Val);
+        return true;
+    }
+    
+    // --------------------------------------------------------------- File I/O
+    
+    // Writes a string to file
+    private static void WriteStr(SAVESTREAM f, String str)
+    {
+        int len;
+        
+        if (str == null)
+        {
+        	str = " ";
+        }
+        
+        // Lenghth to write
+        len = Utility.strlen(str);
+        f.Used += len;
+        
+        if (f.stream != null) // Should I write it to a file?
+        {
+        	if (f.stream.write(str.getBytes(), 0, 1, len) != len)
+            {
+                cmserr.cmsSignalError(null, lcms2.cmsERROR_WRITE, Utility.LCMS_Resources.getString(LCMSResource.CGATS_FILE_WRITE_ERROR), null);
+                return;
+            }
+        }
+        else // Or to a memory block?
+        {
+            if (f.Base != null && !f.Base.isFree()) // Am I just counting the bytes?
+            {
+                if (f.Used > f.Max)
+                {
+                     cmserr.cmsSignalError(null, lcms2.cmsERROR_WRITE, Utility.LCMS_Resources.getString(LCMSResource.CGATS_MEM_WRITE_ERROR), null);
+                     return;
+                }
+                
+                f.Ptr.getProcessor().write(str, false, false, false);
+                f.Ptr.movePosition(len);
+            }
+        }
+    }
+    
+    // Write formatted
+    
+    private static void Writef(SAVESTREAM f, final String frm, Object[] args)
+    {
+        char[] Buffer = new char[4096];
+        
+        Utility.vsnprintf(Buffer, 4095, frm, args);
+        Buffer[4095] = 0;
+        WriteStr(f, Utility.cstringCreation(Buffer));
+    }
+    
+    // Writes full header
+    private static void WriteHeader(cmsIT8 it8, SAVESTREAM fp)
+    {
+        KEYVALUE p;
+        TABLE t = GetTable(it8);
+        
+        for (p = t.HeaderList[0]; (p != null); p = p.Next)
+        {
+            if (p.Keyword.charAt(0) == '#')
+            {
+                VirtualPointer Pt;
+                
+                WriteStr(fp, "#\n# ");
+                for (Pt = (VirtualPointer)p.Value; Pt.readRaw() != 0; Pt.movePosition(1))
+                {
+                    Writef(fp, "%c", new Object[]{new Character((char)Pt.readRaw())});
+                    
+                    if (Pt.readRaw() == '\n')
+                    {
+                        WriteStr(fp, "# ");
+                    }
+                }
+                
+                WriteStr(fp, "\n#\n");
+                continue;
+            }
+            
+            if (!IsAvailableOnList(it8.ValidKeywords[0], p.Keyword, null, null))
+            {
+//#ifdef CMS_STRICT_CGATS
+                WriteStr(fp, "KEYWORD\t\"");
+                WriteStr(fp, p.Keyword);
+                WriteStr(fp, "\"\n");
+//#endif
+
+                AddAvailableProperty(it8, p.Keyword, WRITE_UNCOOKED);
+            }
+            
+            WriteStr(fp, p.Keyword);
+            if (p.Value != null)
+            {
+                switch (p.WriteAs)
+                {
+	                case WRITE_UNCOOKED:
+	                        Writef(fp, "\t%s", new Object[]{p.Value});                    
+	                        break;
+	                        
+	                case WRITE_STRINGIFY:
+	                        Writef(fp, "\t\"%s\"", new Object[]{p.Value});
+	                        break;
+	                        
+	                case WRITE_HEXADECIMAL:
+	                        Writef(fp, "\t0x%X", new Object[]{Integer.valueOf((String)p.Value)});
+	                        break;
+	                        
+	                case WRITE_BINARY:
+	                        Writef(fp, "\t0x%B", new Object[]{Integer.valueOf((String)p.Value)});
+	                        break;
+	                        
+	                case WRITE_PAIR:
+	                        Writef(fp, "\t\"%s,%s\"", new Object[]{p.Subkey, p.Value});
+	                        break;
+	                        
+	                default: SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_UNK_WRITEMODE), new Object[]{new Integer(p.WriteAs)});
+	                         return;
+                }
+            }
+            
+            WriteStr(fp, "\n");
+        }
+    }
+    
+    // Writes the data format
+    private static void WriteDataFormat(SAVESTREAM fp, cmsIT8 it8)
+    {
+        int i, nSamples;
+        TABLE t = GetTable(it8);
+        
+        if (t.DataFormat == null)
+        {
+        	return;
+        }
+        
+        WriteStr(fp, "BEGIN_DATA_FORMAT\n");
+        WriteStr(fp, " ");
+        nSamples = Integer.parseInt(cmsIT8GetProperty(it8, "NUMBER_OF_FIELDS"));
+        
+        for (i = 0; i < nSamples; i++)
+        {
+        	WriteStr(fp, t.DataFormat[i].getProcessor().readString());
+        	WriteStr(fp, ((i == (nSamples-1)) ? "\n" : "\t"));
+        }
+        
+        WriteStr (fp, "END_DATA_FORMAT\n");
+    }
+    
+    // Writes data array
+    private static void WriteData(SAVESTREAM fp, cmsIT8 it8)
+    {
+    	int  i, j;
+    	TABLE t = GetTable(it8);
+    	
+    	if (t.Data == null)
+    	{
+    		return;
+    	}
+    	
+    	WriteStr (fp, "BEGIN_DATA\n");
+    	
+    	t.nPatches = Integer.parseInt(cmsIT8GetProperty(it8, "NUMBER_OF_SETS"));
+    	
+    	for (i = 0; i < t.nPatches; i++)
+    	{
+    		WriteStr(fp, " ");
+    		
+    		for (j = 0; j < t.nSamples; j++)
+    		{
+    			VirtualPointer ptr = t.Data[i*t.nSamples+j];
+    			
+    			if (ptr == null)
+    			{
+    				WriteStr(fp, "\"\"");
+    			}
+    			else
+    			{
+    				// If value contains whitespace, enclose within quote
+    				
+    				String str = ptr.getProcessor().readString();
+    				if (str.indexOf(' ') >= 0)
+    				{
+    					WriteStr(fp, "\"");
+    					WriteStr(fp, str);
+    					WriteStr(fp, "\"");
+    				}
+    				else
+    				{
+    					WriteStr(fp, str);
+    				}
+    			}
+    			
+    			WriteStr(fp, ((j == (t.nSamples-1)) ? "\n" : "\t"));
+    		}
+    	}
+    	WriteStr (fp, "END_DATA\n");
+    }
+    
+    // Saves whole file
+    public static boolean cmsIT8SaveToFile(cmsHANDLE hIT8, final String cFileName)
+    {
+        SAVESTREAM sd = new SAVESTREAM();
+        int i;
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        
+        sd.stream = Stream.fopen(cFileName, 'w');
+        if (sd.stream == null)
+        {
+        	return false;
+        }
+        
+        WriteStr(sd, Utility.cstringCreation(it8.SheetType));
+        WriteStr(sd, "\n");
+        for (i = 0; i < it8.TablesCount; i++)
+        {
+        	cmsIT8SetTable(hIT8, i);
+        	WriteHeader(it8, sd);
+        	WriteDataFormat(sd, it8);
+        	WriteData(sd, it8);
+        }
+        
+        if (sd.stream.close() != 0)
+        {
+        	return false;
+        }
+        
+        return true;
+    }
+    
+    // Saves to memory
+    public static boolean cmsIT8SaveToMem(cmsHANDLE hIT8, byte[] MemPtr, int[] BytesNeeded)
+    {
+        SAVESTREAM sd = new SAVESTREAM();  
+        int i;
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        
+        sd.stream = null;
+        sd.Base   = new VirtualPointer(MemPtr, true);
+        sd.Ptr    = new VirtualPointer(sd.Base);
+        
+        sd.Used = 0;
+        
+        if (!sd.Base.isFree())
+        {
+        	sd.Max = BytesNeeded[0]; // Write to memory?
+        }
+        else
+        {
+        	sd.Max = 0;              // Just counting the needed bytes
+        }
+        
+        WriteStr(sd, Utility.cstringCreation(it8.SheetType));
+        WriteStr(sd, "\n");
+        for (i = 0; i < it8.TablesCount; i++)
+        {
+        	cmsIT8SetTable(hIT8, i);
+        	WriteHeader(it8, sd);
+        	WriteDataFormat(sd, it8);
+        	WriteData(sd, it8);
+        }
+        
+        sd.Used++; // The \0 at the very end
+        
+        if (!sd.Base.isFree())
+        {
+        	sd.Ptr = null;
+        	sd.Base.free(); //Doesn't get rid of data in MemPtr
+        }
+        
+        BytesNeeded[0] = sd.Used;
+        
+        return true;
+    }
+    
+    // -------------------------------------------------------------- Higer level parsing
+    
+    private static boolean DataFormatSection(cmsIT8 it8)
+    {
+        int iField = 0;    
+        TABLE t = GetTable(it8);
+        
+        InSymbol(it8); // Eats "BEGIN_DATA_FORMAT"
+        CheckEOLN(it8);
+        
+        while (it8.sy != SEND_DATA_FORMAT &&
+            it8.sy != SEOLN &&
+            it8.sy != SEOF &&
+            it8.sy != SSYNERROR)
+        {
+        	if (it8.sy != SIDENT)
+        	{
+        		return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_SAMPLE_TYPE_EXPECTED), null);
+        	}
+        	
+        	if (!SetDataFormat(it8, iField, Utility.cstringCreation(it8.id)))
+        	{
+        		return false;
+        	}
+        	iField++;
+        	
+        	InSymbol(it8);
+        	SkipEOLN(it8);
+        }
+        
+        SkipEOLN(it8);
+        Skip(it8, SEND_DATA_FORMAT);
+        SkipEOLN(it8);
+        
+        if (iField != t.nSamples)
+        {
+        	SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_FIELD_COUNT_MISMATCH), new Object[]{new Integer(t.nSamples), new Integer(iField)});
+        }
+        
+        return true;
+    }
+    
+    private static boolean DataSection (cmsIT8 it8)
+    {
+        int  iField = 0;
+        int  iSet   = 0;
+        char[] Buffer = new char[256];
+        TABLE t = GetTable(it8);
+        
+        InSymbol(it8); // Eats "BEGIN_DATA"
+        CheckEOLN(it8);
+        
+        if (t.Data == null)
+        {
+        	AllocateDataSet(it8);
+        }
+        
+        while (it8.sy != SEND_DATA && it8.sy != SEOF)
+        {
+            if (iField >= t.nSamples)
+            {
+                iField = 0;
+                iSet++;
+            }
+            
+            if (it8.sy != SEND_DATA && it8.sy != SEOF)
+            {
+                if (!GetVal(it8, Buffer, 255, Utility.LCMS_Resources.getString(LCMSResource.CGATS_SAMPLE_DATA_EXPECTED)))
+                {
+                	return false;
+                }
+                
+                if (!SetData(it8, iSet, iField, Utility.cstringCreation(Buffer)))
+                {
+                	return false;
+                }
+                
+                iField++;
+                
+                InSymbol(it8);
+                SkipEOLN(it8);           
+            }
+        }
+        
+        SkipEOLN(it8);
+        Skip(it8, SEND_DATA);
+        SkipEOLN(it8);
+        
+        // Check for data completion.
+        
+        if ((iSet+1) != t.nPatches)
+        {
+        	return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_SET_COUNT_MISMATCH), new Object[]{new Integer(t.nPatches), new Integer(iSet+1)});
+        }
+        
+        return true;
+    }
+    
+    private static boolean HeaderSection(cmsIT8 it8)
+    {
+        char[] VarName = new char[MAXID];
+        char[] Buffer = new char[MAXSTR];
+        KEYVALUE Key;
+        
+        while (it8.sy != SEOF && 
+        		it8.sy != SSYNERROR && 
+        		it8.sy != SBEGIN_DATA_FORMAT && 
+        		it8.sy != SBEGIN_DATA)
+        {
+        	switch (it8.sy)
+        	{
+	            case SKEYWORD:
+                    InSymbol(it8);
+                    if (!GetVal(it8, Buffer, MAXSTR-1, Utility.LCMS_Resources.getString(LCMSResource.CGATS_KEYWORD_EXPECTED)))
+                    {
+                    	return false;
+                    }
+                    if (AddAvailableProperty(it8, Utility.cstringCreation(Buffer), WRITE_UNCOOKED) == null)
+                    {
+                    	return false;
+                    }
+                    InSymbol(it8);
+                    break;
+	                    
+	            case SDATA_FORMAT_ID:
+                    InSymbol(it8);
+                    if (!GetVal(it8, Buffer, MAXSTR-1, Utility.LCMS_Resources.getString(LCMSResource.CGATS_KEYWORD_EXPECTED)))
+                    {
+                    	return false;
+                    }
+                    if (AddAvailableSampleID(it8, Utility.cstringCreation(Buffer)) == null)
+                    {
+                    	return false;
+                    }
+                    InSymbol(it8);
+                    break;
+	                    
+	            case SIDENT:
+	            	Utility.strncpy(VarName, it8.id, MAXID-1);
+                    VarName[MAXID-1] = 0;
+                    
+                    KEYVALUE[] tempKey = new KEYVALUE[1];
+                    if (!IsAvailableOnList(it8.ValidKeywords[0], Utility.cstringCreation(VarName), null, tempKey))
+                    {
+//#ifdef CMS_STRICT_CGATS
+                    	return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_UNDEFINED_KEYWORD), new Object[]{VarName});
+//#else
+                        Key = AddAvailableProperty(it8, Utility.cstringCreation(VarName), WRITE_UNCOOKED);
+                        if (Key == null)
+	                    {
+	                    	return false;
+	                    }
+//#endif
+                    }
+                    Key = tempKey[0];
+                    
+                    InSymbol(it8);
+                    if (!GetVal(it8, Buffer, MAXSTR-1, Utility.LCMS_Resources.getString(LCMSResource.CGATS_DATA_PROPERTY_EXPECTED)))
+                    {
+                    	return false;
+                    }
+                    
+                    if(Key.WriteAs != WRITE_PAIR)
+                    {
+                        AddToList(it8, GetTable(it8).HeaderList, Utility.cstringCreation(VarName), null, Utility.cstringCreation(Buffer), 
+                        		(it8.sy == SSTRING) ? WRITE_STRINGIFY : WRITE_UNCOOKED);
+                    }
+                    else
+                    {
+                    	int max = Buffer.length;
+                        int Subkey;
+                        int Nextkey;
+                        if (it8.sy != SSTRING)
+                        {
+                        	return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_INVALID_VALUE_FOR_PROP_PARAM), new Object[]{Buffer, VarName});
+                        }
+                        String BufferStr = Utility.cstringCreation(Buffer);
+                        
+                        // chop the string as a list of "subkey, value" pairs, using ';' as a separator
+                        for (Subkey = 0; Subkey < max && Subkey >= 0; Subkey = Nextkey)
+                        {
+                            int Value, temp;
+                            
+                            //  identify token pair boundary
+                            Nextkey = BufferStr.indexOf(';', Subkey);
+                            if(Nextkey == -1)
+                            {
+                            	Buffer[Nextkey++] = '\0';
+                            }
+                            
+                            // for each pair, split the subkey and the value
+                            Value = BufferStr.lastIndexOf(',', Subkey);
+                            if(Value == -1)
+                            {
+                            	return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_INVALID_VALUE_FOR_PROP), new Object[]{VarName});
+                            }
+                            
+                            // gobble the spaces before the coma, and the coma itself
+                            temp = Value++;
+                            do
+                            {
+                            	Buffer[temp--] = '\0';
+                            }while(temp >= Subkey && Buffer[temp] == ' ');
+                            
+                            // gobble any space at the right
+                            temp = Value + Utility.strlen(Buffer, Value) - 1;
+                            while(Buffer[temp] == ' ')
+                            {
+                            	Buffer[temp--] = '\0';
+                            }
+                            
+                            // trim the strings from the left
+                            char[] spanChars = new char[]{' '};
+                            Subkey += Utility.strspn(Buffer, Subkey, spanChars);
+                            Value += Utility.strspn(Buffer, Value, spanChars);
+                            
+                            if(Buffer[Subkey] == 0 || Buffer[Value] == 0)
+                            {
+                            	return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_INVALID_VALUE_FOR_PROP), new Object[]{VarName});
+                            }
+                            AddToList(it8, GetTable(it8).HeaderList, Utility.cstringCreation(VarName), Utility.cstringCreation(Buffer, Subkey), 
+                            		Utility.cstringCreation(Buffer, Value), WRITE_PAIR);
+                        }
+                    }
+                    
+                    InSymbol(it8);
+                    break;
+	                    
+	            case SEOLN:
+            		break;
+	            
+	            default:
+                    return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_EXPECTED_KEYWORD_IDENTIFIER), null);
+            }
+        	
+        	SkipEOLN(it8);
+        }
+        
+        return true;
+    }
+    
+    private static boolean ParseIT8(cmsIT8 it8, boolean nosheet)
+    {
+        int SheetTypePtr = 0;
+
+        if (!nosheet)
+        {
+        	// First line is a very special case.
+        	
+        	while (isseparator(it8.ch))
+        	{
+        		NextCh(it8);
+        	}
+        	
+        	while (it8.ch != '\r' && it8.ch != '\n' && it8.ch != '\t' && it8.ch != -1)
+        	{
+        		it8.SheetType[SheetTypePtr++] = (char)it8.ch;
+        		NextCh(it8);
+        	}
+        }
+        
+        it8.SheetType[SheetTypePtr++] = 0;
+        InSymbol(it8);
+        
+        SkipEOLN(it8);
+        
+        while (it8.sy != SEOF && it8.sy != SSYNERROR)
+        {
+        	switch (it8.sy)
+        	{
+                case SBEGIN_DATA_FORMAT:
+                    if (!DataFormatSection(it8))
+                    {
+                    	return false;
+                    }
+                    break;
+                    
+                case SBEGIN_DATA:
+                    if (!DataSection(it8))
+                    {
+                    	return false;
+                    }
+                    
+                    if (it8.sy != SEOF)
+                    {
+                        AllocTable(it8);
+                        it8.nTable = it8.TablesCount - 1;
+                    }
+                    break;
+                    
+                case SEOLN:
+                    SkipEOLN(it8);
+                    break;
+                    
+                default:
+                    if (!HeaderSection(it8))
+                    {
+                    	return false;
+                    }
+        	}
+        }
+        
+        return (it8.sy != SSYNERROR);
+    }
+    
+    // Init usefull pointers
+    
+    private static void CookPointers(cmsIT8 it8)
+    {
+        int idField, i;
+        VirtualPointer Fld;
+        int j;
+        int nOldTable = it8.nTable;
+        
+        for (j = 0; j < it8.TablesCount; j++)
+        {
+        	TABLE t = it8.Tab[j];
+        	
+        	t.SampleID = 0;
+        	it8.nTable = j;
+        	
+        	for (idField = 0; idField < t.nSamples; idField++)
+        	{
+        		if (t.DataFormat == null)
+        		{
+        			SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_UNDEFINED_DATA_FORMAT), null);
+        			return;
+        		}
+        		
+        		Fld = t.DataFormat[idField];
+        		if (Fld == null)
+        		{
+        			continue;
+        		}
+        		
+        		if (cmserr.cmsstrcasecmp(Fld.getProcessor().readString(), "SAMPLE_ID") == 0)
+        		{
+        			t.SampleID = idField;
+        			
+        			for (i = 0; i < t.nPatches; i++)
+        			{
+        				VirtualPointer Data = GetData(it8, i, idField);
+        				if (Data != null)
+        				{
+        					char[] Buffer = new char[256];
+        					
+        					Utility.strncpy(Buffer, Data, 255);
+        					Buffer[255] = 0;
+        					
+        					if (Utility.strlen(Buffer) <= Utility.strlen(Data))
+        					{
+        						Utility.strcpy(Data, Buffer);
+        					}
+        					else
+        					{
+        						SetData(it8, i, idField, Utility.cstringCreation(Buffer));
+        					}
+        				}
+                    }
+        		}
+        		
+        		// "LABEL" is an extension. It keeps references to forward table
+        		
+        		if ((cmserr.cmsstrcasecmp(Fld.getProcessor().readString(), "LABEL") == 0) || Fld.readRaw() == '$' )
+        		{
+        			// Search for table references...
+        			for (i = 0; i < t.nPatches; i++)
+        			{
+        				VirtualPointer Label = GetData(it8, i, idField);
+        				
+        				if (Label != null)
+        				{
+        					int k;
+        					
+        					// This is the label, search for a table containing
+        					// this property
+        					
+        					for (k = 0; k < it8.TablesCount; k++)
+        					{
+        						TABLE Table = it8.Tab[k];
+        						KEYVALUE[] p = new KEYVALUE[1];
+        						
+        						if (IsAvailableOnList(Table.HeaderList[0], Label.getProcessor().readString(), null, p))
+        						{
+        							// Available, keep type and table
+        							char[] Buffer = new char[256];
+        							
+        							Object Type  = p[0].Value;
+        							int nTable = k;
+        							
+        							Utility.vsnprintf(Buffer, 255, "%s %d %s", new Object[]{Label, new Integer(nTable), Type});
+        							
+        							SetData(it8, i, idField, Utility.cstringCreation(Buffer));
+        						}
+        					}
+        				}
+        			}
+        		}
+        	}
+        }
+        
+        it8.nTable = nOldTable;
+    }
+    
+    // Try to infere if the file is a CGATS/IT8 file at all. Read first line
+    // that should be something like some printable characters plus a \n
+    
+    private static boolean IsMyBlock(byte[] Buffer, int n)
+    {
+        int cols = 1;
+        boolean space = false, quot = false;
+        int i;
+        
+        if (n < 10)
+        {
+        	return false; // Too small
+        }
+        
+        if (n > 132)
+        {
+        	n = 132;
+        }
+        
+        for (i = 1; i < n; i++)
+        {
+            switch(Buffer[i])
+            {
+	            case '\n':
+	            case '\r':
+	                return quot || cols <= 2;
+	            case '\t':
+	            case ' ':
+	                if(!quot && !space)
+	                {
+	                	space = true;
+	                }
+	                break;
+	            case '\"':
+	                quot = !quot;
+	                break;
+	            default:
+	                if (Buffer[i] < 32)
+	                {
+	                	return false;
+	                }
+	                if (Buffer[i] > 127)
+	                {
+	                	return false;
+	                }
+	                cols += space ? 1 : 0;
+	                space = false;
+	                break;
+            }
+        }
+        
+        return false;
+    }
+    
+    private static boolean IsMyFile(final String FileName)
+    {
+       Stream fp;
+       int Size;
+       byte[] Ptr = new byte[133];
+       
+       fp = Stream.fopen(FileName, 'r');
+       if (fp == null)
+       {
+           cmserr.cmsSignalError(null, lcms2.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.FILE_NOT_FOUND), new Object[]{FileName});
+           return false;
+       }
+       
+       Size = (int)fp.read(Ptr, 0, 1, 132);
+       
+       if (fp.close() != 0)
+       {
+    	   return false;
+       }
+       
+       Ptr[Size] = '\0';
+       
+       return IsMyBlock(Ptr, Size);
+    }
+    
+    // ---------------------------------------------------------- Exported routines
+    
+    public static cmsHANDLE cmsIT8LoadFromMem(cmsContext ContextID, byte[] Ptr, int len)
+    {
+        cmsHANDLE hIT8; 
+        cmsIT8 it8;
+    	boolean type;
+    	
+    	lcms2_internal._cmsAssert(Ptr != null, "Ptr != null");
+    	lcms2_internal._cmsAssert(len != 0, "len != 0");
+    	
+        type = IsMyBlock(Ptr, len);
+        if (!type)
+        {
+        	return null;
+        }
+        
+        hIT8 = cmsIT8Alloc(ContextID);
+        if (hIT8 == null)
+        {
+        	return null;
+        }
+        
+        it8 = (cmsIT8)hIT8;
+        it8.MemoryBlock = cmserr._cmsMalloc(ContextID, len + 1);
+        
+        Utility.strncpy(it8.MemoryBlock, Ptr, len);
+        it8.MemoryBlock.writeRaw(0, len);
+        
+        Utility.strncpy(it8.FileStack[0].FileName, "", lcms2.cmsMAX_PATH-1);
+        it8.Source = it8.MemoryBlock;
+        
+        if (!ParseIT8(it8, !type))
+        {
+            cmsIT8Free(hIT8); 
+            return null;
+        }
+        
+        CookPointers(it8);
+        it8.nTable = 0;
+        
+        cmserr._cmsFree(ContextID, it8.MemoryBlock);
+        it8.MemoryBlock = null;
+        
+        return hIT8;
+    }
+    
+    public static cmsHANDLE cmsIT8LoadFromFile(cmsContext ContextID, final String cFileName)
+    {
+    	cmsHANDLE hIT8;
+    	cmsIT8 it8;
+    	boolean type;
+    	
+    	lcms2_internal._cmsAssert(cFileName != null, "cFileName != null");
+    	
+    	type = IsMyFile(cFileName);
+    	if (!type)
+    	{
+    		return null;
+    	}
+    	
+    	hIT8 = cmsIT8Alloc(ContextID);
+    	it8 = (cmsIT8)hIT8;
+    	if (hIT8 == null)
+    	{
+    		return null;
+    	}
+    	
+    	it8.FileStack[0].Stream = Stream.fopen(cFileName, 'r');
+    	
+    	if (it8.FileStack[0].Stream == null)
+    	{
+    		cmsIT8Free(hIT8);
+    		return null;
+    	}
+    	
+    	Utility.strncpy(it8.FileStack[0].FileName, cFileName, lcms2.cmsMAX_PATH-1);    
+        it8.FileStack[0].FileName.setCharAt(lcms2.cmsMAX_PATH-1, '\0');
+        
+        if (!ParseIT8(it8, !type))
+        {
+        	it8.FileStack[0].Stream.close();
+        	cmsIT8Free(hIT8);
+        	return null; 
+        }
+        
+        CookPointers(it8);
+        it8.nTable = 0;
+        
+        if (it8.FileStack[0].Stream.close() != 0)
+        {
+        	cmsIT8Free(hIT8);
+        	return null; 
+    	}
+        
+        return hIT8;
+    }
+    
+    public static int cmsIT8EnumDataFormat(cmsHANDLE hIT8, VirtualPointer[][] SampleNames)
+    {
+    	cmsIT8 it8 = (cmsIT8)hIT8;
+    	TABLE t;
+    	
+    	lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+    	
+    	t = GetTable(it8);
+    	
+    	if (SampleNames != null)
+    	{
+    		SampleNames[0] = t.DataFormat;
+    	}
+    	return t.nSamples;
+    }
+    
+    public static int cmsIT8EnumProperties(cmsHANDLE hIT8, String[][] PropertyNames)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        KEYVALUE p;
+        int n;
+        String[] Props;
+        TABLE t;
+    	
+    	lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+    	
+    	t = GetTable(it8);
+    	
+        // Pass#1 - count properties
+    	
+        n = 0;
+        for (p = t.HeaderList[0];  p != null; p = p.Next)
+        {
+            n++;
+        }
+        
+        Props = new String[n];
+        
+        // Pass#2 - Fill pointers
+        n = 0;
+        for (p = t.HeaderList[0];  p != null; p = p.Next)
+        {
+            Props[n++] = p.Keyword;
+        }
+        
+        PropertyNames[0] = Props;
+        return n;
+    }
+    
+    public static int cmsIT8EnumPropertyMulti(cmsHANDLE hIT8, final String cProp, final String[][] SubpropertyNames)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        KEYVALUE tmp;
+        KEYVALUE[] p = new KEYVALUE[1];
+        int n;
+        final String[] Props;
+        TABLE t;
+    	
+    	lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+    	
+    	t = GetTable(it8);
+    	
+        if(!IsAvailableOnList(t.HeaderList[0], cProp, null, p))
+        {
+            SubpropertyNames[0] = null;
+            return 0;
+        }
+        
+        // Pass#1 - count properties
+        
+        n = 0;
+        for (tmp = p[0];  tmp != null; tmp = tmp.NextSubkey)
+        {
+            if(tmp.Subkey != null)
+            {
+            	n++;
+            }
+        }
+        
+        Props = new String[n];
+        
+        // Pass#2 - Fill pointers
+        n = 0;
+        for (tmp = p[0];  tmp != null; tmp = tmp.NextSubkey)
+        {
+            if(tmp.Subkey != null)
+            {
+            	Props[n++] = p[0].Subkey;
+            }
+        }
+        
+        SubpropertyNames[0] = Props;
+        return n;
+    }
+    
+    private static int LocatePatch(cmsIT8 it8, final String cPatch)
+    {
+        int i;
+        String data;
+        TABLE t = GetTable(it8);
+        
+        for (i = 0; i < t.nPatches; i++)
+        {
+            data = GetData(it8, i, t.SampleID).getProcessor().readString();
+            
+            if (data != null)
+            {
+            	if (cmserr.cmsstrcasecmp(data, cPatch) == 0)
+            	{
+            		return i;
+            	}
+            }
+        }
+        
+        // SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_COULDNT_FIND_PATCH), new Object[]{cPatch});
+        return -1;
+    }
+    
+    private static int LocateEmptyPatch(cmsIT8 it8)
+    {
+        int i;
+        VirtualPointer data;
+        TABLE t = GetTable(it8);
+
+        for (i = 0; i < t.nPatches; i++)
+        {
+            data = GetData(it8, i, t.SampleID);
+            
+            if (data == null)
+            {
+            	return i;
+            }
+        }
+        
+        return -1;
+    }
+    
+    private static int LocateSample(cmsIT8 it8, final String cSample)
+    {
+        int i;
+        String fld;
+        TABLE t = GetTable(it8);
+        
+        for (i = 0; i < t.nSamples; i++)
+        {
+            fld = GetDataFormat(it8, i).getProcessor().readString();
+            if (cmserr.cmsstrcasecmp(fld, cSample) == 0)
+            {
+            	return i;
+            }
+        }
+        
+        return -1;
+    }
+    
+    public static int cmsIT8FindDataFormat(cmsHANDLE hIT8, final String cSample)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        
+    	lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+    	
+        return LocateSample(it8, cSample);
+    }
+    
+    public static String cmsIT8GetDataRowCol(cmsHANDLE hIT8, int row, int col)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        
+        lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+        
+        VirtualPointer vp = GetData(it8, row, col);
+        return vp == null ? null : vp.getProcessor().readString();
+    }
+    
+    public static double cmsIT8GetDataRowColDbl(cmsHANDLE hIT8, int row, int col)
+    {
+        final String Buffer;
+        
+        Buffer = cmsIT8GetDataRowCol(hIT8, row, col);
+        
+        if (Buffer != null)
+        {
+            return Double.parseDouble(Buffer);
+        }
+        else
+        {
+        	return 0;
+        }
+    }
+    
+    public static boolean cmsIT8SetDataRowCol(cmsHANDLE hIT8, int row, int col, final String Val)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        
+        lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+    	
+        return SetData(it8, row, col, Val);        
+    }
+    
+    public static boolean cmsIT8SetDataRowColDbl(cmsHANDLE hIT8, int row, int col, double Val)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        StringBuffer Buff = new StringBuffer(new String(new char[256]));
+        
+        lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+        
+        Utility.sprintf(Buff, Utility.cstringCreation(it8.DoubleFormatter), new Object[]{new Double(Val)});
+        
+        String dat = Buff.toString();
+        return SetData(it8, row, col, dat.substring(0, Utility.strlen(dat)));
+    }
+    
+    public static String cmsIT8GetData(cmsHANDLE hIT8, final String cPatch, final String cSample)                        
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        int iField, iSet;
+        
+        lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+        
+        iField = LocateSample(it8, cSample);
+        if (iField < 0)
+        {       
+            return null;
+        }
+        
+        iSet = LocatePatch(it8, cPatch);
+        if (iSet < 0)
+        {
+        	return null;
+        }
+        
+        VirtualPointer vp = GetData(it8, iSet, iField);
+        return vp == null ? null : vp.getProcessor().readString();
+    }
+    
+    public static double cmsIT8GetDataDbl(cmsHANDLE it8, final String cPatch, final String cSample)
+    {
+    	final String Buffer;
+    	
+        Buffer = cmsIT8GetData(it8, cPatch, cSample);
+        
+        if (Buffer != null)
+        {
+            return Double.parseDouble(Buffer);
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    
+    public static boolean cmsIT8SetData(cmsHANDLE hIT8, final String cPatch, final String cSample, final String Val)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        int iField, iSet;
+        TABLE t;
+    	
+        lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+        
+    	t = GetTable(it8);
+    	
+        iField = LocateSample(it8, cSample);
+        
+        if (iField < 0)
+        {
+        	return false;
+        }
+        
+        if (t.nPatches == 0)
+        {
+            AllocateDataFormat(it8);
+            AllocateDataSet(it8);
+            CookPointers(it8);
+        }
+        
+        if (cmserr.cmsstrcasecmp(cSample, "SAMPLE_ID") == 0)
+        {
+            iSet = LocateEmptyPatch(it8);
+            if (iSet < 0)
+            {
+                return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_COULDNT_ADD_PATCH), new Object[]{cPatch});                        
+            }
+            
+            iField = t.SampleID;
+        }
+        else
+        {
+            iSet = LocatePatch(it8, cPatch);
+            if (iSet < 0)
+            {
+                return false;
+            }
+        }
+        
+        return SetData(it8, iSet, iField, Val);
+    }
+    
+    public static boolean cmsIT8SetDataDbl(cmsHANDLE hIT8, final String cPatch, final String cSample, double Val)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        StringBuffer Buff = new StringBuffer(new String(new char[256]));
+        
+        lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+        
+        Utility.vsnprintf(Buff, 255, Utility.cstringCreation(it8.DoubleFormatter), new Object[]{new Double(Val)});
+        
+        String dat = Buff.toString();
+        return cmsIT8SetData(hIT8, cPatch, cSample, dat.substring(0, Utility.strlen(dat)));
+    }
+    
+    // Buffer should get MAXSTR at least
+    
+    public static String cmsIT8GetPatchName(cmsHANDLE hIT8, int nPatch, StringBuffer buffer)
+    {
+    	cmsIT8 it8 = (cmsIT8)hIT8;
+    	TABLE t;
+    	VirtualPointer Data;
+    	
+    	lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+    	
+    	t = GetTable(it8);
+    	Data = GetData(it8, nPatch, t.SampleID);
+    	
+    	if (Data == null)
+    	{
+    		return null;
+    	}
+    	if (buffer == null)
+    	{
+    		return Data.getProcessor().readString();
+    	}
+    	
+    	Utility.strncpy(buffer, Data, MAXSTR-1);        
+    	buffer.setCharAt(MAXSTR-1, '\0');
+    	String str = buffer.toString();
+    	return str.substring(0, Utility.strlen(str));
+    }
+    
+    public static int cmsIT8GetPatchByName(cmsHANDLE hIT8, final String cPatch)
+    {
+    	lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+    	
+        return LocatePatch((cmsIT8)hIT8, cPatch);
+    }
+    
+    public static int cmsIT8TableCount(cmsHANDLE hIT8)
+    {
+    	cmsIT8 it8 = (cmsIT8)hIT8;
+    	
+    	lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+    	
+    	return it8.TablesCount;
+    }
+    
+    // This handles the "LABEL" extension. 
+    // Label, nTable, Type
+    
+    public static int cmsIT8SetTableByLabel(cmsHANDLE hIT8, final String cSet, String cField, String ExpectedType)
+    {
+        final String cLabelFld;
+        char[] Type = new char[256], Label = new char[256];
+        int[] nTable = new int[1];
+        
+        lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+        
+        if (cField != null && cField.charAt(0) == 0)
+        {
+        	cField = "LABEL";
+        }
+        
+        if (cField == null)
+        {
+        	cField = "LABEL";
+        }
+        
+        cLabelFld = cmsIT8GetData(hIT8, cSet, cField); 
+        if (cLabelFld == null)
+        {
+        	return -1;
+        }
+        
+        if (Utility.sscanf(cLabelFld, "%255s %d %255s", new Object[]{Label, nTable, Type}) != 3)
+        {
+        	return -1;
+        }
+        
+        if (ExpectedType != null && ExpectedType.charAt(0) == 0)
+        {
+        	ExpectedType = null;
+        }
+
+        if (ExpectedType != null)
+        {
+            if (cmserr.cmsstrcasecmp(Utility.cstringCreation(Type), ExpectedType) != 0)
+            {
+            	return -1;
+            }
+        }
+        
+        return cmsIT8SetTable(hIT8, nTable[0]);    
+    }
+    
+    public static boolean cmsIT8SetIndexColumn(cmsHANDLE hIT8, final String cSample)
+    {
+    	cmsIT8 it8 = (cmsIT8)hIT8;
+    	int pos;
+    	
+    	lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+    	
+    	pos = LocateSample(it8, cSample);
+    	if(pos == -1)
+    	{
+    		return false;
+    	}
+    	
+    	it8.Tab[it8.nTable].SampleID = pos;
+    	return true;
+    }
+
+
+    public static void cmsIT8DefineDblFormat(cmsHANDLE hIT8, final String Formatter)
+    {
+        cmsIT8 it8 = (cmsIT8)hIT8;
+        
+        lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
+        
+        if (Formatter == null)
+        {
+        	Utility.strcpy(it8.DoubleFormatter, DEFAULT_DBL_FORMAT);
+        }
+        else
+        {
+        	Utility.strcpy(it8.DoubleFormatter, Formatter);
+        }
+    }
 }

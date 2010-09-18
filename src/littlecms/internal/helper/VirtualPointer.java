@@ -29,15 +29,21 @@ import java.util.Hashtable;
 import java.util.Random;
 import java.util.Vector;
 
+import littlecms.internal.LCMSResource;
+
 import net.rim.device.api.collection.util.SparseList;
 
 /**
  * Virtual pointer system for data types
+ * @Author Vinnie Simonetti
  */
 public class VirtualPointer
 {
 	public static final class TypeProcessor
     {
+		private static String UTF_ENCODING = "UTF-16BE";
+		private static String ASCII_ENCODING = "ISO-8859-1";
+		
         private VirtualPointer vp;
         private int stat;
         
@@ -312,7 +318,7 @@ public class VirtualPointer
                     }
                 }
             }
-            String enc = unicode ? "UTF-16BE" : "ISO-8859-1";
+            String enc = unicode ? UTF_ENCODING : ASCII_ENCODING;
             StringBuffer tvalue = new StringBuffer(value);
             tvalue.append('\0');
             byte[] data = null;
@@ -418,7 +424,7 @@ public class VirtualPointer
             int len = actLen - (unicode ? 2 : 1);
             byte[] data = new byte[actLen];
             vp.readByteArray(data, 0, actLen, inc);
-            String en = unicode ? "UTF-16BE" : "ISO-8859-1";
+            String en = unicode ? UTF_ENCODING : ASCII_ENCODING;
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
             try
             {
@@ -698,7 +704,7 @@ public class VirtualPointer
     public VirtualPointer(byte[] data, boolean direct)
 	{
     	this(0); //Do this because if data is direct then we don't want any precreated data
-    	int len = data.length;
+    	int len = data == null ? 0 : data.length;
 	    if (direct) //Direct means that if pointer is written to it will set the "data" that it was set to.
 	    {
 	        this.data = data;
@@ -711,7 +717,10 @@ public class VirtualPointer
 	    else
 	    {
 	        resize(len);
-	        System.arraycopy(data, 0, this.data, 0, len);
+	        if(data != null)
+	        {
+	        	System.arraycopy(data, 0, this.data, 0, len);
+	        }
 	    }
 	}
 	
@@ -723,7 +732,7 @@ public class VirtualPointer
     public VirtualPointer(VirtualPointer parent, int pos)
 	{
     	this(0);
-	    if (parent.data == null)
+	    if (parent == null || parent.data == null)
 	    {
 	        this.data = null;
 //#ifdef DEBUG
@@ -748,16 +757,19 @@ public class VirtualPointer
 	        }
 //#endif
 	    }
-	    if (parent.children == null)
+	    if (parent != null && parent.children == null)
 	    {
 	        parent.children = new Vector();
 	    }
-	    synchronized (parent.children)
+	    if(parent != null)
 	    {
-	        parent.children.addElement(this);
+		    synchronized (parent.children)
+		    {
+		        parent.children.addElement(this);
+		    }
 	    }
 	    this.parent = parent;
-	    this.dataPos = parent.dataPos + pos;
+	    this.dataPos = (parent == null ? 0 : parent.dataPos) + pos;
 	}
 	
     public VirtualPointer(Object obj)
@@ -777,7 +789,7 @@ public class VirtualPointer
 	        ser = VirtualPointer.getSerializer(obj.getClass());
 	        if (ser == null)
 	        {
-	            throw new UnsupportedOperationException("obj needs Serializer in order to be converted to pointer");
+	            throw new UnsupportedOperationException(Utility.LCMS_Resources.getString(LCMSResource.VP_NO_SERIALIZER));
 	        }
 	    }
 	    resize(ser.getSerializedSize(obj));
@@ -890,6 +902,11 @@ public class VirtualPointer
             }
 //#endif
         }
+    }
+    
+    public boolean isFree()
+    {
+    	return data == null;
     }
     
     public void free()

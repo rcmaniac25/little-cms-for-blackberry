@@ -29,6 +29,7 @@ package littlecms.internal;
 
 import net.rim.device.api.util.Arrays;
 import net.rim.device.api.util.MathUtilities;
+import littlecms.internal.helper.Utility;
 import littlecms.internal.lcms2.cmsCIELCh;
 import littlecms.internal.lcms2.cmsCIELab;
 import littlecms.internal.lcms2.cmsCIEXYZ;
@@ -132,7 +133,7 @@ final class cmspcs
 //#ifndef BlackBerrySDK4.5.0
 	    	return MathUtilities.pow(t, 1.0/3.0);
 //#else
-	    	return lcms2_internal.pow(t, 1.0/3.0);
+	    	return Utility.pow(t, 1.0/3.0);
 //#endif
 	    }
 	}
@@ -379,7 +380,7 @@ final class cmspcs
 //#ifndef BlackBerrySDK4.5.0
 	    LCh.C = MathUtilities.pow(Sqr(Lab.a) + Sqr(Lab.b), 0.5);
 //#else
-	    LCh.C = lcms2_internal.pow(Sqr(Lab.a) + Sqr(Lab.b), 0.5);
+	    LCh.C = Utility.pow(Sqr(Lab.a) + Sqr(Lab.b), 0.5);
 //#endif
 	    LCh.h = atan2deg(Lab.b, Lab.a);
 	}
@@ -482,7 +483,7 @@ final class cmspcs
 //#ifndef BlackBerrySDK4.5.0
 	    return MathUtilities.pow(Sqr(dL) + Sqr(da) + Sqr(db), 0.5);
 //#else
-	    return lcms2_internal.pow(Sqr(dL) + Sqr(da) + Sqr(db), 0.5);
+	    return Utility.pow(Sqr(dL) + Sqr(da) + Sqr(db), 0.5);
 //#endif
 	}
 	
@@ -511,7 +512,7 @@ final class cmspcs
 //#ifndef BlackBerrySDK4.5.0
 	    	dh = MathUtilities.pow(dhsq, 0.5);
 //#else
-	    	dh = lcms2_internal.pow(dhsq, 0.5);
+	    	dh = Utility.pow(dhsq, 0.5);
 //#endif
 	    }
 	    
@@ -660,7 +661,7 @@ final class cmspcs
 //#ifndef BlackBerrySDK4.5.0
     	double G = 0.5 * ( 1 - Math.sqrt(MathUtilities.pow((C + Cs) / 2 , 7.0) / (MathUtilities.pow((C + Cs) / 2, 7.0) + MathUtilities.pow(25.0, 7.0) ) ));
 //#else
-    	double G = 0.5 * ( 1 - Math.sqrt(lcms2_internal.pow((C + Cs) / 2 , 7.0) / (lcms2_internal.pow((C + Cs) / 2, 7.0) + lcms2_internal.pow(25.0, 7.0) ) ));
+    	double G = 0.5 * ( 1 - Math.sqrt(Utility.pow((C + Cs) / 2 , 7.0) / (Utility.pow((C + Cs) / 2, 7.0) + Utility.pow(25.0, 7.0) ) ));
 //#endif
 	    
 	    double a_p = (1 + G ) * a1;
@@ -707,7 +708,7 @@ final class cmspcs
 //#ifndef BlackBerrySDK4.5.0
     	double Rc = 2 * Math.sqrt(( MathUtilities.pow(meanC_p, 7.0) )/( MathUtilities.pow(meanC_p, 7.0) + MathUtilities.pow(25.0, 7.0)));
 //#else
-    	double Rc = 2 * Math.sqrt(( lcms2_internal.pow(meanC_p, 7.0) )/( lcms2_internal.pow(meanC_p, 7.0) + lcms2_internal.pow(25.0, 7.0)));
+    	double Rc = 2 * Math.sqrt(( Utility.pow(meanC_p, 7.0) )/( Utility.pow(meanC_p, 7.0) + Utility.pow(25.0, 7.0)));
 //#endif
 	    
 	    double Rt = -Math.sin(2 * RADIANS(delta_ro)) * Rc;

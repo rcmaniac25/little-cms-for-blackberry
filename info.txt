@@ -1,7 +1,6 @@
 TODO:
 Implement actual code | Update VirtualPointer so it can work with arrays, this will take some work and might not work right away so do some research
 **
-cmscgats
 cmsopt
 cmsgmt
 cmsio1

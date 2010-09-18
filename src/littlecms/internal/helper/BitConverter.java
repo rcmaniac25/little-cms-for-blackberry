@@ -24,6 +24,7 @@
 //
 //---------------------------------------------------------------------------------
 //
+//@Author Vinnie Simonetti
 package littlecms.internal.helper;
 
 //#ifdef USE_IO_BIT_CONVERTER

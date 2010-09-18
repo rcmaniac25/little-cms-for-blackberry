@@ -24,6 +24,7 @@
 //
 //---------------------------------------------------------------------------------
 //
+//@Author Vinnie Simonetti
 package littlecms.internal.helper;
 
 import java.io.IOException;
@@ -77,6 +78,34 @@ public abstract class Stream
 	public abstract long write(byte[] buffer, int offset, int size, int count);
 	
 	public abstract int close();
+	
+	public final int readByte()
+	{
+		long pos = this.getPosition();
+		byte[] data = new byte[1];
+		if(this.read(data, 0, 1, 1) != 0)
+		{
+			return data[0] & 0xFF;
+		}
+		this.seek(pos, SEEK_SET);
+		return -1;
+	}
+	
+	public final boolean eof()
+	{
+		long pos = this.getPosition(); //Remember the initial position
+		if(this.seek(0, SEEK_END) == 0)
+		{
+			//Successfully went to the end of the Stream.
+			boolean end = pos >= this.getPosition(); //See if the position is the same as or greater then original position
+			if(this.seek(0, SEEK_SET) == 0)
+			{
+				//Successfully went to the original position of the Stream.
+				return end;
+			}
+		}
+		return true; //O no, a seek operation failed. Treat this like a end of file.
+	}
 	
 	public static Stream fopen(final String filename, final char mode)
 	{
@@ -297,18 +326,25 @@ public abstract class Stream
 			try
 			{
 				read = in.read(buffer, offset, count);
-//#ifdef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
-				pos += read;
-//#endif
-				if(out != null)
+				if(read > -1)
 				{
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
-					outSeek.setPosition(outSeek.getPosition() + read);
-//#else
-					out.flush();
-					out.close();
-					out = file.openOutputStream(pos);
+//#ifdef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+					pos += read;
 //#endif
+					if(out != null)
+					{
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+						outSeek.setPosition(outSeek.getPosition() + read);
+//#else
+						out.flush();
+						out.close();
+						out = file.openOutputStream(pos);
+//#endif
+					}
+				}
+				else
+				{
+					read = 0;
 				}
 			}
 			catch(IOException ioe)

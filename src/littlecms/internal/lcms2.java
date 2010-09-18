@@ -916,12 +916,12 @@ public class lcms2
 	
 	public static int cmsstrcasecmp(final String s1, final String s2)
 	{
-		return cmsplugin.cmsstrcasecmp(s1, s2);
+		return cmserr.cmsstrcasecmp(s1, s2);
 	}
 	
 	public static long cmsfilelength(Stream f)
 	{
-		return cmsplugin.cmsfilelength(f);
+		return cmserr.cmsfilelength(f);
 	}
 	
 	// Plug-In registering  ---------------------------------------------------------------------------------------------------
@@ -2371,7 +2371,7 @@ public class lcms2
 	 */
 	public static boolean cmsLinkTag(cmsHPROFILE hProfile, int sig, int dest)
 	{
-		return cmsio0.cmsLinkTag(hProfile, dest);
+		return cmsio0.cmsLinkTag(hProfile, sig, dest);
 	}
 	
 	// Read and write raw data
@@ -2402,7 +2402,7 @@ public class lcms2
 	 * @param Size Size of data in bytes
 	 * @return TRUE on success, FALSE on error
 	 */
-	public static boolean cmsWriteRawTag(cmsHPROFILE hProfile, iny sig, final byte[] data, iny Size)
+	public static boolean cmsWriteRawTag(cmsHPROFILE hProfile, int sig, final byte[] data, int Size)
 	{
 		return cmsio0.cmsWriteRawTag(hProfile, sig, data, Size);
 	}
@@ -2805,7 +2805,7 @@ public class lcms2
 	 */
 	public static cmsIOHANDLER cmsOpenIOhandlerFromMem(cmsContext ContextID, byte[] Buffer, int size, final char AccessMode)
 	{
-		return cmsio0.cmsOpenIOhandlerFromFile(ContextID, Buffer, size, AccessMode);
+		return cmsio0.cmsOpenIOhandlerFromMem(ContextID, Buffer, size, AccessMode);
 	}
 	
 	/**
@@ -3962,10 +3962,10 @@ public class lcms2
 	 * Returns an array with pointers to the column names in current table. SampleNames may be NULL to get only the number of column names. 
 	 * Memory is associated with the CGATS.17 object, and should not be freed by the user.
 	 * @param hIT8 A handle to a CGATS.17 object.
-	 * @param SampleNames A pointer to a variable of type String[] which will hold the table.
+	 * @param SampleNames A pointer to a variable of type VirtualPointer[][] which will hold the table.
 	 * @return The number of column names in table on success, -1 on error.
 	 */
-	public static int cmsIT8EnumDataFormat(cmsHANDLE hIT8, String[] SampleNames)
+	public static int cmsIT8EnumDataFormat(cmsHANDLE hIT8, VirtualPointer[][] SampleNames)
 	{
 		return cmscgats.cmsIT8EnumDataFormat(hIT8, SampleNames);
 	}

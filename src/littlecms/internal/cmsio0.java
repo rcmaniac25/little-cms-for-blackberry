@@ -35,6 +35,7 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.file.FileConnection;
 
 import littlecms.internal.helper.Stream;
+import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
 import littlecms.internal.lcms2.cmsContext;
 import littlecms.internal.lcms2.cmsHPROFILE;
@@ -247,7 +248,7 @@ final class cmsio0
 		        
 		        if(Buffer == null)
 		        {
-		        	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_READ, "Couldn't read profile from NULL pointer", null);
+		        	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_READ, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_CANT_READ_PROFILE_NULL_PTR), null);
 //#ifdef RAW_C
 		        	if (fm != null)
 	        	    {
@@ -268,7 +269,7 @@ final class cmsio0
 		        	cmserr._cmsFree(ContextID, fmP);
 		        	cmserr._cmsFree(ContextID, ioP);
 //#endif
-		            cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_READ, "Couldn't allocate %ld bytes for profile", new Object[]{new Integer(size)});
+		            cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_READ, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_CANT_ALLOC), new Object[]{new Integer(size)});
 		            return null;
 		        }
 		        
@@ -302,7 +303,7 @@ final class cmsio0
 		        fm.Pointer = 0;
 		        break;
 		    default:
-		    	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, "Unknow access mode '%c'", new Object[]{new Character(AccessMode)});
+		    	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNK_ACCESS_MODE), new Object[]{new Character(AccessMode)});
 		        return null;
 	    }
 	    
@@ -324,7 +325,7 @@ final class cmsio0
 				if (ResData.Pointer + len > ResData.Size)
 				{
 			        len = (ResData.Size - ResData.Pointer);
-			        cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_READ, "Read from memory error. Got %d bytes, block should be of %d bytes",
+			        cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_READ, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_CANT_READ_MEM),
 			        		new Object[]{new Integer(len), new Integer(count * size)});
 			        return 0;
 			    }
@@ -346,7 +347,7 @@ final class cmsio0
 				
 			    if(offset > ResData.Size)
 			    {
-			    	cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_SEEK, "Too few data; probably corrupted profile", null);        
+			    	cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_SEEK, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_NOT_ENOUGH_DATA), null);        
 			        return false;
 			    }
 			    
@@ -446,7 +447,7 @@ final class cmsio0
 				
 			    if (nReaded != count)
 			    {
-			    	cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_FILE, "Read error. Got %d bytes, block should be of %d bytes", 
+			    	cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_READ_ERR), 
 			    			new Object[]{new Integer(nReaded * size), new Integer(count * size)});
 			    	return 0;
 			    }
@@ -462,7 +463,7 @@ final class cmsio0
 			{
 				if (((Stream)iohandler.stream).seek(offset, Stream.SEEK_SET) != 0)
 				{
-					cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_FILE, "Seek error; probably corrupted file", null);
+					cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_SEEK_ERROR), null);
 					return false;
 				}
 				return true;
@@ -537,7 +538,7 @@ final class cmsio0
 //#ifdef RAW_C
 		        	cmserr._cmsFree(ContextID, ioP);
 //#endif
-		        	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, "File '%s' not found", new Object[]{FileName});
+		        	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.FILE_NOT_FOUND), new Object[]{FileName});
 		            return null;
 		        }
 		        break;
@@ -548,7 +549,7 @@ final class cmsio0
 //#ifdef RAW_C
 		        	cmserr._cmsFree(ContextID, ioP);
 //#endif
-		            cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, "Couldn't create '%s'", new Object[]{FileName});
+		            cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_COULDNT_CREATE_FILE), new Object[]{FileName});
 		            return null;
 		        }
 		        break;
@@ -556,7 +557,7 @@ final class cmsio0
 //#ifdef RAW_C
 		    	cmserr._cmsFree(ContextID, ioP);
 //#endif
-		    	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, "Unknow access mode '%c'", new Object[]{new Character(AccessMode)});
+		    	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNK_ACCESS_MODE), new Object[]{new Character(AccessMode)});
 		        return null;
 	    }
 	    
@@ -728,7 +729,7 @@ final class cmsio0
 	    // Now let's do it easy. If the tag has been already written, that's an error
 	    if (i >= 0)
 	    {
-	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_ALREADY_DEFINED, "Tag '%x' already exists", new Object[]{new Integer(sig)});
+	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_ALREADY_DEFINED, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_TAG_ALREADY_EXISTS), new Object[]{new Integer(sig)});
 	        return false;
 	    }
 	    else 
@@ -737,7 +738,7 @@ final class cmsio0
 	        
 	        if (Icc.TagCount >= lcms2_internal.MAX_TABLE_TAG)
 	        {
-	        	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_RANGE, "Too many tags (%d)", new Object[]{new Integer(lcms2_internal.MAX_TABLE_TAG)});
+	        	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_TO_MANY_TAGS), new Object[]{new Integer(lcms2_internal.MAX_TABLE_TAG)});
 	            return false;
 	        }
 	        
@@ -778,8 +779,8 @@ final class cmsio0
 	    // Validate file as an ICC profile
 	    if (cmsplugin._cmsAdjustEndianess32(Header.magic) != lcms2.cmsMagicNumber)
 	    {
-	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_BAD_SIGNATURE, "not an ICC profile, invalid signature", null);
-	        return false; 
+	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_BAD_SIGNATURE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_NOT_ICC_PROFILE), null);
+	        return false;
 	    }
 	    
 	    // Adjust endianess of the used parameters
@@ -814,7 +815,7 @@ final class cmsio0
 	    TagCount = temp2[0];
 	    if (TagCount > lcms2_internal.MAX_TABLE_TAG)
 	    {
-	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_RANGE, "Too many tags (%d)", new Object[]{new Integer(TagCount)});
+	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_TO_MANY_TAGS), new Object[]{new Integer(TagCount)});
 	        return false;
 	    }
 	    
@@ -1358,7 +1359,7 @@ final class cmsio0
 	            if (TypeHandler == null)
 	            {
 	            	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_INTERNAL, 
-	            			"(Internal) no handler for tag %x", new Object[]{new Integer(Icc.TagNames[i])});
+	            			Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_NO_TAG_HANDLER), new Object[]{new Integer(Icc.TagNames[i])});
 	                continue;
 	            }
 	            
@@ -1373,7 +1374,7 @@ final class cmsio0
 	            	StringBuffer String = new StringBuffer(4);
 					
 	            	cmserr._cmsTagSignature2String(String, TypeBase);
-	            	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_WRITE, "Couldn't write type '%s'", 
+	            	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_WRITE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_CANT_WRITE_TYPE), 
 	            			new Object[]{String});
 	                return false;
 	            }
@@ -1717,7 +1718,7 @@ final class cmsio0
 	    	StringBuffer String = new StringBuffer(4);
 			
         	cmserr._cmsTagSignature2String(String, sig);
-	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_CORRUPTION_DETECTED, "Corrupted tag '%s'", new Object[]{String});
+	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_CORRUPTION_DETECTED, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_CORRUPTED_TAG), new Object[]{String});
 	        return null;
 	    }
 	    
@@ -1728,7 +1729,7 @@ final class cmsio0
 	    	StringBuffer String = new StringBuffer(4);
 			
         	cmserr._cmsTagSignature2String(String, sig);
-        	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_CORRUPTION_DETECTED, "'%s' Inconsistent number of items: expected %d, got %d", 
+        	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_CORRUPTION_DETECTED, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_INCONSISTANT_COUNT), 
         			new Object[]{String, new Integer(TagDescriptor.ElemCount), new Integer(ElemCount[0])});
 	    }
 	    
@@ -1768,7 +1769,7 @@ final class cmsio0
 	    
 	    if (data == null)
 	    {
-	    	cmserr.cmsSignalError(cmsGetProfileContextID(hProfile), lcms2_plugin.cmsERROR_NULL, "couldn't wite NULL to tag", null);
+	    	cmserr.cmsSignalError(cmsGetProfileContextID(hProfile), lcms2_plugin.cmsERROR_NULL, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_CANT_WRITE_NULL), null);
 	    	return false;
 	    }
 	    
@@ -1796,7 +1797,7 @@ final class cmsio0
 	        
 	        if (i >= lcms2_internal.MAX_TABLE_TAG)
 	        {
-	            cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_RANGE, "Too many tags (%d)", 
+	            cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_TO_MANY_TAGS), 
 	            		new Object[]{new Integer(lcms2_internal.MAX_TABLE_TAG)});
 	            return false;
 	        }
@@ -1814,7 +1815,7 @@ final class cmsio0
 	    TagDescriptor = cmstypes._cmsGetTagDescriptor(sig);
 	    if (TagDescriptor == null)
 	    {
-	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, "Unsupported tag '%x'", 
+	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNSUPPORTED_TAG), 
 	    			new Object[]{new Integer(sig)});
 	        return false;
 	    }
@@ -1838,7 +1839,7 @@ final class cmsio0
 	    // Does the tag support this type?
 	    if (!IsTypeSupported(TagDescriptor, Type))
 	    {
-	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, "Unsupported type '%x' for tag '%x'", 
+	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNSUPPORTED_TYPE_FOR_TAG), 
 	        		new Object[]{new Integer(Type), new Integer(sig)});
 	        return false;
 	    }
@@ -1847,7 +1848,7 @@ final class cmsio0
 	    TypeHandler = cmstypes._cmsGetTagTypeHandler(Type);
 	    if (TypeHandler == null)
 	    {
-	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, "Unsupported type '%x' for tag '%x'", 
+	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNSUPPORTED_TYPE_FOR_TAG), 
 	        		new Object[]{new Integer(Type), new Integer(sig)});
 	        return false; // Should never happen
 	    }
@@ -1862,7 +1863,7 @@ final class cmsio0
 	    if (Icc.TagPtrs[i] == null)
 	    {
 	        TypeHandler.DupPtr.run(TypeHandler, data, TagDescriptor.ElemCount);
-	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_CORRUPTION_DETECTED, "Malformed struct in type '%x' for tag '%x'", 
+	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_CORRUPTION_DETECTED, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_MALFORMED_TYPE_FOR_TAG), 
 	        		new Object[]{new Integer(Type), new Integer(sig)});
 	        
 	        return false;

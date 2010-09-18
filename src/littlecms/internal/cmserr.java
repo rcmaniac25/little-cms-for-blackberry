@@ -28,7 +28,7 @@
 package littlecms.internal;
 
 import littlecms.internal.helper.Stream;
-import littlecms.internal.helper.TextFormatting;
+import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
 import littlecms.internal.lcms2.cmsContext;
 import littlecms.internal.lcms2.cmsLogErrorHandlerFunction;
@@ -462,7 +462,7 @@ final class cmserr
 	{
 		public void run(cmsContext ContextID, int ErrorCode, String Text)
 		{
-			// TextFormatting.fprintf(System.err, "[lcms]: %s\n", new Object[]{Text});
+			// Utility.fprintf(System.err, "[lcms]: %s\n", new Object[]{Text});
 			// System.err.flush();
 		}
 	};
@@ -489,7 +489,7 @@ final class cmserr
 	{
 		StringBuffer Buffer = new StringBuffer(MAX_ERROR_MESSAGE_LEN);
 	    
-	    TextFormatting.vsnprintf(Buffer, MAX_ERROR_MESSAGE_LEN-1, ErrorText, args);
+		Utility.vsnprintf(Buffer, MAX_ERROR_MESSAGE_LEN-1, ErrorText, args);
 	    
 	    // Call handler
 	    LogErrorHandler.run(ContextID, ErrorCode, Buffer.toString());

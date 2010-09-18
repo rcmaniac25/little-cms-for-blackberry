@@ -22,6 +22,7 @@
 //
 //---------------------------------------------------------------------------------
 //
+//@Author Vinnie Simonetti
 package littlecms.internal.helper;
 
 public abstract class SerializerWrapper implements VirtualPointer.Serializer

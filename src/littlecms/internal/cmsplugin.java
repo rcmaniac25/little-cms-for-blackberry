@@ -30,7 +30,7 @@ package littlecms.internal;
 import java.util.Calendar;
 
 import littlecms.internal.helper.BitConverter;
-import littlecms.internal.helper.TextFormatting;
+import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
 import littlecms.internal.lcms2.cmsCIEXYZ;
 import littlecms.internal.lcms2.cmsDateTimeNumber;
@@ -649,7 +649,7 @@ final class cmsplugin
 		lcms2_internal._cmsAssert(io != null, "io != null");
 		lcms2_internal._cmsAssert(frm != null, "frm != null");
 		
-		len = TextFormatting.vsnprintf(Buffer, 2047, frm, args);
+		len = Utility.vsnprintf(Buffer, 2047, frm, args);
 		if (len < 0)
 		{
 			return false; // Truncated, which is a fatal error for us
@@ -691,13 +691,13 @@ final class cmsplugin
 	    {
 	    	if (Plugin.Magic != lcms2_plugin.cmsPluginMagicNumber)
 	    	{
-	    		cmserr.cmsSignalError(null, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unrecognized plugin", null);
+	    		cmserr.cmsSignalError(null, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSPLUGIN_UNRECOGNIZED_PLUGIN), null);
                 return false;
 	    	}
 	    	
 			if (Plugin.ExpectedVersion > lcms2.LCMS_VERSION)
 			{
-				cmserr.cmsSignalError(null, lcms2.cmsERROR_UNKNOWN_EXTENSION, "plugin needs Little CMS %d, current  version is %d", 
+				cmserr.cmsSignalError(null, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSPLUGIN_NEED_HIGHER_VERSION), 
 						new Object[]{new Integer(Plugin.ExpectedVersion), new Integer(lcms2.LCMS_VERSION)});
 				return false;
 			}
@@ -759,7 +759,7 @@ final class cmsplugin
                     }
                     break;
                 default:
-                    cmserr.cmsSignalError(null, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unrecognized plugin type '%X'", 
+                    cmserr.cmsSignalError(null, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSPLUGIN_UNRECOGNIZED_PLUGIN_TYPE), 
                     		new Object[]{new Integer(Plugin.Type)});
                     return false;
             }

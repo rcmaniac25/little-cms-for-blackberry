@@ -2011,7 +2011,7 @@ final class cmstypes
 
 	    if (Type[0] > 4)
 	    {
-	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknown parametric curve type '%d'", new Object[]{new Short(Type[0])});
+	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_PARAM_CURVE_TYPE), new Object[]{new Short(Type[0])});
 	        return null;
 	    }
 	    
@@ -2041,7 +2041,7 @@ final class cmstypes
 	    
 	    if (Curve.nSegments > 1 || Curve.Segments[0].Type < 1)
 	    {
-	    	cmserr.cmsSignalError(self.ContextID, 0, "Multisegment or Inverted parametric curves cannot be written", null);          
+	    	cmserr.cmsSignalError(self.ContextID, 0, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_CURVE_CANT_BE_WRITTEN), null);          
 	        return false;
 	    }
 	    
@@ -2255,7 +2255,7 @@ final class cmstypes
 	    
 	    if (RecLen != 12)
 	    {
-	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "multiLocalizedUnicodeType of len != 12 is not supported.", null);
+	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_LOCALIZED_UNICODE_TYPE_INVALID_LEN), null);
 	        return null;
 	    }
 	    
@@ -2581,7 +2581,7 @@ final class cmstypes
 	        {
 	            if (Tables.TheCurves[i].nEntries != 256)
 	            {
-	            	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_RANGE, "LUT8 needs 256 entries on prelinearization", null);
+	            	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_LUT8_NOT_ENOUGH_ELEMENTS), null);
 	                return false;
 	            }
 	        }
@@ -2913,7 +2913,7 @@ final class cmstypes
 	    // That should be all
 	    if (mpe != null)
 	    {
-	        cmserr.cmsSignalError(mpe.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "LUT is not suitable to be saved as LUT8", null);
+	        cmserr.cmsSignalError(mpe.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_LUT_CANT_BE_LUT8), null);
 	        return false;
 	    }
 	    
@@ -3463,7 +3463,7 @@ final class cmstypes
 	    // That should be all
 	    if (mpe != null)
 	    {
-	        cmserr.cmsSignalError(mpe.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "LUT is not suitable to be saved as LUT16", null);
+	        cmserr.cmsSignalError(mpe.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_LUT_CANT_BE_LUT16), null);
 	        return false;
 	    }
 	    
@@ -3810,7 +3810,7 @@ final class cmstypes
 	    }
 	    else
 	    {
-	        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknow precision of '%d'", new Object[]{new Integer(Precision[0])}); 
+	        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_PRECISION), new Object[]{new Integer(Precision[0])}); 
 	        return null;
 	    }
 	    
@@ -3834,7 +3834,7 @@ final class cmstypes
 	                StringBuffer String = new StringBuffer(4);
 	                
 	                cmserr._cmsTagSignature2String(String, BaseType);
-	                cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknow curve type '%s'", new Object[]{String});
+	                cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_CURVE_TYPE), new Object[]{String});
 	            }
 	            return null;
 	    }
@@ -4111,7 +4111,7 @@ final class cmstypes
 	                	StringBuffer String = new StringBuffer(4);
 	                    
 	                    cmserr._cmsTagSignature2String(String, Type);
-	                    cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknow curve type '%s'", new Object[]{String});
+	                    cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_CURVE_TYPE), new Object[]{String});
 	                }
 	                return false;
 	        }
@@ -4183,7 +4183,7 @@ final class cmstypes
 	        }
 	        else
 	        {
-	        	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknow precision of '%d'", new Object[]{new Byte(Precision)});
+	        	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_PRECISION), new Object[]{new Byte(Precision)});
 	            return false;
 	        }
 	    }
@@ -4231,7 +4231,7 @@ final class cmstypes
 			        	args[4] = new Integer(lcms2.cmsSigCurveSetElemType);
 	                    if (!cmslut.cmsPipelineCheckAndRetreiveStages(Lut, 5, args))
 	                    {
-	                    	lcms2.cmsSignalError(self.ContextID, lcms2.cmsERROR_NOT_SUITABLE, "LUT is not suitable to be saved as LutAToB", null);
+	                    	lcms2.cmsSignalError(self.ContextID, lcms2.cmsERROR_NOT_SUITABLE, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_LUT_CANT_BE_LUTATOB), null);
 	                    	return false;
 	                    }
 	                    else
@@ -4542,7 +4542,7 @@ final class cmstypes
 			        	args[4] = new Integer(lcms2.cmsSigCurveSetElemType);
 	                    if (!cmslut.cmsPipelineCheckAndRetreiveStages(Lut, 5, args))
 	                    {
-	                    	lcms2.cmsSignalError(self.ContextID, lcms2.cmsERROR_NOT_SUITABLE, "LUT is not suitable to be saved as LutBToA", null);
+	                    	lcms2.cmsSignalError(self.ContextID, lcms2.cmsERROR_NOT_SUITABLE, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_LUT_CANT_BE_LUTBTOA), null);
 	                    	return false;
 	                    }
 	                    else
@@ -4732,7 +4732,7 @@ final class cmstypes
 	    
 	    if (Count > lcms2.cmsMAXCHANNELS)
 	    {
-	        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_RANGE, "Too many colorants '%d'", new Object[]{new Integer(Count)});
+	        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_TOO_MANY_COLORANTS), new Object[]{new Integer(Count)});
 	        return null;
 	    }
 	    
@@ -4876,7 +4876,7 @@ final class cmstypes
 	    
 	    if (nDeviceCoords > lcms2.cmsMAXCHANNELS)
 	    {
-	        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_RANGE, "Too many device coordinates '%d'", new Object[]{new Integer(nDeviceCoords)});
+	        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_TOO_MANY_DEVICE_COORD), new Object[]{new Integer(nDeviceCoords)});
 	        return false;
 	    }
 	    for (i = 0; i < count; i++)
@@ -5966,7 +5966,7 @@ final class cmstypes
 	                	StringBuffer String = new StringBuffer(4);
 	                	
 	                	cmserr._cmsTagSignature2String(String, ElementSig);
-	                	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknown curve element type '%s' found.", new Object[]{String});
+	                	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_CURVE_ELEMENT_TYPE_NOT_FOUND), new Object[]{String});
 	                }
 	                return null;
 	         }
@@ -6541,7 +6541,7 @@ final class cmstypes
 		        cmserr._cmsTagSignature2String(String, ElementSig);
 		        
 		        // An unknown element was found. 
-		        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unknown MPE type '%s' found.", new Object[]{String});
+		        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_MPE_TYPE_NOT_FOUND), new Object[]{String});
 		        return false;
 		    }
 		    
@@ -6683,7 +6683,7 @@ final class cmstypes
                 cmserr._cmsTagSignature2String(String, ElementSig);
                 
                 // An unknow element was found.
-                cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Found unknown MPE type '%s'", new Object[]{String});
+                cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_MPE_TYPE), new Object[]{String});
                 return false;
 	        }
 	        
@@ -8117,7 +8117,7 @@ final class cmstypes
 	}
 	
 	// Return a descriptor for a given tag or NULL
-	public cmsTagDescriptor _cmsGetTagDescriptor(int sig)
+	public static cmsTagDescriptor _cmsGetTagDescriptor(int sig)
 	{
 	    _cmsTagLinkedList pt;
 	    
