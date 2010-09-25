@@ -4211,7 +4211,8 @@ final class cmstypes
 	    
 	    if (Lut.Elements != null)
 	    {
-	    	Object[] args = new Object[5 * 2]{new Integer(lcms2.cmsSigCurveSetElemType)};
+	    	Object[] args = new Object[5 * 2];
+	    	args[0] = new Integer(lcms2.cmsSigCurveSetElemType);
 	        if (!cmslut.cmsPipelineCheckAndRetreiveStages(Lut, 1, args))
 	        {
 	        	//args[0] = new Integer(lcms2.cmsSigCurveSetElemType);
@@ -6801,7 +6802,7 @@ final class cmstypes
 		    	
 		    	if (nChannels != 3)
 		    	{
-		    		cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unsupported number of channels for VCGT '%d'", new Object[]{new Short(nChannels)});
+		    		cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_INVALID_VCGT_CHANNELS), new Object[]{new Short(nChannels)});
 		    		// Regret, free all resources
 		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 		    	    return null;
@@ -6862,7 +6863,7 @@ final class cmstypes
 		    				break;
 						// Unsupported
 						default:
-							cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unsupported bit depth for VCGT '%d'", new Object[]{new Integer(nBytes * 8)});
+							cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_INVALID_VCGT_BIT_DEPTH), new Object[]{new Integer(nBytes * 8)});
 							// Regret, free all resources
 	    		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 	    		    	    return null;
@@ -6935,7 +6936,7 @@ final class cmstypes
 		    
 		    // Unsupported
 		    default:
-		    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unsupported tag type for VCGT '%d'", new Object[]{new Integer(TagType)});
+		    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_INVALID_VCGT_TAG_TYPE), new Object[]{new Integer(TagType)});
 	    		// Regret, free all resources
 	    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 	    	    return null;

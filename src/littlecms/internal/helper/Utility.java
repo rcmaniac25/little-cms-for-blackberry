@@ -601,10 +601,12 @@ public final class Utility
 		{
 			return 0;
 		}
+		/* Not needed anymore
 		if(argptr == null)
 		{
 			argptr = new Object[0];
 		}
+		*/
 		return PrintUtility.output(stream, count, format, argptr);
 	}
     

@@ -35,6 +35,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 //#endif
 
+import littlecms.internal.LCMSResource;
+
 /**
  * Data type converter
  */
@@ -122,7 +124,7 @@ public final class BitConverter
 	    }
 	    if (startIndex > (value.length - size))
 	    {
-	    	throw new IndexOutOfBoundsException("value is too small");
+	    	throw new IndexOutOfBoundsException(Utility.LCMS_Resources.getString(LCMSResource.BITCONVERTER_VALUE_TOO_SMALL));
 	    }
 	}
 	

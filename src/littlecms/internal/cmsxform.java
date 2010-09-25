@@ -26,6 +26,7 @@
 package littlecms.internal;
 
 import net.rim.device.api.util.Arrays;
+import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
 import littlecms.internal.lcms2.cmsContext;
 import littlecms.internal.lcms2.cmsHPROFILE;
@@ -484,7 +485,7 @@ final class cmsxform
 	        
 	        if (p.FromInputFloat == null || p.ToOutputFloat == null)
 	        {
-	            cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unsupported raster format", null);
+	            cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_UNSUPPORTED_RASTER_FORMAT), null);
 	            return null;
 	        }
 	        
@@ -498,7 +499,7 @@ final class cmsxform
 
 	        if (p.FromInput == null || p.ToOutput == null)
 	        {
-	            cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unsupported raster format", null);
+	            cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_UNSUPPORTED_RASTER_FORMAT), null);
 	            return null;
 	        }
 	        
@@ -647,20 +648,20 @@ final class cmsxform
 	    // Mark entry/exit spaces
 		if (!GetXFormColorSpaces(nProfiles, hProfiles, EntryColorSpace, ExitColorSpace))
 		{
-			cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_NULL, "NULL input profiles on transform", null);        
+			cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_NULL, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_NULL_PROFILES), null);
 			return null;
 		}
 		
 	    // Check if proper colorspaces
 	    if (!IsProperColorSpace(EntryColorSpace[0], InputFormat))
 	    {        
-	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_COLORSPACE_CHECK, "Wrong input color space on transform", null);        
+	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_COLORSPACE_CHECK, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_WRONG_COLORSPACE_IN), null);
 	        return null;
 	    }
 	    
 	    if (!IsProperColorSpace(ExitColorSpace[0], OutputFormat))
 	    {
-	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_COLORSPACE_CHECK, "Wrong output color space on transform", null);       
+	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_COLORSPACE_CHECK, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_WRONG_COLORSPACE_OUT), null);
 	        return null;
 	    }
 	    
@@ -668,7 +669,7 @@ final class cmsxform
 	    Lut = cmscnvrt._cmsLinkProfiles(ContextID, nProfiles, Intents, hProfiles, BPC, AdaptationStates, dwFlags);
 	    if (Lut == null)
 	    {
-	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_NOT_SUITABLE, "Couldn't link the profiles", null);   
+	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_NOT_SUITABLE, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_CANT_LINK_PROFILES), null);   
 	        return null;
 	    }
 	    
@@ -770,7 +771,7 @@ final class cmsxform
 	    
 	    if (nProfiles <= 0 || nProfiles > 255)
 	    {
-	        cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_RANGE, "Wrong number of profiles. 1..255 expected, %d found.", new Object[]{new Integer(nProfiles)});
+	        cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_WRONG_PROFILE_COUNT), new Object[]{new Integer(nProfiles)});
 	        return null;
 	    }
 	    
@@ -789,7 +790,7 @@ final class cmsxform
 	{
 		if (nProfiles <= 0 || nProfiles > 255)
 		{
-	         cmserr.cmsSignalError(null, lcms2.cmsERROR_RANGE, "Wrong number of profiles. 1..255 expected, %d found.", new Object[]{new Integer(nProfiles)});
+	         cmserr.cmsSignalError(null, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_WRONG_PROFILE_COUNT), new Object[]{new Integer(nProfiles)});
 	         return null;
 	    }
 		

@@ -1,12 +1,11 @@
 TODO:
 Implement actual code | Update VirtualPointer so it can work with arrays, this will take some work and might not work right away so do some research
 **
-cmsopt
+cmslut
 cmsgmt
 cmsio1
 cmsintrp
 cmscnvrt
-cmslut
 cmsps2
 cmsvirt
 cmsgamma
@@ -14,6 +13,9 @@ cmsnamed
 cmssm
 cmscam02
 **
+
+Finish floating point print formatter
+Write print unformatters (and write sscanf)
 
 Implement serializers
 

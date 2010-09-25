@@ -48,7 +48,7 @@ final class PrintUtility
         }
         int count = 0;
         int len = formats.length;
-        int argLen = args.length;
+        int argLen = args == null ? 0 : args.length;
         int elLen;
         int argPos = 0;
         for(int i = 0; i < len; i++)
@@ -148,7 +148,7 @@ final class PrintUtility
 	
 	private static String SPECIFIERS = "cdieEfFgGosuxXpn";
 	private static String FLAGS = "-+ #0";
-	private static String WIDTH_PRECISION = "123456789*0";
+	private static String WIDTH_PRECISION = "123456789*0"; //Zero is added at end so that when FULL_FORMAT is generated there isn't two zeros in the format. It wouldn't cause an error but it would be one more char to check that isn't needed.
 	private static String LENGTH = "hlLzjt";
 	private static String FULL_FORMAT = FLAGS + WIDTH_PRECISION.substring(0, 9) + '.' + LENGTH + SPECIFIERS;
 	
@@ -588,6 +588,8 @@ final class PrintUtility
         public abstract int requires();
 
         public abstract int argLocation();
+        
+        public abstract String getNullParamOutput();
 
         public boolean hasArgLocation()
         {
@@ -623,6 +625,11 @@ final class PrintUtility
             }
 	        return new GenericFormatElement(form);
         }
+        
+        protected void argError(String formatter, String defValue, Class element)
+        {
+        	System.err.println(formatter + Utility.LCMS_Resources.getString(LCMSResource.PRINTUTIL_UNK_ARG) + defValue + ". Arg:" + element);
+        }
 
         public String ToString()
         {
@@ -630,7 +637,7 @@ final class PrintUtility
         }
 	}
 	
-	public static abstract class GeneralFormatElement extends FormatElement
+	private static abstract class GeneralFormatElement extends FormatElement
     {
         private boolean arg, lengthDoubleSize;
         protected String flags;
@@ -642,7 +649,7 @@ final class PrintUtility
         	super(format);
             this.precision = -1;
             this.width = -1;
-            arg = true; //Not sure why this should be included but could be useful in the future or depending on implemintation.
+            this.arg = true; //Not sure why this should be included but could be useful in the future or depending on implemintation.
             parseFormat();
         }
         
@@ -794,7 +801,7 @@ final class PrintUtility
         }
     }
 	
-	public static class GenericFormatElement extends GeneralFormatElement
+	private static class GenericFormatElement extends GeneralFormatElement
     {
         public GenericFormatElement(String format)
         {
@@ -803,7 +810,13 @@ final class PrintUtility
 
         public String inFormat(Object obj)
         {
+        	argError("GenericFormat", "$format", obj.getClass());
             return this.format;
+        }
+        
+        public String getNullParamOutput()
+        {
+        	return inFormat(null);
         }
 
         public void unformat(String value, Object refO)
@@ -812,7 +825,7 @@ final class PrintUtility
         }
     }
 	
-	public static class StringFormatElement extends GeneralFormatElement
+	private static class StringFormatElement extends GeneralFormatElement
     {
         public StringFormatElement(String format)
         {
@@ -890,6 +903,7 @@ final class PrintUtility
                 }
                 else
                 {
+                	argError("StringFormat", "obj.toString()", obj.getClass());
                     str = obj.toString(); //This will return ASCII
                 }
             }
@@ -920,6 +934,11 @@ final class PrintUtility
             }
             return str;
         }
+        
+        public String getNullParamOutput()
+        {
+        	return this.type == 'c' ? "\0" : "(null)";
+        }
 
         public void unformat(String value, Object refO)
         {
@@ -928,7 +947,7 @@ final class PrintUtility
         }
     }
 	
-	public static class IntFormatElement extends GeneralFormatElement
+	private static class IntFormatElement extends GeneralFormatElement
     {
         private boolean signed;
         private boolean basicType;
@@ -968,14 +987,69 @@ final class PrintUtility
         {
             StringBuffer bu = new StringBuffer();
             long value = 0;
-            if (this.length != '\0')
-            {
-                //TODO: get obj into value based on length
-            }
-            else
-            {
-                //TODO: get obj into value
-            }
+            switch(this.length)
+        	{
+        		default:
+        			if(obj instanceof Byte)
+                	{
+                		value = ((Byte)obj).byteValue();
+                	}
+                	else if(obj instanceof Short)
+                	{
+                		value = ((Short)obj).shortValue();
+                	}
+                	else if(obj instanceof Integer)
+                	{
+                		value = ((Integer)obj).intValue();
+                	}
+                	else if(obj instanceof Long)
+                	{
+                		value = ((Long)obj).longValue();
+                	}
+                	else if(obj instanceof Float)
+                	{
+                		value = Float.floatToIntBits(((Float)obj).floatValue());
+                	}
+                	else if(obj instanceof Double)
+                	{
+                		value = Double.doubleToLongBits(((Double)obj).doubleValue());
+                	}
+                	else if(obj instanceof VirtualPointer)
+                	{
+                		value = ((VirtualPointer)obj).getProcessor().readInt32();
+                	}
+                	else
+                	{
+                		argError("IntFormat", "0", obj.getClass());
+                		value = 0;
+                	}
+        			break;
+        		case 'h':
+        			if(super.lengthDoubleSize)
+        			{
+        				value = ((Character)obj).charValue();
+        			}
+        			else
+        			{
+        				value = ((Short)obj).shortValue();
+        			}
+        			break;
+        		case 'z':
+        		case 'j':
+        		case 't':
+        			value = ((Integer)obj).intValue();
+        			break;
+        		case 'l':
+        			if(super.lengthDoubleSize)
+        			{
+        				value = ((Long)obj).longValue();
+        			}
+        			else
+        			{
+        				value = ((Integer)obj).longValue();
+        			}
+        			break;
+        	}
             if (this.flags != null)
             {
                 if (value >= 0)
@@ -1119,6 +1193,11 @@ final class PrintUtility
             return bu.toString();
         }
         
+        public String getNullParamOutput()
+        {
+        	return "0";
+        }
+        
         public void unformat(String value, Object refO)
         {
         	//TODO
@@ -1126,7 +1205,7 @@ final class PrintUtility
         }
     }
 	
-	public static class FloatFormatElement extends GeneralFormatElement
+	private static class FloatFormatElement extends GeneralFormatElement
     {
         public FloatFormatElement(String format)
         {
@@ -1138,6 +1217,12 @@ final class PrintUtility
         	//TODO
             throw new UnsupportedOperationException();
         }
+        
+        public String getNullParamOutput()
+        {
+        	//TODO
+            throw new UnsupportedOperationException();
+        }
 
         public void unformat(String value, Object refO)
         {
@@ -1146,7 +1231,7 @@ final class PrintUtility
         }
     }
 	
-	public static class PointerFormatElement extends GeneralFormatElement
+	private static class PointerFormatElement extends GeneralFormatElement
     {
         public PointerFormatElement(String format)
         {
@@ -1169,6 +1254,15 @@ final class PrintUtility
         		buf.insert(4, ':');
         		return buf.toString();
         	}
+        	else
+        	{
+        		argError("PointerFormat", Utility.LCMS_Resources.getString(LCMSResource.PRINTUTIL_NULL_POINTER_ERR), obj.getClass());
+        	}
+        	return "0000:0000";
+        }
+        
+        public String getNullParamOutput()
+        {
         	return "0000:0000";
         }
 

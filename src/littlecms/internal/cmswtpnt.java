@@ -27,6 +27,7 @@
 //
 package littlecms.internal;
 
+import littlecms.internal.helper.Utility;
 import littlecms.internal.lcms2.cmsCIEXYZ;
 import littlecms.internal.lcms2.cmsCIExyY;
 import littlecms.internal.lcms2.cmsCIExyYTRIPLE;
@@ -96,7 +97,7 @@ final class cmswtpnt
 		}
 		else
 		{
-			cmserr.cmsSignalError(null, lcms2.cmsERROR_RANGE, "cmsWhitePointFromTemp: invalid temp", null);
+			cmserr.cmsSignalError(null, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSWTPNT_BAD_WHITEPOINT_TEMP), null);
 			return false;
 		}
 		

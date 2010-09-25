@@ -28,6 +28,7 @@ package littlecms.internal;
 import java.util.Calendar;
 
 import littlecms.internal.helper.VirtualPointer;
+import littlecms.internal.lcms2.cmsPipeline;
 import littlecms.internal.lcms2_internal._cmsTRANSFORM;
 
 /**
@@ -1204,7 +1205,7 @@ public class lcms2_plugin extends lcms2
 	
 	public static interface _cmsOPToptimizeFn
 	{
-		public boolean run(cmsPipeline Lut, int Intent, int InputFormat, int OutputFormat, int dwFlags);
+		public boolean run(cmsPipeline[] Lut, int Intent, int[] InputFormat, int[] OutputFormat, int[] dwFlags);
 	}
 	
 	// This function may be used to set the optional evaluator and a block of private data. If private data is being used, an optional
