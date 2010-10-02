@@ -693,14 +693,14 @@ final class lcms2_internal extends lcms2_plugin
 		return cmspcs._cmsEndPointsBySpace(Space, White, Black, nOutputs);
 	}
 	
-	public static boolean _cmsOptimizePipeline(cmsPipeline Lut, int Intent, int[] InputFormat, int[] OutputFormat, int[] dwFlags)
+	public static boolean _cmsOptimizePipeline(cmsPipeline[] Lut, int Intent, int[] InputFormat, int[] OutputFormat, int[] dwFlags)
 	{
 		return cmsopt._cmsOptimizePipeline(Lut, Intent, InputFormat, OutputFormat, dwFlags);
 	}
 	
 	// Hi level LUT building ----------------------------------------------------------------------------------------------
 
-	public static cmsPipeline _cmsCreateGamutCheckPipeline(cmsContext ContextID, cmsHPROFILE[] hProfiles, boolean[] BPC, int[] Intents, float[] AdaptationStates, 
+	public static cmsPipeline _cmsCreateGamutCheckPipeline(cmsContext ContextID, cmsHPROFILE[] hProfiles, boolean[] BPC, int[] Intents, double[] AdaptationStates, 
 			int nGamutPCSposition, cmsHPROFILE hGamut)
 	{
 		return cmsgmt._cmsCreateGamutCheckPipeline(ContextID, hProfiles, BPC, Intents, AdaptationStates, nGamutPCSposition, hGamut);

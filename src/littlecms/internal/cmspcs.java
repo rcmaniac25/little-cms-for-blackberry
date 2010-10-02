@@ -349,7 +349,7 @@ final class cmspcs
 //#ifndef BlackBerrySDK4.5.0
 	    	h = MathUtilities.atan2(a, b);
 //#else
-	    	h = lcms2_internal.atan2(a, b);
+	    	h = Utility.atan2(a, b);
 //#endif
 	    }
 		

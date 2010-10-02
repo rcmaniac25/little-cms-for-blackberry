@@ -518,6 +518,11 @@ public class VirtualPointer
             write(value, false);
         }
         
+        public void write(Object value, int size)
+        {
+        	//TODO Finish array function and add others, size is byte size
+        }
+        
         public void write(Object value, boolean inc)
         {
             if (value == null)
@@ -623,6 +628,8 @@ public class VirtualPointer
             }
             return obj[0];
         }
+        
+        //TODO Add array functions
     }
 	
 	public static interface Serializer
@@ -1264,4 +1271,6 @@ public class VirtualPointer
     		}
         }
     }
+    
+    //TODO Add equals, toString, and hashCode functions
 }

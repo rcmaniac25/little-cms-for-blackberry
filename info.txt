@@ -1,23 +1,16 @@
 TODO:
-Implement actual code | Update VirtualPointer so it can work with arrays, this will take some work and might not work right away so do some research
-**
-cmslut
-cmsgmt
-cmsio1
-cmsintrp
-cmscnvrt
-cmsps2
-cmsvirt
-cmsgamma
-cmsnamed
-cmssm
-cmscam02
-**
+Work on VirtualPointer so it can work with arrays (idea for use, try to type-change the Object to a Object[], if it works then it is classes that can be recreated, otherwise it is a primitive array that needs explicit conversion.)
+
+Work on xform converters so that input and output work correctly
 
 Finish floating point print formatter
 Write print unformatters (and write sscanf)
 
 Implement serializers
+
+Testing
+
+See notes
 
 Figure out what the high-level structures should be, then...
 Create high-level structures that handle color management in a true OOP fashion.
@@ -25,6 +18,9 @@ Create high-level structures that handle color management in a true OOP fashion.
 NOTES:
 VirtualPointer piece is cumbersome but allows internal system to act more like C/C++. If used properly it should be fast and have a low overhead (except when deserializeing items).
 Strings follow the guidelines listed in "http://docs.blackberry.com/en/developers/deliverables/3299/JDE_4.5_Fundamentals_Guide.pdf" which state not to use static final for Strings because then Strings need to be loaded multiple times and multiple instances of the same String exist.
+See if performance can be improved in cmsintrp, every delegate including and after Eval4InputsFloat recreates cmsInterpParams, the LutTable, and the input params. Sometimes twice, this is a HUGE waste of memory.
+Also, on a similar topic as above, nearly every class is a <need word bigger then HUGE> waste of memory. In C/C++ memory needed to be pre-allocated but in Java it does not, thus having the first operation in a function being create 4096 doubles (pretty sure I saw that somewhere) is just unacceptable.
+Finally, again based off the above note, something must be done about Strings. The whole "C-string" thing is just not needed and is a waste, since the dev isn't expected to pass in a null-terminated String in the first place it is unneeded to use a null-terminated String. Allocating StringBuffer's with a full-length null String is an even bigger waste. See if it is possible to work around this once everything is working.
 
 Defines:
 CMS_USE_BIG_ENDIAN //Not supported because BlackBerry is little endian, just here so it is explicitly known that it isn't supported

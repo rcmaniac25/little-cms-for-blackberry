@@ -30,9 +30,11 @@ package littlecms.internal.helper;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.Calendar;
 
 import littlecms.internal.LCMSResource;
 
+import net.rim.device.api.i18n.DateFormat;
 import net.rim.device.api.i18n.ResourceBundle;
 import net.rim.device.api.util.Arrays;
 //#ifdef BlackBerrySDK4.5.0
@@ -266,6 +268,11 @@ public final class Utility
 	//END CODE FROM J4ME
 //#endif
 	
+	public static double log10(double x)
+	{
+		return MathUtilities.log(x) / MathUtilities.log(10);
+	}
+	
 	private static boolean charNumRangeComp(int c, int lowerEnd, int upperEnd)
     {
     	return Character.isDigit((char)c) || (((c >= 'a') || (c <= lowerEnd)) || ((c >= 'A') || (c <= upperEnd)));
@@ -285,6 +292,33 @@ public final class Utility
     {
     	return charNumRangeComp(c, 'f', 'F');
     }
+    
+    public static String ctime(Calendar timer)
+	{
+    	//ctime format: "Www Mmm dd hh:mm:ss yyyy" and appends \n to the end
+    	StringBuffer buf = new StringBuffer();
+    	
+    	DateFormat form = DateFormat.getInstance(DateFormat.DAY_OF_WEEK_FIELD);
+    	form.format(timer, buf, null);	//Ex: Sunday
+    	buf.delete(3, buf.length() - 1);//Ex: Sun
+    	buf.append(' ');				//Ex: Sun 
+    	
+    	form = DateFormat.getInstance(DateFormat.DATE_MEDIUM);
+    	form.format(timer, buf, null);	//Ex: Sun Mar 08, 2006
+    	buf.setCharAt(10, ' ');			//Ex: Sun Mar 08  2006
+    	
+    	StringBuffer tBuf = new StringBuffer();
+    	form = DateFormat.getInstance(DateFormat.TIME_LONG);
+    	form.format(timer, tBuf, null);	//Ex: 2:10:20pm
+    	if(Character.toLowerCase(tBuf.charAt(tBuf.length() - 1)) == 'm')
+    	{
+    		tBuf.delete(tBuf.length() - 3, tBuf.length() - 1);//Ex: 2:10:20
+    	}
+    	buf.insert(11, tBuf.toString());//Ex: Sun Mar 08 2:10:20 2006
+    	
+    	buf.append('\n');
+    	return buf.toString();
+	}
     
     //strlen
     
@@ -590,9 +624,34 @@ public final class Utility
 		}
 	}
 	
+	private static class StreamOut extends OutputStream
+	{
+		private Stream st;
+		
+		public StreamOut(Stream st)
+		{
+			this.st = st;
+		}
+		
+		public void write(int b) throws IOException
+		{
+			write(new byte[]{(byte)b}, 0, 1);
+		}
+		
+		public void write(byte[] b, int off, int len) throws IOException
+		{
+			st.write(b, off, len, 1);
+		}
+	}
+	
 	public static int fprintf(PrintStream stream, final String format, Object[] argptr)
 	{
 		return fprintf(stream, -1, format, argptr);
+	}
+	
+	public static int fprintf(Stream stream, final String format, Object[] argptr)
+	{
+		return fprintf(new PrintStream(new StreamOut(stream)), -1, format, argptr);
 	}
 	
 	public static int fprintf(PrintStream stream, int count, final String format, Object[] argptr)

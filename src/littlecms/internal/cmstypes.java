@@ -40,8 +40,20 @@ import littlecms.internal.lcms2.cmsICCMeasurementConditions;
 import littlecms.internal.lcms2.cmsIOHANDLER;
 import littlecms.internal.lcms2.cmsMLU;
 import littlecms.internal.lcms2.cmsScreening;
+import littlecms.internal.lcms2.cmsContext;
+import littlecms.internal.lcms2.cmsICCViewingConditions;
+import littlecms.internal.lcms2.cmsPipeline;
+import littlecms.internal.lcms2.cmsSEQ;
+import littlecms.internal.lcms2.cmsPSEQDESC;
+import littlecms.internal.lcms2.cmsNAMEDCOLORLIST;
+import littlecms.internal.lcms2.cmsStage;
+import littlecms.internal.lcms2.cmsToneCurve;
+import littlecms.internal.lcms2.cmsCurveSegment;
+import littlecms.internal.lcms2.cmsUcrBg;
+import littlecms.internal.lcms2_plugin.cmsPluginTag;
 import littlecms.internal.lcms2_internal._cmsStageCLutData;
 import littlecms.internal.lcms2_internal._cmsStageMatrixData;
+import littlecms.internal.lcms2_internal._cmsStageToneCurvesData;
 import littlecms.internal.lcms2_plugin._cmsTagBase;
 import littlecms.internal.lcms2_plugin.cmsPluginBase;
 import littlecms.internal.lcms2_plugin.cmsPluginTagType;
@@ -1778,8 +1790,8 @@ final class cmstypes
 	    	Wide - new StringBuffer(new char[len]);
 	        
 	        // Get both representations. 
-	    	cmsnamed.cmsMLUgetASCII(mlu, cmsNoLanguage, cmsNoCountry, Text, len * /*sizeof(char)*/1);
-	    	cmsnamed.cmsMLUgetWide(mlu,  cmsNoLanguage, cmsNoCountry, Wide, len * /*sizeof(wchar_t)*/2);
+	    	cmsnamed.cmsMLUgetASCII(mlu, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, Text, len * /*sizeof(char)*/1);
+	    	cmsnamed.cmsMLUgetWide(mlu, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, Wide, len * /*sizeof(wchar_t)*/2);
 	    }
 	    
 	    // * cmsUInt32Number       count;          * Description length
@@ -2493,7 +2505,7 @@ final class cmstypes
 	    
 	    for (i = 0; i < nChannels; i++)
 	    {
-	        Tables[i] = cmsgamma.cmsBuildTabulatedToneCurve16(ContextID, 256, NULL);
+	        Tables[i] = cmsgamma.cmsBuildTabulatedToneCurve16(ContextID, 256, null);
 	        if (Tables[i] == null)
 	        {
 	        	for (i = 0; i < nChannels; i++)
@@ -2892,19 +2904,19 @@ final class cmstypes
 	        mpe = mpe.Next;
 	    }
 	    
-	    if (mpe != NULL && mpe.Type == lcms2.cmsSigCurveSetElemType)
+	    if (mpe != null && mpe.Type == lcms2.cmsSigCurveSetElemType)
 	    {
 	        PreMPE = (_cmsStageToneCurvesData)mpe.Data;
 	        mpe = mpe.Next;
 	    }
 	    
-	    if (mpe != NULL && mpe.Type == lcms2.cmsSigCLutElemType)
+	    if (mpe != null && mpe.Type == lcms2.cmsSigCLutElemType)
 	    {
 	        clut  = (_cmsStageCLutData)mpe.Data;
 	        mpe = mpe.Next;
 	    }
 	    
-	    if (mpe != NULL && mpe.Type == lcms2.cmsSigCurveSetElemType)
+	    if (mpe != null && mpe.Type == lcms2.cmsSigCurveSetElemType)
 	    {
 	        PostMPE = (_cmsStageToneCurvesData)mpe.Data;
 	        mpe = mpe.Next;
@@ -3436,25 +3448,25 @@ final class cmstypes
 	    
 	    // Disassemble the LUT into components.
 	    mpe = NewLUT.Elements;
-	    if (mpe != NULL && mpe.Type == lcms2.cmsSigMatrixElemType)
+	    if (mpe != null && mpe.Type == lcms2.cmsSigMatrixElemType)
 	    {
 	        MatMPE = (_cmsStageMatrixData)mpe.Data;
 	        mpe = mpe.Next;
 	    }
 	    
-	    if (mpe != NULL && mpe.Type == lcms2.cmsSigCurveSetElemType)
+	    if (mpe != null && mpe.Type == lcms2.cmsSigCurveSetElemType)
 	    {
 	        PreMPE = (_cmsStageToneCurvesData)mpe.Data;
 	        mpe = mpe.Next;
 	    }
 	    
-	    if (mpe != NULL && mpe.Type == lcms2.cmsSigCLutElemType)
+	    if (mpe != null && mpe.Type == lcms2.cmsSigCLutElemType)
 	    {
 	        clut  = (_cmsStageCLutData)mpe.Data;
 	        mpe = mpe.Next;
 	    }
 	    
-	    if (mpe != NULL && mpe.Type == lcms2.cmsSigCurveSetElemType)
+	    if (mpe != null && mpe.Type == lcms2.cmsSigCurveSetElemType)
 	    {
 	        PostMPE = (_cmsStageToneCurvesData)mpe.Data;
 	        mpe = mpe.Next;
@@ -3609,7 +3621,7 @@ final class cmstypes
 	    
 	    if (PreMPE != null)
 	    {
-	        if (!Write16bitTables(self ->ContextID, io, PreMPE))
+	        if (!Write16bitTables(self.ContextID, io, PreMPE))
 	        {
 	        	return false;
 	        }
@@ -3627,7 +3639,7 @@ final class cmstypes
 	    }
 	    
 	    // The postlinearization table
-	    if (PostMPE != NULL)
+	    if (PostMPE != null)
 	    {
 	        if (!Write16bitTables(self.ContextID, io, PostMPE))
 	        {
@@ -3730,7 +3742,7 @@ final class cmstypes
 	    }
 	    dOff[2] = temp[0];
 	    
-	    Mat = cmslut.cmsStageAllocMatrix(self ->ContextID, 3, 3, dMat, dOff);
+	    Mat = cmslut.cmsStageAllocMatrix(self.ContextID, 3, 3, dMat, dOff);
 	    
 	    return Mat;
 	}
@@ -3807,11 +3819,11 @@ final class cmstypes
 	            	return null;
 	            }
 	        }
-	    }
-	    else
-	    {
-	        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_PRECISION), new Object[]{new Integer(Precision[0])}); 
-	        return null;
+	        else
+		    {
+		        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_PRECISION), new Object[]{new Integer(Precision[0])}); 
+		        return null;
+		    }
 	    }
 	    
 	    return CLUT;
@@ -4523,7 +4535,8 @@ final class cmstypes
 	    
 	    if (Lut.Elements != null)
 	    {
-	    	Object[] args = new Object[5 * 2]{new Integer(lcms2.cmsSigCurveSetElemType)};
+	    	Object[] args = new Object[5 * 2];
+	    	args[0] = new Integer(lcms2.cmsSigCurveSetElemType);
 	        if (!cmslut.cmsPipelineCheckAndRetreiveStages(Lut, 1, args))
 	        {
 	        	//args[0] = new Integer(lcms2.cmsSigCurveSetElemType);
@@ -5621,7 +5634,7 @@ final class cmstypes
 	
 	private static void Type_CrdInfo_Free(cmsTagTypeHandler self, Object Ptr)
 	{
-		cmsMLUfree.cmsMLUfree((cmsMLU)Ptr);
+		cmsnamed.cmsMLUfree((cmsMLU)Ptr);
 	}
 	
 	// ********************************************************************************
@@ -6044,7 +6057,7 @@ final class cmstypes
 	// Write a single segmented curve. NO CHECK IS PERFORMED ON VALIDITY
 	private static boolean WriteSegmentedCurve(cmsIOHANDLER io, cmsToneCurve g)
 	{
-	    cmsUInt32Number i, j;
+	    int i, j;
 	    cmsCurveSegment[] Segments = g.Segments;
 	    int nSegments = g.nSegments;
 	    
@@ -6362,7 +6375,7 @@ final class cmstypes
 	    	    }
 	    	    return null;
 	        }
-	        proc.write(tamp2[0], true);
+	        proc.write(temp2[0], true);
 	    }
 	    clut.Tab.setPosition(pos);
 	    
@@ -6528,14 +6541,14 @@ final class cmstypes
 		    ElementSig = temp[0];
 		    
 		    // The reserved placeholder
-		    if (!cmsplugin._cmsReadUInt32Number(io, NULL))
+		    if (!cmsplugin._cmsReadUInt32Number(io, null))
 		    {
 		    	return false;
 		    }
 		    
 		    // Read diverse MPE types
 		    TypeHandler = GetHandler(ElementSig, SupportedMPEtypes);
-		    if (TypeHandler == NULL)
+		    if (TypeHandler == null)
 		    {
 		        StringBuffer String = new StringBuffer(4);
 		        
@@ -6595,7 +6608,7 @@ final class cmstypes
 	    NewLUT = cmslut.cmsPipelineAlloc(self.ContextID, InputChans, OutputChans);
 	    if (NewLUT == null)
 	    {
-	    	return null
+	    	return null;
 	    }
 	    
 	    if (!cmsplugin._cmsReadUInt32Number(io, ElementCount))
@@ -7815,7 +7828,7 @@ final class cmstypes
 	}
 	
 	// Wrapper for tag types
-	public cmsTagTypeHandler _cmsGetTagTypeHandler(int sig)
+	public static cmsTagTypeHandler _cmsGetTagTypeHandler(int sig)
 	{
 	    return GetHandler(sig, SupportedTagTypes);
 	}

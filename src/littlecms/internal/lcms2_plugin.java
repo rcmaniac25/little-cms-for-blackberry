@@ -828,6 +828,11 @@ public class lcms2_plugin extends lcms2
 		{
 			this.lerp = lerp;
 		}
+		
+		public boolean hasValue()
+		{
+			return this.lerp != null;
+		}
 	}
 	
 	// Flags for interpolator selection

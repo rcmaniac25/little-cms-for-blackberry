@@ -394,6 +394,10 @@ namespace linker
                 lines[0] = "$AT TYPE double";
                 predefinedElements.Add(new FIE(null, lines));
 
+                //boolean
+                lines[0] = "$AT TYPE boolean";
+                predefinedElements.Add(new FIE(null, lines));
+
                 //Object
                 lines[0] = "$AT TYPE Object";
                 predefinedElements.Add(new FIE(null, lines));
@@ -1000,9 +1004,16 @@ namespace linker
                 {
                     //Predefined types
                     double d;
-                    if (double.TryParse(typeData, out d) || this.Type.Equals("Object") || !char.IsLetter(typeData[0]))
+                    if (double.TryParse(typeData, out d) || this.Type.Equals("Object") || !char.IsLetter(typeData[0]) || this.Type.Equals("boolean"))
                     {
-                        sw.Write(typeData);
+                        if (this.Type.Equals("boolean"))
+                        {
+                            sw.Write(typeData.ToLower());
+                        }
+                        else
+                        {
+                            sw.Write(typeData);
+                        }
                     }
                     else
                     {
@@ -1294,10 +1305,6 @@ namespace linker
             //Write each element
             for (int i = 0; i < elements.Length; i++)
             {
-                if (i == 46)
-                {
-                }
-
                 //Write tab
                 sw.Write(new string('\t', tab));
 
@@ -1655,7 +1662,7 @@ namespace linker
                     else
                     {
                         string[] elements = breakIntoElements(typeData);
-                        sw.Write("new {0}{{", field.Type);
+                        sw.Write("new {0}[]{{", field.Type);
                         for (int i = 0; i < elements.Length; i++)
                         {
                             element.process(sw, lookup, elements[i], ref tab);

@@ -816,6 +816,18 @@ public class lcms2
 		public double x;
 		public double y;
 		public double Y;
+		
+		public cmsCIExyY()
+		{
+			this(0, 0, 0);
+		}
+		
+		public cmsCIExyY(double x, double y, double Y)
+		{
+			this.x = x;
+			this.y = y;
+			this.Y = Y;
+		}
 	}
 	
 	public static class cmsCIELab
@@ -852,6 +864,13 @@ public class lcms2
 		public cmsCIEXYZ Red;
 		public cmsCIEXYZ Green;
 		public cmsCIEXYZ Blue;
+		
+		public cmsCIEXYZTRIPLE()
+		{
+			Red = new cmsCIEXYZ();
+			Green = new cmsCIEXYZ();
+			Blue = new cmsCIEXYZ();
+		}
 	}
 	
 	public static class cmsCIExyYTRIPLE
@@ -861,6 +880,20 @@ public class lcms2
 		public cmsCIExyY Red;
 		public cmsCIExyY Green;
 		public cmsCIExyY Blue;
+		
+		public cmsCIExyYTRIPLE()
+		{
+			Red = new cmsCIExyY();
+			Green = new cmsCIExyY();
+			Blue = new cmsCIExyY();
+		}
+		
+		public cmsCIExyYTRIPLE(double[] vals)
+		{
+			Red = new cmsCIExyY(vals[0], vals[1], vals[2]);
+			Green = new cmsCIExyY(vals[3], vals[4], vals[5]);
+			Blue = new cmsCIExyY(vals[6], vals[7], vals[8]);
+		}
 	}
 	
 	// Illuminant types for structs below
@@ -1395,7 +1428,7 @@ public class lcms2
 	 */
 	public static void cmsFreeToneCurveTriple(cmsToneCurve[] Curve)
 	{
-		cmsgamma.cmsFreeToneCurve(Curve);
+		cmsgamma.cmsFreeToneCurveTriple(Curve);
 	}
 	
 	/**
@@ -1950,7 +1983,7 @@ public class lcms2
 	 */
 	public static boolean cmsSliceSpace16(int nInputs, final int[] clutPoints, cmsSAMPLER16 Sampler, Object Cargo)
 	{
-		return cmslut.cmsSliceSpaceFloat(nInputs, clutPoints, Sampler, Cargo);
+		return cmslut.cmsSliceSpace16(nInputs, clutPoints, Sampler, Cargo);
 	}
 	
 	/**
@@ -2066,7 +2099,7 @@ public class lcms2
 	 * @param ObtainedCountry Array of 3 chars to get the country translation.
 	 * @return TRUE on success, FALSE on error
 	 */
-	public static boolean cmsMLUgetTranslation(cmsMLU mlu, final String LanguageCode, final String CountryCode, String ObtainedLanguage, String ObtainedCountry)
+	public static boolean cmsMLUgetTranslation(cmsMLU mlu, final String LanguageCode, final String CountryCode, StringBuffer ObtainedLanguage, StringBuffer ObtainedCountry)
 	{
 		return cmsnamed.cmsMLUgetTranslation(mlu, LanguageCode, CountryCode, ObtainedLanguage, ObtainedCountry);
 	}
@@ -2734,24 +2767,24 @@ public class lcms2
 	}
 	
 	// Localized info
-	public static int cmsInfoDescription  = 0;
-	public static int cmsInfoManufacturer = 1;
-	public static int cmsInfoModel        = 2;
-	public static int cmsInfoCopyright    = 3;
+	public static final int cmsInfoDescription  = 0;
+	public static final int cmsInfoManufacturer = 1;
+	public static final int cmsInfoModel        = 2;
+	public static final int cmsInfoCopyright    = 3;
 	
 	/**
 	 * Gets several information strings from the profile, dealing with localization. Strings are returned as chars.
 	 * @param hProfile Handle to a profile object
 	 * @param Info A selector of which info to return
 	 * @param LanguageCode first name language code from ISO-639/2.
-	 * @param CountryCod first name region code from ISO-3166.
+	 * @param CountryCode first name region code from ISO-3166.
 	 * @param Buffer pointer to a memory block to get the result. NULL to calculate size only
 	 * @param BufferSize Amount of byes allocated in Buffer, or 0 to calculate size only.
 	 * @return Number of required bytes to hold the result. 0 on error.
 	 */
-	public static int cmsGetProfileInfo(cmsHPROFILE hProfile, int Info, final String LanguageCode, final String CountryCod, StringBuffer Buffer, int BufferSize)
+	public static int cmsGetProfileInfo(cmsHPROFILE hProfile, int Info, final String LanguageCode, final String CountryCode, StringBuffer Buffer, int BufferSize)
 	{
-		return cmsio1.cmsGetProfileInfo(hProfile, Info, LanguageCode, CountryCod, Buffer, BufferSize);
+		return cmsio1.cmsGetProfileInfo(hProfile, Info, LanguageCode, CountryCode, Buffer, BufferSize);
 	}
 	
 	/**
@@ -2759,14 +2792,14 @@ public class lcms2
 	 * @param hProfile Handle to a profile object
 	 * @param Info A selector of which info to return
 	 * @param LanguageCode first name language code from ISO-639/2.
-	 * @param CountryCod first name region code from ISO-3166.
+	 * @param CountryCode first name region code from ISO-3166.
 	 * @param Buffer pointer to a memory block to get the result. NULL to calculate size only
 	 * @param BufferSize Amount of byes allocated in Buffer, or 0 to calculate size only.
 	 * @return Number of required bytes to hold the result. 0 on error.
 	 */
 	public static int cmsGetProfileInfoASCII(cmsHPROFILE hProfile, int Info, final String LanguageCode, final String CountryCode, StringBuffer Buffer, int BufferSize)
 	{
-		return cmsio1.cmsGetProfileInfoASCII(hProfile, Info, LanguageCode, CountryCod, Buffer, BufferSize);
+		return cmsio1.cmsGetProfileInfoASCII(hProfile, Info, LanguageCode, CountryCode, Buffer, BufferSize);
 	}
 	
 	// IO handlers ----------------------------------------------------------------------------------------------------------
@@ -3828,7 +3861,7 @@ public class lcms2
 	 * @param PropertyNames A pointer to a variable of type String[] which will receive the table of property name strings.
 	 * @return The number of properties in current table on success, 0 on error.
 	 */
-	public static int cmsIT8EnumProperties(cmsHANDLE hIT8, String[] PropertyNames)
+	public static int cmsIT8EnumProperties(cmsHANDLE hIT8, String[][] PropertyNames)
 	{
 		return cmscgats.cmsIT8EnumProperties(hIT8, PropertyNames);
 	}
@@ -4098,6 +4131,6 @@ public class lcms2
 	 */
 	public static boolean cmsDesaturateLab(cmsCIELab Lab, double amax, double amin, double bmax, double bmin)
 	{
-		return cmsgmt.cmsDetectTAC(Lab, amax, amin, bmax, bmin);
+		return cmsgmt.cmsDesaturateLab(Lab, amax, amin, bmax, bmin);
 	}
 }

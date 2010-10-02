@@ -1,3 +1,5 @@
+//#preprocessor
+
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
@@ -677,10 +679,12 @@ final class cmsxform
 	    int[] temp1 = new int[]{InputFormat};
 	    int[] temp2 = new int[]{OutputFormat};
 	    int[] temp3 = new int[]{dwFlags};
-	    cmsopt._cmsOptimizePipeline(Lut, LastIntent, temp1, temp2, temp3);
+	    cmsPipeline[] temp4 = new cmsPipeline[]{Lut};
+	    cmsopt._cmsOptimizePipeline(temp4, LastIntent, temp1, temp2, temp3);
 	    InputFormat = temp1[0];
 	    OutputFormat = temp2[0];
 	    dwFlags = temp3[0];
+	    Lut = temp4[4];
 	    
 	    // All seems ok
 	    xform = AllocEmptyTransform(ContextID, InputFormat, OutputFormat, dwFlags);
@@ -710,7 +714,7 @@ final class cmsxform
 	    if (cmsio0.cmsIsTag(hProfiles[0], lcms2.cmsSigColorantTableTag))
 	    {
 	        // Input table can only come in this way.       
-	        xform.InputColorant = cmsnamed.cmsDupNamedColorList((cmsNAMEDCOLORLIST)cmsReadTag(hProfiles[0], lcms2.cmsSigColorantTableTag));
+	        xform.InputColorant = cmsnamed.cmsDupNamedColorList((cmsNAMEDCOLORLIST)cmsio0.cmsReadTag(hProfiles[0], lcms2.cmsSigColorantTableTag));
 	    }
 	    
 	    // Output is a little bit more complex.    

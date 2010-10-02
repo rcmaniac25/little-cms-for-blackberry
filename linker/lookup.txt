@@ -337,6 +337,116 @@ $OP SDEL
 	$OP EFIE
 $OP EDEL
 
+##cmsIntentFn
+$OP SDEL
+	$AT NAME cmsIntentFn
+
+	$OP SFIE
+		$AT NAME $ret
+		$AT TYPE cmsPipeline
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME ContextID
+		$AT TYPE cmsContext
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME nProfiles
+		$AT TYPE int
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME Intents
+		$AT TYPE int[]
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME hProfiles
+		$AT TYPE cmsHPROFILE[]
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME BPC
+		$AT TYPE boolean[]
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME AdaptationStates
+		$AT TYPE double[]
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME dwFlags
+		$AT TYPE int
+	$OP EFIE
+$OP EDEL
+
+##cmsIntentsList
+$OP STYP
+	$AT NAME cmsIntentsList
+	
+	$OP SFIE
+		$AT NAME Intent
+		$AT TYPE int
+	$OP EFIE
+	
+	$OP SFIE
+		$AT NAME Description
+		$AT TYPE String
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME Link
+		$AT TYPE cmsIntentFn
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME Next
+		$AT TYPE cmsIntentsList
+	$OP EFIE
+$OP ETYP
+
+##cmsAllowedLUT
+$OP STYP
+	$AT NAME cmsAllowedLUT
+	
+	$OP SFIE
+		$AT NAME IsV4
+		$AT TYPE boolean
+	$OP EFIE
+	
+	$OP SFIE
+		$AT NAME LutType
+		$AT TYPE int
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME nTypes
+		$AT TYPE int
+	$OP EFIE
+
+	$OP SFIE
+		$AT NAME MpeTypes
+		$AT TYPE int[]
+	$OP EFIE
+$OP ETYP
+
+##_spiral
+$OP STYP
+	$AT NAME _spiral
+	
+	$OP SFIE
+		$AT NAME AdvX
+		$AT TYPE int
+	$OP EFIE
+	
+	$OP SFIE
+		$AT NAME AdvY
+		$AT TYPE int
+	$OP EFIE
+$OP ETYP
+
 ##Preprocessors
 $OP SPRE
 	$AT PREPROC FLOAT_SH(a)  ((a) << lcms2.FLOAT_SHIFT_VALUE)

@@ -46,6 +46,8 @@ import littlecms.internal.lcms2_plugin._cmsOPToptimizeFn;
 import littlecms.internal.lcms2_plugin.cmsInterpParams;
 import littlecms.internal.lcms2_plugin.cmsMAT3;
 import littlecms.internal.lcms2_plugin.cmsVEC3;
+import littlecms.internal.lcms2_plugin.cmsPluginBase;
+import littlecms.internal.lcms2_plugin.cmsPluginOptimization;
 
 //#ifdef CMS_INTERNAL_ACCESS & DEBUG
 public
@@ -1147,11 +1149,11 @@ final class cmsopt
 		    }
 		    
 		    // Only on RGB
-		    if (lcsm2.T_COLORSPACE(InputFormat[0])  != lcms2.PT_RGB)
+		    if (lcms2.T_COLORSPACE(InputFormat[0])  != lcms2.PT_RGB)
 		    {
 		    	return false;
 		    }
-		    if (lcsm2.T_COLORSPACE(OutputFormat[0]) != lcms2.PT_RGB)
+		    if (lcms2.T_COLORSPACE(OutputFormat[0]) != lcms2.PT_RGB)
 		    {
 		    	return false;
 		    }
@@ -1179,11 +1181,11 @@ final class cmsopt
 				    {
 				        if (Trans[t] != null)
 				        {
-				        	cmslut.cmsFreeToneCurve(Trans[t]);
+				        	cmsgamma.cmsFreeToneCurve(Trans[t]);
 				        }
 				        if (TransReverse[t] != null)
 				        {
-				        	cmslut.cmsFreeToneCurve(TransReverse[t]);
+				        	cmsgamma.cmsFreeToneCurve(TransReverse[t]);
 				        }
 				    }
 				    
@@ -1252,11 +1254,11 @@ final class cmsopt
 			    {
 			        if (Trans[t] != null)
 			        {
-			        	cmslut.cmsFreeToneCurve(Trans[t]);
+			        	cmsgamma.cmsFreeToneCurve(Trans[t]);
 			        }
 			        if (TransReverse[t] != null)
 			        {
-			        	cmslut.cmsFreeToneCurve(TransReverse[t]);
+			        	cmsgamma.cmsFreeToneCurve(TransReverse[t]);
 			        }
 			    }
 			    
@@ -1282,11 +1284,11 @@ final class cmsopt
 				    {
 				        if (Trans[t] != null)
 				        {
-				        	cmslut.cmsFreeToneCurve(Trans[t]);
+				        	cmsgamma.cmsFreeToneCurve(Trans[t]);
 				        }
 				        if (TransReverse[t] != null)
 				        {
-				        	cmslut.cmsFreeToneCurve(TransReverse[t]);
+				        	cmsgamma.cmsFreeToneCurve(TransReverse[t]);
 				        }
 				    }
 				    
@@ -1311,11 +1313,11 @@ final class cmsopt
 			    {
 			        if (Trans[t] != null)
 			        {
-			        	cmslut.cmsFreeToneCurve(Trans[t]);
+			        	cmsgamma.cmsFreeToneCurve(Trans[t]);
 			        }
 			        if (TransReverse[t] != null)
 			        {
-			        	cmslut.cmsFreeToneCurve(TransReverse[t]);
+			        	cmsgamma.cmsFreeToneCurve(TransReverse[t]);
 			        }
 			    }
 			    
@@ -1331,7 +1333,7 @@ final class cmsopt
 			    return false;
 		    }
 		    
-		    cmslut.cmsPipelineInsertStage(LutPlusCurves, lcms2.cmsAT_BEGIN, cmsStageAllocToneCurves(OriginalLut.ContextID, OriginalLut.InputChannels, TransReverse));
+		    cmslut.cmsPipelineInsertStage(LutPlusCurves, lcms2.cmsAT_BEGIN, cmslut.cmsStageAllocToneCurves(OriginalLut.ContextID, OriginalLut.InputChannels, TransReverse));
 		    
 		    // Create the result LUT
 		    OptimizedLUT = cmslut.cmsPipelineAlloc(OriginalLut.ContextID, OriginalLut.InputChannels, OriginalLut.OutputChannels);
@@ -1341,11 +1343,11 @@ final class cmsopt
 			    {
 			        if (Trans[t] != null)
 			        {
-			        	cmslut.cmsFreeToneCurve(Trans[t]);
+			        	cmsgamma.cmsFreeToneCurve(Trans[t]);
 			        }
 			        if (TransReverse[t] != null)
 			        {
-			        	cmslut.cmsFreeToneCurve(TransReverse[t]);
+			        	cmsgamma.cmsFreeToneCurve(TransReverse[t]);
 			        }
 			    }
 			    
@@ -1367,7 +1369,7 @@ final class cmsopt
 		    cmslut.cmsPipelineInsertStage(OptimizedLUT, lcms2.cmsAT_BEGIN, OptimizedPrelinMpe);
 		    
 		    // Allocate the CLUT for result
-		    OptimizedCLUTmpe = mcslut.cmsStageAllocCLut16bit(OriginalLut.ContextID, nGridPoints, OriginalLut.InputChannels, OriginalLut.OutputChannels, null);
+		    OptimizedCLUTmpe = cmslut.cmsStageAllocCLut16bit(OriginalLut.ContextID, nGridPoints, OriginalLut.InputChannels, OriginalLut.OutputChannels, null);
 		    
 		    // Add the CLUT to the destination LUT
 		    cmslut.cmsPipelineInsertStage(OptimizedLUT, lcms2.cmsAT_END, OptimizedCLUTmpe);
@@ -1379,11 +1381,11 @@ final class cmsopt
 			    {
 			        if (Trans[t] != null)
 			        {
-			        	cmslut.cmsFreeToneCurve(Trans[t]);
+			        	cmsgamma.cmsFreeToneCurve(Trans[t]);
 			        }
 			        if (TransReverse[t] != null)
 			        {
-			        	cmslut.cmsFreeToneCurve(TransReverse[t]);
+			        	cmsgamma.cmsFreeToneCurve(TransReverse[t]);
 			        }
 			    }
 			    
@@ -1404,11 +1406,11 @@ final class cmsopt
 		    {
 		        if (Trans[t] != null)
 		        {
-		        	cmslut.cmsFreeToneCurve(Trans[t]);
+		        	cmsgamma.cmsFreeToneCurve(Trans[t]);
 		        }
 		        if (TransReverse[t] != null)
 		        {
-		        	cmslut.cmsFreeToneCurve(TransReverse[t]);
+		        	cmsgamma.cmsFreeToneCurve(TransReverse[t]);
 		        }
 		    }
 		    
@@ -1866,14 +1868,14 @@ final class cmsopt
 	            // first we compute the resulting byte and then we store the byte times
 	            // 257. This quantization allows to round very quick by doing a >> 8, but
 	            // since the low byte is always equal to msb, we can do a & 0xff and this works!
-	            short w = lcsm2_internal._cmsQuickSaturateWord(Val * 65535.0 + 0.5);        
-	            byte b = lcsm2_internal.FROM_16_TO_8(w);
+	            short w = lcms2_internal._cmsQuickSaturateWord(Val * 65535.0 + 0.5);        
+	            byte b = lcms2_internal.FROM_16_TO_8(w);
 	            
-	            Table[i] = lcsm2_internal.FROM_8_TO_16(b);
+	            Table[i] = lcms2_internal.FROM_8_TO_16(b);
 	        }
 	        else
 	        {
-	        	Table[i] = lcsm2_internal._cmsQuickSaturateWord(Val * 65535.0 + 0.5);        
+	        	Table[i] = lcms2_internal._cmsQuickSaturateWord(Val * 65535.0 + 0.5);        
 	        }
 	    }
 	}
@@ -1987,10 +1989,10 @@ final class cmsopt
 		    
 		    // Multiply both matrices to get the result
 		    cmsMAT3 temp1 = new cmsMAT3();
-		    cmsMAT3 temp1 = new cmsMAT3();
+		    cmsMAT3 temp2 = new cmsMAT3();
 		    cmsmtrx._cmsMAT3set(temp1, Data2.Double, 0);
 		    cmsmtrx._cmsMAT3set(temp2, Data1.Double, 0);
-		    cmsmtrx._cmsMAT3per(res, temp1, temp1);
+		    cmsmtrx._cmsMAT3per(res, temp1, temp2);
 		    
 		    // Now the result is in res + Data2 -> Offset. Maybe is a plain identity?
 		    IdentityMat = false;
@@ -2031,7 +2033,7 @@ final class cmsopt
 		        
 		        // In this particular optimization, caché does not help as it takes more time to deal with 
 		        // the caché that with the pixel handling
-		        dwFlags[0] |= cmsFLAGS_NOCACHE;
+		        dwFlags[0] |= lcms2.cmsFLAGS_NOCACHE;
 		        
 		        // Setup the optimizarion routines
 		        cmsVEC3 vecTmp = new cmsVEC3();
@@ -2079,7 +2081,7 @@ final class cmsopt
 	private static _cmsOptimizationCollection OptimizationCollection = DefaultOptimization;
 	
 	// Register new ways to optimize
-	private static boolean _cmsRegisterOptimizationPlugin(cmsPluginBase Data)
+	public static boolean _cmsRegisterOptimizationPlugin(cmsPluginBase Data)
 	{
 	    cmsPluginOptimization Plugin = (cmsPluginOptimization)Data;
 	    _cmsOptimizationCollection fl;
