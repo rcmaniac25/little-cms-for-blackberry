@@ -6,6 +6,8 @@ Work on xform converters so that input and output work correctly
 Finish floating point print formatter
 Write print unformatters (and write sscanf)
 
+Figure out RuntimeStore implementation so that certain variables are actually static
+
 Implement serializers
 
 Testing

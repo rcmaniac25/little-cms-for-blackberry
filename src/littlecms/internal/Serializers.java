@@ -24,9 +24,6 @@
 //
 package littlecms.internal;
 
-import littlecms.internal.helper.VirtualPointer;
-import littlecms.internal.helper.VirtualPointer.Serializer;
-
 /**
  * The serializers that are used
  */

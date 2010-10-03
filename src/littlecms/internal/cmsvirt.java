@@ -28,6 +28,7 @@
 package littlecms.internal;
 
 import littlecms.internal.helper.Utility;
+import littlecms.internal.helper.VirtualPointer;
 import littlecms.internal.lcms2.cmsCIELCh;
 import littlecms.internal.lcms2.cmsCIELab;
 import littlecms.internal.lcms2.cmsCIEXYZ;
@@ -246,8 +247,14 @@ final class cmsvirt
 	        CHAD = new cmsMAT3();
 	        cmswtpnt._cmsAdaptationMatrix(CHAD, null, WhitePointXYZ, lcms2.cmsD50_XYZ);     
 	        
-	        // This is a V4 tag, but many CMM does read and understand it no matter which version       
-	        if (!cmsio0.cmsWriteTag(hICC, lcms2.cmsSigChromaticAdaptationTag, CHAD))
+	        // This is a V4 tag, but many CMM does read and understand it no matter which version
+//#ifdef RAW_C
+	        VirtualPointer temp = new VirtualPointer(CHAD);
+//#else
+	        double[] temp = new double[3*3];
+	        cmsmtrx._cmsMAT3get(CHAD, temp, 0);
+//#endif
+	        if (!cmsio0.cmsWriteTag(hICC, lcms2.cmsSigChromaticAdaptationTag, temp))
 		    {
 		    	if (hICC != null)
 			    {

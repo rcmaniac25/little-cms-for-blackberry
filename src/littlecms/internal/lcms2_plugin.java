@@ -28,7 +28,6 @@ package littlecms.internal;
 import java.util.Calendar;
 
 import littlecms.internal.helper.VirtualPointer;
-import littlecms.internal.lcms2.cmsPipeline;
 import littlecms.internal.lcms2_internal._cmsTRANSFORM;
 
 /**

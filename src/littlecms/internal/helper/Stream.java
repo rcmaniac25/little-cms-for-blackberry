@@ -370,6 +370,7 @@ public abstract class Stream
 			}
 			catch(IOException ioe)
 			{
+				return -1L;
 			}
 //#else
 			return this.pos;

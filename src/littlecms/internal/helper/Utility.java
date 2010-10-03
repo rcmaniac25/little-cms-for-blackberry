@@ -37,9 +37,7 @@ import littlecms.internal.LCMSResource;
 import net.rim.device.api.i18n.DateFormat;
 import net.rim.device.api.i18n.ResourceBundle;
 import net.rim.device.api.util.Arrays;
-//#ifdef BlackBerrySDK4.5.0
 import net.rim.device.api.util.MathUtilities;
-//#endif
 
 /**
  * Some simply helper functions for processing. Mainly C functions that don't exist (some due to OS versioning) in the BB API.

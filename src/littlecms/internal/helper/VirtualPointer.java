@@ -520,7 +520,11 @@ public class VirtualPointer
         
         public void write(Object value, int size)
         {
-        	//TODO Finish array function and add others, size is byte size
+        	if (value == null)
+            {
+                return;
+            }
+            write(value, false, size);
         }
         
         public void write(Object value, boolean inc)
@@ -532,27 +536,125 @@ public class VirtualPointer
             write(value, inc, value.getClass());
         }
         
+        public void write(Object value, boolean inc, int size)
+        {
+        	if (value == null)
+            {
+                return;
+            }
+            write(value, inc, value.getClass(), size);
+        }
+        
         public void write(Object value, boolean inc, Class clazz)
         {
             write(value, inc, VirtualPointer.getSerializer(clazz));
         }
         
+        public void write(Object value, boolean inc, Class clazz, int size)
+        {
+        	write(value, inc, VirtualPointer.getSerializer(clazz), size);
+        }
+        
         public void write(Object value, boolean inc, Serializer ser)
+        {
+        	write(value, inc, ser, -1);
+        }
+        
+        public void write(Object value, boolean inc, Serializer ser, int size)
         {
             if (value == null)
             {
                 return; //Value is null, nothing to do
             }
-            else if (ser == null)
+            boolean array = value.getClass().isArray();
+            int len = -1;
+            Object[] objArray = null;
+            if (ser == null)
             {
                 ser = VirtualPointer.getSerializer(value.getClass());
                 if (ser == null)
                 {
-                    return; //Couldn't find serializer
+                	if(array)
+                	{
+                		try
+                		{
+                			objArray = (Object[])value; //If value is an array of Objects then this should work, else it will throw a cast exception because they are primitives
+                		}
+                		catch(ClassCastException c)
+                		{
+                			//Primitive array
+                			writePrimitiveArray(value, inc, size);
+                			return;
+                		}
+                		//Only exceptions to the cast rule is if the elements are String or VirtualPointer
+                		if(value instanceof String[] || value instanceof VirtualPointer[])
+                		{
+                			//Primitive array
+                			writePrimitiveArray(value, inc, size);
+                			return;
+                		}
+                		len = objArray.length;
+                		Class clz = null;
+                		//Make sure there are no null elements because there is no serialized value for null
+                		for(int i = 0; i < len; i++)
+                		{
+                			if(objArray[i] == null)
+                			{
+                				return; //Can't handle null elements
+                			}
+                			else if(!objArray[i].getClass().equals(clz))
+                			{
+                				if(i == 0)
+                				{
+                					clz = objArray[i].getClass();
+                				}
+                				else
+                				{
+                					return; //Multi-type arrays are not supported
+                				}
+                			}
+                		}
+                	}
+                	else
+                	{
+                		return; //Couldn't find serializer
+                	}
                 }
             }
-            if (ser.canProcess(value))
+            if(objArray == null)
             {
+            	if(array)
+            	{
+            		try
+            		{
+            			objArray = (Object[])value; //If value is an array of Objects then this should work, else it will throw a cast exception because they are primitives
+            			len = objArray.length;
+                		//Make sure there are no null elements because there is no serialized value for null
+                		for(int i = 0; i < len; i++)
+                		{
+                			if(objArray[i] == null)
+                			{
+                				return; //Can't handle null elements
+                			}
+                		}
+            		}
+            		catch(ClassCastException c)
+            		{
+            			//If it got this far then a serializer exists, continue processing
+            			len = -1;
+            		}
+            	}
+            	else
+            	{
+            		len = 1;
+            		objArray = new Object[]{value}; //We know this is a Object and not a primitive so we can just do this
+            	}
+            }
+            
+            boolean arraySupport;
+            if (ser.canProcess(objArray))
+            {
+            	arraySupport = true;
                 //Serializer can process data. Does the serializers have this?
                 Class clazz = value.getClass();
                 synchronized (VirtualPointer.serializers)
@@ -565,13 +667,142 @@ public class VirtualPointer
             }
             else
             {
-                return; //Serializer may be for that type but doesn't support serializing that object
+            	arraySupport = false;
+            	for(int i = 0; i < len; i++)
+            	{
+            		if(!ser.canProcess(objArray[i]))
+            		{
+            			return; //Serializer may be for that type but doesn't support serializing that object
+            		}
+            	}
             }
             int pos = vp.dataPos;
-            this.stat = ser.serialize(this.vp, value);
+            if(arraySupport)
+            {
+            	this.stat = ser.serialize(this.vp, value);
+            }
+            else
+            {
+            	//Write each item, if an error occurs then stop processing
+            	this.stat = Serializer.STATUS_SUCCESS; //Just to prevent problems
+            	for(int i = 0; i < len && this.stat == Serializer.STATUS_SUCCESS; i++)
+            	{
+            		this.stat = ser.serialize(this.vp, objArray[i]);
+            	}
+            }
             if (!inc)
             {
                 vp.dataPos = pos;
+            }
+            else if(size >= 0 && vp.dataPos - pos != size)
+            {
+            	//Too many/Not enough bytes written, make sure size matches
+            	vp.dataPos = pos + size;
+            }
+        }
+        
+        private void writePrimitiveArray(Object value, boolean inc, int size)
+        {
+        	int pos = vp.dataPos;
+        	if(value instanceof byte[])
+        	{
+        		byte[] val = (byte[])value;
+        		this.write(val, true);
+        	}
+        	else if(value instanceof short[])
+        	{
+        		short[] val = (short[])value;
+        		int len = val.length;
+        		for(int i = 0; i < len; i++)
+        		{
+        			this.write(val[i], true);
+        		}
+        	}
+        	else if(value instanceof char[])
+        	{
+        		char[] val = (char[])value;
+        		int len = val.length;
+        		for(int i = 0; i < len; i++)
+        		{
+        			this.write(val[i], true);
+        		}
+        	}
+        	else if(value instanceof int[])
+        	{
+        		int[] val = (int[])value;
+        		int len = val.length;
+        		for(int i = 0; i < len; i++)
+        		{
+        			this.write(val[i], true);
+        		}
+        	}
+        	else if(value instanceof long[])
+        	{
+        		long[] val = (long[])value;
+        		int len = val.length;
+        		for(int i = 0; i < len; i++)
+        		{
+        			this.write(val[i], true);
+        		}
+        	}
+        	else if(value instanceof float[])
+        	{
+        		float[] val = (float[])value;
+        		int len = val.length;
+        		for(int i = 0; i < len; i++)
+        		{
+        			this.write(val[i], true);
+        		}
+        	}
+        	else if(value instanceof double[])
+        	{
+        		double[] val = (double[])value;
+        		int len = val.length;
+        		for(int i = 0; i < len; i++)
+        		{
+        			this.write(val[i], true);
+        		}
+        	}
+        	else if(value instanceof boolean[])
+        	{
+        		boolean[] val = (boolean[])value;
+        		int len = val.length;
+        		for(int i = 0; i < len; i++)
+        		{
+        			this.write(val[i], true);
+        		}
+        	}
+        	else if(value instanceof String[])
+        	{
+        		String[] val = (String[])value;
+        		int len = val.length;
+        		for(int i = 0; i < len; i++)
+        		{
+        			this.write(val[i], true);
+        		}
+        	}
+        	else if(value instanceof VirtualPointer[])
+        	{
+        		VirtualPointer[] val = (VirtualPointer[])value;
+        		int len = val.length;
+        		for(int i = 0; i < len; i++)
+        		{
+        			this.write(val[i], true);
+        		}
+        	}
+        	else
+        	{
+        		//If it gets here without running then something is up
+        		return;
+        	}
+        	if (!inc)
+            {
+                vp.dataPos = pos;
+            }
+            else if(size >= 0 && vp.dataPos - pos != size)
+            {
+            	//Too many/Not enough bytes written, make sure size matches
+            	vp.dataPos = pos + size;
             }
         }
         
@@ -629,7 +860,37 @@ public class VirtualPointer
             return obj[0];
         }
         
-        //TODO Add array functions
+        //TODO: Make lower array functions
+        
+        public Object readArray(Serializer ser, boolean inc, boolean primitive, final String primitiveType, int len, boolean lenIsBytes, Object org)
+        {
+        	int pos = vp.dataPos;
+        	if(primitive)
+        	{
+        		//TODO: Read primitive array
+        	}
+        	else
+        	{
+        		//TODO: Read object array
+        	}
+        	if (!inc)
+            {
+                vp.dataPos = pos;
+            }
+        	else
+        	{
+        		if(!lenIsBytes)
+        		{
+        			//TODO: Convert len to bytes, keep a counter for reach item read
+        		}
+        		else if(len >= 0 && vp.dataPos - pos != len)
+                {
+                	//Too many/Not enough bytes written, make sure size matches
+                	vp.dataPos = pos + len;
+                }
+        	}
+        	return null; //TODO: Figure out how array should be arranged
+        }
     }
 	
 	public static interface Serializer

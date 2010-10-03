@@ -63,8 +63,8 @@ $OP STYP
 		$OP EFIE
 
 		$OP SFIE
-			$AT NAME int
-			$AT TYPE SizeOfTag
+			$AT NAME SizeOfTag
+			$AT TYPE int
 		$OP EFIE
 	$OP EDEL
 
@@ -88,7 +88,7 @@ $OP STYP
 
 		$OP SFIE
 			$AT NAME Ptr
-			$AT TYPE int
+			$AT TYPE Object
 		$OP EFIE
 
 		$OP SFIE

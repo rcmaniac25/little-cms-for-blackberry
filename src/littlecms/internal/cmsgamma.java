@@ -195,6 +195,10 @@ final class cmsgamma
 	    else
 	    {
 	        p.Segments = new cmsCurveSegment[nSegments];
+	        for(i = 0; i < nSegments; i++)
+	        {
+	        	p.Segments[i] = new cmsCurveSegment();
+	        }
 	        
 	        p.Evals = new cmsParametricCurveEvaluator[nSegments];
 	    }
@@ -252,7 +256,10 @@ final class cmsgamma
 	            else
 	            {
 	            	nSeg.SampledPoints = new float[oSeg.nGridPoints];
-	            	System.arraycopy(oSeg.SampledPoints, 0, nSeg.SampledPoints, 0, oSeg.nGridPoints);
+	            	if(oSeg.nGridPoints > 0 && oSeg.SampledPoints != null)
+	            	{
+	            		System.arraycopy(oSeg.SampledPoints, 0, nSeg.SampledPoints, 0, oSeg.nGridPoints);
+	            	}
 	            }
 	            
 	            if (Segments[i].Type == 0 && Segments[i].SampledPoints != null)

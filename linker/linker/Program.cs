@@ -378,6 +378,10 @@ namespace linker
                 lines[0] = "$AT TYPE short";
                 predefinedElements.Add(new FIE(null, lines));
 
+                //char
+                lines[0] = "$AT TYPE char";
+                predefinedElements.Add(new FIE(null, lines));
+
                 //int
                 lines[0] = "$AT TYPE int";
                 predefinedElements.Add(new FIE(null, lines));

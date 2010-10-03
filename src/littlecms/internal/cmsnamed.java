@@ -217,6 +217,7 @@ final class cmsnamed
 		Ptr.getProcessor().write(Block, size);
 	    mlu.PoolUsed += size;
 	    
+	    mlu.Entries[mlu.UsedEntries] = new _cmsMLUentry();
 	    mlu.Entries[mlu.UsedEntries].StrW     = Offset;
 	    mlu.Entries[mlu.UsedEntries].Len      = size;
 	    mlu.Entries[mlu.UsedEntries].Country  = CountryCode;
@@ -229,7 +230,8 @@ final class cmsnamed
 	private static short codeAsShort(final String code)
 	{
 		byte[] values = new byte[3];
-		for(int i = 0; i < 3; i++)
+		int len = code.length();
+		for(int i = 0; i < 3 && i < len; i++)
 		{
 			values[i] = (byte)code.charAt(i);
 		}

@@ -146,61 +146,7 @@ final class cmsxform
 		{
 			return (VirtualPointer)buffer;
 		}
-		if(!buffer.getClass().isArray())
-		{
-			return ref2vp(buffer);
-		}
-		Class clazz = buffer.getClass();
-		Class nClass = null;
-		try
-		{
-			nClass = Class.forName(getBaseClass(clazz.getName()));
-		}
-		catch (ClassNotFoundException e)
-		{
-		}
-		if(nClass.isArray())
-		{
-			return null;
-		}
-		//TODO: Convert an array of types to a VirtualPointer
-		return null;
-	}
-	
-	private static VirtualPointer ref2vp(final Object ref)
-	{
-		//TODO: Convert a reference type (like cmsXYZ) to a VirtualPointer
-		return null;
-	}
-	
-	private static String getBaseClass(String clazz)
-	{
-		//XXX Not sure if this will work, will know later
-		boolean array = false;
-		boolean obj = false;
-		int len = clazz.length();
-		for(int i = 0; i < len; i++)
-		{
-			if(!array)
-			{
-				if(clazz.charAt(i) == '[')
-				{
-					array = true;
-				}
-			}
-			else if(!obj)
-			{
-				if(clazz.charAt(i) != '[')
-				{
-					obj = true;
-				}
-			}
-			else
-			{
-				return clazz.substring(i);
-			}
-		}
-		return clazz;
+		return new VirtualPointer(buffer);
 	}
 	
 	private static void vp2buffer(VirtualPointer vp, Object buffer)

@@ -615,6 +615,7 @@ final class cmsio0
 	    }
 //#else
 	    _cmsICCPROFILE Icc = new _cmsICCPROFILE();
+	    Icc.Created = Calendar.getInstance();
 //#endif
 	    
 	    Icc.ContextID = ContextID;

@@ -154,7 +154,7 @@ final class cmserr
 		    	return null; // Never realloc over MAX_MEMORY_FOR_ALLOC_MB or below 0
 		    }
 		    
-		    return Ptr.resize(size);
+		    return Ptr == null ? new VirtualPointer(size) : Ptr.resize(size);
 		}
 	};
 	

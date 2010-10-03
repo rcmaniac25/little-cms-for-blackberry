@@ -27,7 +27,7 @@
 //
 package littlecms.internal;
 
-//#ifdef BlackBerrySDK4.5.0
+//#ifndef BlackBerrySDK4.5.0
 import net.rim.device.api.util.MathUtilities;
 //#endif
 import littlecms.internal.helper.Stream;
