@@ -343,7 +343,7 @@ final class lcms2_internal extends lcms2_plugin
 	public static class _cmsICCPROFILE implements cmsHPROFILE
 	{
 		//Calendar, header values, tag count, iswrite
-		public static final int SIZE = 8 + (8 * 4) + 8 + cmsProfileID.SIZE + 4 + (MAX_TABLE_TAG * ((4 * 4) + 1)) + 1;
+		public static final int SIZE = 8 + (4 * 8) + 8 + cmsProfileID.SIZE + 4 + (MAX_TABLE_TAG * ((4 * 4) + 1)) + 1;
 		
 		// I/O handler
 		public cmsIOHANDLER IOhandler;
@@ -392,33 +392,33 @@ final class lcms2_internal extends lcms2_plugin
 	}
 	
 	// IO helpers for profiles
-	public boolean _cmsReadHeader(_cmsICCPROFILE Icc)
+	public static boolean _cmsReadHeader(_cmsICCPROFILE Icc)
 	{
 		return cmsio0._cmsReadHeader(Icc);
 	}
 	
-	public boolean _cmsWriteHeader(_cmsICCPROFILE Icc, int UsedSpace)
+	public static boolean _cmsWriteHeader(_cmsICCPROFILE Icc, int UsedSpace)
 	{
 		return cmsio0._cmsWriteHeader(Icc, UsedSpace);
 	}
 	
-	public int _cmsSearchTag(_cmsICCPROFILE Icc, int sig, boolean lFollowLinks)
+	public static int _cmsSearchTag(_cmsICCPROFILE Icc, int sig, boolean lFollowLinks)
 	{
 		return cmsio0._cmsSearchTag(Icc, sig, lFollowLinks);
 	}
 	
 	// Tag types
-	public cmsTagTypeHandler _cmsGetTagTypeHandler(int sig)
+	public static cmsTagTypeHandler _cmsGetTagTypeHandler(int sig)
 	{
 		return cmstypes._cmsGetTagTypeHandler(sig);
 	}
 	
-	public int _cmsGetTagTrueType(cmsHPROFILE hProfile, int sig)
+	public static int _cmsGetTagTrueType(cmsHPROFILE hProfile, int sig)
 	{
 		return cmsio0._cmsGetTagTrueType(hProfile, sig);
 	}
 	
-	public cmsTagDescriptor _cmsGetTagDescriptor(int sig)
+	public static cmsTagDescriptor _cmsGetTagDescriptor(int sig)
 	{
 		return cmstypes._cmsGetTagDescriptor(sig);
 	}

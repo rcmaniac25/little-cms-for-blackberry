@@ -146,11 +146,43 @@ final class PrintUtility
 		return new Long(l);
 	}
 	
-	private static String SPECIFIERS = "cdieEfFgGosuxXpn";
-	private static String FLAGS = "-+ #0";
-	private static String WIDTH_PRECISION = "123456789*0"; //Zero is added at end so that when FULL_FORMAT is generated there isn't two zeros in the format. It wouldn't cause an error but it would be one more char to check that isn't needed.
-	private static String LENGTH = "hlLzjt";
-	private static String FULL_FORMAT = FLAGS + WIDTH_PRECISION.substring(0, 9) + '.' + LENGTH + SPECIFIERS;
+	private static final long SPECIFIERS_UID = 0x318AE6E8A41FCF70L;
+	private static final long FLAGS_UID = 0x94E998EE54BD00EL;
+	private static final long WIDTH_PRECISION_UID = 0xFF217872C5D4CDDL;
+	private static final long LENGTH_UID = 0x9EF53E8BFE248140L;
+	private static final long FULL_FORMAT_UID = 0x3024E7CCD507CBE0L;
+	
+	private static String SPECIFIERS;
+	private static String FLAGS;
+	private static String WIDTH_PRECISION;
+	private static String LENGTH;
+	private static String FULL_FORMAT;
+	
+	static
+	{
+		String temp = (String)Utility.singletonStorageGet(SPECIFIERS_UID);
+		if(temp == null)
+		{
+			SPECIFIERS = "cdieEfFgGosuxXpn";
+			FLAGS = "-+ #0";
+			WIDTH_PRECISION = "123456789*0"; //Zero is added at end so that when FULL_FORMAT is generated there isn't two zeros in the format. It wouldn't cause an error but it would be one more char to check that isn't needed.
+			LENGTH = "hlLzjt";
+			FULL_FORMAT = FLAGS + WIDTH_PRECISION.substring(0, 9) + '.' + LENGTH + SPECIFIERS;
+			Utility.singletonStorageSet(SPECIFIERS_UID, SPECIFIERS);
+			Utility.singletonStorageSet(FLAGS_UID, FLAGS);
+			Utility.singletonStorageSet(WIDTH_PRECISION_UID, WIDTH_PRECISION);
+			Utility.singletonStorageSet(LENGTH_UID, LENGTH);
+			Utility.singletonStorageSet(FULL_FORMAT_UID, FULL_FORMAT);
+		}
+		else
+		{
+			SPECIFIERS = temp;
+			FLAGS = (String)Utility.singletonStorageGet(FLAGS_UID);
+			WIDTH_PRECISION = (String)Utility.singletonStorageGet(WIDTH_PRECISION_UID);
+			LENGTH = (String)Utility.singletonStorageGet(LENGTH_UID);
+			FULL_FORMAT = (String)Utility.singletonStorageGet(FULL_FORMAT_UID);
+		}
+	}
 	
 	public static Object[] breakFormat(final String format, String[][] args)
 	{

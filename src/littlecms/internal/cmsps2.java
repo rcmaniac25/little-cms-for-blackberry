@@ -310,7 +310,23 @@ final class cmsps2
 		public int ColorSpace;  // ColorSpace of profile
 	}
 	
-	private static int _cmsPSActualColumn = 0;
+	private static int[] _cmsPSActualColumn;
+	
+	private static final long CMS_PS2_COLUMN = 0xBA4B943359533558L;
+	
+	static
+	{
+		Object obj;
+		if((obj = Utility.singletonStorageGet(CMS_PS2_COLUMN)) != null)
+		{
+			_cmsPSActualColumn = (int[])obj;
+		}
+		else
+		{
+			_cmsPSActualColumn = new int[1];
+			Utility.singletonStorageSet(CMS_PS2_COLUMN, _cmsPSActualColumn);
+		}
+	}
 	
 	// Convert to byte
 	private static byte Word2Byte(short w)
@@ -338,12 +354,12 @@ final class cmsps2
 	private static void WriteByte(cmsIOHANDLER m, byte b)
 	{
 		cmsplugin._cmsIOPrintf(m, "%02x", new Object[]{new Byte(b)});	
-		_cmsPSActualColumn += 2;
+		_cmsPSActualColumn[0] += 2;
 		
-		if (_cmsPSActualColumn > MAXPSCOLS)
+		if (_cmsPSActualColumn[0] > MAXPSCOLS)
 		{
 			cmsplugin._cmsIOPrintf(m, "\n", null);
-			_cmsPSActualColumn = 0;
+			_cmsPSActualColumn[0] = 0;
 		}
 	}
 	
@@ -648,7 +664,7 @@ final class cmsps2
 		    	}
 		    	
 		    	// Begin block
-		    	_cmsPSActualColumn = 0;
+		    	_cmsPSActualColumn[0] = 0;
 		    	
 		    	cmsplugin._cmsIOPrintf(sc.m, sc.PreMaj, null);
 		    	sc.FirstComponent = In[0];

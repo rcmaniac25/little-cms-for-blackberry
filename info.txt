@@ -1,12 +1,6 @@
 TODO:
-Work on VirtualPointer so it can work with arrays (idea for use, try to type-change the Object to a Object[], if it works then it is classes that can be recreated, otherwise it is a primitive array that needs explicit conversion.)
-
-Work on xform converters so that input and output work correctly
-
 Finish floating point print formatter
 Write print unformatters (and write sscanf)
-
-Figure out RuntimeStore implementation so that certain variables are actually static
 
 Implement serializers
 

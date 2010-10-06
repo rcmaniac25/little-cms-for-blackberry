@@ -464,7 +464,7 @@ final class cmssm
 		}
 	}
 	
-	private static _spiral[] Spiral;
+	private static final _spiral[] Spiral;
 	
 	static
 	{

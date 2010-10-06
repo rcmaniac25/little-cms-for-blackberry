@@ -671,12 +671,28 @@ final class cmsplugin
 	
 	private static _cmsSubAllocator PluginPool = null;
 	
+	private static final long PLUGIN_POOL_UID = 0L;
+	
+	static
+	{
+		Object obj;
+		if((obj = Utility.singletonStorageGet(PLUGIN_POOL_UID)) != null)
+		{
+			PluginPool = (_cmsSubAllocator)obj;
+		}
+		else
+		{
+			PluginPool = null;
+		}
+	}
+	
 	// Specialized malloc for plug-ins, that is freed upon exit.
 	public static Object _cmsPluginMalloc(int size)
 	{
 	    if (PluginPool == null)
 	    {
 	    	PluginPool = cmserr._cmsCreateSubAlloc(null, 4 * 1024);
+	    	Utility.singletonStorageSet(PLUGIN_POOL_UID, PluginPool);
 	    }
 	    
 	    return cmserr._cmsSubAlloc(PluginPool, size);

@@ -27,6 +27,7 @@
 //
 package littlecms.internal;
 
+import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
 import littlecms.internal.lcms2.cmsCIELab;
 import littlecms.internal.lcms2.cmsCIEXYZ;
@@ -50,14 +51,6 @@ public
 //#endif
 final class cmspack
 {
-	static
-	{
-		setupInputFormatter16();
-		setupInputFormatterFloat();
-		setupOutputFormatter16();
-		setupOutputFormatterFloat();
-	}
-	
 	// This macro return words stored as big endian
 	private static short CHANGE_ENDIAN(short w){return (short)(((w)<<8)|((w)>>8));}
 	
@@ -3249,8 +3242,47 @@ final class cmspack
 		public cmsFormatterFactory Factory;
 		public cmsFormattersFactoryList Next;
 	}
-
-	private static cmsFormattersFactoryList FactoryList = null;
+	
+	private static cmsFormattersFactoryList FactoryList;
+	
+	private static final long FACTORY_LIST_UID = 0xD0FFC62FFBB2E7A4L;
+	
+	private static final long INPUT16 = 0xCC418D6C1E355480L;
+	private static final long INPUTFLOAT = 0xB94ADC6E0C7F002CL;
+	private static final long OUTPUT16 = 0xE73DFE4ED3EAEAC8L;
+	private static final long OUTPUTFLOAT = 0xEE345CAF21C0C592L;
+	
+	static
+	{
+		Object obj;
+		if((obj = Utility.singletonStorageGet(INPUT16)) != null)
+		{
+			InputFormatters16 = (cmsFormatters16[])obj;
+			InputFormattersFloat = (cmsFormattersFloat[])Utility.singletonStorageGet(INPUTFLOAT);
+			OutputFormatters16 = (cmsFormatters16[])Utility.singletonStorageGet(OUTPUT16);
+			OutputFormattersFloat = (cmsFormattersFloat[])Utility.singletonStorageGet(OUTPUTFLOAT);
+		}
+		else
+		{
+			setupInputFormatter16();
+			setupInputFormatterFloat();
+			setupOutputFormatter16();
+			setupOutputFormatterFloat();
+			Utility.singletonStorageSet(INPUT16, InputFormatters16);
+			Utility.singletonStorageSet(INPUTFLOAT, InputFormattersFloat);
+			Utility.singletonStorageSet(OUTPUT16, OutputFormatters16);
+			Utility.singletonStorageSet(OUTPUTFLOAT, OutputFormattersFloat);
+		}
+		
+		if((obj = Utility.singletonStorageGet(FACTORY_LIST_UID)) != null)
+		{
+			FactoryList = (cmsFormattersFactoryList)obj;
+		}
+		else
+		{
+			FactoryList = null;
+		}
+	}
 	
 	// Formatters management
 	public static boolean _cmsRegisterFormattersPlugin(cmsPluginBase Data)
@@ -3262,6 +3294,7 @@ final class cmspack
 		if (Data == null)
 		{
 			FactoryList = null;
+			Utility.singletonStorageSet(FACTORY_LIST_UID, FactoryList);
 			return true;
 		}
 		
@@ -3271,6 +3304,7 @@ final class cmspack
 	    
 	    fl.Next = FactoryList;
 	    FactoryList = fl;
+	    Utility.singletonStorageSet(FACTORY_LIST_UID, FactoryList);
 	    
 	    return true;
 	}

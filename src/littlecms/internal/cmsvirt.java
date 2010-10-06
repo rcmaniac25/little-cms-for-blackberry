@@ -1279,8 +1279,7 @@ final class cmsvirt
 	// In this way, LittleCMS may be used to "group" several named color databases into a single profile.
 	// It has, however, several minor limitations. PCS is always Lab, which is not very critic since this
 	// is the normal PCS for named color profiles.
-	static
-	cmsHPROFILE CreateNamedColorDevicelink(cmsHTRANSFORM xform)
+	private static cmsHPROFILE CreateNamedColorDevicelink(cmsHTRANSFORM xform)
 	{
 	    _cmsTRANSFORM v = (_cmsTRANSFORM)xform;
 	    cmsHPROFILE hICC = null;  
@@ -1371,7 +1370,7 @@ final class cmsvirt
 	    }
 	}
 	
-	private static cmsAllowedLUT[] AllowedLUTTypes;
+	private static final cmsAllowedLUT[] AllowedLUTTypes;
 	
 	static
 	{

@@ -71,11 +71,26 @@ final class cmscnvrt
 	    }
 	}
 	
+	private static final long INTENDS_UID = 0xF3C13ED7EE94FB24L;
+	
 	// Search the list for a suitable intent. Returns NULL if not found
 	private static cmsIntentsList SearchIntent(int Intent)
 	{
 	    cmsIntentsList pt;
 	    
+	    if(Intents == null)
+	    {
+		    Object obj;
+		    if((obj = Utility.singletonStorageGet(INTENDS_UID)) != null)
+			{
+		    	Intents = (cmsIntentsList)obj;
+			}
+			else
+			{
+				Intents = DefaultIntents;
+				Utility.singletonStorageSet(INTENDS_UID, Intents);
+			}
+	    }
 	    for (pt = Intents; pt != null; pt = pt.Next)
 	    {
 	    	if (pt.Intent == Intent)
@@ -1100,7 +1115,7 @@ final class cmscnvrt
 	}
 	
 	// A pointer to the begining of the list
-	private static cmsIntentsList Intents = DefaultIntents;
+	private static cmsIntentsList Intents;
 	
 	// Link routines ------------------------------------------------------------------------------------------------------
 	
@@ -1172,6 +1187,19 @@ final class cmscnvrt
 	    cmsIntentsList pt;
 	    int nIntents;
 	    
+	    if(Intents == null)
+	    {
+	    	Object obj;
+		    if((obj = Utility.singletonStorageGet(INTENDS_UID)) != null)
+			{
+		    	Intents = (cmsIntentsList)obj;
+			}
+			else
+			{
+				Intents = DefaultIntents;
+				Utility.singletonStorageSet(INTENDS_UID, Intents);
+			}
+	    }
 	    for (nIntents=0, pt = Intents; pt != null; pt = pt.Next)
 	    {
 	        if (nIntents < nMax)
@@ -1203,6 +1231,7 @@ final class cmscnvrt
 	    if (Data == null)
 	    {
 	       Intents = DefaultIntents;
+	       Utility.singletonStorageSet(INTENDS_UID, Intents);
 	       return true;
 	    }
 	    
@@ -1224,6 +1253,7 @@ final class cmscnvrt
 	    
 	    fl.Next = Intents;
 	    Intents = fl;
+	    Utility.singletonStorageSet(INTENDS_UID, Intents);
 	    
 	    return true;
 	}

@@ -2078,7 +2078,9 @@ final class cmsopt
 	}
 	
 	// The linked list head
-	private static _cmsOptimizationCollection OptimizationCollection = DefaultOptimization;
+	private static _cmsOptimizationCollection OptimizationCollection;
+	
+	private static final long OPTIMIZATION_COLLECTION_UID = 0x9BD12673EA887CD2L;
 	
 	// Register new ways to optimize
 	public static boolean _cmsRegisterOptimizationPlugin(cmsPluginBase Data)
@@ -2088,7 +2090,8 @@ final class cmsopt
 	    
 	    if (Data == null)
 	    {
-	        OptimizationCollection = DefaultOptimization; 
+	        OptimizationCollection = DefaultOptimization;
+	        Utility.singletonStorageSet(OPTIMIZATION_COLLECTION_UID, OptimizationCollection);
 	        return true;
 	    }
 	    
@@ -2106,6 +2109,7 @@ final class cmsopt
 	    // Keep linked list
 	    fl.Next = OptimizationCollection;
 	    OptimizationCollection = fl;
+	    Utility.singletonStorageSet(OPTIMIZATION_COLLECTION_UID, OptimizationCollection);
 	    
 	    // All is ok
 	    return true;
@@ -2148,6 +2152,18 @@ final class cmsopt
 	    }
 	    
 	    // Try built-in optimizations and plug-in
+	    if(OptimizationCollection == null)
+	    {
+	    	Object obj;
+	    	if((obj = Utility.singletonStorageGet(OPTIMIZATION_COLLECTION_UID)) != null)
+	    	{
+	    		OptimizationCollection = (_cmsOptimizationCollection)obj;
+	    	}
+	    	else
+	    	{
+	    		OptimizationCollection = DefaultOptimization;
+	    	}
+	    }
 	    for (Opts = OptimizationCollection; Opts != null; Opts = Opts.Next)
 	    {
 	    	// If one schema succeeded, we are done

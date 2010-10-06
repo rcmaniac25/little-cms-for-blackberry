@@ -87,6 +87,8 @@ final class cmsgamma
 	    }
 	}
 	
+	private static final long PARAMETRIC_CURVES_UID = 0L;
+	
 	// As a way to install new parametric curves
 	public static boolean _cmsRegisterParametricCurvesPlugin(cmsPluginBase Data)
 	{
@@ -96,6 +98,7 @@ final class cmsgamma
 	    if (Data == null)
 	    {
 	    	ParametricCurves = DefaultCurves;
+	    	Utility.singletonStorageSet(PARAMETRIC_CURVES_UID, ParametricCurves);
 	    	return true;
 	    }
 	    
@@ -118,6 +121,7 @@ final class cmsgamma
 	    // Keep linked list
 	    fl.Next = ParametricCurves;
 	    ParametricCurves = fl;
+	    Utility.singletonStorageSet(PARAMETRIC_CURVES_UID, ParametricCurves);
 	    
 	    // All is ok
 	    return true;
@@ -145,6 +149,19 @@ final class cmsgamma
 	    _cmsParametricCurvesCollection c;
 	    int Position;
 	    
+	    if(ParametricCurves == null)
+	    {
+	    	Object obj;
+	    	if((obj = Utility.singletonStorageGet(PARAMETRIC_CURVES_UID)) != null)
+	    	{
+	    		ParametricCurves = (_cmsParametricCurvesCollection)obj;
+	    	}
+	    	else
+	    	{
+	    		ParametricCurves = DefaultCurves;
+	    		Utility.singletonStorageSet(PARAMETRIC_CURVES_UID, ParametricCurves);
+	    	}
+	    }
 	    for (c = ParametricCurves; c != null; c = c.Next)
 	    {
 	        Position = IsInSet(Type, c);
@@ -678,7 +695,7 @@ final class cmsgamma
 			);
 	
 	// The linked list head
-	private static _cmsParametricCurvesCollection ParametricCurves = DefaultCurves;
+	private static _cmsParametricCurvesCollection ParametricCurves;
 	
 	// Evaluate a segmented funtion for a single value. Return -1 if no valid segment found .
 	// If fn type is 0, perform an interpolation on the table 

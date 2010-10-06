@@ -31,6 +31,7 @@ import java.util.Calendar;
 
 import littlecms.internal.helper.BitConverter;
 import littlecms.internal.helper.Stream;
+import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
 
 import net.rim.device.api.util.Arrays;
@@ -1031,11 +1032,11 @@ public class lcms2
 	/**
 	 * Returns pointer to constant structures. Pointer to constant D50 white point in XYZ space.
 	 */
-	public static final cmsCIEXYZ cmsD50_XYZ = cmswtpnt.cmsD50_XYZ();
+	public static cmsCIEXYZ cmsD50_XYZ = cmswtpnt.cmsD50_XYZ();
 	/**
 	 * Returns pointer to constant structures. Pointer to constant D50 white point in xyY space.
 	 */
-	public static final cmsCIExyY cmsD50_xyY = cmswtpnt.cmsD50_xyY();
+	public static cmsCIExyY cmsD50_xyY = cmswtpnt.cmsD50_xyY();
 	
 	// Colorimetric space conversions
 	/**
@@ -2004,8 +2005,25 @@ public class lcms2
 	public static class cmsMLU extends lcms2_internal._cms_MLU_struct{}
 	
 	//Use of static was determined by RIM development doc that stated that if "static final" then String would be allocated multiple times and need to be loaded multiple times but by using just "static" only one instance is used and always the same memory
-	public static String cmsNoLanguage = "\0\0";
-	public static String cmsNoCountry = cmsNoLanguage; //Reference since they are the same value and immutable.
+	public static String cmsNoLanguage;
+	public static String cmsNoCountry;
+	
+	private static final long MLU_NO_LANG_COUNTRY = 0x4BB8C4EFF4355C80L;
+	
+	static
+	{
+		Object obj;
+		if((obj = Utility.singletonStorageGet(MLU_NO_LANG_COUNTRY)) != null)
+		{
+			cmsNoLanguage = (String)obj;
+		}
+		else
+		{
+			cmsNoLanguage = "\0\0";
+			Utility.singletonStorageSet(MLU_NO_LANG_COUNTRY, cmsNoLanguage);
+		}
+		cmsNoCountry = cmsNoLanguage; //Reference since they are the same value and immutable.
+	}
 	
 	/**
 	 * Allocates an empty multilocalized unicode object.

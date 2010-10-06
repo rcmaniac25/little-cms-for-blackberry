@@ -773,7 +773,7 @@ final class cmsio0
 	    vp = new VirtualPointer(cmsICCHeader.SIZE);
 	    if (io.vpRead(io, vp, /*sizeof(cmsICCHeader)*/cmsICCHeader.SIZE, 1) != 1)
 	    {
-	        return false; 
+	        return false;
 	    }
 	    Header = (cmsICCHeader)vp.getProcessor().readObject(cmsICCHeader.class);
 	    
@@ -804,6 +804,7 @@ final class cmsio0
 	    cmsplugin._cmsDecodeDateTimeNumber(Header.date, Icc.Created);
 	    
 	    // The profile ID are 32 raw bytes
+	    Icc.ProfileID = new cmsProfileID();
 	    Icc.ProfileID.setID8(Header.profileID.getID8());
 	    
 	    

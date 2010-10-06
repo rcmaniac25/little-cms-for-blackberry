@@ -39,30 +39,34 @@ public
 //#endif
 final class cmswtpnt
 {
-	private static boolean XYZcalled, xyZcalled;
+	private static final long D50_XYZ_UID = 0x989B7FD873DB3186L;
+	private static final long D50_xyY_UID = 0xCEA6CBC509325696L;
 	
 	// D50 - Widely used
 	public static cmsCIEXYZ cmsD50_XYZ()
 	{
-		if(XYZcalled)
+		Object obj;
+		if((obj = Utility.singletonStorageGet(D50_XYZ_UID)) != null)
 		{
-			return lcms2.cmsD50_XYZ;
+			return (cmsCIEXYZ)obj;
 		}
-		XYZcalled = true;
-		return new cmsCIEXYZ(lcms2.cmsD50X, lcms2.cmsD50Y, lcms2.cmsD50Z);
+		cmsCIEXYZ temp = new cmsCIEXYZ(lcms2.cmsD50X, lcms2.cmsD50Y, lcms2.cmsD50Z);
+		Utility.singletonStorageSet(D50_XYZ_UID, temp);
+		return temp;
 	}
 	
 	public static cmsCIExyY cmsD50_xyY()
 	{
-		if(xyZcalled)
+		Object obj;
+		if((obj = Utility.singletonStorageGet(D50_xyY_UID)) != null)
 		{
-			return lcms2.cmsD50_xyY;
+			return (cmsCIExyY)obj;
 		}
-		xyZcalled = true;
 		
 		cmsCIExyY D50xyY = new cmsCIExyY();
 		
 		cmspcs.cmsXYZ2xyY(D50xyY, cmsD50_XYZ());
+		Utility.singletonStorageSet(D50_xyY_UID, D50xyY);
 		
 		return D50xyY;
 	}

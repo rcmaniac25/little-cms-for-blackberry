@@ -30,8 +30,10 @@ import java.util.Random;
 import java.util.Vector;
 
 import littlecms.internal.LCMSResource;
+import littlecms.internal.Serializers;
 
 import net.rim.device.api.collection.util.SparseList;
+import net.rim.device.api.util.Arrays;
 
 /**
  * Virtual pointer system for data types
@@ -614,6 +616,11 @@ public class VirtualPointer
                 				}
                 			}
                 		}
+                		ser = VirtualPointer.getSerializer(clz);
+                		if(ser == null)
+                		{
+                			return; //Couldn't find serializer
+                		}
                 	}
                 	else
                 	{
@@ -657,11 +664,16 @@ public class VirtualPointer
             	arraySupport = true;
                 //Serializer can process data. Does the serializers have this?
                 Class clazz = value.getClass();
+                Class clazz2 = objArray[0].getClass();
                 synchronized (VirtualPointer.serializers)
                 {
                     if (!VirtualPointer.serializers.containsKey(clazz))
                     {
                         VirtualPointer.setSerializer(ser, clazz); //Apparently not, add it so that future use can be done explicitly
+                    }
+                    if (!VirtualPointer.serializers.containsKey(clazz2))
+                    {
+                        VirtualPointer.setSerializer(ser, clazz2); //Apparently not, add it so that future use can be done explicitly
                     }
                 }
             }
@@ -846,7 +858,7 @@ public class VirtualPointer
             {
                 vp.dataPos = pos;
             }
-            if (obj != null)
+            if (obj != null && obj[0] != null)
             {
                 Class clazz = obj[0].getClass();
                 synchronized (VirtualPointer.serializers)
@@ -857,21 +869,100 @@ public class VirtualPointer
                     }
                 }
             }
-            return obj[0];
+            return obj != null ? obj[0] : null;
         }
         
-        //TODO: Make lower array functions
+        //Primitive array
         
+        public Object readArray(final String primitiveType, int len)
+        {
+        	return readArray(false, primitiveType, len);
+        }
+        
+        public Object readArray(boolean inc, final String primitiveType, int len)
+        {
+        	return readArray(inc, primitiveType, len, false, null);
+        }
+        
+        public Object readArray(boolean inc, final String primitiveType, int len, Object org)
+        {
+        	return readArray(inc, primitiveType, len, false, org);
+        }
+        
+        public Object readArray(boolean inc, final String primitiveType, int len, boolean lenIsBytes, Object org)
+        {
+        	return readArray((Serializer)null, inc, true, primitiveType, len, lenIsBytes, org);
+        }
+        
+        //Object array
+        
+        public Object readArray(Serializer ser, int len)
+        {
+        	return readArray(ser, false, len);
+        }
+        
+        public Object readArray(Class clazz, int len)
+        {
+        	return readArray(VirtualPointer.getSerializer(clazz), false, len);
+        }
+        
+        public Object readArray(Serializer ser, boolean inc, int len)
+        {
+        	return readArray(ser, inc, len, false, null);
+        }
+        
+        public Object readArray(Class clazz, boolean inc, int len)
+        {
+        	return readArray(VirtualPointer.getSerializer(clazz), inc, len, false, null);
+        }
+        
+        public Object readArray(Serializer ser, boolean inc, int len, Object org)
+        {
+        	return readArray(ser, inc, len, false, org);
+        }
+        
+        public Object readArray(Class clazz, boolean inc, int len, Object org)
+        {
+        	return readArray(VirtualPointer.getSerializer(clazz), inc, len, false, org);
+        }
+        
+        public Object readArray(Serializer ser, boolean inc, int len, boolean lenIsBytes, Object org)
+        {
+        	return readArray(ser, inc, false, null, len, lenIsBytes, org);
+        }
+        
+        public Object readArray(Class clazz, boolean inc, int len, boolean lenIsBytes, Object org)
+        {
+        	return readArray(VirtualPointer.getSerializer(clazz), inc, false, null, len, lenIsBytes, org);
+        }
+        
+        public Object readArray(Class clazz, boolean inc, boolean primitive, final String primitiveType, int len, boolean lenIsBytes, Object org)
+        {
+        	return readArray(VirtualPointer.getSerializer(clazz), inc, primitive, primitiveType, len, lenIsBytes, org);
+        }
+        
+        /**
+         * <strong>NOTE:</strong> "String" and "VirtualPointer" are primitive types even though they are objects. This is because they can be read and
+         * written directly from TypeProcessor.
+         */
         public Object readArray(Serializer ser, boolean inc, boolean primitive, final String primitiveType, int len, boolean lenIsBytes, Object org)
         {
         	int pos = vp.dataPos;
+        	int[] count = new int[1];
+        	Object[] result = new Object[3];
+        	result[1] = count;
         	if(primitive)
         	{
-        		//TODO: Read primitive array
+        		readPrimitiveArray(primitiveType, len, lenIsBytes, result);
         	}
         	else
         	{
-        		//TODO: Read object array
+        		result[0] = new Integer(lenIsBytes ? -len : len);
+        		if(org != null)
+        		{
+        			result[2] = org;
+        		}
+        		this.stat = ser.deserialize(this.vp, result); //Serializer's are required to support arrays
         	}
         	if (!inc)
             {
@@ -881,15 +972,230 @@ public class VirtualPointer
         	{
         		if(!lenIsBytes)
         		{
-        			//TODO: Convert len to bytes, keep a counter for reach item read
+        			len = count[0];
         		}
-        		else if(len >= 0 && vp.dataPos - pos != len)
+        		if(len >= 0 && vp.dataPos - pos != len)
                 {
                 	//Too many/Not enough bytes written, make sure size matches
                 	vp.dataPos = pos + len;
                 }
         	}
-        	return null; //TODO: Figure out how array should be arranged
+        	return result[2];
+        }
+        
+        private void readPrimitiveArray(final String primitiveType, int len, boolean lenIsBytes, Object[] result)
+        {
+        	int count = 0;
+        	int elementCount = 0;
+        	if(primitiveType.equals("byte"))
+        	{
+        		byte[] arr;
+        		elementCount = count = len;
+        		if(result[2] == null)
+        		{
+        			result[2] = (arr = new byte[elementCount]);
+        		}
+        		else
+        		{
+        			arr = (byte[])result[2];
+        			elementCount = Math.min(elementCount, arr.length);
+        		}
+        		this.vp.readByteArray(arr, 0, elementCount, true);
+        	}
+        	else if(primitiveType.equals("short"))
+        	{
+        		short[] arr;
+        		if(lenIsBytes)
+        		{
+        			len >>= 2;
+        		}
+        		count = (elementCount = len) * 2;
+        		if(result[2] == null)
+        		{
+        			result[2] = (arr = new short[elementCount]);
+        		}
+        		else
+        		{
+        			arr = (short[])result[2];
+        			elementCount = Math.min(elementCount, arr.length);
+        		}
+        		for(int i = 0; i < elementCount; i++)
+        		{
+        			arr[i] = readInt16(true);
+        		}
+        	}
+        	else if(primitiveType.equals("char"))
+        	{
+        		char[] arr;
+        		if(lenIsBytes)
+        		{
+        			len >>= 2;
+        		}
+        		count = (elementCount = len) * 2;
+        		if(result[2] == null)
+        		{
+        			result[2] = (arr = new char[elementCount]);
+        		}
+        		else
+        		{
+        			arr = (char[])result[2];
+        			elementCount = Math.min(elementCount, arr.length);
+        		}
+        		for(int i = 0; i < elementCount; i++)
+        		{
+        			arr[i] = readChar(true);
+        		}
+        	}
+        	else if(primitiveType.equals("int"))
+        	{
+        		int[] arr;
+        		if(lenIsBytes)
+        		{
+        			len /= 4;
+        		}
+        		count = (elementCount = len) * 4;
+        		if(result[2] == null)
+        		{
+        			result[2] = (arr = new int[elementCount]);
+        		}
+        		else
+        		{
+        			arr = (int[])result[2];
+        			elementCount = Math.min(elementCount, arr.length);
+        		}
+        		for(int i = 0; i < elementCount; i++)
+        		{
+        			arr[i] = readInt32(true);
+        		}
+        	}
+        	else if(primitiveType.equals("long"))
+        	{
+        		long[] arr;
+        		if(lenIsBytes)
+        		{
+        			len /= 8;
+        		}
+        		count = (elementCount = len) * 8;
+        		if(result[2] == null)
+        		{
+        			result[2] = (arr = new long[elementCount]);
+        		}
+        		else
+        		{
+        			arr = (long[])result[2];
+        			elementCount = Math.min(elementCount, arr.length);
+        		}
+        		for(int i = 0; i < elementCount; i++)
+        		{
+        			arr[i] = readInt64(true);
+        		}
+        	}
+        	else if(primitiveType.equals("float"))
+        	{
+        		float[] arr;
+        		if(lenIsBytes)
+        		{
+        			len /= 4;
+        		}
+        		count = (elementCount = len) * 4;
+        		if(result[2] == null)
+        		{
+        			result[2] = (arr = new float[elementCount]);
+        		}
+        		else
+        		{
+        			arr = (float[])result[2];
+        			elementCount = Math.min(elementCount, arr.length);
+        		}
+        		for(int i = 0; i < elementCount; i++)
+        		{
+        			arr[i] = readFloat(true);
+        		}
+        	}
+        	else if(primitiveType.equals("double"))
+        	{
+        		double[] arr;
+        		if(lenIsBytes)
+        		{
+        			len /= 8;
+        		}
+        		count = (elementCount = len) * 8;
+        		if(result[2] == null)
+        		{
+        			result[2] = (arr = new double[elementCount]);
+        		}
+        		else
+        		{
+        			arr = (double[])result[2];
+        			elementCount = Math.min(elementCount, arr.length);
+        		}
+        		for(int i = 0; i < elementCount; i++)
+        		{
+        			arr[i] = readDouble(true);
+        		}
+        	}
+        	else if(primitiveType.equals("boolean"))
+        	{
+        		boolean[] arr;
+        		elementCount = count = len;
+        		if(result[2] == null)
+        		{
+        			result[2] = (arr = new boolean[elementCount]);
+        		}
+        		else
+        		{
+        			arr = (boolean[])result[2];
+        			elementCount = Math.min(elementCount, arr.length);
+        		}
+        		for(int i = 0; i < elementCount; i++)
+        		{
+        			arr[i] = readBool(true);
+        		}
+        	}
+        	else if(primitiveType.equals("String"))
+        	{
+        		String[] arr;
+        		elementCount = len;
+        		if(result[2] == null)
+        		{
+        			result[2] = (arr = new String[elementCount]);
+        		}
+        		else
+        		{
+        			arr = (String[])result[2];
+        			elementCount = Math.min(elementCount, arr.length);
+        		}
+        		int or;
+        		for(int i = 0; i < elementCount; i++)
+        		{
+        			or = this.vp.dataPos;
+        			arr[i] = readString(true);
+        			count += this.vp.dataPos - or;
+        		}
+        	}
+        	else if(primitiveType.equals("VirtualPointer"))
+        	{
+        		VirtualPointer[] arr;
+        		if(lenIsBytes)
+        		{
+        			len /= 8;
+        		}
+        		count = (elementCount = len) * 8;
+        		if(result[2] == null)
+        		{
+        			result[2] = (arr = new VirtualPointer[elementCount]);
+        		}
+        		else
+        		{
+        			arr = (VirtualPointer[])result[2];
+        			elementCount = Math.min(elementCount, arr.length);
+        		}
+        		for(int i = 0; i < elementCount; i++)
+        		{
+        			arr[i] = readVirtualPointer(true);
+        		}
+        	}
+        	((int[])result[1])[0] = count;
         }
     }
 	
@@ -903,14 +1209,30 @@ public class VirtualPointer
 		
 		public int getSerializedSize(Object val);
 		
-		/** Serialize <i>val</i>. Note: Pointers need to be incramented after writing the data to them.*/
+		/** Serialize <i>val</i>. Note: Pointers need to be incremented after writing the data to them. Array support is not necessary.*/
 		public int serialize(VirtualPointer vp, Object val);
 		
-		/** Deserialize a value into <i>val</i>. Note: Pointers need to be incramented after reading the data from them.*/
+		/**
+		 * Deserialize a value into <i>val</i>. Note: Pointers need to be incremented after reading the data from them. If <i>val</i>'s length is greater then 1 then
+		 * the Serializer should deserialize an array of items. Array support is necessary (specified below):
+		 * <p>
+		 * The first element is a Integer that specifies how many elements are in the array, if this value is
+		 * negative then it is the number of bytes that should be read (simply negate the number). If the element has a fixed size then the size can simply be 
+		 * divided to get the number of elements, else the Serializer should read until the byte count equals or exceeds the specified size, VirtualPointer will take
+		 * care of the rest.
+		 * <p>
+		 * The second element is the total read in byte count, it is a int[] of one element and should be set before returning out of the function.
+		 * <p>
+		 * Finally the last element is the data itself, if this is not null then it should be used to set the data. Do not take the first element in the <i>val</i>
+		 * array as fact, if this element in the array is smaller then what the first element says then take this element's length instead of the first element. 
+		 * If it is null then take the first element in <i>val</i> and use that as the length the array should be. Note that if the first parameter is does not 
+		 * end on the proper bounds for an element the the rest of the element should be made up so as to not mix up data (as if the element went outside of it's 
+		 * allocated bounds where it is undefined).
+		 */
 		public int deserialize(VirtualPointer vp, Object[] val);
-
+		
 		public boolean canProcess(Object val);
-
+		
 		public boolean canWrap(Object val);
 	}
 	
@@ -921,9 +1243,32 @@ public class VirtualPointer
 	
 	public static final int SIZE = 4; //Format: high-bit set to symbolize inner type, rest of int is index to inner stored inner type
 	
-	//TODO: Make these singletons
-	private static SparseList pointerRef = new SparseList(); //Use a SparseList so that indexes don't change
-	private static Hashtable serializers = new Hashtable();
+	private static final long POINTER_REF_UID = 0xAE7A0376ECFF1112L;
+	private static final long SERIALIZERS_UID = 0x507EA7834E510030L;
+	
+	private static SparseList pointerRef;
+	private static Hashtable serializers;
+	
+	static
+	{
+		Object obj = Utility.singletonStorageGet(POINTER_REF_UID);
+		if(obj == null)
+		{
+			pointerRef = new SparseList(); //Use a SparseList so that indexes don't change
+			serializers = new Hashtable();
+			Utility.singletonStorageSet(POINTER_REF_UID, pointerRef);
+			Utility.singletonStorageSet(SERIALIZERS_UID, serializers);
+			if(!Serializers.initialize())
+			{
+				throw new IllegalStateException();
+			}
+		}
+		else
+		{
+			pointerRef = (SparseList)obj;
+			serializers = (Hashtable)Utility.singletonStorageGet(SERIALIZERS_UID);
+		}
+	}
 	
 	private byte[] data;
     private int dataPos;
@@ -1424,7 +1769,7 @@ public class VirtualPointer
     
     public void writeRaw(byte[] buffer, int offset, int len)
     {
-        readRaw(buffer, offset, len, -1);
+    	writeRaw(buffer, offset, len, -1);
     }
     
     public void writeRaw(byte[] buffer, int offset, int len, int directPos)
@@ -1441,7 +1786,7 @@ public class VirtualPointer
     
     public void writeRaw(VirtualPointer buffer, int offset, int len)
     {
-        readRaw(buffer, offset, len, -1);
+    	writeRaw(buffer, offset, len, -1);
     }
     
     public void writeRaw(VirtualPointer buffer, int offset, int len, int directPos)
@@ -1514,7 +1859,25 @@ public class VirtualPointer
     {
         synchronized (VirtualPointer.serializers)
         {
-        	return (Serializer)VirtualPointer.serializers.get(clazz);
+        	//return (Serializer)VirtualPointer.serializers.get(clazz); //This just does not seem reliable, it finds the Object then returns null.
+        	
+        	//Instead do this for saftey, extreamly stupid but for some reason it works sometimes, it's better to be redundent then to get null for an item in serializers.
+        	Object obj = VirtualPointer.serializers.get(clazz);
+        	if(obj != null)
+        	{
+        		return (Serializer)obj;
+        	}
+        	obj = VirtualPointer.serializers.get(clazz);
+        	if(obj != null)
+        	{
+        		return (Serializer)obj;
+        	}
+        	obj = VirtualPointer.serializers.get(clazz);
+        	if(obj != null)
+        	{
+        		return (Serializer)obj;
+        	}
+        	return null;
         }
     }
     
@@ -1533,5 +1896,55 @@ public class VirtualPointer
         }
     }
     
-    //TODO Add equals, toString, and hashCode functions
+    public String toString()
+    {
+    	StringBuffer str = new StringBuffer();
+    	Utility.sprintf(str, "%p", new Object[]{this});
+    	return str.toString();
+    }
+    
+    public int hashCode()
+    {
+    	int hash = dataPos + (resizeable ? 1 : 0) + (data != null ? ((Object)data).hashCode() : 0);
+    	if(children != null)
+    	{
+    		hash += children.hashCode();
+    	}
+    	if(parent != null)
+    	{
+    		hash += parent.hashCode();
+    	}
+//#ifdef DEBUG
+    	hash += ((Object)types).hashCode();
+    	hash += ((Object)len).hashCode();
+//#endif
+    	return hash;
+    }
+    
+    public boolean equals(Object obj)
+    {
+    	if(obj instanceof VirtualPointer)
+    	{
+    		if(obj == this)
+    		{
+    			return true;
+    		}
+    		VirtualPointer vp = (VirtualPointer)obj;
+    		if(vp.dataPos == this.dataPos)
+    		{
+    			if(vp.resizeable == this.resizeable)
+    			{
+    				if(Arrays.equals(vp.data, this.data))
+    				{
+    					/* Could add other types but isn't needed because if data is the same then this is probably a child of the original, which means that the
+    					 * types and len will be the same, the children only exist in the parent, and the parent would have to be the same. A child pointer will often
+    					 * have a different data position too so it doesn't pay to check parent and children as well as len and types. If that makes sense.
+    					 */
+    					return true;
+    				}
+    			}
+    		}
+    	}
+    	return false;
+    }
 }

@@ -30,6 +30,7 @@ package littlecms.internal;
 import net.rim.device.api.util.Arrays;
 import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
+import littlecms.internal.helper.VirtualPointer.Serializer;
 import littlecms.internal.lcms2.cmsContext;
 import littlecms.internal.lcms2.cmsHPROFILE;
 import littlecms.internal.lcms2.cmsHTRANSFORM;
@@ -48,17 +49,37 @@ final class cmsxform
 {
 	// Alarm codes for 16-bit transformations, because the fixed range of containers there are
 	// no values left to mark out of gamut. volatile is C99 per 6.2.5
-	private static volatile short[] Alarm = new short[lcms2.cmsMAXCHANNELS];
-	private static volatile double GlobalAdaptationState = 0;
+	private static volatile short[] Alarm;
+	private static volatile double[] GlobalAdaptationState;
+	
+	private static final long ALARM_UID = 0L;
+	private static final long GAS_UID = 0L;
+	
+	static
+	{
+		Object obj;
+		if((obj = Utility.singletonStorageGet(ALARM_UID)) != null)
+		{
+			Alarm = (short[])obj;
+			GlobalAdaptationState = (double[])Utility.singletonStorageGet(GAS_UID);
+		}
+		else
+		{
+			Alarm = new short[lcms2.cmsMAXCHANNELS];
+			GlobalAdaptationState = new double[1];
+			Utility.singletonStorageSet(ALARM_UID, Alarm);
+			Utility.singletonStorageSet(GAS_UID, GlobalAdaptationState);
+		}
+	}
 	
 	// The adaptation state may be defaulted by this function. If you don't like it, use the extended transform routine
 	public static double cmsSetAdaptationState(double d)
 	{
-	    double OldVal = GlobalAdaptationState;
+	    double OldVal = GlobalAdaptationState[0];
 	    
 	    if (d >= 0)
 	    {
-	    	GlobalAdaptationState = d;
+	    	GlobalAdaptationState[0] = d;
 	    }
 	    
 	    return OldVal;  
@@ -159,7 +180,83 @@ final class cmsxform
 		{
 			return; //Buffer is a VirtualPointer
 		}
-		//TODO: figure out how to convert "vp" back to buffer.
+		boolean primitive;
+		try
+		{
+			Object[] temp = (Object[])buffer;
+			primitive = true;
+		}
+		catch(ClassCastException c)
+		{
+			primitive = false;
+		}
+		if(primitive)
+		{
+			readPrimitveArray(vp, buffer);
+		}
+		else
+		{
+			vp.getProcessor().readArray((Serializer)null, false, ((Object[])buffer).length, buffer);
+		}
+	}
+	
+	private static void readPrimitveArray(VirtualPointer vp, Object buffer)
+	{
+		//Slow, inefficient method of reading primitives but no other options exist
+		if(buffer instanceof byte[])
+    	{
+    		byte[] val = (byte[])buffer;
+    		vp.readByteArray(val, 0, val.length, false);
+    	}
+		else
+		{
+			VirtualPointer.TypeProcessor proc = vp.getProcessor();
+	    	if(buffer instanceof short[])
+	    	{
+	    		short[] val = (short[])buffer;
+	    		proc.readArray(false, "short", val.length, val);
+	    	}
+	    	else if(buffer instanceof char[])
+	    	{
+	    		char[] val = (char[])buffer;
+	    		proc.readArray(false, "char", val.length, val);
+	    	}
+	    	else if(buffer instanceof int[])
+	    	{
+	    		int[] val = (int[])buffer;
+	    		proc.readArray(false, "int", val.length, val);
+	    	}
+	    	else if(buffer instanceof long[])
+	    	{
+	    		long[] val = (long[])buffer;
+	    		proc.readArray(false, "long", val.length, val);
+	    	}
+	    	else if(buffer instanceof float[])
+	    	{
+	    		float[] val = (float[])buffer;
+	    		proc.readArray(false, "float", val.length, val);
+	    	}
+	    	else if(buffer instanceof double[])
+	    	{
+	    		double[] val = (double[])buffer;
+	    		proc.readArray(false, "double", val.length, val);
+	    	}
+	    	else if(buffer instanceof boolean[])
+	    	{
+	    		boolean[] val = (boolean[])buffer;
+	    		proc.readArray(false, "boolean", val.length, val);
+	    	}
+	    	else if(buffer instanceof String[])
+	    	{
+	    		String[] val = (String[])buffer;
+	    		proc.readArray(false, "String", val.length, val);
+	    	}
+	    	else if(buffer instanceof VirtualPointer[])
+	    	{
+	    		VirtualPointer[] val = (VirtualPointer[])buffer;
+	    		proc.readArray(false, "VirtualPointer", val.length, val);
+	    	}
+		}
 	}
 	
 	// Transform routines ----------------------------------------------------------------------------------------------------------
@@ -730,7 +827,7 @@ final class cmsxform
 	    {
 	        BPC[i] = BPC_value;
 	        Intents[i] = Intent;
-	        AdaptationStates[i] = GlobalAdaptationState;
+	        AdaptationStates[i] = GlobalAdaptationState[0];
 	    }
 	    
 	    return cmsCreateExtendedTransform(ContextID, nProfiles, hProfiles, BPC, Intents, AdaptationStates, null, 0, InputFormat, OutputFormat, dwFlags);
@@ -776,7 +873,7 @@ final class cmsxform
 	    Intents[0] = nIntent;      Intents[1] = nIntent;        Intents[2] = lcms2.INTENT_RELATIVE_COLORIMETRIC;  Intents[3] = ProofingIntent;
 	    BPC[0]     = DoBPC;        BPC[1] = DoBPC;              BPC[2] = false;                                   BPC[3] = false;
 	    
-	    Adaptation[0] = Adaptation[1] = Adaptation[2] = Adaptation[3] = GlobalAdaptationState;
+	    Adaptation[0] = Adaptation[1] = Adaptation[2] = Adaptation[3] = GlobalAdaptationState[0];
 	    
 	    if ((dwFlags & (lcms2.cmsFLAGS_SOFTPROOFING|lcms2.cmsFLAGS_GAMUTCHECK)) == 0)
 	    {

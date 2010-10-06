@@ -86,13 +86,6 @@ final class cmstypes
 	// RAW_C support implemented but return type is expected to be cmsUInt8Number[16] (byte[lcms2.cmsMAXCHANNELS]) so just do that.
 	// If RAW_C processing is desired then remove the comment marker "//-" or in the case of the preprocessor components replace '-' with '#'
 	
-	static
-	{
-		setupMPEtypes();
-		setupTypes();
-		setupTags();
-	}
-	
 	// Some broken types
 	public static final int cmsCorbisBrokenXYZtype = 0x17A505B8;
 	public static final int cmsMonacoBrokenCurveType = 0x9478ee00;
@@ -7872,7 +7865,7 @@ final class cmstypes
         	this.Next = Next;
         }
 	}
-
+	
 	// This is the list of built-in tags
 	private static _cmsTagLinkedList SupportedTags;
 	
@@ -8166,5 +8159,29 @@ final class cmstypes
 	    }
 	    
 	    return null;
+	}
+	
+	private static final long MPE_TYPE_UID = 0xB16DAF3637DE1200L;
+	private static final long TYPES_UID = 0x6501929FD0DE0D54L;
+	private static final long TAGS_UID = 0x9BD0A0F3911A4810L;
+	
+	static
+	{
+		Object obj;
+		if((obj = Utility.singletonStorageGet(MPE_TYPE_UID)) != null)
+		{
+			SupportedMPEtypes = (_cmsTagTypeLinkedList)obj;
+			SupportedTagTypes = (_cmsTagTypeLinkedList)Utility.singletonStorageGet(TYPES_UID);
+			SupportedTags = (_cmsTagLinkedList)Utility.singletonStorageGet(TAGS_UID);
+		}
+		else
+		{
+			setupMPEtypes();
+			setupTypes();
+			setupTags();
+			Utility.singletonStorageSet(MPE_TYPE_UID, SupportedMPEtypes);
+			Utility.singletonStorageSet(TYPES_UID, SupportedTagTypes);
+			Utility.singletonStorageSet(TAGS_UID, SupportedTags);
+		}
 	}
 }

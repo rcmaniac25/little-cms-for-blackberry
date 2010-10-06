@@ -55,11 +55,13 @@ final class cmsintrp
 	    if (Data == null)
 	    {
 	        Interpolators = DefaultInterpolatorsFactory;
+	        Utility.singletonStorageSet(INTERPOLATORS_UID, Interpolators);
 	        return true;
 	    }
 	    
 	    // Set replacement functions
-	    Interpolators = Plugin.InterpolatorsFactory;  
+	    Interpolators = Plugin.InterpolatorsFactory;
+	    Utility.singletonStorageSet(INTERPOLATORS_UID, Interpolators);
 	    return true;
 	}
 	
@@ -1363,5 +1365,21 @@ final class cmsintrp
 	};
 	
 	// This is the default factory
-	private static cmsInterpFnFactory Interpolators = DefaultInterpolatorsFactory;
+	private static cmsInterpFnFactory Interpolators;
+	
+	private static final long INTERPOLATORS_UID = 0x133F1C6D4325EFFAL;
+	
+	static
+	{
+		Object obj;
+		if((obj = Utility.singletonStorageGet(INTERPOLATORS_UID)) != null)
+		{
+			Interpolators = (cmsInterpFnFactory)obj;
+		}
+		else
+		{
+			Interpolators = DefaultInterpolatorsFactory;
+			Utility.singletonStorageSet(INTERPOLATORS_UID, Interpolators);
+		}
+	}
 }

@@ -36,6 +36,12 @@ import littlecms.internal.lcms2_internal._cmsSubAllocator;
 import littlecms.internal.lcms2_internal._cmsSubAllocator_chunk;
 import littlecms.internal.lcms2_plugin.cmsPluginBase;
 import littlecms.internal.lcms2_plugin.cmsPluginMemHandler;
+import littlecms.internal.lcms2_plugin.cmsPluginMemHandler.pluginCallocPtr;
+import littlecms.internal.lcms2_plugin.cmsPluginMemHandler.pluginDupPtr;
+import littlecms.internal.lcms2_plugin.cmsPluginMemHandler.pluginFreePtr;
+import littlecms.internal.lcms2_plugin.cmsPluginMemHandler.pluginMallocPtr;
+import littlecms.internal.lcms2_plugin.cmsPluginMemHandler.pluginMallocZeroPtr;
+import littlecms.internal.lcms2_plugin.cmsPluginMemHandler.pluginReallocPtr;
 
 //#ifdef CMS_INTERNAL_ACCESS & DEBUG
 public
@@ -207,12 +213,19 @@ final class cmserr
 	};
 	
 	// Pointers to malloc and _cmsFree functions in current environment
-	private static cmsPluginMemHandler.pluginMallocPtr MallocPtr = _cmsMallocDefaultFn;
-	private static cmsPluginMemHandler.pluginMallocZeroPtr MallocZeroPtr = _cmsMallocZeroDefaultFn;
-	private static cmsPluginMemHandler.pluginFreePtr FreePtr = _cmsFreeDefaultFn;
-	private static cmsPluginMemHandler.pluginReallocPtr ReallocPtr = _cmsReallocDefaultFn; 
-	private static cmsPluginMemHandler.pluginCallocPtr CallocPtr = _cmsCallocDefaultFn;
-	private static cmsPluginMemHandler.pluginDupPtr DupPtr = _cmsDupDefaultFn;
+	private static cmsPluginMemHandler.pluginMallocPtr MallocPtr;
+	private static cmsPluginMemHandler.pluginMallocZeroPtr MallocZeroPtr;
+	private static cmsPluginMemHandler.pluginFreePtr FreePtr;
+	private static cmsPluginMemHandler.pluginReallocPtr ReallocPtr;
+	private static cmsPluginMemHandler.pluginCallocPtr CallocPtr;
+	private static cmsPluginMemHandler.pluginDupPtr DupPtr;
+	
+	private static final long MALLOC_UID = 0xE31DEE851696E940L;
+	private static final long MALLOC_ZERO_UID = 0xC6B6786957830A00L;
+	private static final long FREE_UID = 0x7A977FA95FDA4780L;
+	private static final long REALLOC_UID = 0x453671681EF0A4DAL;
+	private static final long CALLOC_UID = 0x7268B1F2CEC61E0AL;
+	private static final long DUP_UID = 0xDF1F60A440974130L;
 	
 	// Plug-in replacement entry
 	public static boolean _cmsRegisterMemHandlerPlugin(cmsPluginBase Data)
@@ -225,9 +238,15 @@ final class cmserr
 	        MallocPtr    = _cmsMallocDefaultFn;
 	        MallocZeroPtr= _cmsMallocZeroDefaultFn;
 	        FreePtr      = _cmsFreeDefaultFn;
-	        ReallocPtr   = _cmsReallocDefaultFn; 
+	        ReallocPtr   = _cmsReallocDefaultFn;
 	        CallocPtr    = _cmsCallocDefaultFn;
 	        DupPtr       = _cmsDupDefaultFn;
+	        Utility.singletonStorageSet(MALLOC_UID, MallocPtr);
+	        Utility.singletonStorageSet(MALLOC_ZERO_UID, MallocZeroPtr);
+	        Utility.singletonStorageSet(FREE_UID, FreePtr);
+	        Utility.singletonStorageSet(REALLOC_UID, ReallocPtr);
+	        Utility.singletonStorageSet(CALLOC_UID, CallocPtr);
+	        Utility.singletonStorageSet(DUP_UID, DupPtr);
 	        return true;
 	    }
 	    
@@ -241,18 +260,24 @@ final class cmserr
 	    MallocPtr  = Plugin.MallocPtr;
 	    FreePtr    = Plugin.FreePtr;
 	    ReallocPtr = Plugin.ReallocPtr;
+	    Utility.singletonStorageSet(MALLOC_UID, MallocPtr);
+	    Utility.singletonStorageSet(FREE_UID, FreePtr);
+        Utility.singletonStorageSet(REALLOC_UID, ReallocPtr);
 	    
 	    if (Plugin.MallocZeroPtr != null)
 	    {
 	    	MallocZeroPtr = Plugin.MallocZeroPtr;
+	    	Utility.singletonStorageSet(MALLOC_ZERO_UID, MallocZeroPtr);
 	    }
 	    if (Plugin.CallocPtr != null)
 	    {
 	    	CallocPtr = Plugin.CallocPtr;
+	    	Utility.singletonStorageSet(CALLOC_UID, CallocPtr);
 	    }
 	    if (Plugin.DupPtr != null)
 	    {
 	    	DupPtr = Plugin.DupPtr;
+	    	Utility.singletonStorageSet(DUP_UID, DupPtr);
 	    }
 	    
 	    return true;
@@ -303,7 +328,7 @@ final class cmserr
 	// this way have be freed at once. Next function allocates a single chunk for linked list
 	// I prefer this method over realloc due to the big inpact on xput realloc may have if 
 	// memory is being swapped to disk. This approach is safer (although thats not true on any platform)
-	static _cmsSubAllocator_chunk _cmsCreateSubAllocChunk(cmsContext ContextID, int Initial)
+	private static _cmsSubAllocator_chunk _cmsCreateSubAllocChunk(cmsContext ContextID, int Initial)
 	{
 	    _cmsSubAllocator_chunk chunk;
 //#ifdef RAW_C
@@ -468,7 +493,41 @@ final class cmserr
 	};
 	
 	// The current handler in actual environment
-	private static cmsLogErrorHandlerFunction LogErrorHandler = DefaultLogErrorHandlerFunction;
+	private static cmsLogErrorHandlerFunction LogErrorHandler;
+	
+	private static final long LOG_ERROR_HANDLER_UID = 0xBC8073B29A4E148L;
+	
+	static
+	{
+		Object obj;
+	    if((obj = Utility.singletonStorageGet(LOG_ERROR_HANDLER_UID)) != null)
+		{
+	    	LogErrorHandler = (cmsLogErrorHandlerFunction)obj;
+	    	MallocPtr = (pluginMallocPtr)Utility.singletonStorageGet(MALLOC_UID);
+	    	MallocZeroPtr = (pluginMallocZeroPtr)Utility.singletonStorageGet(MALLOC_ZERO_UID);
+	    	FreePtr = (pluginFreePtr)Utility.singletonStorageGet(FREE_UID);
+	    	ReallocPtr = (pluginReallocPtr)Utility.singletonStorageGet(REALLOC_UID);
+	    	CallocPtr = (pluginCallocPtr)Utility.singletonStorageGet(CALLOC_UID);
+	    	DupPtr = (pluginDupPtr)Utility.singletonStorageGet(DUP_UID);
+		}
+		else
+		{
+			LogErrorHandler = DefaultLogErrorHandlerFunction;
+			Utility.singletonStorageSet(LOG_ERROR_HANDLER_UID, LogErrorHandler);
+			MallocPtr    = _cmsMallocDefaultFn;
+	        MallocZeroPtr= _cmsMallocZeroDefaultFn;
+	        FreePtr      = _cmsFreeDefaultFn;
+	        ReallocPtr   = _cmsReallocDefaultFn;
+	        CallocPtr    = _cmsCallocDefaultFn;
+	        DupPtr       = _cmsDupDefaultFn;
+	        Utility.singletonStorageSet(MALLOC_UID, MallocPtr);
+	        Utility.singletonStorageSet(MALLOC_ZERO_UID, MallocZeroPtr);
+	        Utility.singletonStorageSet(FREE_UID, FreePtr);
+	        Utility.singletonStorageSet(REALLOC_UID, ReallocPtr);
+	        Utility.singletonStorageSet(CALLOC_UID, CallocPtr);
+	        Utility.singletonStorageSet(DUP_UID, DupPtr);
+		}
+	}
 	
 	// Change log error
 	public static void cmsSetLogErrorHandler(cmsLogErrorHandlerFunction Fn)
@@ -481,6 +540,7 @@ final class cmserr
 	    {
 	    	LogErrorHandler = Fn;
 	    }
+	    Utility.singletonStorageSet(LOG_ERROR_HANDLER_UID, LogErrorHandler);
 	}
 	
 	// Log an error 
