@@ -539,7 +539,7 @@ public final class Utility
     {
     	int len = vp.getAllocLen();
     	byte[] dat = new byte[len - vp.getPosition()];
-    	vp.readByteArray(dat, 0, dat.length, false);
+    	vp.readByteArray(dat, 0, dat.length, false, false);
     	return strlen(dat, 0);
     }
     
@@ -567,7 +567,7 @@ public final class Utility
     	//Not efficent at all but the only way to get from one to the other
     	int len = strlen(src) + 1;
     	byte[] data = new byte[len];
-    	src.readByteArray(data, 0, len - 1, false);
+    	src.readByteArray(data, 0, len - 1, false, false);
     	char[] chars = new char[len];
     	for(int i = 0; i < len; i++)
     	{
@@ -581,7 +581,7 @@ public final class Utility
     	//Not efficent at all but the only way to get from one to the other
     	int len = strlen(src) + 1;
     	byte[] data = new byte[len];
-    	src.readByteArray(data, 0, len - 1, false);
+    	src.readByteArray(data, 0, len - 1, false, false);
     	char[] chars = new char[len];
     	for(int i = 0; i < len; i++)
     	{

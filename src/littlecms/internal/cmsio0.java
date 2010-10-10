@@ -798,7 +798,7 @@ final class cmsio0
 	    Icc.Version         = cmsplugin._cmsAdjustEndianess32(Header.version);
 	    
 	    // Get size as reported in header
-	    HeaderSize = cmsplugin._cmsAdjustEndianess32(Header.size);
+	    HeaderSize = cmsplugin._cmsAdjustEndianess32(Header.size); //Figure out why this keeps coming out negative
 	    
 	    // Get creation date/time
 	    cmsplugin._cmsDecodeDateTimeNumber(Header.date, Icc.Created);
@@ -812,7 +812,7 @@ final class cmsio0
 	    temp2 = new int[1];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	    {
-	    	return false;                          
+	    	return false;
 	    }
 	    TagCount = temp2[0];
 	    if (TagCount > lcms2_internal.MAX_TABLE_TAG)
@@ -1938,7 +1938,7 @@ final class cmsio0
 					TagSize = BufferSize;
 				}
 				
-				((VirtualPointer)Icc.TagPtrs[i]).readByteArray(data, 0, TagSize, false);
+				((VirtualPointer)Icc.TagPtrs[i]).readByteArray(data, 0, TagSize, false, false);
 			}
 			
 	        return Icc.TagSizes[i];

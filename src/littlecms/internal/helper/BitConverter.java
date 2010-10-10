@@ -93,7 +93,7 @@ public final class BitConverter
 		}
 		//Fallback on error
 //#endif
-		return new byte[]{(byte)((value >> 56) & 0xFF), (byte)((value >> 48) & 0xFF), (byte)((value >> 40) & 0xFF), (byte)((value >> 32) & 0xFF),
+		return new byte[]{(byte)((value >> 56) & 0xFF), (byte)((value >> 48) & 0xFF), (byte)((value >> 40) & 0xFF), (byte)((value >> 32) & 0xFF), 
 				(byte)((value >> 24) & 0xFF), (byte)((value >> 16) & 0xFF), (byte)((value >> 8) & 0xFF), (byte)(value & 0xFF)};
 	}
 	
@@ -143,7 +143,7 @@ public final class BitConverter
 		}
 		//Fallback on error
 //#endif
-		return (short)((value[startIndex + 1] << 8) | value[startIndex]);
+		return (short)(value[startIndex + 1] | (value[startIndex] << 8));
 	}
 	
 	public static int toInt32(byte[] value, int startIndex)
@@ -161,7 +161,7 @@ public final class BitConverter
 		}
 		//Fallback on error
 //#endif
-		return ((value[startIndex + 3] << 24) | (value[startIndex + 2] << 16) | (value[startIndex + 1] << 8) | value[startIndex]);
+		return (value[startIndex + 3] | (value[startIndex + 2] << 8) | (value[startIndex + 1] << 16) | (value[startIndex] << 24));
 	}
 	
 	public static long toInt64(byte[] value, int startIndex)
@@ -179,9 +179,9 @@ public final class BitConverter
 		}
 		//Fallback on error
 //#endif
-		int low = ((value[startIndex + 3] << 24) | (value[startIndex + 2] << 16) | (value[startIndex + 1] << 8) | value[startIndex]);
-		int high = ((value[startIndex + 7] << 24) | (value[startIndex + 6] << 16) | (value[startIndex + 5] << 8) | value[startIndex + 4]);
-		return (((long)high) << 32) | ((long)low);
+		int low = (value[startIndex + 7] | (value[startIndex + 6] << 8) | (value[startIndex + 5] << 16) | (value[startIndex + 4] << 24));
+		int high = (value[startIndex + 3] | (value[startIndex + 2] << 8) | (value[startIndex + 1] << 16) | (value[startIndex] << 24));
+		return ((long)low) | (((long)high) << 32);
 	}
 	
 	public static char toChar(byte[] value, int startIndex)

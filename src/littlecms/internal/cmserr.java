@@ -204,7 +204,7 @@ final class cmserr
 		    if (mem != null && Org != null)
 		    {
 		    	byte[] PtrData = new byte[size];
-		    	Org.readByteArray(PtrData, 0, size, false);
+		    	Org.readByteArray(PtrData, 0, size, false, false);
 		    	mem.getProcessor().write(PtrData);
 		    }
 		    

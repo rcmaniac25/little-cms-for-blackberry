@@ -957,7 +957,7 @@ final class PrintUtility
                     str = str.substring(0, 1);
                 }
             }
-            else if (this.precision >= 0)
+            else if (this.precision >= 0 && this.type != 'c')
             {
                 if (str.length() > this.precision)
                 {
@@ -1243,7 +1243,7 @@ final class PrintUtility
         {
         	super(format);
         }
-
+        
         public String inFormat(Object obj)
         {
         	//TODO

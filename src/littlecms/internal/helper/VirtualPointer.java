@@ -81,7 +81,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 VirtualPointer.Int8,
 //#endif
-                inc);
+                inc, false);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
         
@@ -93,7 +93,7 @@ public class VirtualPointer
         public byte readInt8(boolean inc)
         {
             byte[] buffer = new byte[1];
-            vp.readByteArray(buffer, 0, 1, inc);
+            vp.readByteArray(buffer, 0, 1, inc, false);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
             return buffer[0];
         }
@@ -109,7 +109,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 VirtualPointer.Bool,
 //#endif
-                inc);
+                inc, false);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
         
@@ -121,7 +121,7 @@ public class VirtualPointer
         public boolean readBool(boolean inc)
         {
             byte[] buffer = new byte[1];
-            vp.readByteArray(buffer, 0, 1, inc);
+            vp.readByteArray(buffer, 0, 1, inc, false);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
             return buffer[0] != 0;
         }
@@ -137,7 +137,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 VirtualPointer.Int16,
 //#endif
-                inc);
+                inc, true);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
         
@@ -149,7 +149,7 @@ public class VirtualPointer
         public short readInt16(boolean inc)
         {
             byte[] buffer = new byte[2];
-            vp.readByteArray(buffer, 0, 2, inc);
+            vp.readByteArray(buffer, 0, 2, inc, true);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
             return BitConverter.toInt16(buffer, 0);
         }
@@ -165,7 +165,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 VirtualPointer.Int32,
 //#endif
-                inc);
+                inc, true);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
         
@@ -177,7 +177,7 @@ public class VirtualPointer
         public int readInt32(boolean inc)
         {
             byte[] buffer = new byte[4];
-            vp.readByteArray(buffer, 0, 4, inc);
+            vp.readByteArray(buffer, 0, 4, inc, true);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
             return BitConverter.toInt32(buffer, 0);
         }
@@ -193,7 +193,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 VirtualPointer.Int64,
 //#endif
-                inc);
+                inc, true);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
         
@@ -205,7 +205,7 @@ public class VirtualPointer
         public long readInt64(boolean inc)
         {
             byte[] buffer = new byte[8];
-            vp.readByteArray(buffer, 0, 8, inc);
+            vp.readByteArray(buffer, 0, 8, inc, true);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
             return BitConverter.toInt64(buffer, 0);
         }
@@ -221,7 +221,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 VirtualPointer.Char,
 //#endif
-                inc);
+                inc, true);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
         
@@ -233,7 +233,7 @@ public class VirtualPointer
         public char readChar(boolean inc)
         {
             byte[] buffer = new byte[2];
-            vp.readByteArray(buffer, 0, 2, inc);
+            vp.readByteArray(buffer, 0, 2, inc, true);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
             return BitConverter.toChar(buffer, 0);
         }
@@ -249,7 +249,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 VirtualPointer.Float,
 //#endif
-                inc);
+                inc, true);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
         
@@ -261,7 +261,7 @@ public class VirtualPointer
         public float readFloat(boolean inc)
         {
             byte[] buffer = new byte[4];
-            vp.readByteArray(buffer, 0, 4, inc);
+            vp.readByteArray(buffer, 0, 4, inc, true);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
             return BitConverter.toFloat(buffer, 0);
         }
@@ -277,7 +277,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 VirtualPointer.Double,
 //#endif
-                inc);
+                inc, true);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
 
@@ -289,7 +289,7 @@ public class VirtualPointer
         public double readDouble(boolean inc)
         {
             byte[] buffer = new byte[8];
-            vp.readByteArray(buffer, 0, 8, inc);
+            vp.readByteArray(buffer, 0, 8, inc, true);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
             return BitConverter.toDouble(buffer, 0);
         }
@@ -336,7 +336,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 unicode ? VirtualPointer.StringUnicode : VirtualPointer.StringAscii, 
 //#endif
-                inc);
+                inc, false);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
         
@@ -425,7 +425,7 @@ public class VirtualPointer
         {
             int len = actLen - (unicode ? 2 : 1);
             byte[] data = new byte[actLen];
-            vp.readByteArray(data, 0, actLen, inc);
+            vp.readByteArray(data, 0, actLen, inc, false);
             String en = unicode ? UTF_ENCODING : ASCII_ENCODING;
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
             try
@@ -450,7 +450,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 VirtualPointer.ByteArray,
 //#endif
-                inc);
+                inc, false);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
         
@@ -480,7 +480,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 VirtualPointer.Pointer,
 //#endif
-                inc);
+                inc, false);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
 
@@ -1000,7 +1000,7 @@ public class VirtualPointer
         			arr = (byte[])result[2];
         			elementCount = Math.min(elementCount, arr.length);
         		}
-        		this.vp.readByteArray(arr, 0, elementCount, true);
+        		this.vp.readByteArray(arr, 0, elementCount, true, false);
         	}
         	else if(primitiveType.equals("short"))
         	{
@@ -1581,7 +1581,7 @@ public class VirtualPointer
     }
     
 //#ifdef DEBUG
-    public byte[] readStructuredByteArray(boolean inc)
+    public byte[] readStructuredByteArray(boolean inc, boolean reverse)
     {
         if (dataPos < data.length)
         {
@@ -1590,14 +1590,14 @@ public class VirtualPointer
                 return new byte[0];
             }
             byte[] dat = new byte[this.len[dataPos]];
-            readByteArray(dat, 0, dat.length, inc);
+            readByteArray(dat, 0, dat.length, inc, reverse);
             return dat;
         }
         return null;
     }
 //#endif
     
-    public int readByteArray(byte[] buffer, int offset, int len, boolean inc)
+    public int readByteArray(byte[] buffer, int offset, int len, boolean inc, boolean reverse)
     {
         if (buffer == null)
         {
@@ -1637,14 +1637,35 @@ public class VirtualPointer
                 int count;
                 byte[] randData = new byte[(count = len >= 0 ? dif : dif + len)];
                 readRandom(new Random(), randData, 0, count);
-                System.arraycopy(randData, 0, buffer, len >= 0 ? len + offset : offset, randData.length);
+                if(reverse)
+                {
+                	int tOff = len >= 0 ? len + offset : offset;
+        			for(int i = randData.length - 1, k = 0; i >= 0; i--, k++)
+        			{
+        				buffer[k + tOff] = randData[i];
+        			}
+                }
+                else
+                {
+                	System.arraycopy(randData, 0, buffer, len >= 0 ? len + offset : offset, randData.length);
+                }
                 len += dif;
             }
             else
             {
             	synchronized (data)
                 {
-            		System.arraycopy(data, dataPos, buffer, offset, len);
+            		if(reverse)
+            		{
+            			for(int i = (dataPos + len) - 1, k = 0; i >= dataPos; i--, k++)
+            			{
+            				buffer[k + offset] = data[i];
+            			}
+            		}
+            		else
+            		{
+            			System.arraycopy(data, dataPos, buffer, offset, len);
+            		}
                 }
             }
             if (inc)
@@ -1669,7 +1690,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 byte type, 
 //#endif
-                boolean inc)
+                boolean inc, boolean reverse)
     {
         if (data == null)
         {
@@ -1697,7 +1718,18 @@ public class VirtualPointer
         {
         	synchronized (this.data)
             {
-                System.arraycopy(value, 0, data, dataPos, len);
+        		if(reverse)
+        		{
+        			int tLen = dataPos + len;
+        			for(int i = dataPos, k = len - 1; i < tLen; i++, k--)
+        			{
+        				value[k] = data[i];
+        			}
+        		}
+        		else
+        		{
+        			System.arraycopy(value, 0, data, dataPos, len);
+        		}
             }
         }
         if (inc)
@@ -1859,25 +1891,7 @@ public class VirtualPointer
     {
         synchronized (VirtualPointer.serializers)
         {
-        	//return (Serializer)VirtualPointer.serializers.get(clazz); //This just does not seem reliable, it finds the Object then returns null.
-        	
-        	//Instead do this for saftey, extreamly stupid but for some reason it works sometimes, it's better to be redundent then to get null for an item in serializers.
-        	Object obj = VirtualPointer.serializers.get(clazz);
-        	if(obj != null)
-        	{
-        		return (Serializer)obj;
-        	}
-        	obj = VirtualPointer.serializers.get(clazz);
-        	if(obj != null)
-        	{
-        		return (Serializer)obj;
-        	}
-        	obj = VirtualPointer.serializers.get(clazz);
-        	if(obj != null)
-        	{
-        		return (Serializer)obj;
-        	}
-        	return null;
+        	return (Serializer)VirtualPointer.serializers.get(clazz.toString());
         }
     }
     
@@ -1887,11 +1901,11 @@ public class VirtualPointer
         {
     		if(ser == null)
     		{
-    			return (Serializer)VirtualPointer.serializers.remove(clazz);
+    			return (Serializer)VirtualPointer.serializers.remove(clazz.toString());
     		}
     		else
     		{
-    			return (Serializer)VirtualPointer.serializers.put(clazz, ser);
+    			return (Serializer)VirtualPointer.serializers.put(clazz.toString(), ser);
     		}
         }
     }

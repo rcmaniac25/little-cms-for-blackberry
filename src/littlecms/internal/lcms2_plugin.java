@@ -358,7 +358,7 @@ public class lcms2_plugin extends lcms2
 	    	if(Write != null)
 	    	{
 	    		byte[] temp = new byte[size];
-	    		if(Buffer.readByteArray(temp, 0, size, false) != size)
+	    		if(Buffer.readByteArray(temp, 0, size, false, false) != size)
 	    		{
 	    			return false;
 	    		}

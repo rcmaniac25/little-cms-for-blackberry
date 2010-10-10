@@ -206,7 +206,7 @@ final class cmsxform
 		if(buffer instanceof byte[])
     	{
     		byte[] val = (byte[])buffer;
-    		vp.readByteArray(val, 0, val.length, false);
+    		vp.readByteArray(val, 0, val.length, false, false);
     	}
 		else
 		{

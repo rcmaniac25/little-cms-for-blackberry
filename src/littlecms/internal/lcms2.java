@@ -459,8 +459,9 @@ public class lcms2
         public cmsICCHeader()
         {
         	this.reserved = new byte[28];
-        	date = new cmsDateTimeNumber();
-        	illuminant = new cmsEncodedXYZNumber();
+        	this.date = new cmsDateTimeNumber();
+        	this.illuminant = new cmsEncodedXYZNumber();
+        	this.profileID = new cmsProfileID();
         }
     }
     
