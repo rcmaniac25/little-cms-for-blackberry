@@ -94,7 +94,13 @@ final class lcms2_internal extends lcms2_plugin
 	
 	public static void _cmsAssert(boolean test, String exp)
 	{
-		//TODO: To implement
+//#ifdef DEBUG | CMS_ENABLE_ASSERT
+		if(!test)
+		{
+			new Throwable(exp).printStackTrace();
+			System.exit(1);
+		}
+//#endif
 	}
 	
 	//---------------------------------------------------------------------------------
@@ -234,7 +240,7 @@ final class lcms2_internal extends lcms2_plugin
 	// Suballocators. Those are blocks of memory that is freed at the end on whole block.
 	public static class _cmsSubAllocator_chunk
 	{
-		public static final int SIZE = VirtualPointer.SIZE + 4 + 4;
+		public static final int SIZE = VirtualPointer.SIZE + 4 + 4 + 4; //The last 4 is pointer
 		
 		public VirtualPointer Block;
 		public int BlockSize;
@@ -270,7 +276,7 @@ final class lcms2_internal extends lcms2_plugin
 	public static class _cmsMLUentry
 	{
 		public short Language;
-		public short Country;   
+		public short Country;
 	    
 		/** Offset to current unicode string*/
 		public int StrW;

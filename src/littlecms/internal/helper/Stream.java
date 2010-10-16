@@ -112,7 +112,7 @@ public abstract class Stream
 		return new FileStream(filename, mode, 0);
 	}
 	
-	private static class FileStream extends Stream
+	static class FileStream extends Stream
 	{
 		private FileConnection file;
 		private InputStream in;

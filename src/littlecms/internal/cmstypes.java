@@ -93,7 +93,7 @@ final class cmstypes
 	// This is the linked list that keeps track of the defined types
 	public static class _cmsTagTypeLinkedList
 	{
-		public static final int SIZE = cmsTagTypeHandler.SIZE;
+		public static final int SIZE = cmsTagTypeHandler.SIZE + 4;
 		
 		public cmsTagTypeHandler Handler;
 		public _cmsTagTypeLinkedList Next;

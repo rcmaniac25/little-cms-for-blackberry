@@ -423,7 +423,6 @@ final class cmscgats
     // NOTE: this function doesn't check if the path exists or even if it's legal
     private static boolean BuildAbsolutePath(final String relPath, final String basePath, StringBuffer buffer, int MaxLen)
     {
-    	//XXX Make sure this works proberly
         int len;
         char[] temp = new char[MaxLen - 1];
         
@@ -439,6 +438,7 @@ final class cmscgats
         Utility.strncpy(buffer, basePath, MaxLen);
         buffer.setCharAt(MaxLen-1, '\0');
         
+        //XXX Make sure this works properly, expects standard URL which BlackBerry uses but which this was not made to handle the full format
         len = buffer.toString().lastIndexOf(DIR_CHAR);
         if (len == -1)
         {

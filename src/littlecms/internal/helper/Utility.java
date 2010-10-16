@@ -38,6 +38,7 @@ import net.rim.device.api.i18n.DateFormat;
 import net.rim.device.api.i18n.ResourceBundle;
 import net.rim.device.api.system.RuntimeStore;
 import net.rim.device.api.util.Arrays;
+import net.rim.device.api.util.CharacterUtilities;
 //#ifndef BlackBerrySDK4.5.0
 import net.rim.device.api.util.LongVector;
 //#endif
@@ -843,7 +844,6 @@ public final class Utility
     
     public static int sscanf(final String str, final String format, Object[] argptr)
     {
-    	//TODO
-    	return -1;
+    	return PrintUtility.sscanf(str, format, argptr);
     }
 }

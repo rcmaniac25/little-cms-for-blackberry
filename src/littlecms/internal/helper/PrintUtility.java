@@ -120,6 +120,12 @@ final class PrintUtility
         return count;
 	}
 	
+	public static int sscanf(final String str, final String format, Object[] argptr)
+    {
+    	//TODO
+    	return -1;
+    }
+	
 	private static Long getAsLong(Object arg)
 	{
 		if(arg instanceof Long)
@@ -650,7 +656,8 @@ final class PrintUtility
                 case 'E': //Scientific notation
                 case 'g':
                 case 'G': //Takes the smaller output of 'f' and 'e'/'E'
-                case 'f': //Decimal floating point
+                case 'f':
+                case 'F': //Decimal floating point
                     return new FloatFormatElement(form);
                 case 'p': //Pointer address
                     return new PointerFormatElement(form);
@@ -709,13 +716,14 @@ final class PrintUtility
             {
                 //Width
                 String el = elements[pos - 1];
-                if (el.indexOf('*') >= 0)
+                int loc;
+                if ((loc = el.indexOf('*')) >= 0)
                 {
                     requiresInput = 1;
                 }
-                else
+                if (el.length() > loc + 1)
                 {
-                    width = Integer.parseInt(el);
+                    width = Integer.parseInt(loc >= 0 ? el.substring(loc + 1) : el);
                 }
             }
             if (elements[pos++] != null)
@@ -1203,7 +1211,7 @@ final class PrintUtility
                     {
                         if (writing)
                         {
-                            bu.append((char)(result[k] + '0'));
+                            bu.append(result[k]);
                         }
                         else if (result[k] != 0)
                         {

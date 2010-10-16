@@ -48,6 +48,8 @@ public class lcms2_plugin extends lcms2
 	// Vectors
 	public static class cmsVEC3
 	{
+		public static final int SIZE = 8 * 3;
+		
 		public double[] n;
 		
 		public cmsVEC3()
@@ -59,6 +61,8 @@ public class lcms2_plugin extends lcms2
 	// 3x3 Matrix
 	public static class cmsMAT3
 	{
+		public static final int SIZE = cmsVEC3.SIZE * 3;
+		
 		public cmsVEC3[] v;
 		
 		public cmsMAT3()

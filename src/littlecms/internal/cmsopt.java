@@ -154,7 +154,7 @@ final class cmsopt
 	
 	// Simple optimizations ----------------------------------------------------------------------------------------------------------
 	
-	//XXX NOTE: The following 3 functions are modified from the original code so that _RemoveElement actually removes the element.
+	//NOTE: The following 3 functions are modified from the original code so that _RemoveElement actually removes the element.
 	
 	// Remove an element in linked chain
 	private static void _RemoveElement(cmsStage head)
