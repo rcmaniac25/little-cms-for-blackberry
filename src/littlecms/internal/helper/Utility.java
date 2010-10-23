@@ -38,7 +38,6 @@ import net.rim.device.api.i18n.DateFormat;
 import net.rim.device.api.i18n.ResourceBundle;
 import net.rim.device.api.system.RuntimeStore;
 import net.rim.device.api.util.Arrays;
-import net.rim.device.api.util.CharacterUtilities;
 //#ifndef BlackBerrySDK4.5.0
 import net.rim.device.api.util.LongVector;
 //#endif
@@ -839,11 +838,11 @@ public final class Utility
 			argptr = new Object[0];
 		}
 		*/
-		return PrintUtility.output(stream, count, format, argptr);
+		return PrintUtility.output(stream, count, format, argptr, null);
 	}
     
     public static int sscanf(final String str, final String format, Object[] argptr)
     {
-    	return PrintUtility.sscanf(str, format, argptr);
+    	return PrintUtility.sscanf(str, format, argptr, null);
     }
 }

@@ -1,9 +1,10 @@
 TODO:
 Finish floating point print formatter
-Write print unformatters (and write sscanf)
-Update PrintUtility.output and sscanf so the formatters can be cached
+Finish TODOs in PrintUtility
 
-Update file functions in cmscgats
+Correct file functions in cmscgats so they work for BlackBerry
+
+Go through helper classes and make sure documented
 
 Testing
 
@@ -20,7 +21,7 @@ Also, on a similar topic as above, nearly every class is a <need word bigger the
 Finally, again based off the above note, something must be done about Strings. The whole "C-string" thing is just not needed and is a waste, since the dev isn't expected to pass in a null-terminated String in the first place it is unneeded to use a null-terminated String. Allocating StringBuffer's with a full-length null String is an even bigger waste. See if it is possible to work around this once everything is working.
 
 Defines:
-CMS_USE_BIG_ENDIAN //Not supported because BlackBerry is little endian, just here so it is explicitly known that it isn't supported
+CMS_USE_BIG_ENDIAN //Not supported because BlackBerry is little endian, just here so it is explicitly known that it isn't supported [well it is used but it shouldn't be changed, it would screw up pretty much everything]
 CMS_DONT_USE_FAST_FLOOR
 CMS_DONT_USE_PTHREADS
 CMS_USE_PROFILE_BLACK_POINT_TAG

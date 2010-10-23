@@ -39,9 +39,21 @@ public
 //#endif
 final class PrintUtility
 {
-	public static int output(PrintStream out, int max, final String format, Object[] args)
+	public static int output(PrintStream out, int max, final String format, Object[] args, Object[][] formatCache)
 	{
-		Object[] formats = breakFormat(format, null);
+		Object[] formats;
+		if(formatCache != null && formatCache.length > 0 && formatCache[0] != null)
+		{
+			formats = formatCache[0];
+		}
+		else
+		{
+			formats = breakFormat(format, null);
+			if(formatCache != null && formatCache.length > 0)
+			{
+				formatCache[0] = formats;
+			}
+		}
         if (max < 0)
         {
             max = Integer.MAX_VALUE;
@@ -117,13 +129,188 @@ final class PrintUtility
                 }
             }
         }
+        if(formatCache != null && formatCache.length > 0)
+		{
+        	for(int i = 0; i < len; i++)
+        	{
+        		if(formats[i] instanceof FormatElement)
+        		{
+        			((FormatElement)formats[i]).reset();
+        		}
+        	}
+		}
         return count;
 	}
 	
-	public static int sscanf(final String str, final String format, Object[] argptr)
+	public static int sscanf(final String str, final String format, Object[] argptr, Object[][] formatCache)
     {
-    	//TODO
-    	return -1;
+		boolean doValidate = true;
+		Object[] formats;
+		if(formatCache != null && formatCache.length > 0 && formatCache[0] != null)
+		{
+			doValidate = false;
+			formats = formatCache[0];
+		}
+		else
+		{
+			formats = breakFormat(format, null);
+			if(formatCache != null && formatCache.length > 0)
+			{
+				formatCache[0] = formats;
+			}
+		}
+        char[] chars = str.toCharArray();
+        int slen = str.length();
+        int len = formats.length;
+        int argLen = argptr.length;
+        int[] tempVals = new int[2]; //index 0 is "str pos", index 1 is "arg pos"
+        //Simplify formats even more, this will not be cached because if the cache was used on output it would create an invalid formatted element
+        for (int i = 0; i < len; i++)
+        {
+            Object obj = formats[i];
+            if (obj instanceof String)
+            {
+                String tmp = (String)obj;
+                tmp = tmp.trim();
+                if (tmp.length() == 0)
+                {
+                    Object[] nForms = new Object[len - 1];
+                    System.arraycopy(formats, 0, nForms, 0, i);
+                    System.arraycopy(formats, i + 1, nForms, i, len - (i + 1));
+                    len = nForms.length;
+                    i--;
+                    formats = nForms;
+                }
+                else
+                {
+                    Vector nEl = null;
+                    int l = tmp.length();
+                    for (int k = 0; k < l; k++)
+                    {
+                        if (isWhiteSpace(tmp.charAt(k)))
+                        {
+                            if (nEl == null)
+                            {
+                                nEl = new Vector();
+                            }
+                            nEl.addElement(tmp.substring(0, k).trim());
+                            tmp = tmp.substring(k).trim();
+                            k = 0;
+                            l = tmp.length();
+                        }
+                    }
+                    if (nEl != null)
+                    {
+                        //Get forgotten element
+                        nEl.addElement(tmp);
+                        int nElSize;
+                        Object[] nForms = new Object[len + (nElSize = nEl.size()) - 1];
+                        System.arraycopy(formats, 0, nForms, 0, i);
+                        Object[] tObj = new Object[nElSize];
+                        nEl.copyInto(tObj);
+                        System.arraycopy(tObj, 0, nForms, i, nElSize);
+                        System.arraycopy(formats, i + 1, nForms, i + nElSize, len - (i + 1));
+                        len = nForms.length;
+                        i += nElSize - 1;
+                        formats = nForms;
+                    }
+                    else
+                    {
+                        formats[i] = tmp;
+                    }
+                }
+            }
+        }
+        //Process str
+        for (int i = 0; i < len && tempVals[0] < slen; i++)
+        {
+            //Skip Whitespace
+            while (isWhiteSpace(chars[tempVals[0]]))
+            {
+                tempVals[0]++;
+            }
+            if (tempVals[0] >= slen)
+            {
+                break;
+            }
+            
+            //Process elements
+            Object obj = formats[i];
+            if (obj instanceof String)
+            {
+                String tmp = (String)obj;
+                if (str.indexOf(tmp, tempVals[0]) != tempVals[0])
+                {
+                    break;
+                }
+                tempVals[0] += tmp.length();
+            }
+            else
+            {
+                FormatElement form = (FormatElement)obj;
+                if (form == null)
+                {
+                	throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.BAD_STRING_FORMAT));
+                }
+                if(doValidate)
+                {
+                	if(!validateUnformatter(form.getFormat()))
+                	{
+                		//Invalid format, return
+                		if(formatCache != null && formatCache.length > 0)
+                		{
+                			formatCache[0] = null;
+                		}
+                		break;
+                	}
+                }
+                int sp = tempVals[0];
+                int ap = tempVals[1];
+                form.unformat(str, argptr, tempVals);
+                if (sp == tempVals[0] && ap == tempVals[1])
+                {
+                    //This means something went wrong, no changes to the input String or arguments occured
+                    break;
+                }
+                //count += (tempVals[1] - ap); //This is simply the number of arguments read
+                if(tempVals[1] >= argLen)
+                {
+                	break; //Reached the max number of args that can be parsed, no need to keep processing
+                }
+            }
+        }
+        if(formatCache != null && formatCache.length > 0)
+		{
+        	for(int i = 0; i < len; i++)
+        	{
+        		if(formats[i] instanceof FormatElement)
+        		{
+        			((FormatElement)formats[i]).reset();
+        		}
+        	}
+		}
+        return tempVals[1];
+    }
+	
+	private static boolean validateUnformatter(String form)
+	{
+		//TODO: Figure out how to do a general validation of format
+		return false;
+	}
+	
+	static boolean isWhiteSpace(char c)
+    {
+        switch (c)
+        {
+            case ' ':
+            case '\n':
+            case '\r':
+            case '\t':
+            case '\0':
+                return true;
+            default:
+                return false;
+        }
     }
 	
 	private static Long getAsLong(Object arg)
@@ -609,31 +796,33 @@ final class PrintUtility
         {
             this.format = format;
         }
-
+        
         public abstract String format(Object obj);
-
-        public abstract void unformat(String value, Object refO);
-
+        
+        public abstract void unformat(String value, Object[] refO, int[] vals);
+        
         public String getFormat()
         {
             return format;
         }
-
+        
         public abstract void setInputValue(Long one, Long two);
-
+        
         public abstract boolean takesArg();
-
+        
         public abstract int requires();
-
+        
         public abstract int argLocation();
         
         public abstract String getNullParamOutput();
-
+        
+        public abstract void reset();
+        
         public boolean hasArgLocation()
         {
             return argLocation() >= 0;
         }
-
+        
         public static FormatElement getFormatter(String form)
         {
             if (form.charAt(0) != '%')
@@ -669,7 +858,7 @@ final class PrintUtility
         {
         	System.err.println(formatter + Utility.LCMS_Resources.getString(LCMSResource.PRINTUTIL_UNK_ARG) + defValue + ". Arg:" + element);
         }
-
+        
         public String ToString()
         {
             return format;
@@ -686,10 +875,15 @@ final class PrintUtility
         public GeneralFormatElement(String format)
         {
         	super(format);
-            this.precision = -1;
-            this.width = -1;
-            this.arg = true; //Not sure why this should be included but could be useful in the future or depending on implemintation.
+        	reset();
+            this.arg = true; //Not sure why this should be included but could be useful in the future or depending on implementation.
             parseFormat();
+        }
+        
+        public void reset()
+        {
+        	this.precision = -1;
+            this.width = -1;
         }
         
         private void parseFormat()
@@ -859,7 +1053,7 @@ final class PrintUtility
         	return inFormat(null);
         }
 
-        public void unformat(String value, Object refO)
+        public void unformat(String value, Object[] refO, int[] vals)
         {
             throw new UnsupportedOperationException();
         }
@@ -883,6 +1077,11 @@ final class PrintUtility
             else if (obj instanceof StringBuffer)
             {
                 str = ((StringBuffer)obj).toString();
+                int len = Utility.strlen(str);
+                if(len != str.length())
+                {
+                	str = str.substring(0, len);
+                }
             }
             if (str == null)
             {
@@ -890,13 +1089,13 @@ final class PrintUtility
                 {
                     if (this.length == 'l')
                     {
-                        str = new String((char[])obj);
+                        str = new String((char[])obj, 0, Utility.strlen((char[])obj));
                     }
                     else
                     {
                         char[] chars = (char[])obj;
                         int len;
-                        byte[] nBytes = new byte[len = charType ? 1 : chars.length];
+                        byte[] nBytes = new byte[len = charType ? 1 : Utility.strlen(chars)];
                         for (int i = 0; i < len; i++)
                         {
                             nBytes[i] = (byte)chars[i];
@@ -980,10 +1179,164 @@ final class PrintUtility
         	return this.type == 'c' ? "\0" : "(null)";
         }
 
-        public void unformat(String value, Object refO)
+        public void unformat(String value, Object[] refO, int[] vals)
         {
-        	//TODO
-            throw new UnsupportedOperationException();
+        	int w = this.width;
+            if (w < 0)
+            {
+                w = 1;
+            }
+            int len = value.length();
+            int org = vals[0];
+            if (this.type == 'c')
+            {
+                char[] items = new char[w];
+                value.getChars(org, org + w, items, 0);
+                vals[0] += w;
+                int t = vals[1] + w;
+                if (this.requiresInput == 1)
+                {
+                    return;
+                }
+                for (int i = vals[1], e = 0; i < t; i++, e++)
+                {
+                    vals[1]++;
+                    Object obj = refO[i];
+                    if (obj == null || !obj.getClass().isArray())
+                    {
+                    	if(obj != null)
+                    	{
+                    		if(!(obj instanceof VirtualPointer || obj instanceof StringBuffer))
+                    		{
+                    			return;
+                    		}
+                    	}
+                		else
+                		{
+                			return;
+                		}
+                    }
+                    if (obj instanceof char[])
+                    {
+                        ((char[])obj)[0] = items[e];
+                    }
+                    else if(obj instanceof byte[])
+                    {
+                    	((byte[])obj)[0] = (byte)items[e];
+                    }
+                    else if(obj instanceof short[])
+                    {
+                    	((short[])obj)[0] = (short)items[e];
+                    }
+                    else if(obj instanceof int[])
+                    {
+                    	((int[])obj)[0] = items[e];
+                    }
+                    else if(obj instanceof long[])
+                    {
+                    	((long[])obj)[0] = items[e];
+                    }
+                    else if(obj instanceof StringBuffer)
+                    {
+                    	StringBuffer buf = (StringBuffer)obj;
+                    	if(buf.length() == buf.capacity())
+                    	{
+                    		buf.setCharAt(0, items[e]);
+                    	}
+                    	else
+                    	{
+                    		buf.append(items[e]);
+                    	}
+                    }
+                    else if(obj instanceof VirtualPointer)
+                    {
+                    	VirtualPointer.TypeProcessor proc = ((VirtualPointer)obj).getProcessor();
+                    	proc.write(items[e]);
+                    }
+                    else
+                    {
+                    	argError("StringFormat", "null", obj.getClass());
+                    }
+                }
+            }
+            else
+            {
+                for (w = 0; w < len; w++)
+                {
+                    if (PrintUtility.isWhiteSpace(value.charAt(org + w)))
+                    {
+                        break;
+                    }
+                }
+                if (this.width < w && this.width != -1)
+                {
+                    w = this.width;
+                }
+                vals[0] += w;
+                if (this.requiresInput == 1)
+                {
+                    return; //Skip argument
+                }
+                Object obj = refO[vals[1]];
+                vals[1]++;
+                if (obj == null || !obj.getClass().isArray())
+                {
+                	if(obj != null)
+                	{
+                		if(!(obj instanceof VirtualPointer || obj instanceof StringBuffer))
+                		{
+                			return;
+                		}
+                	}
+            		else
+            		{
+            			return;
+            		}
+                }
+                String sVal = value.substring(org, org + w);
+                if (obj instanceof String[])
+                {
+                    ((String[])refO)[0] = sVal;
+                }
+                else if (obj instanceof char[])
+                {
+                    System.arraycopy(sVal.toCharArray(), 0, (char[])obj, 0, w);
+                }
+                else if(obj instanceof byte[])
+                {
+                	System.arraycopy(sVal.getBytes(), 0, (byte[])obj, 0, w);
+                }
+                else if(obj instanceof short[])
+                {
+                	short[] sh = (short[])obj;
+                	char[] ch = sVal.toCharArray();
+                	for(int i = 0; i < w; i++)
+                	{
+                		sh[i] = (short)ch[i];
+                	}
+                }
+                else if(obj instanceof StringBuffer)
+                {
+                	StringBuffer buf = (StringBuffer)obj;
+                	if(buf.length() == buf.capacity())
+                	{
+                		Utility.strncpy(buf, sVal, w);
+                	}
+                	else
+                	{
+                		buf.append(sVal);
+                	}
+                }
+                else if(obj instanceof VirtualPointer)
+                {
+                	VirtualPointer.TypeProcessor proc = ((VirtualPointer)obj).getProcessor();
+                	proc.write(sVal);
+                }
+                else
+                {
+                	argError("StringFormat", "null", obj.getClass());
+                }
+            }
         }
     }
 	
@@ -1149,7 +1502,7 @@ final class PrintUtility
                 }
                 else
                 {
-                	str = Long.toString(value, 16);
+                	str = Long.toString(value, 16); //TODO: Double check this, if the number is negative it prints a negative sign. Should not do that.
                     if (flags != null && flags.indexOf('#') >= 0 && value != 0)
                     {
                         bu.append('0');
@@ -1238,10 +1591,293 @@ final class PrintUtility
         	return "0";
         }
         
-        public void unformat(String value, Object refO)
+        public void unformat(String value, Object[] refO, int[] vals)
         {
-        	//TODO
-            throw new UnsupportedOperationException();
+        	int len = value.length();
+            int org = vals[0];
+            int w;
+            boolean sign = false;
+            char c;
+            char type = this.type;
+            boolean basicType = this.basicType;
+            boolean signed = this.signed;
+            for (w = 0; w < len; w++)
+            {
+                c = value.charAt(org + w);
+                if (!sign)
+                {
+                    if (Character.isDigit(c))
+                    {
+                        sign = true;
+                        if (type == 'i' && c == '0')
+                        {
+                            //We might be on to something
+                            if (w + 1 < len)
+                            {
+                                if (value.charAt(org + w + 1) == 'x')
+                                {
+                                    //A ha, hex
+                                    type = 'Z'; //Do this to trick the rest of the parser into reading hex
+                                    basicType = false;
+                                    if (signed && c == '-')
+                                    {
+                                        //Hmm, if this is a hex integer it can't be negative
+                                        return;
+                                    }
+                                    signed = false;
+                                    w++;
+                                }
+                                else
+                                {
+                                    //Since it wasn't hex then it must be octal
+                                    type = 'o';
+                                    basicType = false;
+                                    signed = true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            w--;
+                        }
+                    }
+                    else if (c == '+' || (signed && c == '-'))
+                    {
+                        sign = true;
+                        if (type == 'i')
+                        {
+                            //Do a quick check to see what the next value is
+                            if (w + 1 < len)
+                            {
+                                if (value.charAt(org + w + 1) == '0')
+                                {
+                                    w++;
+                                    //We might be on to something
+                                    if (w + 1 < len)
+                                    {
+                                        if (value.charAt(org + w + 1) == 'x')
+                                        {
+                                            //A ha, hex
+                                            type = 'Z'; //Do this to trick the rest of the parser into reading hex
+                                            basicType = false;
+                                            if (signed && c == '-')
+                                            {
+                                                //Hmm, if this is a hex integer it can't be negative
+                                                return;
+                                            }
+                                            signed = false;
+                                            w++;
+                                        }
+                                        else
+                                        {
+                                            //Since it wasn't hex then it must be octal
+                                            type = 'o';
+                                            basicType = false;
+                                            signed = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    if (Character.isDigit(c))
+                    {
+                        if (!basicType && signed && c > '7')
+                        {
+                            //Octal
+                            break;
+                        }
+                        continue;
+                    }
+                    else if (!basicType)
+                    {
+                        if (!signed)
+                        {
+                            //Hex
+                            if (type <= 'X')
+                            {
+                                //Upper case
+                                if (c >= 'A' && c <= 'F')
+                                {
+                                    continue;
+                                }
+                            }
+                            else if (type <= 'x')
+                            {
+                                //Lower case
+                                if (c >= 'a' && c <= 'f')
+                                {
+                                    continue;
+                                }
+                            }
+                            else if (type == 'Z')
+                            {
+                                //Dynamic hex
+                                if ((c >= 'A' && c <= 'F') && (c >= 'a' && c <= 'f'))
+                                {
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+            vals[0] += w;
+            if (this.requiresInput == 1)
+            {
+                return;
+            }
+            String stval = value.substring(org, org + w);
+            short sval = 0;
+            int ival = 0;
+            long lval = 0;
+            try
+            {
+                //TODO, do some preliminary size checks, if a number is 800 chars it's not going to get parsed (unless every digit is a zero or something similar)
+                switch (type)
+                {
+                    case 'd':
+                    case 'i':
+                        //Signed decimal integer
+                        switch (this.length)
+                        {
+                            default:
+                            	ival = Integer.parseInt(stval);
+                                break;
+                            case 'h':
+                                sval = Short.parseShort(stval);
+                                break;
+                            case 'l':
+                                lval = Long.parseLong(stval);
+                                break;
+                        }
+                        break;
+                    case 'o':
+                        //Signed octal
+                    	switch (this.length)
+                        {
+                            default:
+                            	ival = Integer.parseInt(stval, 8);
+                                break;
+                            case 'h':
+                                sval = Short.parseShort(stval, 8);
+                                break;
+                            case 'l':
+                                lval = Long.parseLong(stval, 8);
+                                break;
+                        }
+                        break;
+                        
+                    case 'x':
+                    case 'X':
+                    case 'Z': //Small hack
+                        //Unsigned hexadecimal integer
+                    	switch (this.length)
+                        {
+                    	//TODO
+                            default:
+                            	ival = Integer.parseInt(stval, 16);
+                                break;
+                            case 'h':
+                                sval = Short.parseShort(stval, 16);
+                                break;
+                            case 'l':
+                                lval = Long.parseLong(stval, 16);
+                                break;
+                        }
+                        break;
+                    case 'u':
+                        //Unsigned decimal integer
+                    	switch (this.length)
+                        {
+                            default:
+                            	ival = (int)(Long.parseLong(stval) & 0xFFFFFFFF);
+                                break;
+                            case 'h':
+                                sval = (short)(Integer.parseInt(stval) & 0xFFFF);
+                                break;
+                            case 'l':
+                            	//TODO
+                                lval = Long.parseLong(stval);
+                                break;
+                        }
+                        break;
+                }
+            }
+            catch (NumberFormatException e)
+            {
+                return;
+            }
+            Object obj = refO[vals[1]];
+            if (obj == null || !obj.getClass().isArray())
+            {
+            	if(obj != null)
+            	{
+            		if(!(obj instanceof VirtualPointer))
+            		{
+            			return;
+            		}
+            	}
+            	else
+            	{
+            		return;
+            	}
+            }
+            vals[1]++;
+            boolean written = false;
+            switch (this.length)
+            {
+                default:
+                    if (obj instanceof int[])
+                    {
+                        written = true;
+                        ((int[])obj)[0] = ival;
+                    }
+                    else if(obj instanceof VirtualPointer)
+                    {
+                    	written = true;
+                    	((VirtualPointer)obj).getProcessor().write(ival);
+                    }
+                    break;
+                case 'h':
+                    if (obj instanceof short[])
+                    {
+                        written = true;
+                        ((short[])obj)[0] = sval;
+                    }
+                    else if(obj instanceof VirtualPointer)
+                    {
+                    	written = true;
+                    	((VirtualPointer)obj).getProcessor().write(sval);
+                    }
+                    break;
+                case 'l':
+                    if (obj instanceof long[])
+                    {
+                        written = true;
+                        ((long[])obj)[0] = lval;
+                    }
+                    else if(obj instanceof VirtualPointer)
+                    {
+                    	written = true;
+                    	((VirtualPointer)obj).getProcessor().write(lval);
+                    }
+                    break;
+            }
+            if (!written)
+            {
+                //Error
+                vals[1]--;
+                vals[0] -= w;
+            }
         }
     }
 	
@@ -1260,14 +1896,156 @@ final class PrintUtility
         
         public String getNullParamOutput()
         {
-        	//TODO
-            throw new UnsupportedOperationException();
+        	switch(this.type)
+        	{
+        		default:
+	        	case 'f':
+	        	case 'F':
+	        	case 'g':
+	        	case 'G':
+	        		return "0";
+	        	case 'e':
+	        		return "0e+00";
+	        	case 'E':
+	        		return "0E+00";
+        	}
         }
 
-        public void unformat(String value, Object refO)
+        public void unformat(String value, Object[] refO, int[] vals)
         {
-        	//TODO
-            throw new UnsupportedOperationException();
+        	int len = value.length();
+            int org = vals[0];
+            int w;
+            boolean sign = false;
+            char c;
+            for (w = 0; w < len; w++)
+            {
+                c = value.charAt(org + w);
+                if (!sign)
+                {
+                    if (Character.isDigit(c))
+                    {
+                        sign = true;
+                        w--;
+                    }
+                    else if (c == '+' || c == '-')
+                    {
+                        sign = true;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    if (c == '.' && (w < len && Character.isDigit(value.charAt(org + w + 1))))
+                    {
+                        //Decimal and correct format
+                        w++;
+                        continue;
+                    }
+                    else if (Character.isDigit(c))
+                    {
+                        continue;
+                    }
+                    char type = this.type;
+                    boolean caps = type <= 'Z'; //Lower case is after upper case
+                    if (type == 'f' || type == 'F')
+                    {
+                        //Not a digit? End
+                        break;
+                    }
+                    switch (type)
+                    {
+                        case 'g':
+                        case 'G':
+                        case 'e':
+                        case 'E':
+                            if (c == '+' || c == '-')
+                            {
+                                continue;
+                            }
+                            else if ((caps && c == 'E') || (!caps && c == 'e'))
+                            {
+                                continue;
+                            }
+                            break;
+                    }
+                    break;
+                }
+            }
+            vals[0] += w;
+            if (this.requiresInput == 1)
+            {
+                return;
+            }
+            float valf = 0;
+            double vald = 0;
+            try
+            {
+                if (this.length == 'l' || this.length == 'L')
+                {
+                    vald = Double.parseDouble(value.substring(org, org + w));
+                }
+                else
+                {
+                    valf = Float.parseFloat(value.substring(org, org + w));
+                }
+            }
+            catch (NumberFormatException e)
+            {
+                return;
+            }
+            Object obj = refO[vals[1]];
+            if (obj == null || !obj.getClass().isArray())
+            {
+            	if(obj != null)
+            	{
+            		if(!(obj instanceof VirtualPointer))
+            		{
+            			return;
+            		}
+            	}
+            	else
+            	{
+            		return;
+            	}
+            }
+            vals[1]++;
+            boolean written = false;
+            if (this.length == 'l' || this.length == 'L')
+            {
+                if (obj instanceof double[])
+                {
+                    written = true;
+                    ((double[])obj)[0] = vald;
+                }
+                else if(obj instanceof VirtualPointer)
+                {
+                	written = true;
+                	((VirtualPointer)obj).getProcessor().write(vald);
+                }
+            }
+            else
+            {
+                if (obj instanceof float[])
+                {
+                    written = true;
+                    ((float[])obj)[0] = valf;
+                }
+                else if(obj instanceof VirtualPointer)
+                {
+                	written = true;
+                	((VirtualPointer)obj).getProcessor().write(valf);
+                }
+            }
+            if (!written)
+            {
+                //Error
+                vals[1]--;
+                vals[0] -= w;
+            }
         }
     }
 	
@@ -1306,7 +2084,7 @@ final class PrintUtility
         	return "0000:0000";
         }
 
-        public void unformat(String value, Object refO)
+        public void unformat(String value, Object[] refO, int[] vals)
         {
             throw new UnsupportedOperationException();
         }
