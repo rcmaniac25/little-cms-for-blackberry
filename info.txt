@@ -1,12 +1,21 @@
+--Last update: 12/27/2010--
+--Revision Used: ??/??/2010-- (the date on which the source code was pulled from GIT)
+
 TODO:
 Finish floating point print formatter
 Finish TODOs in PrintUtility
+Go through TODOs in helper package
 
 Correct file functions in cmscgats so they work for BlackBerry
-
 Go through helper classes and make sure documented
+Make sure byte order returned by BitConverter is correct (since it doesn't match .Net BitConverter right now)
+Testing (LCMS 2.0)
 
-Testing
+Update LCMS 4 BB to LCMS 2.1
+Testing (LCMS 2.1)
+
+Update LCMS 4 BB to the same level as the GIT build
+If Test system has been updated then do testing
 
 See notes
 
@@ -14,6 +23,7 @@ Figure out what the high-level structures should be, then...
 Create high-level structures that handle color management in a true OOP fashion.
 
 NOTES:
+Version is defines: Major.Minor.Build; Major and Minor are taken from LCMS itself. Build is for modifications done for LCMS 4 BB
 VirtualPointer piece is cumbersome but allows internal system to act more like C/C++. If used properly it should be fast and have a low overhead (except when deserializeing items).
 Strings follow the guidelines listed in "http://docs.blackberry.com/en/developers/deliverables/3299/JDE_4.5_Fundamentals_Guide.pdf" which state not to use static final for Strings because then Strings need to be loaded multiple times and multiple instances of the same String exist.
 See if performance can be improved in cmsintrp, every delegate including and after Eval4InputsFloat recreates cmsInterpParams, the LutTable, and the input params. Sometimes twice, this is a HUGE waste of memory.
@@ -26,7 +36,8 @@ CMS_DONT_USE_FAST_FLOOR
 CMS_DONT_USE_PTHREADS
 CMS_USE_PROFILE_BLACK_POINT_TAG
 CMS_STRICT_CGATS
-USE_IO_BIT_CONVERTER //Use java.io to convert value types to bytes and back
-RAW_C //Code is similar, to near exact the same as C/C++, not fully used (obviously cumbersome)
+CMS_USE_IO_BIT_CONVERTER //Use java.io to convert value types to bytes and back
+CMS_RAW_C //Code is similar, to near exact the same as C/C++, not fully used (obviously cumbersome)
 CMS_REALLOC_PTR //By default a C pointer passed into a function is independent of the original pointer unless it is a pointer to the pointer. Since VirtualPointer is a Java class that operation is reversed. This definition reverses the process back to the C process but depending on if the dev is willing to use more memory and the operation is really necessary it can be changed.
 CMS_ENABLE_ASSERT //If not in debug compilation mode then assert is ignored, this explicitly enabled it.
+CMS_USE_NATIVE_BIGINT //Use a native big int for big number math. This requires Certicom signing if used. By default it is not used

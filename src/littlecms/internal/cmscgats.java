@@ -27,7 +27,6 @@
 //
 package littlecms.internal;
 
-import net.rim.device.api.util.Arrays;
 //#ifndef BlackBerrySDK4.5.0
 import net.rim.device.api.util.MathUtilities;
 //#endif
@@ -424,7 +423,7 @@ final class cmscgats
     private static boolean BuildAbsolutePath(final String relPath, final String basePath, StringBuffer buffer, int MaxLen)
     {
         int len;
-        char[] temp = new char[MaxLen - 1];
+        //char[] temp = new char[MaxLen - 1];
         
         // Already absolute?
         if (isabsolutepath(relPath))

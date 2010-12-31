@@ -1522,7 +1522,7 @@ final class PrintUtility
         
         private String ulongToString(long _val)
         {
-        	//Not very efficient but works well
+        	//TODO: Not very efficient but works well
         	StringBuffer bu = new StringBuffer();
             if ((_val & 0x8000000000000000L) != 0)
             {
@@ -1891,7 +1891,167 @@ final class PrintUtility
         public String inFormat(Object obj)
         {
         	//TODO
+        	//XXX: For the CryptoByteArrayArithmetic, the toString function must be reversed and "log2modulus" equals the result length * 2. This makes a limit of 0xFFFFFFF bytes for the length of the result, or 0x7FFFFFF getting multiplied.
             throw new UnsupportedOperationException();
+        }
+        
+        private static void writeFloatingPoint(StringBuffer buf, double v, int p)
+        {
+        	//TODO: Could possibly replace append with the toString overload which takes a StringBuffer
+            if (Double.isNaN(v) || Double.isInfinite(v))
+            {
+                if (Double.isNaN(v))
+                {
+                    buf.append("nan");
+                }
+                else if (v == Double.NEGATIVE_INFINITY)
+                {
+                    buf.append("-inf");
+                }
+                else
+                {
+                    buf.append("inf");
+                }
+                return;
+            }
+            long temp = Double.doubleToLongBits(v);
+            int exp = ((int)((temp & 0x7FF0000000000000L) >>> 52)) - 1023;
+            boolean neg = (temp & 0x8000000000000000L) == 0x8000000000000000L;
+            long mantissa = (temp & ((1L << 52) - 1)) | (exp == -1023 ? 0 : (1L << 52));
+            exp -= 52;
+            if (p < 0)
+            {
+                p = 6; //Default precision: http://support.microsoft.com/kb/29557
+            }
+            
+            if (exp == 0 || mantissa == 0)
+            {
+                buf.append(mantissa);
+            }
+            else
+            {
+                if (Math.abs(exp) >= 63)
+                {
+                    if (exp > 0)
+                    {
+                        //Create the floating point value by multiplication (mantissa * 2^exp), using really big numbers
+                        //-Precision is not needed since it only covers decimal point
+                        buf.append(new LargeNumber(mantissa).multiply(new LargeNumber(exp)));
+                        
+                        /*
+                        double value = mantissa;
+                        for (int i = exp; i > 0; i--)
+                        {
+                            value *= 2;
+                        }
+                         */
+                    }
+                    else
+                    {
+                        //Create the floating point value by division (mantissa / 2^exp), using really big numbers
+                        LargeNumber man = new LargeNumber(mantissa);
+                        LargeNumber exponent = new LargeNumber(exp);
+                        
+                        LargeNumber ten = new LargeNumber(10L);
+                        LargeNumber rem;
+                        LargeNumber[] mod = null;
+                        //Whole number
+                        if (man.greaterThenOrEqual(exponent))
+                        {
+                            if (mod == null)
+                            {
+                                mod = new LargeNumber[1];
+                            }
+                            buf.append(man.divideAndMod(exponent, mod));
+                            rem = mod[0].multiply(ten);
+                        }
+                        else
+                        {
+                            buf.append('0');
+                            rem = man.multiply(ten);
+                        }
+                        //Decimal point
+                        if (!rem.zero() && p > 0)
+                        {
+                            buf.append('.');
+                            while (p-- > 0)
+                            {
+                                if (rem.greaterThenOrEqual(exponent))
+                                {
+                                    if (mod == null)
+                                    {
+                                        mod = new LargeNumber[1];
+                                    }
+                                    buf.append(rem.divideAndMod(exponent, mod));
+                                    rem = mod[0].multiply(ten);
+                                }
+                                else
+                                {
+                                    buf.append('0');
+                                    rem = rem.multiply(ten);
+                                }
+                            }
+                        }
+                        
+                        /*
+                        double value = mantissa;
+                        for (int i = exp; i < 0; i++)
+                        {
+                            value /= 2;
+                        }
+                         */
+                    }
+                }
+                else
+                {
+                    long twoPower = longPower(exp);
+                    if (exp > 0)
+                    {
+                        long result = mantissa * twoPower;
+                        if (result < 0) //Possible highest exponent before overflow occurs: 10 (0x1FFFFFFFFFFFFF * 2^10 = 0x7FFFFFFFFFFFFC00, 0x3FF diff before overflow. 0x1FFFFFFFFFFFFF * 2^11 = 1844674407370954956, which is overflow for a signed long)
+                        {
+                            //Overflow
+                            buf.append(new LargeNumber(mantissa).multiply(new LargeNumber(exp)));
+                        }
+                        else
+                        {
+                            buf.append(result);
+                        }
+                    }
+                    else
+                    {
+                        //Create the floating point value by division (mantissa / 2^exp)
+                        //-Make the whole number
+                        buf.append(mantissa / twoPower);
+                        long rem = (mantissa % twoPower) * 10;
+                        //Now calculate the decimal portion if necessary
+                        if (rem != 0 && p > 0)
+                        {
+                            buf.append('.');
+                            while (p-- > 0) //Precision only affects the decimal portion so calculate until the number precision digits is met
+                            {
+                                buf.append(rem / twoPower);
+                                rem = (rem % twoPower) * 10;
+                            }
+                        }
+                    }
+                }
+            }
+            if(neg)
+            {
+            	buf.insert(0, '-');
+            }
+        }
+        
+        private static long longPower(int exp)
+        {
+            exp = Math.abs(exp);
+            
+            //Built in
+            //return (long)Math.Pow(2, exp); //Bit shifting more efficient
+            
+            //Ints only
+            return 1L << exp;
         }
         
         public String getNullParamOutput()

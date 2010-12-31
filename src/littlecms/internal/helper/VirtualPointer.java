@@ -1225,7 +1225,7 @@ public class VirtualPointer
 		 * <p>
 		 * Finally the last element is the data itself, if this is not null then it should be used to set the data. Do not take the first element in the <i>val</i>
 		 * array as fact, if this element in the array is smaller then what the first element says then take this element's length instead of the first element. 
-		 * If it is null then take the first element in <i>val</i> and use that as the length the array should be. Note that if the first parameter is does not 
+		 * If it is null then take the first element in <i>val</i> and use that as the length the array should be. Note that if the first parameter does not 
 		 * end on the proper bounds for an element the the rest of the element should be made up so as to not mix up data (as if the element went outside of it's 
 		 * allocated bounds where it is undefined).
 		 */

@@ -27,7 +27,7 @@
 //@Author Vinnie Simonetti
 package littlecms.internal.helper;
 
-//#ifdef USE_IO_BIT_CONVERTER
+//#ifdef CMS_USE_IO_BIT_CONVERTER
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -44,7 +44,7 @@ public final class BitConverter
 {
 	public static byte[] getBytes(short value)
 	{
-//#ifdef USE_IO_BIT_CONVERTER
+//#ifdef CMS_USE_IO_BIT_CONVERTER
 		try
 		{
 			ByteArrayOutputStream baos = new ByteArrayOutputStream(2);
@@ -62,7 +62,7 @@ public final class BitConverter
 	
 	public static byte[] getBytes(int value)
 	{
-//#ifdef USE_IO_BIT_CONVERTER
+//#ifdef CMS_USE_IO_BIT_CONVERTER
 		try
 		{
 			ByteArrayOutputStream baos = new ByteArrayOutputStream(4);
@@ -80,7 +80,7 @@ public final class BitConverter
 	
 	public static byte[] getBytes(long value)
 	{
-//#ifdef USE_IO_BIT_CONVERTER
+//#ifdef CMS_USE_IO_BIT_CONVERTER
 		try
 		{
 			ByteArrayOutputStream baos = new ByteArrayOutputStream(8);
@@ -131,7 +131,7 @@ public final class BitConverter
 	public static short toInt16(byte[] value, int startIndex)
 	{
 		argumentCheck(value, startIndex, 2);
-//#ifdef USE_IO_BIT_CONVERTER
+//#ifdef CMS_USE_IO_BIT_CONVERTER
 		try
 		{
 			ByteArrayInputStream bais = new ByteArrayInputStream(value, startIndex, 2);
@@ -149,7 +149,7 @@ public final class BitConverter
 	public static int toInt32(byte[] value, int startIndex)
 	{
 		argumentCheck(value, startIndex, 4);
-//#ifdef USE_IO_BIT_CONVERTER
+//#ifdef CMS_USE_IO_BIT_CONVERTER
 		try
 		{
 			ByteArrayInputStream bais = new ByteArrayInputStream(value, startIndex, 4);
@@ -167,7 +167,7 @@ public final class BitConverter
 	public static long toInt64(byte[] value, int startIndex)
 	{
 		argumentCheck(value, startIndex, 8);
-//#ifdef USE_IO_BIT_CONVERTER
+//#ifdef CMS_USE_IO_BIT_CONVERTER
 		try
 		{
 			ByteArrayInputStream bais = new ByteArrayInputStream(value, startIndex, 8);

@@ -27,10 +27,6 @@
 //
 package littlecms.internal;
 
-//#ifndef BlackBerrySDK4.5.0
-import net.rim.device.api.util.MathUtilities;
-//#endif
-
 import net.rim.device.api.util.MathUtilities;
 import littlecms.internal.helper.Utility;
 import littlecms.internal.lcms2.cmsCIEXYZ;

@@ -248,7 +248,7 @@ final class cmsvirt
 	        cmswtpnt._cmsAdaptationMatrix(CHAD, null, WhitePointXYZ, lcms2.cmsD50_XYZ);     
 	        
 	        // This is a V4 tag, but many CMM does read and understand it no matter which version
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        VirtualPointer temp = new VirtualPointer(CHAD);
 //#else
 	        double[] temp = new double[3*3];

@@ -331,12 +331,12 @@ final class cmserr
 	private static _cmsSubAllocator_chunk _cmsCreateSubAllocChunk(cmsContext ContextID, int Initial)
 	{
 	    _cmsSubAllocator_chunk chunk;
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    VirtualPointer vp;
 //#endif
 	    
 	    // Create the container
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    chunk = (_cmsSubAllocator_chunk)(vp = _cmsMallocZero(ContextID, /*sizeof(_cmsSubAllocator_chunk)*/_cmsSubAllocator_chunk.SIZE)).getProcessor().readObject(_cmsSubAllocator_chunk.class);
 	    if (chunk == null)
 	    {
@@ -351,7 +351,7 @@ final class cmserr
 	    if (chunk.Block == null)
 	    {
 	        // Something went wrong
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        _cmsFree(ContextID, vp);
 //#endif
 	        return null;
@@ -375,12 +375,12 @@ final class cmserr
 	public static _cmsSubAllocator _cmsCreateSubAlloc(cmsContext ContextID, int Initial)
 	{
 	    _cmsSubAllocator sub;
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    VirtualPointer vp;
 //#endif
 	    
 	    // Create the container
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    sub = (_cmsSubAllocator)(vp = _cmsMallocZero(ContextID, /*sizeof(_cmsSubAllocator)*/_cmsSubAllocator.SIZE)).getProcessor().readObject(_cmsSubAllocator.class);
 	    if (sub == null)
 	    {
@@ -395,7 +395,7 @@ final class cmserr
 	    sub.h = _cmsCreateSubAllocChunk(ContextID, Initial);
 	    if (sub.h == null)
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        _cmsFree(ContextID, vp);
 //#endif
 	        return null;
@@ -416,13 +416,13 @@ final class cmserr
 	        {
 	        	_cmsFree(sub.ContextID, chunk.Block);
 	        }
-//#ifndef RAW_C
+//#ifndef CMS_RAW_C
 	        _cmsFree(sub.ContextID, new VirtualPointer(chunk));
 //#endif
 	    }
 	    
 	    // Free the header
-//#ifndef RAW_C
+//#ifndef CMS_RAW_C
 	    _cmsFree(sub.ContextID, new VirtualPointer(sub));
 //#endif
 	}

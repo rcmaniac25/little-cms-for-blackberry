@@ -80,7 +80,7 @@ final class cmsio0
 	{
 		cmsIOHANDLER iohandler = null;
 	    FILENULL fm = null;
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    VirtualPointer ioP, fmP;
 	    
 	    iohandler = (cmsIOHANDLER)(ioP = cmserr._cmsMallocZero(ContextID, /*sizeof(cmsIOHANDLER)*/cmsIOHANDLER.SIZE)).getProcessor().readObject(cmsIOHANDLER.class);
@@ -146,7 +146,7 @@ final class cmsio0
 			{
 				FILENULL ResData = (FILENULL)iohandler.stream;
 				
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 				cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(ResData));
 				cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(iohandler));
 //#endif
@@ -207,13 +207,13 @@ final class cmsio0
 	{
 	    cmsIOHANDLER iohandler = null;
 	    FILEMEM fm = null;
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    VirtualPointer ioP, fmP;
 //#endif
 	    
 		lcms2_internal._cmsAssert(AccessMode != 0, "AccessMode != 0");
 		
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    iohandler = (cmsIOHANDLER)(ioP = cmserr._cmsMallocZero(ContextID, /*sizeof(cmsIOHANDLER)*/cmsIOHANDLER.SIZE)).getProcessor().readObject(cmsIOHANDLER.class);
 	    if(iohandler == null)
 	    {
@@ -226,7 +226,7 @@ final class cmsio0
 	    switch (AccessMode)
 	    {
 		    case 'r':
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		        fm = (FILEMEM)(fmP = cmserr._cmsMallocZero(ContextID, /*sizeof(FILEMEM)*/FILEMEM.SIZE)).getProcessor().readObject(FILEMEM.class);
 		        if(fm == null)
 		        {
@@ -249,7 +249,7 @@ final class cmsio0
 		        if(Buffer == null)
 		        {
 		        	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_READ, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_CANT_READ_PROFILE_NULL_PTR), null);
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		        	if (fm != null)
 	        	    {
 		        		cmserr._cmsFree(ContextID, fmP);
@@ -265,7 +265,7 @@ final class cmsio0
 		        fm.Block = cmserr._cmsMalloc(ContextID, size);
 		        if(fm.Block == null)
 		        {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		        	cmserr._cmsFree(ContextID, fmP);
 		        	cmserr._cmsFree(ContextID, ioP);
 //#endif
@@ -279,7 +279,7 @@ final class cmsio0
 		        fm.Pointer = 0;
 		        break;
 		    case 'w':
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    	fm = (FILEMEM)(fmP = cmserr._cmsMallocZero(ContextID, /*sizeof(FILEMEM)*/FILEMEM.SIZE)).getProcessor().readObject(FILEMEM.class);
 		        if (fm == null)
 		        {
@@ -370,7 +370,7 @@ final class cmsio0
 			        }
 			    }
 			    
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 			    cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(ResData));
 			    cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(iohandler));
 //#endif
@@ -479,7 +479,7 @@ final class cmsio0
 				{
 					return false;
 				}
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 				cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(iohandler));
 //#endif
 			    return true;
@@ -517,7 +517,7 @@ final class cmsio0
 	{
 	    cmsIOHANDLER iohandler = null;
 	    Stream fm = null;
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    VirtualPointer ioP;
 		
 	    iohandler = (cmsIOHANDLER)(ioP = cmserr._cmsMallocZero(ContextID, /*sizeof(cmsIOHANDLER)*/cmsIOHANDLER.SIZE)).getProcessor().readObject(cmsIOHANDLER.class);
@@ -535,7 +535,7 @@ final class cmsio0
 		        fm = Stream.fopen(FileName, 'r');
 		        if (fm == null)
 		        {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		        	cmserr._cmsFree(ContextID, ioP);
 //#endif
 		        	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.FILE_NOT_FOUND), new Object[]{FileName});
@@ -546,7 +546,7 @@ final class cmsio0
 		        fm = Stream.fopen(FileName, 'w');
 		        if (fm == null)
 		        {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		        	cmserr._cmsFree(ContextID, ioP);
 //#endif
 		            cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_COULDNT_CREATE_FILE), new Object[]{FileName});
@@ -554,7 +554,7 @@ final class cmsio0
 		        }
 		        break;
 		    default:
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    	cmserr._cmsFree(ContextID, ioP);
 //#endif
 		    	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNK_ACCESS_MODE), new Object[]{new Character(AccessMode)});
@@ -578,7 +578,7 @@ final class cmsio0
 	{
 	    cmsIOHANDLER iohandler = null;
 		
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    iohandler = (cmsIOHANDLER)cmserr._cmsMallocZero(ContextID, /*sizeof(cmsIOHANDLER)*/cmsIOHANDLER.SIZE).getProcessor().readObject(cmsIOHANDLER.class);
 	    if (iohandler == null)
 	    {
@@ -607,7 +607,7 @@ final class cmsio0
 	public static cmsHPROFILE cmsCreateProfilePlaceholder(cmsContext ContextID)
 	{
 		Date now = new Date();
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)cmserr._cmsMallocZero(ContextID, /*sizeof(_cmsICCPROFILE)*/_cmsICCPROFILE.SIZE).getProcessor().readObject(_cmsICCPROFILE.class);
 	    if (Icc == null)
 	    {
@@ -1615,7 +1615,7 @@ final class cmsio0
 	        rc &= cmsCloseIOhandler(Icc.IOhandler);
 	    }
 	    
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    cmserr._cmsFree(Icc.ContextID, new VirtualPointer(Icc)); // Free placeholder memory
 //#endif
 	    return rc;

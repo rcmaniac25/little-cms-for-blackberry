@@ -48,6 +48,7 @@ import net.rim.device.api.util.MathUtilities;
  */
 public final class Utility
 {
+	//TODO: Should the resources be public?
 	public static final ResourceBundle LCMS_Resources = ResourceBundle.getBundle(LCMSResource.BUNDLE_ID, LCMSResource.BUNDLE_NAME);
 	private static final long SINGLETON_STORAGE_ID = 0x2794B93D60A08F80L;
 	

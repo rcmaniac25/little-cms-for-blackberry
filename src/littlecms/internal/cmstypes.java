@@ -83,8 +83,8 @@ public
 final class cmstypes
 {
 	// Some types are not internal, thus they need to return public (normal) types.
-	// RAW_C support implemented but return type is expected to be cmsUInt8Number[16] (byte[lcms2.cmsMAXCHANNELS]) so just do that.
-	// If RAW_C processing is desired then remove the comment marker "//-" or in the case of the preprocessor components replace '-' with '#'
+	// CMS_RAW_C support implemented but return type is expected to be cmsUInt8Number[16] (byte[lcms2.cmsMAXCHANNELS]) so just do that.
+	// If CMS_RAW_C processing is desired then remove the comment marker "//-" or in the case of the preprocessor components replace '-' with '#'
 	
 	// Some broken types
 	public static final int cmsCorbisBrokenXYZtype = 0x17A505B8;
@@ -139,7 +139,7 @@ final class cmstypes
 	    }
 	    
 	    // Registering happens in plug-in memory pool
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    pt = (_cmsTagTypeLinkedList)cmsplugin._cmsPluginMalloc(/*sizeof(_cmsTagTypeLinkedList)*/_cmsTagTypeLinkedList.SIZE).getDeserializedType(_cmsTagTypeLinkedList.class);
 	    if (pt == null)
 	    {
@@ -222,7 +222,7 @@ final class cmstypes
 			PositionTableEntryFn ElementFn)
 	{
 	    int i;
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    VirtualPointer ElementOffsets = null, ElementSizes = null;
 	    VirtualPointer.TypeProcessor offProc, sizeProc;
 //#else
@@ -230,7 +230,7 @@ final class cmstypes
 //#endif
 	    
 	    // Let's take the offsets to each element
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    ElementOffsets = cmserr._cmsCalloc(io.ContextID, Count, /*sizeof(cmsUInt32Number *)*/4);
 	    if (ElementOffsets == null)
 	    {
@@ -249,7 +249,7 @@ final class cmstypes
 	    ElementOffsets = new int[Count];
 //#endif
 	    
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    ElementSizes = cmserr._cmsCalloc(io.ContextID, Count, /*sizeof(cmsUInt32Number *)*/4);
 	    if (ElementSizes == null)
 	    {
@@ -274,7 +274,7 @@ final class cmstypes
 	    {
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	        {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        	if (ElementOffsets != null)
 	    	    {
 	    	    	cmserr._cmsFree(io.ContextID, ElementOffsets);
@@ -286,14 +286,14 @@ final class cmstypes
 //#endif
 	    	    return false;
 	        }
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        offProc.write(temp[0] + BaseOffset, true);
 //#else
 	        ElementOffsets[i] = temp[0] + BaseOffset;
 //#endif
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	        {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        	if (ElementOffsets != null)
 	    	    {
 	    	    	cmserr._cmsFree(io.ContextID, ElementOffsets);
@@ -305,13 +305,13 @@ final class cmstypes
 //#endif
 	    	    return false;
 	        }
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        sizeProc.write(temp[0], true);
 //#else
 	        ElementSizes[i] = temp[0];
 //#endif
 	    }
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    ElementOffsets.setPosition(0);
 	    ElementSizes.setPosition(0);
 //#endif
@@ -319,7 +319,7 @@ final class cmstypes
 	    // Seek to each element and read it
 	    for (i = 0; i < Count; i++)
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        if (!io.Seek.run(io, offProc.readInt32(true)))
 	        {
 	        	if (ElementOffsets != null)
@@ -338,7 +338,7 @@ final class cmstypes
 	        }
 	        
 	        // This is the reader callback
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        if (!ElementFn.run(self, io, Cargo, i, sizeProc.readInt32(true)))
 	        {
 	        	if (ElementOffsets != null)
@@ -358,7 +358,7 @@ final class cmstypes
 	    }
 
 	    // Success
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    if (ElementOffsets != null)
 	    {
 	    	cmserr._cmsFree(io.ContextID, ElementOffsets);
@@ -377,7 +377,7 @@ final class cmstypes
     {
         int i;
         int DirectoryPos, CurrentPos, Before;
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
         VirtualPointer ElementOffsets = null, ElementSizes = null;
         VirtualPointer.TypeProcessor offProc, sizeProc;
 //#else
@@ -385,7 +385,7 @@ final class cmstypes
 //#endif
         
         // Create table
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
         ElementOffsets = cmserr._cmsCalloc(io.ContextID, Count, /*sizeof(cmsUInt32Number *)*/4);
         if (ElementOffsets == null)
         {
@@ -404,7 +404,7 @@ final class cmstypes
         ElementOffsets = new int[Count];
 //#endif
         
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
         ElementSizes = cmserr._cmsCalloc(io.ContextID, Count, /*sizeof(cmsUInt32Number *)*/4);
         if (ElementSizes == null)
         {
@@ -432,7 +432,7 @@ final class cmstypes
             if (!cmsplugin._cmsWriteUInt32Number(io, 0))
             {
             	// Offset
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
             	if (ElementOffsets != null)
                 {
                 	cmserr._cmsFree(io.ContextID, ElementOffsets);
@@ -447,7 +447,7 @@ final class cmstypes
             if (!cmsplugin._cmsWriteUInt32Number(io, 0))
             {
             	// size
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
             	if (ElementOffsets != null)
                 {
                 	cmserr._cmsFree(io.ContextID, ElementOffsets);
@@ -465,7 +465,7 @@ final class cmstypes
         for (i = 0; i < Count; i++)
         {
             Before = io.Tell.run(io);
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
             offProc.write(Before - BaseOffset, true);
 //#else
             ElementOffsets[i] = Before - BaseOffset;
@@ -474,7 +474,7 @@ final class cmstypes
             // Callback to write...
             if (!ElementFn.run(self, io, Cargo, i, SizeOfTag))
             {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
             	if (ElementOffsets != null)
                 {
                 	cmserr._cmsFree(io.ContextID, ElementOffsets);
@@ -488,7 +488,7 @@ final class cmstypes
             }
             
             // Now the size
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
             sizeProc.write(io.Tell.run(io) - Before, true);
 //#else
             ElementSizes[i] = io.Tell.run(io) - Before;
@@ -499,7 +499,7 @@ final class cmstypes
         CurrentPos = io.Tell.run(io);
         if (!io.Seek.run(io, DirectoryPos))
         {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
         	if (ElementOffsets != null)
             {
             	cmserr._cmsFree(io.ContextID, ElementOffsets);
@@ -512,14 +512,14 @@ final class cmstypes
             return false;
         }
         
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
         ElementOffsets.setPosition(0);
         ElementSizes.setPosition(0);
 //#endif
         
         for (i = 0; i < Count; i++)
         {
-//#ifndef RAW_C
+//#ifndef CMS_RAW_C
             if (!cmsplugin._cmsWriteUInt32Number(io, ElementOffsets[i]))
             {
 //#else
@@ -536,7 +536,7 @@ final class cmstypes
 //#endif
                 return false;
             }
-//#ifndef RAW_C
+//#ifndef CMS_RAW_C
             if (!cmsplugin._cmsWriteUInt32Number(io, ElementSizes[i]))
             {
 //#else
@@ -557,7 +557,7 @@ final class cmstypes
         
         if (!io.Seek.run(io, CurrentPos))
         {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
         	if (ElementOffsets != null)
             {
             	cmserr._cmsFree(io.ContextID, ElementOffsets);
@@ -570,7 +570,7 @@ final class cmstypes
             return false;
         }
         
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
         if (ElementOffsets != null)
         {
         	cmserr._cmsFree(io.ContextID, ElementOffsets);
@@ -593,7 +593,7 @@ final class cmstypes
     
 	private static Object Type_XYZ_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
 	{
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-		VirtualPointer xyz;
 //-		cmsCIEXYZ temp;
 //-else
@@ -601,7 +601,7 @@ final class cmstypes
 //-endif
 	    
 	    nItems[0] = 0;
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-	    xyz = cmserr._cmsMallocZero(self.ContextID, /*sizeof(cmsCIEXYZ)*/cmsCIEXYZ.SIZE));
 //-	    if (xyz == null)
 //-	    {
@@ -612,18 +612,18 @@ final class cmstypes
 	    xyz = new cmsCIEXYZ();
 //-endif
 	    
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-	    if (!cmsplugin._cmsReadXYZNumber(io, temp))
 //-else
 	    if (!cmsplugin._cmsReadXYZNumber(io, xyz))
 //-endif
 	    {
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-	    	cmserr._cmsFree(self.ContextID, xyz);
 //-endif
 	        return null;
 	    }
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-	    xyz.getProcessor().write(temp);
 //-endif
 	    
@@ -643,7 +643,7 @@ final class cmstypes
 	
 	private static Object Type_XYZ_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
 	{
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-	    return cmserr._cmsDupMem(self.ContextID, (VirtualPointer)Ptr, /*sizeof(cmsCIEXYZ)*/cmsCIEXYZ.SIZE);
 //-else
 	    cmsCIEXYZ xyz = new cmsCIEXYZ();
@@ -657,7 +657,7 @@ final class cmstypes
 
 	private static void Type_XYZ_Free(cmsTagTypeHandler self, Object Ptr)
 	{
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-	    cmserr._cmsFree(self.ContextID, (VirtualPointer)Ptr);
 //-endif
 	}
@@ -680,7 +680,7 @@ final class cmstypes
 	    short[] temp;
 	    
 	    nItems[0] = 0;
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    VirtualPointer chrmP;
 	    chrm =  (cmsCIExyYTRIPLE)(chrmP = cmserr._cmsMallocZero(self.ContextID, /*sizeof(cmsCIExyYTRIPLE)*/cmsCIExyYTRIPLE.SIZE)).getProcessor().readObject(cmsCIExyYTRIPLE.class);
 	    if (chrm == null)
@@ -694,7 +694,7 @@ final class cmstypes
 	    temp = new short[1];
 	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
 //#endif
 		    return null;
@@ -706,14 +706,14 @@ final class cmstypes
 	    {
 	        if (!cmsplugin._cmsReadUInt16Number(io, null))
 	        {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        	cmserr._cmsFree(self.ContextID, chrmP);
 //#endif
 	        	return null;
 	        }
 	        if (!cmsplugin._cmsReadUInt16Number(io, temp))
 	        {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        	cmserr._cmsFree(self.ContextID, chrmP);
 //#endif
 	        	return null;
@@ -723,7 +723,7 @@ final class cmstypes
 	    
 	    if (nChans != 3)
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
 //#endif
 		    return null;
@@ -731,7 +731,7 @@ final class cmstypes
 	    
 	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
 //#endif
 		    return null;
@@ -741,7 +741,7 @@ final class cmstypes
 	    double[] temp2 = new double[1];
 	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
 //#endif
 		    return null;
@@ -749,7 +749,7 @@ final class cmstypes
 	    chrm.Red.x = temp2[0];
 	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
 //#endif
 		    return null;
@@ -760,7 +760,7 @@ final class cmstypes
 	    
 	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
 //#endif
 		    return null;
@@ -768,7 +768,7 @@ final class cmstypes
 	    chrm.Green.x = temp2[0];
 	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
 //#endif
 		    return null;
@@ -779,7 +779,7 @@ final class cmstypes
 	    
 	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
 //#endif
 		    return null;
@@ -787,7 +787,7 @@ final class cmstypes
 	    chrm.Blue.x = temp2[0];
 	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
 //#endif
 		    return null;
@@ -845,7 +845,7 @@ final class cmstypes
 	
 	private static Object Type_Chromaticity_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    return cmserr._cmsDupMem(self.ContextID, new VirtualPointer(Ptr), /*sizeof(cmsCIExyYTRIPLE)*/cmsCIExyYTRIPLE.SIZE).getProcessor().readObject(cmsCIExyYTRIPLE.class);
 //#else
 	    cmsCIExyYTRIPLE xyz = new cmsCIExyYTRIPLE();
@@ -867,7 +867,7 @@ final class cmstypes
 
 	private static void Type_Chromaticity_Free(cmsTagTypeHandler self, Object Ptr)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    cmserr._cmsFree(self.ContextID, new VirtualPointer(Ptr));
 //#endif
 	}
@@ -885,7 +885,7 @@ final class cmstypes
 	
 	private static Object Type_ColorantOrderType_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
 	{
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-		VirtualPointer ColorantOrder;
 //-else
 		byte[] ColorantOrder;
@@ -904,7 +904,7 @@ final class cmstypes
 	    	return null;
 	    }
 	    
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-	    ColorantOrder = cmserr._cmsCalloc(self.ContextID, lcms2.cmsMAXCHANNELS, /*sizeof(cmsUInt8Number)*/1);
 //-		if (ColorantOrder == null)
 //-	    {
@@ -915,13 +915,13 @@ final class cmstypes
 //-endif
 	    
 	    // We use FF as end marker
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-	    ColorantOrder.set(0xFF, lcms2.cmsMAXCHANNELS * /*sizeof(cmsUInt8Number)*/1);
 //-else
 	    Arrays.fill(ColorantOrder, (byte)0xFF);
 //-endif
 	    
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-	    if (io.vpRead(io, ColorantOrder, /*sizeof(cmsUInt8Number)*/1, Count) != Count)
 //-	    {
 //-	    	cmserr._cmsFree(self.ContextID, ColorantOrder);
@@ -938,7 +938,7 @@ final class cmstypes
 	
 	private static boolean Type_ColorantOrderType_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-		VirtualPointer ColorantOrder = (VirtualPointer)Ptr;
 //-		int pos = ColorantOrder.getPosition();
 //-		VirtualPointer.TypeProcessor proc = ColorantOrder.getProcessor();
@@ -950,7 +950,7 @@ final class cmstypes
 	    // Get the length
 	    for (Count = i = 0; i < lcms2.cmsMAXCHANNELS; i++)
 	    {
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-	        if (proc.readInt8(true) != 0xFF)
 //-else
 	        if (ColorantOrder[i] != (byte)0xFF)
@@ -959,7 +959,7 @@ final class cmstypes
 	        	Count++;
 	        }
 	    }
-//=ifdef RAW_C
+//=ifdef CMS_RAW_C
 //-	    ColorantOrder.setPosition(pos);
 //-endif
 	    
@@ -969,7 +969,7 @@ final class cmstypes
 	    }
 	    
 	    sz = Count/* * sizeof(cmsUInt8Number)*/;
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-	    if (!io.vpWrite(io, sz, ColorantOrder))
 //-else
     	if (!io.Write.run(io, sz, ColorantOrder))
@@ -983,7 +983,7 @@ final class cmstypes
 	
 	private static Object Type_ColorantOrderType_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
 	{
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-		return cmserr._cmsDupMem(self.ContextID, (VirtualPointer)Ptr, lcms2.cmsMAXCHANNELS/* * sizeof(cmsUInt8Number)*/);
 //-else
 		return Arrays.copy((byte[])Ptr);
@@ -992,7 +992,7 @@ final class cmstypes
 	
 	private static void Type_ColorantOrderType_Free(cmsTagTypeHandler self, Object Ptr)
 	{
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-		cmserr._cmsFree(self.ContextID, (VirtualPointer)Ptr);
 //-endif
 	}
@@ -1005,7 +1005,7 @@ final class cmstypes
 	
 	private static Object Type_S15Fixed16_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		VirtualPointer array_double;
 		VirtualPointer.TypeProcessor proc;
 //#else
@@ -1016,7 +1016,7 @@ final class cmstypes
 	    
 	    nItems[0] = 0;
 	    n = SizeOfTag / /*sizeof(cmsUInt32Number)*/4;
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    array_double = cmserr._cmsCalloc(self.ContextID, n, /*sizeof(cmsFloat64Number)*/8);
 	    if (array_double == null)
 	    {
@@ -1031,18 +1031,18 @@ final class cmstypes
 	    {
 	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	        {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	            cmserr._cmsFree(self.ContextID, array_double);
 //#endif
 	            return null;
 	        }
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        proc.write(temp[0], true);
 //#else
 	        array_double[i] = temp[0];
 //#endif
 	    }
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    array_double.setPosition(0);
 //#endif
 	    
@@ -1052,7 +1052,7 @@ final class cmstypes
 	
 	private static boolean Type_S15Fixed16_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		VirtualPointer Value = (VirtualPointer)Ptr;
 		VirtualPointer.TypeProcessor proc = Value.getProcessor();
 		int pos = Value.getPosition();
@@ -1063,7 +1063,7 @@ final class cmstypes
 	    
 	    for (i = 0; i < nItems; i++)
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    	if (!cmsplugin._cmsWrite15Fixed16Number(io, proc.readDouble(true)))
 //#else
 	        if (!cmsplugin._cmsWrite15Fixed16Number(io, Value[i]))
@@ -1072,7 +1072,7 @@ final class cmstypes
 	        	return false;  
 	        }
 	    }
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    Value.setPosition(pos);
 //#endif
 	    
@@ -1081,7 +1081,7 @@ final class cmstypes
 	
 	private static Object Type_S15Fixed16_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		return cmserr._cmsDupMem(self.ContextID, (VirtualPointer)Ptr, n * /*sizeof(cmsFloat64Number)*/8);
 //#else
 		double[] oval = (double[])Ptr;
@@ -1093,7 +1093,7 @@ final class cmstypes
 	
 	private static void Type_S15Fixed16_Free(cmsTagTypeHandler self, Object Ptr)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		cmserr._cmsFree(self.ContextID, (VirtualPointer)Ptr);
 //#endif
 	}
@@ -1106,7 +1106,7 @@ final class cmstypes
 	
 	private static Object Type_U16Fixed16_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		VirtualPointer array_double;
 		VirtualPointer.TypeProcessor proc;
 //#else
@@ -1117,7 +1117,7 @@ final class cmstypes
 	    
 	    nItems[0] = 0;
 	    n = SizeOfTag / /*sizeof(cmsUInt32Number)*/4;
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    array_double = cmserr._cmsCalloc(self.ContextID, n, /*sizeof(cmsFloat64Number)*/8);
 	    if (array_double == null)
 	    {
@@ -1132,14 +1132,14 @@ final class cmstypes
 	    {
 	        if (!cmsplugin._cmsReadUInt32Number(io, v))
 	        {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	            cmserr._cmsFree(self.ContextID, array_double);
 //#endif
 	            return null;
 	        }
 	        
 	        // Convert to double
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        proc.write((double)(v[0] / 65536.0), true);
 	    }
 	    array_double.setPosition(0);
@@ -1154,7 +1154,7 @@ final class cmstypes
         
     private static boolean Type_U16Fixed16_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
     {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
     	VirtualPointer Value = (VirtualPointer)Ptr;
     	VirtualPointer.TypeProcessor proc = Value.getProcessor();
     	int pos = Value.getPosition();
@@ -1165,7 +1165,7 @@ final class cmstypes
         
         for (i = 0; i < nItems; i++)
         {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
             int v = (int)Math.floor(proc.readDouble(true)*65536.0 + 0.5);
 //#else
             int v = (int)Math.floor(Value[i]*65536.0 + 0.5);
@@ -1176,7 +1176,7 @@ final class cmstypes
             	return false;    
             }
         }
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
         Value.setPosition(pos);
 //#endif
         
@@ -1185,7 +1185,7 @@ final class cmstypes
     
     private static Object Type_U16Fixed16_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		return cmserr._cmsDupMem(self.ContextID, (VirtualPointer)Ptr, n * /*sizeof(cmsFloat64Number)*/8);
 //#else
 		double[] oval = (double[])Ptr;
@@ -1197,7 +1197,7 @@ final class cmstypes
 	
 	private static void Type_U16Fixed16_Free(cmsTagTypeHandler self, Object Ptr)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		cmserr._cmsFree(self.ContextID, (VirtualPointer)Ptr);
 //#endif
 	}
@@ -1213,7 +1213,7 @@ final class cmstypes
 	
 	private static Object Type_Signature_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
 	{
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-		VirtualPointer SigPtr = cmserr._cmsMalloc(self.ContextID, /*sizeof(cmsSignature)*/4);
 //-	    if (SigPtr == null)
 //-	    {
@@ -1228,7 +1228,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-	    SigPtr.getProcessor().write(temp[0]);
 //-else
 	    SigPtr = new Integer(temp[0]);
@@ -1240,7 +1240,7 @@ final class cmstypes
 	
 	private static boolean Type_Signature_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-		VirtualPointer SigPtr = (VirtualPointer)Ptr; 
 //-	    
 //-	    return cmsplugin._cmsWriteUInt32Number(io, SigPtr.getProcessor().readInt32());
@@ -1253,7 +1253,7 @@ final class cmstypes
 	
 	private static Object Type_Signature_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
 	{
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-		return cmserr._cmsDupMem(self.ContextID, (VirtualPointer)Ptr, n * /*sizeof(cmsSignature)*/4);
 //-else
 		return new Integer(((Integer)Ptr).intValue());
@@ -1262,7 +1262,7 @@ final class cmstypes
 	
 	private static void Type_Signature_Free(cmsTagTypeHandler self, Object Ptr)
 	{
-//-ifdef RAW_C
+//-ifdef CMS_RAW_C
 //-		cmserr._cmsFree(self.ContextID, (VirtualPointer)Ptr);
 //-endif
 	}
@@ -1277,7 +1277,7 @@ final class cmstypes
 	
 	private static Object Type_Text_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		VirtualPointer Text = null;
 //#else
 		byte[] Text = null;
@@ -1294,7 +1294,7 @@ final class cmstypes
 	    nItems[0] = 0;
 	    
 	    // We need to store the "\0" at the end, so +1
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    Text = cmserr._cmsMalloc(self.ContextID, SizeOfTag + 1);
 	    if (Text == null)
 	    {
@@ -1313,7 +1313,7 @@ final class cmstypes
 	    Text = new byte[SizeOfTag + 1];
 //#endif
 	    
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    if (io.vpRead(io, Text, /*sizeof(char)*/1, SizeOfTag) != SizeOfTag)
 //#else
     	if (io.Read.run(io, Text, /*sizeof(char)*/1, SizeOfTag) != SizeOfTag)
@@ -1323,7 +1323,7 @@ final class cmstypes
 		    {
 	    		cmsnamed.cmsMLUfree(mlu);
 		    }
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    if (Text != null)
 		    {
 		    	cmserr._cmsFree(self.ContextID, Text);
@@ -1334,7 +1334,7 @@ final class cmstypes
 	    }
 	    
 	    // Make sure text is properly ended
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    Text.setPosition(SizeOfTag);
 	    Text.getProcessor().write((byte)0);
 	    Text.setPosition(0);
@@ -1344,7 +1344,7 @@ final class cmstypes
 	    nItems[0] = 1;
 	    
 	    // Keep the result
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    if (!cmsnamed.cmsMLUsetASCII(mlu, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, Text.getProcessor().readString(false, false)))
 //#else
     	if (!cmsnamed.cmsMLUsetASCII(mlu, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, new String(Text))) //It's ASCII so it should be just fine
@@ -1354,7 +1354,7 @@ final class cmstypes
 		    {
 	    		cmsnamed.cmsMLUfree(mlu);
 		    }
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    if (Text != null)
 		    {
 		    	cmserr._cmsFree(self.ContextID, Text);
@@ -1364,7 +1364,7 @@ final class cmstypes
 		    return null;
 	    }
 	    
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    cmserr._cmsFree(self.ContextID, Text);
 //#endif
 	    return mlu;
@@ -1423,7 +1423,7 @@ final class cmstypes
 	// General purpose data type
 	private static Object Type_Data_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		VirtualPointer BinData;
 //#else
 		cmsICCData BinData;
@@ -1433,7 +1433,7 @@ final class cmstypes
 	    nItems[0] = 0;
 	    LenOfData = SizeOfTag - /*sizeof(cmsUInt32Number)*/4;
 	    
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    BinData = cmserr._cmsMalloc(self.ContextID, /*sizeof(cmsICCData)*/cmsICCData.SIZE); //cmsICCData usually has at least 1 byte of data and the rest is just "taked on" so this would read "sizeof(cmsICCData) + LenOfData - 1", this is a little different
 	    if (BinData == null)
 	    {
@@ -1443,7 +1443,7 @@ final class cmstypes
 	    BinData = new cmsICCData();
 //#endif
 	    
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    BinData.getProcessor().write(LenOfData, true);
 //#else
 	    BinData.len = LenOfData;
@@ -1451,12 +1451,12 @@ final class cmstypes
 	    int[] temp = new int[1];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    	cmserr._cmsFree(self.ContextID, BinData);
 //#endif
 	    	return null;
 	    }
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    BinData.getProcessor().write(temp[0], true);
 //#else
 	    BinData.flag = temp[0];
@@ -1465,12 +1465,12 @@ final class cmstypes
 	    VirtualPointer data = cmserr._cmsMalloc(self.ContextID, LenOfData);
 	    if(data == null)
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    	cmserr._cmsFree(self.ContextID, BinData);
 //#endif
 	    	return null;
 	    }
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    BinData.getProcessor().write(data);
 	    BinData.setPosition(0);
 //#else
@@ -1479,7 +1479,7 @@ final class cmstypes
 	    if (io.vpRead(io, data, /*sizeof(cmsUInt8Number)*/1, LenOfData) != LenOfData)
 	    {
 	    	cmserr._cmsFree(self.ContextID, data);
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    	cmserr._cmsFree(self.ContextID, BinData);
 //#endif
 	        return null;
@@ -1492,14 +1492,14 @@ final class cmstypes
 	
 	private static boolean Type_Data_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		VirtualPointer BinData = (VirtualPointer)Ptr;
 		BinData.setPosition(4);
 //#else
 		cmsICCData BinData = (cmsICCData)Ptr;
 //#endif
 	    
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		if (!cmsplugin._cmsWriteUInt32Number(io, BinData.getProcessor().readInt32(true)))
 //#else
 		if (!cmsplugin._cmsWriteUInt32Number(io, BinData.flag))
@@ -1508,7 +1508,7 @@ final class cmstypes
 			return false;
 		}
 		
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		VirtualPointer data = BinData.getProcessor().readVirtualPointer();
 		BinData.setPosition(0);
 		return io.vpWrite(io, BinData.getProcessor().readInt32(), data);
@@ -1519,7 +1519,7 @@ final class cmstypes
 	
 	private static Object Type_Data_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		VirtualPointer BinData = (VirtualPointer)Ptr;
 		int len = BinData.getProcessor().readInt32();
 		
@@ -1546,7 +1546,7 @@ final class cmstypes
 	
 	private static void Type_Data_Free(cmsTagTypeHandler self, Object Ptr)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		cmserr._cmsFree(self.ContextID, (VirtualPointer)Ptr);
 //#else
 		cmserr._cmsFree(self.ContextID, ((cmsICCData)Ptr).data);
@@ -1559,7 +1559,7 @@ final class cmstypes
 	
 	private static Object Type_Text_Description_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
 	{
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		VirtualPointer Text = null;
 //#else
 		byte[] Text = null;
@@ -1602,7 +1602,7 @@ final class cmstypes
 	    }
 	    
 	    // As many memory as size of tag
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    Text = cmserr._cmsMalloc(self.ContextID, AsciiCount + 1);
 	    if (Text == null)
 	    {
@@ -1621,13 +1621,13 @@ final class cmstypes
 //#endif
 	    
 	    // Read it
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    if (io.vpRead(io, Text, /*sizeof(char)*/1, AsciiCount) != AsciiCount)
 //#else
     	if (io.Read.run(io, Text, /*sizeof(char)*/1, AsciiCount) != AsciiCount)
 //#endif
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    if (Text != null)
 		    {
 		    	cmserr._cmsFree(self.ContextID, Text);
@@ -1642,7 +1642,7 @@ final class cmstypes
 	    SizeOfTag -= AsciiCount;
 	    
 	    // Make sure there is a terminator
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    Text.setPosition(AsciiCount);
 	    Text.getProcessor().write((byte)0);
 	    Text.setPosition(0);
@@ -1651,13 +1651,13 @@ final class cmstypes
 //#endif
 	    
 	    // Set the MLU entry. From here we can be tolerant to wrong types
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    if (!cmsnamed.cmsMLUsetASCII(mlu, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, Text.getProcessor().readString(false, false)))
 //#else
     	if (!cmsnamed.cmsMLUsetASCII(mlu, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, new String(Text)))
 //#endif
 	    {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 		    if (Text != null)
 		    {
 		    	cmserr._cmsFree(self.ContextID, Text);
@@ -1669,7 +1669,7 @@ final class cmstypes
 		    }
 		    return null;
 	    }
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	    cmserr._cmsFree(self.ContextID, Text);
 //#endif
 	    Text = null;
@@ -1736,7 +1736,7 @@ final class cmstypes
 	        {
 	            if (io.Read.run(io, temp2, /*sizeof(cmsUInt8Number)*/1, 1) == 0)
 	            {
-//#ifdef RAW_C
+//#ifdef CMS_RAW_C
 	        	    if (Text != null)
 	        	    {
 	        	    	cmserr._cmsFree(self.ContextID, Text);

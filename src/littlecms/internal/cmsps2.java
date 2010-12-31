@@ -28,10 +28,8 @@
 package littlecms.internal;
 
 import java.util.Calendar;
-import java.util.Date;
 
 import net.rim.device.api.util.Arrays;
-import net.rim.device.api.util.DateTimeUtilities;
 
 import littlecms.internal.helper.Utility;
 import littlecms.internal.lcms2.cmsCIELab;

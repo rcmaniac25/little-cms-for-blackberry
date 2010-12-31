@@ -93,6 +93,7 @@ public abstract class Stream
 	
 	public final boolean eof()
 	{
+		//TODO: Should the original position be retained?
 		long pos = this.getPosition(); //Remember the initial position
 		if(this.seek(0, SEEK_END) == 0)
 		{
@@ -243,6 +244,7 @@ public abstract class Stream
 		
 		public int seek(long offset, int origin)
 		{
+			//TODO: Is this correct for eof()?
 			if(offset == 0)
 			{
 				return 0; //No change
