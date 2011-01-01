@@ -2,7 +2,7 @@
 --Revision Used: ??/??/2010-- (the date on which the source code was pulled from GIT)
 
 TODO:
-Finish floating point print formatter
+Do some more testing with different floating point values (both 'e' and 'f')
 Finish TODOs in PrintUtility
 Go through TODOs in helper package
 
@@ -41,3 +41,9 @@ CMS_RAW_C //Code is similar, to near exact the same as C/C++, not fully used (ob
 CMS_REALLOC_PTR //By default a C pointer passed into a function is independent of the original pointer unless it is a pointer to the pointer. Since VirtualPointer is a Java class that operation is reversed. This definition reverses the process back to the C process but depending on if the dev is willing to use more memory and the operation is really necessary it can be changed.
 CMS_ENABLE_ASSERT //If not in debug compilation mode then assert is ignored, this explicitly enabled it.
 CMS_USE_NATIVE_BIGINT //Use a native big int for big number math. This requires Certicom signing if used. By default it is not used
+
+Small history on PrintUtility:
+Done Jan. 1, 2011 at 1:55AM over Steam:
+rcmaniac25: Just a few more lines of code and floating point printing will finally be done.
+rcmaniac25: a month and a half. Nearly 40k lines of test code. Two previous attempts at librarys. About 300 test cases. Three automated utilities. 5 research papers. Hours of online research. One CS professor referenced. 4 decompiled OS files (totaling about 20k ASM codes). 3 OSs inspected. About 13 photos. And god knows how much food and liquid. It will finally be done...
+rcmaniac25: That month and a half were just for this code. The many OS components and the other libraries took a couple months themselves

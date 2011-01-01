@@ -33,14 +33,41 @@ import java.util.Vector;
 import littlecms.internal.LCMSResource;
 
 import net.rim.device.api.util.Arrays;
+import net.rim.device.api.util.StringUtilities;
+/*
+//#ifndef BlackBerrySDK4.5.0
+import net.rim.device.api.util.MathUtilities;
+//#endif
+ */
 
 //#ifdef CMS_INTERNAL_ACCESS & DEBUG
 public
 //#endif
 final class PrintUtility
 {
+	/* There are many components to printf that are implementation specific.
+	 * 
+	 * This mostly follows the specification mentioned http://www.cplusplus.com/reference/clibrary/cstdio/printf/
+	 * 
+	 * Implementation specific components:
+	 * Precision:
+	 * 	If no precision is mentioned then the default precision is 6.
+	 * 
+	 * Formats:
+	 * 	f, F: Fixed-point printing, if the number is an integer then the trailing zeros are removed unless the '#' flag is used which case the decimal and one zero 
+	 * 		will be retained. Also if it is an integer and a precision is specified then it will follow the precision instead of removing the decimal.
+	 *	e, E: Same as 'f' and 'F' but with exponent notation (+/-d.ddd e-/+00).
+	 *	p: Bit of inside information, it prints out the position the pointer is currently at. A new VirtualPointer will be 0000:0000. Moving 16 bytes in will print
+	 *		out 0000:000F.
+	 */
+	
 	public static int output(PrintStream out, int max, final String format, Object[] args, Object[][] formatCache)
 	{
+		if(max == 0)
+        {
+			//Regardless of if there is a format or not, nothing is going to get returned.
+        	return 0;
+        }
 		Object[] formats;
 		if(formatCache != null && formatCache.length > 0 && formatCache[0] != null)
 		{
@@ -1522,7 +1549,7 @@ final class PrintUtility
         
         private String ulongToString(long _val)
         {
-        	//TODO: Not very efficient but works well
+        	//Not very efficient but works well
         	StringBuffer bu = new StringBuffer();
             if ((_val & 0x8000000000000000L) != 0)
             {
@@ -1549,7 +1576,7 @@ final class PrintUtility
                     {
                         byte add = (byte)(a >= i ? addValues[a] : 0);
                         byte val = (byte)(result[r] + add + rem);
-                        rem -= rem;
+                        rem = 0;
                         if (val >= 10)
                         {
                             rem = 1;
@@ -1883,6 +1910,15 @@ final class PrintUtility
 	
 	private static class FloatFormatElement extends GeneralFormatElement
     {
+		private static final int DEFAULT_PRECISION = 6; //Nearly every reference says 6 except www.cplusplus.com
+		
+		private static char decimalPoint;
+		
+		static
+		{
+			decimalPoint = Double.toString(1.1).charAt(1);
+		}
+		
         public FloatFormatElement(String format)
         {
         	super(format);
@@ -1890,14 +1926,237 @@ final class PrintUtility
         
         public String inFormat(Object obj)
         {
-        	//TODO
-        	//XXX: For the CryptoByteArrayArithmetic, the toString function must be reversed and "log2modulus" equals the result length * 2. This makes a limit of 0xFFFFFFF bytes for the length of the result, or 0x7FFFFFF getting multiplied.
-            throw new UnsupportedOperationException();
+        	double value = 0;
+            if (this.length == 'L')
+            {
+                value = Double.longBitsToDouble(((Long)obj).longValue());
+            }
+            else
+            {
+            	if (obj instanceof Float)
+	            {
+	                value = ((Float)obj).doubleValue();
+	            }
+	            else if(obj instanceof Double)
+	            {
+	                value = ((Double)obj).doubleValue();
+	            }
+	            else if (obj instanceof VirtualPointer)
+	            {
+	            	value = ((VirtualPointer)obj).getProcessor().readDouble();
+	            }
+	            else
+	            {
+	            	argError("FloatFormat", "0", obj.getClass());
+	        		value = 0;
+	            }
+            }
+            
+            //Determine what to do
+            StringBuffer fixedBuf = null;
+            StringBuffer expBuf = null;
+            boolean caps = type <= 'Z';
+            boolean alt = this.flags != null && this.flags.indexOf('#') >= 0;
+            if (type == 'g' || type == 'G')
+            {
+                fixedBuf = new StringBuffer();
+                expBuf = new StringBuffer();
+            }
+            else if (type == 'f' || type == 'F')
+            {
+                fixedBuf = new StringBuffer();
+            }
+            else if (type == 'e' || type == 'E')
+            {
+                expBuf = new StringBuffer();
+            }
+            
+            //To string for the specified type
+            if (fixedBuf != null)
+            {
+            	if (this.flags != null)
+                {
+                    if (value >= 0)
+                    {
+                        if (flags.indexOf(' ') >= 0)
+                        {
+                        	fixedBuf.append(' ');
+                        }
+                        else if (flags.indexOf('+') >= 0)
+                        {
+                        	fixedBuf.append('+');
+                        }
+                    }
+                }
+                writeFloatingPoint(fixedBuf, value, this.precision);
+            }
+            if (expBuf != null)
+            {
+                if (fixedBuf == null)
+                {
+                	if (this.flags != null)
+                    {
+                        if (value >= 0)
+                        {
+                            if (flags.indexOf(' ') >= 0)
+                            {
+                            	expBuf.append(' ');
+                            }
+                            else if (flags.indexOf('+') >= 0)
+                            {
+                            	expBuf.append('+');
+                            }
+                        }
+                    }
+                    writeFloatingPoint(expBuf, value, this.precision);
+                }
+                else
+                {
+                    //expBuf.append(fixedBuf.toString());
+                	StringUtilities.append(expBuf, fixedBuf);
+                }
+                
+                String temp = expBuf.toString();
+                int tlen = temp.length();
+            	int index = temp.indexOf(decimalPoint);
+            	
+            	//Get the exponent
+            	int exp = 0;
+            	int off = Character.isDigit(temp.charAt(0)) ? 0 : 1;
+            	int i;
+            	if(index == 1 + off)
+            	{
+            		//Either don't adjust decimal or move it backwards
+            		if(temp.charAt(off) != '0')
+            		{
+            			//Ok, move decimal backwards
+            			for(i = index + 1; i < tlen; i++)
+            			{
+            				if(temp.charAt(i) != '0')
+            				{
+            					exp = i - index;
+            					break;
+            				}
+            			}
+            		}
+            	}
+            	else
+            	{
+            		//Move decimal forwards
+            		for(i = off; i < index; i++)
+        			{
+            			if(temp.charAt(i) != '0')
+        				{
+        					exp = index - i - 1;
+        					break;
+        				}
+        			}
+            	}
+            	
+            	//Start writing out the value
+            	expBuf.setLength(0); //Reset the StringBuffer
+            	if(off == 1)
+            	{
+            		//If a formatter or sign was added then make sure the final value has it too.
+            		expBuf.append(temp.charAt(0));
+            	}
+            	StringUtilities.append(expBuf, temp, off, index - off); //Copy whole number
+            	StringUtilities.append(expBuf, temp, index + 1, tlen - ((index * 2) + 1)); //Copy decimal (subtracting what are now extra precision chars)
+            	//Trim zeros before finishing formatting
+            	for(i = tlen - 1; i > off; i--)
+        		{
+        			if(temp.charAt(i) != '0')
+        			{
+        				break;
+        			}
+        		}
+        		if(((i - 1) == off) && (this.precision == -1))
+        		{
+        			//Only remove zeros if it is an integer and the precision isn't predefined
+        			if(alt)
+        			{
+        				//Adjust
+        				expBuf.delete(off + 2, expBuf.length());
+        				expBuf.insert(off + 1, decimalPoint); //Insert the decimal point
+        			}
+        			else
+        			{
+        				expBuf.delete(off + 1, expBuf.length());
+        			}
+        		}
+        		else
+        		{
+        			expBuf.insert(off + 1, decimalPoint); //Insert the decimal point
+        		}
+            	
+            	//Now write out the exponent
+            	expBuf.append('e');
+            	expBuf.append(exp < 0 ? '-' : '+');
+            	exp = Math.abs(exp);
+            	if(exp < 10)
+            	{
+            		//Must be at least 2 digits for the exponent
+            		expBuf.append('0');
+            	}
+            	expBuf.append(exp);
+            }
+            if (fixedBuf != null)
+            {
+            	String temp = fixedBuf.toString();
+            	int index = temp.indexOf(decimalPoint);
+            	
+            	//Trim the decimal if possible
+        		int len = temp.length();
+        		int i;
+        		for(i = index + 1; i < len; i++)
+        		{
+        			if(temp.charAt(i) != '0')
+        			{
+        				break;
+        			}
+        		}
+        		if(((i - 1) == (len - 1)) && (this.precision == -1))
+        		{
+        			//Only remove zeros if it is an integer and the precision isn't predefined
+        			if(alt)
+        			{
+        				fixedBuf.delete(index + 2, len);
+        			}
+        			else
+        			{
+        				fixedBuf.delete(index, len);
+        			}
+        		}
+            }
+            
+            //Return the correct type
+            /*
+             * f: fixed-point, if no decimal portion [integer] exists then trailing zeros and no decimal point exists (alt: decimal point always used)
+             * e: exponent form, always 2 digits in exponent, if no decimal portion [integer] exists then trailing zeros and no decimal point exists (alt: decimal point always used)
+             * g: smaller of either f/e, trailing zeros removed, if integer then decimal point removed (alt: trailing zeros not removed, always has decimal point)
+             */
+            String result;
+            if (type == 'g' || type == 'G')
+            {
+            	//TODO: Convert fixed and exp. buffers to general format
+            	
+            	//Compare length. Shortest one is returned.
+                StringBuffer builder = fixedBuf.length() < expBuf.length() ? fixedBuf : expBuf;
+                result = builder.toString();
+            }
+            else
+            {
+                result = fixedBuf != null ? fixedBuf.toString() : expBuf.toString();
+            }
+            if (caps)
+            {
+                result = result.toUpperCase();
+            }
+            return result;
         }
         
         private static void writeFloatingPoint(StringBuffer buf, double v, int p)
         {
-        	//TODO: Could possibly replace append with the toString overload which takes a StringBuffer
             if (Double.isNaN(v) || Double.isInfinite(v))
             {
                 if (Double.isNaN(v))
@@ -1916,12 +2175,15 @@ final class PrintUtility
             }
             long temp = Double.doubleToLongBits(v);
             int exp = ((int)((temp & 0x7FF0000000000000L) >>> 52)) - 1023;
-            boolean neg = (temp & 0x8000000000000000L) == 0x8000000000000000L;
+            if((temp & 0x8000000000000000L) == 0x8000000000000000L)
+            {
+            	buf.append('-');
+            }
             long mantissa = (temp & ((1L << 52) - 1)) | (exp == -1023 ? 0 : (1L << 52));
             exp -= 52;
             if (p < 0)
             {
-                p = 6; //Default precision: http://support.microsoft.com/kb/29557
+                p = DEFAULT_PRECISION;
             }
             
             if (exp == 0 || mantissa == 0)
@@ -1936,7 +2198,11 @@ final class PrintUtility
                     {
                         //Create the floating point value by multiplication (mantissa * 2^exp), using really big numbers
                         //-Precision is not needed since it only covers decimal point
-                        buf.append(new LargeNumber(mantissa).multiply(new LargeNumber(exp)));
+                        new LargeNumber(mantissa).multiply(new LargeNumber(exp)).toString(buf);
+                        buf.append(decimalPoint);
+                        char[] chars = new char[p];
+                        Arrays.fill(chars, '0');
+                        buf.append(chars);
                         
                         /*
                         double value = mantissa;
@@ -1962,7 +2228,7 @@ final class PrintUtility
                             {
                                 mod = new LargeNumber[1];
                             }
-                            buf.append(man.divideAndMod(exponent, mod));
+                            man.divideAndMod(exponent, mod).toString(buf);
                             rem = mod[0].multiply(ten);
                         }
                         else
@@ -1971,10 +2237,10 @@ final class PrintUtility
                             rem = man.multiply(ten);
                         }
                         //Decimal point
-                        if (!rem.zero() && p > 0)
+                        if (!rem.zero() && p >= 0)
                         {
-                            buf.append('.');
-                            while (p-- > 0)
+                            buf.append(decimalPoint);
+                            while (p-- >= 0)
                             {
                                 if (rem.greaterThenOrEqual(exponent))
                                 {
@@ -1982,15 +2248,61 @@ final class PrintUtility
                                     {
                                         mod = new LargeNumber[1];
                                     }
-                                    buf.append(rem.divideAndMod(exponent, mod));
-                                    rem = mod[0].multiply(ten);
+                                    rem.divideAndMod(exponent, mod).toString(buf);
+                                    if(p >= 0)
+                                    {
+                                    	rem = mod[0].multiply(ten);
+                                    }
                                 }
                                 else
                                 {
                                     buf.append('0');
-                                    rem = rem.multiply(ten);
+                                    if(p >= 0 && !rem.zero())
+                                    {
+                                    	rem = rem.multiply(ten);
+                                    }
                                 }
                             }
+                        }
+                        else
+                        {
+                        	buf.append(decimalPoint);
+                        	char[] chars = new char[p];
+                            Arrays.fill(chars, '0');
+                            buf.append(chars);
+                        }
+                        
+                        //Round the value to the specified precision
+                        if(!rem.zero()) //Do these zero checks to avoid unnecessary memory allocation and execution
+                        {
+                        	if (rem.greaterThenOrEqual(exponent))
+                        	{
+	                        	int carry = (int)((rem.divide(exponent).longValue() + 1) / 10); //Rough rounding
+	                        	String temps = buf.toString();
+		                        for(int i = temps.length() - 1; i >= 0; i--)
+		                        {
+		                        	if(carry == 0)
+		                        	{
+		                        		break;
+		                        	}
+		                        	char c = temps.charAt(i);
+		                        	if(c == decimalPoint)
+		                        	{
+		                        		continue;
+		                        	}
+		                        	int tempV = (c - '0') + carry;
+		                        	carry = 0;
+		                        	if(tempV > 9)
+		                        	{
+		                        		buf.setCharAt(i, (char)((tempV % 10) + '0'));
+		                        		carry = tempV / 10;
+		                        	}
+		                        	else
+		                        	{
+		                        		buf.setCharAt(i, (char)(tempV + '0'));
+		                        	}
+		                        }
+                        	}
                         }
                         
                         /*
@@ -2004,19 +2316,33 @@ final class PrintUtility
                 }
                 else
                 {
-                    long twoPower = longPower(exp);
+                    //Built in
+                	/*
+//#ifndef BlackBerrySDK4.5.0
+                    long twoPower = (long)MathUtilities.pow(2, Math.abs(exp)); //Bit shifting more efficient
+//#else
+                    long twoPower = (long)Utility.pow(2, Math.abs(exp)); //Bit shifting more efficient
+//#endif
+                     */
+                	
+                    //Ints only
+                	long twoPower = 1L << Math.abs(exp);
                     if (exp > 0)
                     {
                         long result = mantissa * twoPower;
                         if (result < 0) //Possible highest exponent before overflow occurs: 10 (0x1FFFFFFFFFFFFF * 2^10 = 0x7FFFFFFFFFFFFC00, 0x3FF diff before overflow. 0x1FFFFFFFFFFFFF * 2^11 = 1844674407370954956, which is overflow for a signed long)
                         {
                             //Overflow
-                            buf.append(new LargeNumber(mantissa).multiply(new LargeNumber(exp)));
+                            new LargeNumber(mantissa).multiply(new LargeNumber(exp)).toString(buf);
                         }
                         else
                         {
                             buf.append(result);
                         }
+                        buf.append(decimalPoint);
+                        char[] chars = new char[p];
+                        Arrays.fill(chars, '0');
+                        buf.append(chars);
                     }
                     else
                     {
@@ -2025,33 +2351,61 @@ final class PrintUtility
                         buf.append(mantissa / twoPower);
                         long rem = (mantissa % twoPower) * 10;
                         //Now calculate the decimal portion if necessary
-                        if (rem != 0 && p > 0)
+                        if (rem != 0 && p >= 0)
                         {
-                            buf.append('.');
-                            while (p-- > 0) //Precision only affects the decimal portion so calculate until the number precision digits is met
+                            buf.append(decimalPoint);
+                            while (p-- >= 0) //Precision only affects the decimal portion so calculate until the number precision digits is met
                             {
                                 buf.append(rem / twoPower);
-                                rem = (rem % twoPower) * 10;
+                                if(p >= 0 && rem != 0)
+                                {
+                                	rem = (rem % twoPower) * 10;
+                                }
                             }
+                        }
+                        else
+                        {
+                        	buf.append(decimalPoint);
+                        	char[] chars = new char[p];
+                            Arrays.fill(chars, '0');
+                            buf.append(chars);
+                        }
+                        
+                        //Round the value to the specified precision
+                        if(rem != 0) //Do these zero checks to avoid unnecessary memory allocation and execution
+                        {
+	                        int carry = (int)(((rem / twoPower) + 1) / 10); //Rough rounding
+	                        if(carry != 0)
+	                        {
+		                        String temps = buf.toString();
+		                        for(int i = temps.length() - 1; i >= 0; i--)
+		                        {
+		                        	if(carry == 0)
+		                        	{
+		                        		break;
+		                        	}
+		                        	char c = temps.charAt(i);
+		                        	if(c == decimalPoint)
+		                        	{
+		                        		continue;
+		                        	}
+		                        	int tempV = (c - '0') + carry;
+		                        	carry = 0;
+		                        	if(tempV > 9)
+		                        	{
+		                        		buf.setCharAt(i, (char)((tempV % 10) + '0'));
+		                        		carry = tempV / 10;
+		                        	}
+		                        	else
+		                        	{
+		                        		buf.setCharAt(i, (char)(tempV + '0'));
+		                        	}
+		                        }
+	                        }
                         }
                     }
                 }
             }
-            if(neg)
-            {
-            	buf.insert(0, '-');
-            }
-        }
-        
-        private static long longPower(int exp)
-        {
-            exp = Math.abs(exp);
-            
-            //Built in
-            //return (long)Math.Pow(2, exp); //Bit shifting more efficient
-            
-            //Ints only
-            return 1L << exp;
         }
         
         public String getNullParamOutput()

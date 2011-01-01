@@ -174,6 +174,37 @@ public final class LargeNumber
         return compare(src1, src2) == 0;
     }
     
+    public boolean canReturnLong()
+    {
+    	return this.zero() || this.one() || this.value.length <= 8;
+    }
+    
+    /**
+     * The LargeNumber as a long. The number should be assumed to be unsigned. If {@link #canReturnLong()} returns <code>false</code> then the number returned won't actually match this LargeNumber.
+     * @return The unsigned long value.
+     */
+    public long longValue()
+    {
+    	if(this.zero())
+    	{
+    		return 0L;
+    	}
+    	else if(this.one())
+    	{
+    		return 1L;
+    	}
+//#ifdef CMS_USE_NATIVE_BIGINT
+    	return CryptoByteArrayArithmetic.valueOf(this.value);
+//#else
+    	byte[] revByteOrder = new byte[this.value.length];
+		for(int i = this.value.length - 1, j = 0; i >= 0; i--, j++)
+        {
+			revByteOrder[j] = this.value[i];
+        }
+		return BitConverter.toInt64(revByteOrder, 0);
+//#endif
+    }
+    
     public boolean equals(Object obj)
     {
     	if (obj instanceof LargeNumber)
