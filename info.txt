@@ -2,7 +2,7 @@
 --Revision Used: ??/??/2010-- (the date on which the source code was pulled from GIT)
 
 TODO:
-Do some more testing with different floating point values (both 'e' and 'f')
+Finish toString (with radix) in LargeNumber
 Finish TODOs in PrintUtility
 Go through TODOs in helper package
 
@@ -16,6 +16,8 @@ Testing (LCMS 2.1)
 
 Update LCMS 4 BB to the same level as the GIT build
 If Test system has been updated then do testing
+
+Update PrintUtility FloatFormat so that it properly processes the values with exponent. Example: Double.MIN_VALUE is a subnormal number. The default manner of execution would consider the value to be zero since the number is so small. Make it so that it will scale the value for exponent.
 
 See notes
 

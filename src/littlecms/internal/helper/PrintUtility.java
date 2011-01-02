@@ -156,6 +156,7 @@ final class PrintUtility
                 }
             }
         }
+        //Reset the cache values so that if the cache is reused it doesn't contain the same values used in this current operation
         if(formatCache != null && formatCache.length > 0)
 		{
         	for(int i = 0; i < len; i++)
@@ -325,7 +326,7 @@ final class PrintUtility
 		return false;
 	}
 	
-	static boolean isWhiteSpace(char c)
+	private static boolean isWhiteSpace(char c)
     {
         switch (c)
         {
@@ -1518,7 +1519,8 @@ final class PrintUtility
             {
                 if (basicType)
                 {
-                	str = ulongToString(value);
+                	str = new LargeNumber(value).toString();
+                	//str = ulongToString(value);
                 	if (str.length() < this.length)
                     {
                     	char[] chars = new char[this.length - str.length()];
@@ -1529,7 +1531,15 @@ final class PrintUtility
                 }
                 else
                 {
-                	str = Long.toString(value, 16); //TODO: Double check this, if the number is negative it prints a negative sign. Should not do that.
+                	if(value < 0)
+                	{
+                		//If the value is negative then converting to hex with the built in functions will append a '-' sign to it. This is not how printf works so do it with LargeNumber.
+                		str = new LargeNumber(value).toString(16);
+                	}
+                	else
+                	{
+                		str = Long.toString(value, 16);
+                	}
                     if (flags != null && flags.indexOf('#') >= 0 && value != 0)
                     {
                         bu.append('0');
@@ -1547,6 +1557,7 @@ final class PrintUtility
             return bu.toString();
         }
         
+        /*
         private String ulongToString(long _val)
         {
         	//Not very efficient but works well
@@ -1612,6 +1623,7 @@ final class PrintUtility
             }
             return bu.toString();
         }
+        */
         
         public String getNullParamOutput()
         {
@@ -1807,19 +1819,76 @@ final class PrintUtility
                     case 'X':
                     case 'Z': //Small hack
                         //Unsigned hexadecimal integer
+                    	boolean handled = false;
+                    	LargeNumber num;
+                    	//First try to see if parsing can be done with normal functions
                     	switch (this.length)
                         {
-                    	//TODO
                             default:
-                            	ival = Integer.parseInt(stval, 16);
+                            	if(stval.length() <= 8)
+                            	{
+                            		if(stval.charAt(0) < '8')
+                            		{
+                            			ival = Integer.parseInt(stval, 16);
+                            			handled = true;
+                            		}
+                            	}
                                 break;
                             case 'h':
-                                sval = Short.parseShort(stval, 16);
+                            	if(stval.length() <= 4)
+                            	{
+                            		if(stval.charAt(0) < '8')
+                            		{
+                            			sval = Short.parseShort(stval, 16);
+                            			handled = true;
+                            		}
+                            	}
                                 break;
                             case 'l':
-                                lval = Long.parseLong(stval, 16);
+                            	if(stval.length() <= 16)
+                            	{
+                            		if(stval.charAt(0) < '8')
+                            		{
+                            			lval = Long.parseLong(stval, 16);
+                            			handled = true;
+                            		}
+                            	}
                                 break;
                         }
+                    	if(!handled)
+                    	{
+                    		//Since the hex value wasn't handled then it must be larger then what can actually be processed. So use a larger type and see if we can go down.
+	                    	switch (this.length)
+	                        {
+	                            default:
+	                            	lval = Long.parseLong(stval, 16);
+	                            	if(lval > Integer.MAX_VALUE * 2L)
+	                            	{
+	                            		//Out of range, let it fail by default
+	                            		Integer.parseInt(stval, 16);
+	                            	}
+	                            	ival = (int)(lval & 0xFFFFFFFF);
+	                                break;
+	                            case 'h':
+	                            	ival = Integer.parseInt(stval, 16);
+	                            	if(ival > Short.MAX_VALUE * 2)
+	                            	{
+	                            		//Out of range, let it fail by default
+	                            		Short.parseShort(stval, 16);
+	                            	}
+	                            	sval = (short)(ival & 0xFFFF);
+	                                break;
+	                            case 'l':
+	                            	num = LargeNumber.parse(stval, 16);
+	                            	if(!num.canReturnLong())
+	                            	{
+	                            		//Out of range, let it fail by default
+	                            		Long.parseLong(stval, 16);
+	                            	}
+	                                lval = num.longValue();
+	                                break;
+	                        }
+                    	}
                         break;
                     case 'u':
                         //Unsigned decimal integer
@@ -1832,8 +1901,12 @@ final class PrintUtility
                                 sval = (short)(Integer.parseInt(stval) & 0xFFFF);
                                 break;
                             case 'l':
-                            	//TODO
-                                lval = Long.parseLong(stval);
+                            	num = LargeNumber.parse(stval);
+                            	if(!num.canReturnLong())
+                            	{
+                            		throw new NumberFormatException(Utility.LCMS_Resources.getString(LCMSResource.PRINTUTIL_UNSIGNED_NUMBER_UNPARSEABLE_LONG));
+                            	}
+                            	lval = num.longValue();
                                 break;
                         }
                         break;
@@ -2015,92 +2088,124 @@ final class PrintUtility
                     //expBuf.append(fixedBuf.toString());
                 	StringUtilities.append(expBuf, fixedBuf);
                 }
-                
-                String temp = expBuf.toString();
-                int tlen = temp.length();
-            	int index = temp.indexOf(decimalPoint);
-            	
-            	//Get the exponent
-            	int exp = 0;
-            	int off = Character.isDigit(temp.charAt(0)) ? 0 : 1;
-            	int i;
-            	if(index == 1 + off)
-            	{
-            		//Either don't adjust decimal or move it backwards
-            		if(temp.charAt(off) != '0')
-            		{
-            			//Ok, move decimal backwards
-            			for(i = index + 1; i < tlen; i++)
-            			{
-            				if(temp.charAt(i) != '0')
-            				{
-            					exp = i - index;
-            					break;
-            				}
-            			}
-            		}
-            	}
-            	else
-            	{
-            		//Move decimal forwards
-            		for(i = off; i < index; i++)
-        			{
-            			if(temp.charAt(i) != '0')
-        				{
-        					exp = index - i - 1;
-        					break;
-        				}
-        			}
-            	}
-            	
-            	//Start writing out the value
-            	expBuf.setLength(0); //Reset the StringBuffer
-            	if(off == 1)
-            	{
-            		//If a formatter or sign was added then make sure the final value has it too.
-            		expBuf.append(temp.charAt(0));
-            	}
-            	StringUtilities.append(expBuf, temp, off, index - off); //Copy whole number
-            	StringUtilities.append(expBuf, temp, index + 1, tlen - ((index * 2) + 1)); //Copy decimal (subtracting what are now extra precision chars)
-            	//Trim zeros before finishing formatting
-            	for(i = tlen - 1; i > off; i--)
-        		{
-        			if(temp.charAt(i) != '0')
-        			{
-        				break;
-        			}
-        		}
-        		if(((i - 1) == off) && (this.precision == -1))
-        		{
-        			//Only remove zeros if it is an integer and the precision isn't predefined
-        			if(alt)
-        			{
-        				//Adjust
-        				expBuf.delete(off + 2, expBuf.length());
-        				expBuf.insert(off + 1, decimalPoint); //Insert the decimal point
-        			}
-        			else
-        			{
-        				expBuf.delete(off + 1, expBuf.length());
-        			}
-        		}
-        		else
-        		{
-        			expBuf.insert(off + 1, decimalPoint); //Insert the decimal point
-        		}
-            	
-            	//Now write out the exponent
-            	expBuf.append('e');
-            	expBuf.append(exp < 0 ? '-' : '+');
-            	exp = Math.abs(exp);
-            	if(exp < 10)
-            	{
-            		//Must be at least 2 digits for the exponent
-            		expBuf.append('0');
-            	}
-            	expBuf.append(exp);
+                if(!Double.isInfinite(value) && !Double.isNaN(value))
+                {
+	                String temp = expBuf.toString();
+	                int tlen = temp.length();
+	            	int index = temp.indexOf(decimalPoint);
+	            	
+	            	//Get the exponent
+	            	int exp = 0;
+	            	int off = Character.isDigit(temp.charAt(0)) ? 0 : 1;
+	            	int i;
+	            	if(index == 1 + off)
+	            	{
+	            		//Either don't adjust decimal or move it backwards
+	            		if(temp.charAt(off) == '0')
+	            		{
+	            			//Ok, move decimal backwards
+	            			for(i = index + 1; i < tlen; i++)
+	            			{
+	            				if(temp.charAt(i) != '0')
+	            				{
+	            					exp = -(i - index);
+	            					break;
+	            				}
+	            			}
+	            		}
+	            	}
+	            	else
+	            	{
+	            		//Move decimal forwards
+	            		for(i = off; i < index; i++)
+	        			{
+	            			if(temp.charAt(i) != '0')
+	        				{
+	        					exp = index - i - 1;
+	        					break;
+	        				}
+	        			}
+	            	}
+	            	
+	            	//Start writing out the value
+	            	expBuf.setLength(0); //Reset the StringBuffer
+	            	if(off == 1)
+	            	{
+	            		//If a formatter or sign was added then make sure the final value has it too.
+	            		expBuf.append(temp.charAt(0));
+	            	}
+	            	StringUtilities.append(expBuf, temp, off, index - off); //Copy whole number
+	            	StringUtilities.append(expBuf, temp, index + 1, tlen - (index + 1)); //Copy decimal
+	            	//Trim zeros before finishing formatting
+	            	//-First from the front
+	            	boolean dec = false;
+	            	for(i = off; i < tlen - 1; i++)
+	        		{
+	            		char c = temp.charAt(i);
+	        			if(c != '0')
+	        			{
+	        				if(c != decimalPoint)
+	        				{
+	        					break;
+	        				}
+	        				else
+	        				{
+	        					//If a decimal point is found (since temp is has a decimal point) then make sure to ignore the extra count.
+	        					dec = true;
+	        				}
+	        			}
+	        		}
+	            	if(i != off)
+	            	{
+	            		expBuf.delete(off, i - (dec ? 1 : 0));
+	            	}
+	            	//-Now from the back
+	            	for(i = tlen - 1; i > off; i--)
+	        		{
+	        			if(temp.charAt(i) != '0')
+	        			{
+	        				break;
+	        			}
+	        		}
+	        		if(((i - 1) == off) && (this.precision == -1))
+	        		{
+	        			//Only remove zeros if it is an integer and the precision isn't predefined
+	        			if(alt)
+	        			{
+	        				//Adjust
+	        				expBuf.delete(off + 2, expBuf.length()).insert(off + 1, decimalPoint); //Insert the decimal point
+	        			}
+	        			else
+	        			{
+	        				expBuf.delete(off + 1, expBuf.length());
+	        			}
+	        		}
+	        		else
+	        		{
+	        			expBuf.insert(off + 1, decimalPoint); //Insert the decimal point
+	        			//If not enough digits exist to match precision
+	        			int l = expBuf.length() - 2;
+	        			int p = this.precision == -1 ? DEFAULT_PRECISION : this.precision;
+	        			if(l < p)
+	        			{
+		        			char[] chars = new char[p - l];
+		        			Arrays.fill(chars, '0');
+		        			expBuf.append(chars);
+	        			}
+	        		}
+	            	
+	            	//Now write out the exponent
+	            	expBuf.append('e').append(exp < 0 ? '-' : '+');
+	            	exp = Math.abs(exp);
+	            	if(exp < 10)
+	            	{
+	            		//Must be at least 2 digits for the exponent
+	            		expBuf.append('0');
+	            	}
+	            	expBuf.append(exp);
+                }
             }
-            if (fixedBuf != null)
+            if (fixedBuf != null && !Double.isInfinite(value) && !Double.isNaN(value))
             {
             	String temp = fixedBuf.toString();
             	int index = temp.indexOf(decimalPoint);
@@ -2138,10 +2243,55 @@ final class PrintUtility
             String result;
             if (type == 'g' || type == 'G')
             {
-            	//TODO: Convert fixed and exp. buffers to general format
+            	if(!alt)
+            	{
+            		//If not alternative then trailing zeros should be removed (decimal included [in removal] if the number is an integer)
+            		
+	            	//First process the fixed point
+            		String temp = fixedBuf.toString();
+            		int index = temp.indexOf(decimalPoint);
+            		if(index == -1)
+            		{
+	            		for(int i = fixedBuf.length() - 1; i >= 0; i--)
+	            		{
+	            			char c = temp.charAt(i);
+	            			if(c != '0')
+	            			{
+	            				int start = i;
+	            				if(c != decimalPoint)
+	            				{
+	            					start++;
+	            				}
+	            				fixedBuf.delete(start, fixedBuf.length());
+	            				break;
+	            			}
+	            		}
+            		}
+	            	
+	            	//Now process the exponent
+            		temp = expBuf.toString();
+            		index = temp.indexOf(decimalPoint);
+            		if(index == -1)
+            		{
+	            		for(int i = temp.indexOf('e') - 1; i >= 0; i--)
+	            		{
+	            			char c = temp.charAt(i);
+	            			if(c != '0')
+	            			{
+	            				int start = i;
+	            				if(c != decimalPoint)
+	            				{
+	            					start++;
+	            				}
+	            				fixedBuf.delete(start, temp.indexOf('e'));
+	            				break;
+	            			}
+	            		}
+            		}
+            	}
             	
             	//Compare length. Shortest one is returned.
-                StringBuffer builder = fixedBuf.length() < expBuf.length() ? fixedBuf : expBuf;
+                StringBuffer builder = expBuf.length() < fixedBuf.length() ? expBuf : fixedBuf; //Fixed point is the "false" value so if they are equal in length then fixed-point takes precedence over exponent
                 result = builder.toString();
             }
             else
@@ -2163,13 +2313,13 @@ final class PrintUtility
                 {
                     buf.append("nan");
                 }
-                else if (v == Double.NEGATIVE_INFINITY)
-                {
-                    buf.append("-inf");
-                }
                 else
                 {
-                    buf.append("inf");
+                	if (v == Double.NEGATIVE_INFINITY)
+	                {
+	                    buf.append('-');
+	                }
+	                buf.append("inf");
                 }
                 return;
             }
@@ -2185,6 +2335,7 @@ final class PrintUtility
             {
                 p = DEFAULT_PRECISION;
             }
+            int tp = p; //Used for trimming later
             
             if (exp == 0 || mantissa == 0)
             {
@@ -2302,6 +2453,10 @@ final class PrintUtility
 		                        		buf.setCharAt(i, (char)(tempV + '0'));
 		                        	}
 		                        }
+		                        if(carry != 0)
+		                        {
+		                        	buf.insert(0, carry);
+		                        }
                         	}
                         }
                         
@@ -2317,11 +2472,11 @@ final class PrintUtility
                 else
                 {
                     //Built in
-                	/*
+                	/* Bit shifting more efficient
 //#ifndef BlackBerrySDK4.5.0
-                    long twoPower = (long)MathUtilities.pow(2, Math.abs(exp)); //Bit shifting more efficient
+                    long twoPower = (long)MathUtilities.pow(2, Math.abs(exp));
 //#else
-                    long twoPower = (long)Utility.pow(2, Math.abs(exp)); //Bit shifting more efficient
+                    long twoPower = (long)Utility.pow(2, Math.abs(exp));
 //#endif
                      */
                 	
@@ -2401,10 +2556,22 @@ final class PrintUtility
 		                        		buf.setCharAt(i, (char)(tempV + '0'));
 		                        	}
 		                        }
+		                        if(carry != 0)
+		                        {
+		                        	buf.insert(0, carry);
+		                        }
 	                        }
                         }
                     }
                 }
+            }
+            
+            //Trim precision if necessary (any of the division operations add an extra digit). Only handle greater lengths.
+            int index = buf.toString().indexOf(decimalPoint);
+            if(buf.length() - 1 - index > tp)
+            {
+            	//Not rounding
+            	buf.delete(tp + index + 1, buf.length());
             }
         }
         

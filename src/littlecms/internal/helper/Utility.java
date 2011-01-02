@@ -297,6 +297,24 @@ public final class Utility
     	return charNumRangeComp(c, 'f', 'F');
     }
     
+    //Based off J2SE docs version 6
+    public static char forDigit(int digit, int radix)
+    {
+    	if(radix < Character.MIN_RADIX || radix > Character.MAX_RADIX)
+    	{
+    		return '\0';
+    	}
+    	if(digit < 0 || digit > radix)
+    	{
+    		return '\0';
+    	}
+    	if(digit < 10)
+    	{
+    		return (char)('0' + digit);
+    	}
+    	return (char)('a' + digit - 10);
+    }
+    
     public static String ctime(Calendar timer)
 	{
     	//ctime format: "Www Mmm dd hh:mm:ss yyyy" and appends \n to the end
@@ -713,6 +731,11 @@ public final class Utility
     public static int vsnprintf(StringBuffer buffer, int count, final String format, Object[] argptr)
 	{
     	return fprintf(new PrintStream(new CharOut(buffer)), count, format, argptr);
+	}
+    
+    public static int vsprintf(char[] buffer, final String format, Object[] argptr)
+	{
+		return vsnprintf(buffer, -1, format, argptr);
 	}
 	
 	public static int vsnprintf(char[] buffer, int count, final String format, Object[] argptr)

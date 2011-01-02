@@ -1424,7 +1424,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Destroys tree tone curve object placed into an array. This function is equivalent to call three times cmsFreeToneCurve, one per object. It exists because 
+	 * Destroys three tone curve objects placed into an array. This function is equivalent to call three times cmsFreeToneCurve, one per object. It exists because 
 	 * conveniency.
 	 * @param Curve array to 3 pointers to tone curve objects.
 	 */

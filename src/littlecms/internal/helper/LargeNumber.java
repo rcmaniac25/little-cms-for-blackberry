@@ -45,6 +45,11 @@ public final class LargeNumber
     private Boolean mzero, mone;
 	
 	//Non-representation specific
+    public LargeNumber()
+    {
+    	this(0L);
+    }
+    
     public LargeNumber(LargeNumber num)
     {
     	this.value = Arrays.copy(num.value);
@@ -65,9 +70,83 @@ public final class LargeNumber
         return greaterThenOrEqual(this.value, num.value);
     }
     
+    public static LargeNumber parse(String s)
+    {
+    	return parse(s, 10);
+    }
+    
+    public static LargeNumber parse(String s, int radix)
+	{
+		//Check for invalid data, have the native BlackBerry system throw the error
+		if(s == null || s.length() == 0)
+		{
+			Long.parseLong(s, radix);
+		}
+		if(radix < Character.MIN_RADIX || radix > Character.MAX_RADIX)
+		{
+			Long.parseLong("10", radix);
+		}
+		
+		//Do some preliminary checks to make sure the number is valid.
+		char firstChar = s.charAt(0);
+        int i = 0, len = s.length();
+        if (firstChar < '0')
+        {
+            if (firstChar == '-')
+            {
+            	//Negative number not supported
+            	throw new NumberFormatException(Utility.LCMS_Resources.getString(LCMSResource.PRINTUTIL_UNSIGNED_NUMBER_UNPARSEABLE_LARGE));
+            }
+            else if (firstChar != '+')
+            {
+            	Long.parseLong(s, radix);
+            }
+            if (len == 1)
+            {
+            	Long.parseLong(s, radix);
+            }
+            i++;
+        }
+        //Get the multmin (the maximum number before multiplication goes high then the radix's possible value for a ulong).
+        LargeNumber radRef = new LargeNumber((long)radix);
+        //Create the result and use it temporarily for the multmin calculation.
+        //LargeNumber maxLong = new LargeNumber(0xFFFFFFFFFFFFFFFFL);
+        //LargeNumber multmin = maxLong.divide(radRef);
+        LargeNumber result = new LargeNumber(0L);
+        LargeNumber ldigit;
+        
+        //Calculate the number
+        long digit;
+        while (i < len)
+        {
+        	digit = Character.digit(s.charAt(i++), radix);
+        	if (digit < 0)
+            {
+        		Long.parseLong(s, radix);
+            }
+        	/* No limit needed
+        	if (result.compare(multmin) > 0)
+            {
+        		//The number is greater then the maximum range of this function.
+                throw new NumberFormatException(Utility.LCMS_Resources.getString(LCMSResource.PRINTUTIL_UNSIGNED_NUMBER_UNPARSEABLE_LARGE));
+            }
+            */
+        	result = result.multiply(radRef);
+        	ldigit = new LargeNumber(digit);
+        	/*
+        	if (maxLong.subtract(result).compare(ldigit) < 0)
+            {
+        		Byte.parseByte(s, radix);
+            }
+            */
+        	result = result.add(ldigit);
+        }
+        return result;
+	}
+    
     public LargeNumber add(LargeNumber num)
     {
-        if (this.zero() || num.zero())
+        if (this.zero() && num.zero())
         {
             return new LargeNumber(0L);
         }
@@ -86,7 +165,7 @@ public final class LargeNumber
     
     public LargeNumber subtract(LargeNumber num)
     {
-        if (this.zero() || num.zero())
+        if (this.zero() && num.zero())
         {
             return new LargeNumber(0L);
         }
@@ -196,9 +275,14 @@ public final class LargeNumber
 //#ifdef CMS_USE_NATIVE_BIGINT
     	return CryptoByteArrayArithmetic.valueOf(this.value);
 //#else
-    	byte[] revByteOrder = new byte[this.value.length];
-		for(int i = this.value.length - 1, j = 0; i >= 0; i--, j++)
+    	byte[] revByteOrder = new byte[8];
+		for(int i = this.value.length - 1, j = 0; j < 8; i--, j++)
         {
+			if(i < 0)
+			{
+				//Reached end of avalible data. Stop before an exception occurs.
+				break;
+			}
 			revByteOrder[j] = this.value[i];
         }
 		return BitConverter.toInt64(revByteOrder, 0);
@@ -237,10 +321,24 @@ public final class LargeNumber
     	return toString(null);
     }
     
+    public String toString(int radix)
+    {
+    	return toString(null, radix);
+    }
+    
     public String toString(StringBuffer builder)
+    {
+    	return toString(builder, 10);
+    }
+    
+    public String toString(StringBuffer builder, int radix)
     {
         if (value != null)
         {
+        	if(radix < Character.MIN_RADIX || radix > Character.MAX_RADIX)
+        	{
+        		Integer.toString(0, radix);
+        	}
             if (builder == null)
             {
                 builder = new StringBuffer();
@@ -255,6 +353,20 @@ public final class LargeNumber
             }
             else
             {
+                LargeNumber radRef = new LargeNumber((long)radix);
+                LargeNumber number = new LargeNumber(this);
+                LargeNumber[] mod = new LargeNumber[1];
+                while(number.compare(radRef) >= 0)
+                {
+                	number = number.divideAndMod(radRef, mod);
+                	builder.insert(0, Utility.forDigit((int)mod[0].longValue(), radix));
+                }
+                if(!number.zero())
+                {
+                	//In case another digit exists
+                	builder.insert(0, Utility.forDigit((int)number.longValue(), radix));
+                }
+            	/*
                 //All operations are done backwords. So the number 123 is stored 321.
             	StringBuffer power2 = new StringBuffer("1");
             	StringBuffer result = new StringBuffer("0");
@@ -288,12 +400,14 @@ public final class LargeNumber
                 {
                     builder.append(result.charAt(i));
                 }
+                */
             }
             return builder.toString();
         }
         return super.toString();
     }
     
+    /*
     private static void addString(StringBuffer src, StringBuffer dest)
     {
         int slen = src.length();
@@ -371,13 +485,14 @@ public final class LargeNumber
             number.append(carry);
         }
     }
+    */
 	
 	//Representation specific
 //#ifdef CMS_USE_NATIVE_BIGINT
     public LargeNumber(int exp)
     {
     	exp = Math.abs(exp);
-        if (exp > 1024)
+        if (exp > 1075)//1024) //Java treats Double.MIN_VALUE as the smallest subnormal double (though the docs. say that it is normal).
         {
         	throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.LARGENUM_INVALID_EXP));
         }
@@ -450,7 +565,7 @@ public final class LargeNumber
     public LargeNumber(int exp)
     {
     	exp = Math.abs(exp);
-        if (exp > 1024)
+        if (exp > 1075)//1024) //Java treats Double.MIN_VALUE as the smallest subnormal double (though the docs. say that it is normal).
         {
         	throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.LARGENUM_INVALID_EXP));
         }
@@ -533,7 +648,7 @@ public final class LargeNumber
         {
             if (src2[i] != src1[i])
             {
-                if (src2[i] > src1[i])
+                if ((src2[i] & 0xFF) > (src1[i] & 0xFF))
                 {
                     return -1; //'num' is greater then this number
                 }
@@ -754,7 +869,7 @@ public final class LargeNumber
             }
             System.arraycopy(numerator, 0, mdest, 0, len1); //mdest is the remainder of division. So copy src1 to this, then use it for subtraction to get the divident. Then what is left in mdest is the remaineder of the division operation
             int blen;
-            byte[] buffer = new byte[blen = (dlen + len2 - 1)];
+            byte[] buffer = new byte[blen = (dlen + len2 - 1)]; //TODO: Figure out proper number of bytes (should "- 1" be removed)
             byte[] buffer2 = new byte[blen];
             
             //Process
