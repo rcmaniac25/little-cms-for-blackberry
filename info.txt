@@ -2,7 +2,6 @@
 --Revision Used: ??/??/2010-- (the date on which the source code was pulled from GIT)
 
 TODO:
-Finish toString (with radix) in LargeNumber
 Finish TODOs in PrintUtility
 Go through TODOs in helper package
 

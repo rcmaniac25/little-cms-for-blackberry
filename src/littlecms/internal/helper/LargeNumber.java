@@ -52,6 +52,8 @@ public final class LargeNumber
     
     public LargeNumber(LargeNumber num)
     {
+    	this.mzero = num.mzero;
+    	this.mone = num.mone;
     	this.value = Arrays.copy(num.value);
     }
     
@@ -255,6 +257,7 @@ public final class LargeNumber
     
     public boolean canReturnLong()
     {
+    	//Check if it is a basic value or the length is less then or equal to zero. The last part isn't really necessary since longValue will take the value regardless.
     	return this.zero() || this.one() || this.value.length <= 8;
     }
     
@@ -272,19 +275,25 @@ public final class LargeNumber
     	{
     		return 1L;
     	}
+    	byte[] revByteOrder;
+    	int len = this.value.length;
 //#ifdef CMS_USE_NATIVE_BIGINT
-    	return CryptoByteArrayArithmetic.valueOf(this.value);
+    	if(len > 8)
+    	{
+    		revByteOrder = new byte[8];
+	    	System.arraycopy(this.value, len - 8, revByteOrder, 0, 8);
+    	}
+    	else
+    	{
+    		revByteOrder = this.value;
+    	}
+    	return CryptoByteArrayArithmetic.valueOf(revByteOrder);
 //#else
-    	byte[] revByteOrder = new byte[8];
-		for(int i = this.value.length - 1, j = 0; j < 8; i--, j++)
-        {
-			if(i < 0)
-			{
-				//Reached end of avalible data. Stop before an exception occurs.
-				break;
-			}
-			revByteOrder[j] = this.value[i];
-        }
+    	revByteOrder = new byte[8];
+    	for(int i = 0, j = 7; i < len && j >= 0; i++, j--)
+    	{
+    		revByteOrder[j] = this.value[i];
+    	}
 		return BitConverter.toInt64(revByteOrder, 0);
 //#endif
     }
@@ -869,7 +878,7 @@ public final class LargeNumber
             }
             System.arraycopy(numerator, 0, mdest, 0, len1); //mdest is the remainder of division. So copy src1 to this, then use it for subtraction to get the divident. Then what is left in mdest is the remaineder of the division operation
             int blen;
-            byte[] buffer = new byte[blen = (dlen + len2 - 1)]; //TODO: Figure out proper number of bytes (should "- 1" be removed)
+            byte[] buffer = new byte[blen = (dlen + len2)];
             byte[] buffer2 = new byte[blen];
             
             //Process
@@ -908,7 +917,7 @@ public final class LargeNumber
                         if (compare(buffer, buffer2) >= 0)
                         {
                             //Set the actual bit
-                            dest[bPos / 8] |= (byte)(1 << (bPos % 8));
+                            dest[i] |= (byte)(1 << (bPos % 8));
 
                             //Subtract
                             subtract(mdest, buffer2, mdest); //One for the remained
@@ -927,7 +936,7 @@ public final class LargeNumber
                                     //Carry over a bit
                                     buffer2[b - 1] |= (byte)((buffer2[b] & 0x01) << 7);
                                 }
-                                buffer2[b] >>>= 1;
+                                buffer2[b] = (byte)((buffer2[b] & 0xFF) >>> 1);
                             }
                         }
                     }
