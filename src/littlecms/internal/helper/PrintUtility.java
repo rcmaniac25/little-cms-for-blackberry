@@ -27,11 +27,15 @@
 //@Author Vinnie Simonetti
 package littlecms.internal.helper;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Vector;
 
 import littlecms.internal.LCMSResource;
 
+import net.rim.device.api.io.IOUtilities;
 import net.rim.device.api.util.Arrays;
 import net.rim.device.api.util.StringUtilities;
 /*
@@ -45,8 +49,7 @@ public
 //#endif
 final class PrintUtility
 {
-	/* There are many components to printf that are implementation specific.
-	 * 
+	/* 
 	 * This mostly follows the specification mentioned http://www.cplusplus.com/reference/clibrary/cstdio/printf/
 	 * 
 	 * Implementation specific components:
@@ -68,6 +71,7 @@ final class PrintUtility
 			//Regardless of if there is a format or not, nothing is going to get returned.
         	return 0;
         }
+		//Cache the format if possible
 		Object[] formats;
 		if(formatCache != null && formatCache.length > 0 && formatCache[0] != null)
 		{
@@ -90,21 +94,25 @@ final class PrintUtility
         int argLen = args == null ? 0 : args.length;
         int elLen;
         int argPos = 0;
+        //Go through all the parts of the format
         for(int i = 0; i < len; i++)
         {
 	        Object obj = formats[i];
 	        String str = null;
 	        if(obj instanceof String)
 	        {
+	        	//If it's a String then it's easy
 		        str = (String)obj;
 	        }
 	        else
 	        {
+	        	//Have to actually format the args into a String
 		        FormatElement form = (FormatElement)obj;
                 if (form == null)
                 {
                 	throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.BAD_STRING_FORMAT));
                 }
+                //Does the format take any arguments as width or precision?
 		        int req = form.requires();
 		        if(req > 0)
 		        {
@@ -121,36 +129,44 @@ final class PrintUtility
 			        }
 			        else
 			        {
+			        	//O no, not enough args
 				        argPos += req; //Do this so that it only prints the format out
 			        }
 		        }
                 if (form.getFormat().endsWith("n"))
                 {
+                	//Have a numeric arg (gets the length of what has been written out so far)
                     ((int[])args[argPos++])[0] = count;
                 }
                 else
                 {
+                	//Ok, time to process..
                     if (argPos >= argLen)
                     {
+                    	//..Or not. Not enough args, return the format
                         str = form.getFormat();
                     }
                     else
                     {
+                    	//If the format takes an argument then pass it in; it could be relative or absolute.
                         str = form.format(form.takesArg() ? (form.hasArgLocation() ? args[form.argLocation()] : args[argPos++]) : null);
                     }
                 }
 	        }
+	        //If the String isn't null then print it to the PrintStream
             if (str != null)
             {
                 elLen = str.length();
                 if (elLen + count > max)
                 {
-                    out.print(str.substring(0, max));
+                	//The maximum char-count will be exceeded so truncate the String before writing it and stop execution
+                    out.print(str.substring(0, max - count));
                     count = max;
                     break;
                 }
                 else
                 {
+                	//Print out the whole String
                     out.print(str);
                     count += elLen;
                 }
@@ -170,10 +186,26 @@ final class PrintUtility
         return count;
 	}
 	
-	public static int sscanf(final String str, final String format, Object[] argptr, Object[][] formatCache)
+	public static int fscanf(final InputStream file, final String format, Object[] argptr, Object[][] formatCache)
     {
+		//First thing to do is get the actual formated data
+		byte[] bytes = null;
+		try
+		{
+			bytes = IOUtilities.streamToBytes(file);
+		}
+		catch(IOException ioe)
+		{
+		}
+		if(bytes == null)
+		{
+			//No data, no processing
+			return 0;
+		}
+		//Now process the format
 		boolean doValidate = true;
 		Object[] formats;
+		//..and possibly cache it
 		if(formatCache != null && formatCache.length > 0 && formatCache[0] != null)
 		{
 			doValidate = false;
@@ -187,8 +219,22 @@ final class PrintUtility
 				formatCache[0] = formats;
 			}
 		}
+		//Now get the string data
+		String str = null;
+		try
+		{
+			str = new String(bytes, "UTF-8"); //Get string in UTF-8 format, this will allow standard ASCII all the way to international languages to be processed.
+		}
+		catch(UnsupportedEncodingException ioe)
+		{
+		}
+		if(str == null)
+		{
+			//No string, no processing
+			return 0;
+		}
         char[] chars = str.toCharArray();
-        int slen = str.length();
+        int slen = chars.length;
         int len = formats.length;
         int argLen = argptr.length;
         int[] tempVals = new int[2]; //index 0 is "str pos", index 1 is "arg pos"
@@ -198,10 +244,12 @@ final class PrintUtility
             Object obj = formats[i];
             if (obj instanceof String)
             {
+            	//If the format is a String then it could possibly get simplified to speed up actual execution (this isn't writing out the format so we don't need to go through the format if we don't need to)
                 String tmp = (String)obj;
-                tmp = tmp.trim();
+                tmp = tmp.trim(); //Trim the String
                 if (tmp.length() == 0)
                 {
+                	//Hmm, seems the String was only whitespace so remove it from the processing list
                     Object[] nForms = new Object[len - 1];
                     System.arraycopy(formats, 0, nForms, 0, i);
                     System.arraycopy(formats, i + 1, nForms, i, len - (i + 1));
@@ -211,12 +259,14 @@ final class PrintUtility
                 }
                 else
                 {
+                	//Ok we still have String content, lets see if we can make heads-or-tails of it
                     Vector nEl = null;
                     int l = tmp.length();
                     for (int k = 0; k < l; k++)
                     {
                         if (isWhiteSpace(tmp.charAt(k)))
                         {
+                        	//Found some whitespace, remove it so we are left only with actual String content
                             if (nEl == null)
                             {
                                 nEl = new Vector();
@@ -231,19 +281,27 @@ final class PrintUtility
                     {
                         //Get forgotten element
                         nEl.addElement(tmp);
+                        //Copy formats into a temporary array
                         int nElSize;
                         Object[] nForms = new Object[len + (nElSize = nEl.size()) - 1];
                         System.arraycopy(formats, 0, nForms, 0, i);
+                        //Copy the cleaned up String to a temporary array
                         Object[] tObj = new Object[nElSize];
                         nEl.copyInto(tObj);
+                        //Copy the new String (clean) into the new formats
                         System.arraycopy(tObj, 0, nForms, i, nElSize);
+                        //Copy any formats that might have been overwritten to a new position in the new formats
                         System.arraycopy(formats, i + 1, nForms, i + nElSize, len - (i + 1));
+                        //Adjust format length for processing
                         len = nForms.length;
+                        //Adjust index position in relation to the new String
                         i += nElSize - 1;
+                        //Finally replace the formats
                         formats = nForms;
                     }
                     else
                     {
+                    	//Replace the format String with the trimmed String
                         formats[i] = tmp;
                     }
                 }
@@ -282,22 +340,25 @@ final class PrintUtility
                 }
                 if(doValidate)
                 {
+                	//If this isn't a precached formatter it should get validated
                 	if(!validateUnformatter(form.getFormat()))
                 	{
                 		//Invalid format, return
                 		if(formatCache != null && formatCache.length > 0)
                 		{
+                			//If there is a cache, remove it since the formatting is not valid
                 			formatCache[0] = null;
                 		}
                 		break;
                 	}
                 }
+                //Get the current argument position and String position, "unformat" it, and compare the new positions
                 int sp = tempVals[0];
                 int ap = tempVals[1];
                 form.unformat(str, argptr, tempVals);
                 if (sp == tempVals[0] && ap == tempVals[1])
                 {
-                    //This means something went wrong, no changes to the input String or arguments occured
+                    //This means something went wrong, no changes to the input String or arguments occurred
                     break;
                 }
                 //count += (tempVals[1] - ap); //This is simply the number of arguments read
@@ -307,6 +368,7 @@ final class PrintUtility
                 }
             }
         }
+        //Reset the formats so they can be reused
         if(formatCache != null && formatCache.length > 0)
 		{
         	for(int i = 0; i < len; i++)
@@ -322,7 +384,69 @@ final class PrintUtility
 	
 	private static boolean validateUnformatter(String form)
 	{
-		//TODO: Figure out how to do a general validation of format
+		int len = form.length();
+		int section = 0; //Section: 0-"ignore char", 1-width, 2-modifiers, 3-type, (-1)-done
+		for(int i = 1; i < len; i++) //First char is always %
+		{
+			char c = form.charAt(i);
+			if (matchesChar(c, FULL_FORMAT)) //Valid identifiers
+			{
+				switch(section)
+				{
+					case 0:
+						if(c != '*')
+						{
+							//Not a 'ignore char' so go to next section
+							i--;
+						}
+						section++;
+						break;
+					case 1:
+						if(matchesChar(c, SCANF_SPECIFIERS))
+						{
+							//Found specifier, end
+							return (i + 1) == len;
+						}
+						else if(matchesChar(c, SCANF_WIDTH))
+						{
+							//Continue execution, eventually it should get to the next component in the format.
+						}
+						else if(matchesChar(c, SCANF_LENGTH))
+						{
+							//Go to next section for checking
+							section++;
+						}
+						else
+						{
+							section = -1; //Invalid
+						}
+						break;
+					case 2:
+						if(matchesChar(c, SCANF_SPECIFIERS))
+						{
+							//Found specifier, end
+							return (i + 1) == len;
+						}
+						else if(matchesChar(c, SCANF_LENGTH))
+						{
+							//Continue execution, eventually it should get to a specifier or an invalid number
+						}
+						else
+						{
+							section = -1; //Invalid
+						}
+						break;
+				}
+			}
+			else
+			{
+				section = -1;
+			}
+			if(section < 0)
+			{
+				break;
+			}
+		}
 		return false;
 	}
 	
@@ -341,6 +465,7 @@ final class PrintUtility
         }
     }
 	
+	//Helper function so arguments can be converted to a Long
 	private static Long getAsLong(Object arg)
 	{
 		if(arg instanceof Long)
@@ -362,7 +487,7 @@ final class PrintUtility
 		}
 		else
 		{
-			l = 0; //Invalid
+			l = -1; //Invalid (-1 is the default value for width and precision which is where this function will get used)
 		}
 		return new Long(l);
 	}
@@ -373,11 +498,21 @@ final class PrintUtility
 	private static final long LENGTH_UID = 0x9EF53E8BFE248140L;
 	private static final long FULL_FORMAT_UID = 0x3024E7CCD507CBE0L;
 	
+	private static final long SCANF_SPECIFIERS_UID = 0x3C0F209819016600L;
+	private static final long SCANF_WIDTH_UID = 0x3889827523F0B67AL;
+	private static final long SCANF_LENGTH_UID = 0x50EC7C6D6EC9B264L;
+	private static final long SCANF_FULL_FORMAT_UID = 0xAE2D09322C4157CFL;
+	
 	private static String SPECIFIERS;
 	private static String FLAGS;
 	private static String WIDTH_PRECISION;
 	private static String LENGTH;
 	private static String FULL_FORMAT;
+	
+	private static String SCANF_SPECIFIERS;
+	private static String SCANF_WIDTH;
+	private static String SCANF_LENGTH;
+	private static String SCANF_FULL_FORMAT;
 	
 	static
 	{
@@ -394,6 +529,15 @@ final class PrintUtility
 			Utility.singletonStorageSet(WIDTH_PRECISION_UID, WIDTH_PRECISION);
 			Utility.singletonStorageSet(LENGTH_UID, LENGTH);
 			Utility.singletonStorageSet(FULL_FORMAT_UID, FULL_FORMAT);
+			
+			SCANF_SPECIFIERS = SPECIFIERS.substring(0, SPECIFIERS.length() - 2);
+			SCANF_WIDTH = WIDTH_PRECISION.substring(0, WIDTH_PRECISION.length() - 2);
+			SCANF_LENGTH = LENGTH.substring(0, LENGTH.length() - 3);
+			SCANF_FULL_FORMAT = SCANF_WIDTH + SCANF_LENGTH + SCANF_SPECIFIERS + '*';
+			Utility.singletonStorageSet(SCANF_SPECIFIERS_UID, SCANF_SPECIFIERS);
+			Utility.singletonStorageSet(SCANF_WIDTH_UID, SCANF_WIDTH);
+			Utility.singletonStorageSet(SCANF_LENGTH_UID, SCANF_LENGTH);
+			Utility.singletonStorageSet(SCANF_FULL_FORMAT_UID, SCANF_FULL_FORMAT);
 		}
 		else
 		{
@@ -402,9 +546,15 @@ final class PrintUtility
 			WIDTH_PRECISION = (String)Utility.singletonStorageGet(WIDTH_PRECISION_UID);
 			LENGTH = (String)Utility.singletonStorageGet(LENGTH_UID);
 			FULL_FORMAT = (String)Utility.singletonStorageGet(FULL_FORMAT_UID);
+			
+			SCANF_SPECIFIERS = (String)Utility.singletonStorageGet(SCANF_SPECIFIERS_UID);
+			SCANF_WIDTH = (String)Utility.singletonStorageGet(SCANF_WIDTH_UID);
+			SCANF_LENGTH = (String)Utility.singletonStorageGet(SCANF_LENGTH_UID);
+			SCANF_FULL_FORMAT = (String)Utility.singletonStorageGet(SCANF_FULL_FORMAT_UID);
 		}
 	}
 	
+	//Takes the format String, breaks it up into format elements and String literals. If just the format is passed in along with the args argument then the broken down format will be passed into the args argument.
 	public static Object[] breakFormat(final String format, String[][] args)
 	{
 		StringBuffer bu = new StringBuffer();
@@ -471,7 +621,7 @@ final class PrintUtility
                                 }
                                 else
                                 {
-                                    //If we don't do this it will become redundent and we will get a stack overflow
+                                    //If we don't do this it will become redundant and we will get a stack overflow
                                     parts.addElement(FormatElement.getFormatter(str));
                                 }
                                 bu.setLength(0);
@@ -496,6 +646,7 @@ final class PrintUtility
                             }
                             else if (c == '.')
                             {
+                            	//Precision is prefixed with a decimal, make sure that there is more to the format then just a decimal at the end.
                                 if (i + 1 < len)
                                 {
                                     if (matchesChar(format.charAt(i + 1), WIDTH_PRECISION))
@@ -577,6 +728,7 @@ final class PrintUtility
                             }
                             else if (c == '.')
                             {
+                            	//Precision is prefixed with a decimal, make sure that there is more to the format then just a decimal at the end.
                                 if (i + 1 < len)
                                 {
                                     if (matchesChar(format.charAt(i + 1), WIDTH_PRECISION))
@@ -647,6 +799,7 @@ final class PrintUtility
                             }
                             else if (c == '.')
                             {
+                            	//Precision is prefixed with a decimal, make sure that there is more to the format then just a decimal at the end.
                                 if (i + 1 < len)
                                 {
                                     if (matchesChar(format.charAt(i + 1), WIDTH_PRECISION))
@@ -746,6 +899,7 @@ final class PrintUtility
                             break;
                     }
                 }
+                //If args isn't null then copy the broken up components into the argument
                 if (!inFormat && argList != null)
                 {
                 	String[] argListAr = new String[argList.size()];
@@ -755,8 +909,10 @@ final class PrintUtility
             }
             else
             {
+            	//Look for a format element
                 if (c == '%')
                 {
+                	//Found one
                     if (i + 1 < len)
                     {
                         if (format.charAt(i + 1) == '%')
@@ -787,6 +943,7 @@ final class PrintUtility
                 }
             }
         }
+        //If anything is left over then process it
         if (bu.length() > 0)
         {
             if (inFormat)
@@ -803,6 +960,7 @@ final class PrintUtility
         return partsAr;
 	}
 	
+	//Simple helper function to see if char exists in a set of chars, do this because chars can repeat and we want to check only a certain set
 	private static boolean matchesChar(char c, String chars2match)
     {
         int len = chars2match.length();
@@ -859,6 +1017,8 @@ final class PrintUtility
             }
             switch (form.charAt(form.length() - 1))
             {
+            	case 'C':
+            	case 'S':
                 case 'c': //Character
                 case 's': //String
                     return new StringFormatElement(form);
@@ -869,6 +1029,8 @@ final class PrintUtility
                 case 'X': //Unsigned hexadecimal integer
                 case 'u': //Unsigned decimal integer
                     return new IntFormatElement(form);
+                //case 'a':
+                //case 'A':
                 case 'e':
                 case 'E': //Scientific notation
                 case 'g':
@@ -1640,9 +1802,9 @@ final class PrintUtility
             char type = this.type;
             boolean basicType = this.basicType;
             boolean signed = this.signed;
-            for (w = 0; w < len; w++)
+            for (w = 0; org + w < len; w++) //Make sure we don't reach the end of the string and try to continue checking digits
             {
-                c = value.charAt(org + w);
+            	c = value.charAt(org + w);
                 if (!sign)
                 {
                     if (Character.isDigit(c))
@@ -1778,9 +1940,26 @@ final class PrintUtility
             short sval = 0;
             int ival = 0;
             long lval = 0;
+            int slen = stval.length();
+            if(slen > 65) //Maximum length of a integer string if the maximum value of an unsigned long is converted to binary and an extra char is added, anything less then this should be processed quickly without problem
+            {
+            	//Do some preliminary size checks, if a number is 800 chars it's not going to get parsed (unless every digit is a zero or something similar)
+            	for(int i = 0, minStart = slen - 65; i < slen; i++)
+            	{
+            		c = stval.charAt(i);
+            		if(c != '0' && Utility.isxdigit(c))
+            		{
+            			if(i < minStart)
+            			{
+            				//Too many digits. The program will throw an exception anyway so save the extra execution.
+                    		throw new NumberFormatException();
+            			}
+            			break;
+            		}
+            	}
+            }
             try
             {
-                //TODO, do some preliminary size checks, if a number is 800 chars it's not going to get parsed (unless every digit is a zero or something similar)
                 switch (type)
                 {
                     case 'd':

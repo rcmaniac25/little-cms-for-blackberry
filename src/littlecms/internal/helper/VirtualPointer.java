@@ -55,11 +55,13 @@ public class VirtualPointer
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
         
+        //Is this type processor valid?
         public boolean isValid()
         {
         	return this.vp.data != null;
         }
         
+        //Was the last operation successful?
         public boolean lastOpSuccess()
         {
         	return this.stat == VirtualPointer.Serializer.STATUS_SUCCESS;
@@ -331,6 +333,8 @@ public class VirtualPointer
 			catch (UnsupportedEncodingException e)
 			{
 				//What? How?
+				this.stat = VirtualPointer.Serializer.STATUS_UNSUPPORTED;
+				return;
 			}
             vp.writeIn(data,
 //#ifdef DEBUG
@@ -348,6 +352,7 @@ public class VirtualPointer
         public String readString(boolean inc)
         {
 //#ifdef DEBUG
+        	//If we are in debug mode then we can see if we can take a shortcut to determining the String type
             switch(vp.types[vp.dataPos])
             {
                 case VirtualPointer.StringAscii:
@@ -356,14 +361,17 @@ public class VirtualPointer
                     return readString(inc, true);
             }
 //#endif
+            //Need to figure out String type
             int len = vp.data.length;
             for (int i = vp.dataPos; i < len; i++)
             {
-                if (vp.data[i] > 0x7F)
+                if ((vp.data[i] & 0xFF) > 0x7F)
                 {
+                	//Byte has the high-bit set, this means UTF-8
                     return readString(inc, true);
                 }
             }
+            //ASCII
             return readString(inc, false);
         }
         
@@ -388,7 +396,7 @@ public class VirtualPointer
                     {
                         if (i < (len - 2))
                         {
-                            if (BitConverter.toInt16(vp.data, i) == 0)
+                            if (BitConverter.toInt16(vp.data, i) == 0) //This isn't normal (null byte is, well, a byte) but it adds extra safety and sanity
                             {
                                 actLen = (i - vp.dataPos) + 2;
                                 break;
@@ -409,6 +417,7 @@ public class VirtualPointer
                 }
                 if (actLen == 0)
                 {
+                	//Reached the end of array without finding null byte, must be the entire portion of the array
                     actLen = unicode ? 2 : 1;
                     if (vp.dataPos < len)
                     {
@@ -435,6 +444,7 @@ public class VirtualPointer
             catch(UnsupportedEncodingException e)
             {
             	//What? How?
+            	this.stat = VirtualPointer.Serializer.STATUS_UNSUPPORTED;
             	return null;
             }
         }
@@ -460,7 +470,7 @@ public class VirtualPointer
         {
             write(value, false);
         }
-
+        
         public void write(VirtualPointer value, boolean inc)
         {
             int index = 0;
@@ -483,12 +493,12 @@ public class VirtualPointer
                 inc, false);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
-
+        
         public VirtualPointer readVirtualPointer()
         {
             return readVirtualPointer(false);
         }
-
+        
         public VirtualPointer readVirtualPointer(boolean inc)
         {
             int index = readInt32(inc) - 1;
@@ -602,6 +612,7 @@ public class VirtualPointer
                 		{
                 			if(objArray[i] == null)
                 			{
+                				this.stat = VirtualPointer.Serializer.STATUS_REQUIRES_OBJECT;
                 				return; //Can't handle null elements
                 			}
                 			else if(!objArray[i].getClass().equals(clz))
@@ -612,6 +623,7 @@ public class VirtualPointer
                 				}
                 				else
                 				{
+                					this.stat = VirtualPointer.Serializer.STATUS_UNSUPPORTED;
                 					return; //Multi-type arrays are not supported
                 				}
                 			}
@@ -619,11 +631,13 @@ public class VirtualPointer
                 		ser = VirtualPointer.getSerializer(clz);
                 		if(ser == null)
                 		{
+                			this.stat = VirtualPointer.Serializer.STATUS_FAIL;
                 			return; //Couldn't find serializer
                 		}
                 	}
                 	else
                 	{
+                		this.stat = VirtualPointer.Serializer.STATUS_FAIL;
                 		return; //Couldn't find serializer
                 	}
                 }
@@ -641,6 +655,7 @@ public class VirtualPointer
                 		{
                 			if(objArray[i] == null)
                 			{
+                				this.stat = VirtualPointer.Serializer.STATUS_REQUIRES_OBJECT;
                 				return; //Can't handle null elements
                 			}
                 		}
@@ -684,6 +699,7 @@ public class VirtualPointer
             	{
             		if(!ser.canProcess(objArray[i]))
             		{
+            			this.stat = VirtualPointer.Serializer.STATUS_UNSUPPORTED;
             			return; //Serializer may be for that type but doesn't support serializing that object
             		}
             	}
@@ -805,6 +821,7 @@ public class VirtualPointer
         	else
         	{
         		//If it gets here without running then something is up
+        		this.stat = VirtualPointer.Serializer.STATUS_FAIL;
         		return;
         	}
         	if (!inc)
@@ -1007,7 +1024,7 @@ public class VirtualPointer
         		short[] arr;
         		if(lenIsBytes)
         		{
-        			len >>= 2;
+        			len >>= 1;
         		}
         		count = (elementCount = len) * 2;
         		if(result[2] == null)
@@ -1029,7 +1046,7 @@ public class VirtualPointer
         		char[] arr;
         		if(lenIsBytes)
         		{
-        			len >>= 2;
+        			len >>= 1;
         		}
         		count = (elementCount = len) * 2;
         		if(result[2] == null)
@@ -1051,7 +1068,7 @@ public class VirtualPointer
         		int[] arr;
         		if(lenIsBytes)
         		{
-        			len /= 4;
+        			len >>= 2;
         		}
         		count = (elementCount = len) * 4;
         		if(result[2] == null)
@@ -1073,7 +1090,7 @@ public class VirtualPointer
         		long[] arr;
         		if(lenIsBytes)
         		{
-        			len /= 8;
+        			len >>= 3;
         		}
         		count = (elementCount = len) * 8;
         		if(result[2] == null)
@@ -1095,7 +1112,7 @@ public class VirtualPointer
         		float[] arr;
         		if(lenIsBytes)
         		{
-        			len /= 4;
+        			len >>= 2;
         		}
         		count = (elementCount = len) * 4;
         		if(result[2] == null)
@@ -1117,7 +1134,7 @@ public class VirtualPointer
         		double[] arr;
         		if(lenIsBytes)
         		{
-        			len /= 8;
+        			len >>= 3;
         		}
         		count = (elementCount = len) * 8;
         		if(result[2] == null)
@@ -1178,9 +1195,9 @@ public class VirtualPointer
         		VirtualPointer[] arr;
         		if(lenIsBytes)
         		{
-        			len /= 8;
+        			len /= SIZE;
         		}
-        		count = (elementCount = len) * 8;
+        		count = (elementCount = len) * SIZE;
         		if(result[2] == null)
         		{
         			result[2] = (arr = new VirtualPointer[elementCount]);
@@ -1325,7 +1342,7 @@ public class VirtualPointer
 	        this.types = new byte[len];
 	        this.len = new int[len];
 //#endif
-	        resizeable = false;
+	        this.resizeable = false;
 	    }
 	    else
 	    {
@@ -1581,6 +1598,7 @@ public class VirtualPointer
     }
     
 //#ifdef DEBUG
+    //In a debug build, the lenth of the data is stored so it is possible to read the data without specifying a length
     public byte[] readStructuredByteArray(boolean inc, boolean reverse)
     {
         if (dataPos < data.length)
@@ -1618,6 +1636,7 @@ public class VirtualPointer
         }
         if (data == null)
         {
+        	//Reading from a null pointer? In most modern compilers this would throw an exception. Here we simply return jiberish.
         	readRandom(new Random(), buffer, offset, len);
             return 0;
         }
@@ -1639,6 +1658,7 @@ public class VirtualPointer
                 readRandom(new Random(), randData, 0, count);
                 if(reverse)
                 {
+                	//Reverse the desired data, so if data was big-endian then it will be returned little endian and vis-versa
                 	int tOff = len >= 0 ? len + offset : offset;
         			for(int i = randData.length - 1, k = 0; i >= 0; i--, k++)
         			{
@@ -1738,6 +1758,7 @@ public class VirtualPointer
         }
     }
     
+    //Read and write directly to the pointer with no safety attached.
     public int readRaw()
     {
     	byte[] buf = new byte[1];

@@ -52,6 +52,7 @@ public final class LargeNumber
     
     public LargeNumber(LargeNumber num)
     {
+    	//Copy the basic test values too, this removes the need to retest for them since LargeNumber is immutable
     	this.mzero = num.mzero;
     	this.mone = num.mone;
     	this.value = Arrays.copy(num.value);
@@ -62,14 +63,9 @@ public final class LargeNumber
         return compare(this.value, num.value);
     }
     
-    private static boolean greaterThenOrEqual(byte[] src1, byte[] src2)
-    {
-        return compare(src1, src2) >= 0;
-    }
-    
     public boolean greaterThenOrEqual(LargeNumber num)
     {
-        return greaterThenOrEqual(this.value, num.value);
+        return compare(this.value, num.value) >= 0;
     }
     
     public static LargeNumber parse(String s)
@@ -117,7 +113,7 @@ public final class LargeNumber
         LargeNumber result = new LargeNumber(0L);
         LargeNumber ldigit;
         
-        //Calculate the number
+        //Calculate the number, not the most efficient but gets the job done
         long digit;
         while (i < len)
         {
@@ -148,6 +144,7 @@ public final class LargeNumber
     
     public LargeNumber add(LargeNumber num)
     {
+    	//Generic checks
         if (this.zero() && num.zero())
         {
             return new LargeNumber(0L);
@@ -167,6 +164,7 @@ public final class LargeNumber
     
     public LargeNumber subtract(LargeNumber num)
     {
+    	//Generic checks
         if (this.zero() && num.zero())
         {
             return new LargeNumber(0L);
@@ -186,6 +184,7 @@ public final class LargeNumber
     
     public LargeNumber multiply(LargeNumber num)
     {
+    	//Generic checks
         if (this.zero() || num.zero())
         {
             return new LargeNumber(0L);
@@ -205,6 +204,7 @@ public final class LargeNumber
     
     public LargeNumber divideAndMod(LargeNumber num, LargeNumber[] mod)
     {
+    	//Generic checks
         if (this.zero())
         {
             if (mod != null)
@@ -221,6 +221,7 @@ public final class LargeNumber
         {
             if (mod != null)
             {
+            	//If a modulus result exists then set to zero, no remainder exists for a divide by one operation
                 mod[0] = new LargeNumber(0L);
             }
             return new LargeNumber(this);
@@ -230,6 +231,7 @@ public final class LargeNumber
         division(this.value, num.value, result, mresult);
         if (mod != null)
         {
+        	//If a modulus result exists then set it
             mod[0] = new LargeNumber(mresult);
         }
         return new LargeNumber(result);
@@ -309,6 +311,7 @@ public final class LargeNumber
     
     public int hashCode()
     {
+    	//Not the best way to return a hashCode but it works
     	int hash = 0;
     	if(this.mzero != null)
     	{
@@ -318,10 +321,13 @@ public final class LargeNumber
     	{
     		hash += this.mone.hashCode();
     	}
+    	/*
     	for(int i = this.value.length - 1; i >= 0; i--)
     	{
     		hash += this.value[i];
     	}
+    	*/
+    	hash += ((Object)this.value).hashCode();
     	return hash;
     }
     
@@ -362,6 +368,7 @@ public final class LargeNumber
             }
             else
             {
+            	//Not that efficient but works without problems
                 LargeNumber radRef = new LargeNumber((long)radix);
                 LargeNumber number = new LargeNumber(this);
                 LargeNumber[] mod = new LargeNumber[1];
@@ -498,6 +505,7 @@ public final class LargeNumber
 	
 	//Representation specific
 //#ifdef CMS_USE_NATIVE_BIGINT
+    //Use native code to perform the operations
     public LargeNumber(int exp)
     {
     	exp = Math.abs(exp);
@@ -505,6 +513,7 @@ public final class LargeNumber
         {
         	throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.LARGENUM_INVALID_EXP));
         }
+        //CryptoByteArrayArithmetic creates a number in little-endian format
         this.value = CryptoByteArrayArithmetic.createArray(exp);
     }
     
@@ -520,6 +529,7 @@ public final class LargeNumber
     
     private static int compare(byte[] src1, byte[] src2)
     {
+    	//It's assumed that a CryptoInteger is basically the same as this class, it is not used instead of this class because it would force Certicom signing
     	return new CryptoInteger(src1).compareTo(new CryptoInteger(src2));
     }
     
@@ -568,6 +578,7 @@ public final class LargeNumber
     	}
     	catch(ArithmeticException e)
     	{
+    		//Throws an exception on a divide-by-zero exception. It will never get here bcause of checks done in other functions
     	}
     }
 //#else
@@ -578,6 +589,7 @@ public final class LargeNumber
         {
         	throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.LARGENUM_INVALID_EXP));
         }
+        //Handle the number in base 2, big-endian format
         this.value = new byte[(exp / 8) + 1];
         this.value[exp / 8] = (byte)(1 << (exp % 8));
     }
@@ -714,6 +726,7 @@ public final class LargeNumber
         int len2 = src2.length;
         int max = Math.min(len1, len2);
         int temp;
+        //Add up the common portion first
         for (int i = 0; i < max; i++)
         {
             temp = (src1[i] & 0xFF) + (src2[i] & 0xFF) + carry;
@@ -724,6 +737,7 @@ public final class LargeNumber
             }
             dest[i] = (byte)(temp & 0xFF);
         }
+        //Now add the extra
         if (Math.max(len1, len2) > max)
         {
             byte[] value = len1 > len2 ? src1 : src2;
@@ -739,6 +753,7 @@ public final class LargeNumber
                 dest[max++] = (byte)(temp & 0xFF);
             }
         }
+        //If a carry exists, add that too
         while (carry != 0)
         {
             dest[max++] = (byte)(carry & 0xFF);
@@ -766,6 +781,7 @@ public final class LargeNumber
             int max = Math.min(len1, len2);
             byte[] src1c = Arrays.copy(src1);
             int v1, v2;
+            //Subtract the common portion of the number first
             for (int i = 0; i < max; i++)
             {
                 v1 = (src1c[i] & 0xFF);
@@ -795,6 +811,7 @@ public final class LargeNumber
                     }
                 }
             }
+            //Now subtract the rest of the number
             if (Math.max(len1, len2) > max)
             {
                 if (Math.max(len1, len2) <= dest.length) //Only copy the higher values if dest is large enough to hold it
@@ -812,6 +829,7 @@ public final class LargeNumber
         int nlen = src2.length;
         int multi, temp, blen;
         byte[] buffer = new byte[blen = dest.length]; //Numbers are offset before being added. The offset numbers will go here
+        //Multiply the numbers like in 3rd grade, by digit at a time
         for (int i = 0; i < nlen; i++)
         {
             multi = src2[i] & 0xFF;
@@ -859,7 +877,7 @@ public final class LargeNumber
         }
         else
         {
-            //src1 is greater then src2, actually do the division process this time
+            //src1 is greater then src2, actually do the division process this time in old-school, long division
         	
             //Get array lengths
             int dlen = dest.length;

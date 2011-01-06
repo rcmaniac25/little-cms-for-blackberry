@@ -39,7 +39,7 @@ import net.rim.device.api.io.Seekable;
 //#endif
 
 /**
- * Generic data stream for files and the likes.
+ * Generic data stream for files and the likes. Functions based off Standard C functions.
  */
 public abstract class Stream
 //#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
@@ -57,6 +57,12 @@ public abstract class Stream
 		seek(pos, SEEK_SET);
 	}
 	
+	/**
+	 * Seek through the stream.
+	 * @param offset The offset to seek to, based on origin.
+	 * @param origin The origin to seek from, either {@link #SEEK_SET}, {@link #SEEK_CUR}, or {@link #SEEK_END}
+	 * @return If zero is returned then the seek operation completed successfully, else an error occurred.
+	 */
 	public abstract int seek(long offset, int origin);
 	
 	/**
@@ -77,6 +83,10 @@ public abstract class Stream
 	 */
 	public abstract long write(byte[] buffer, int offset, int size, int count);
 	
+	/**
+	 * Close the stream.
+	 * @return If zero is returned then the operation completed successfully, else an error occurred.
+	 */
 	public abstract int close();
 	
 	public final int readByte()
@@ -91,15 +101,18 @@ public abstract class Stream
 		return -1;
 	}
 	
+	/**
+	 * Determine if the end-of-file has been reached.
+	 * @return <code>true</code> if end-of-file has been reached, <code>false</code> if otherwise.
+	 */
 	public final boolean eof()
 	{
-		//TODO: Should the original position be retained?
 		long pos = this.getPosition(); //Remember the initial position
 		if(this.seek(0, SEEK_END) == 0)
 		{
 			//Successfully went to the end of the Stream.
 			boolean end = pos >= this.getPosition(); //See if the position is the same as or greater then original position
-			if(this.seek(0, SEEK_SET) == 0)
+			if(this.seek(pos, SEEK_SET) == 0)
 			{
 				//Successfully went to the original position of the Stream.
 				return end;
@@ -244,11 +257,6 @@ public abstract class Stream
 		
 		public int seek(long offset, int origin)
 		{
-			//TODO: Is this correct for eof()?
-			if(offset == 0)
-			{
-				return 0; //No change
-			}
 			long absPos = getPosition();
 			switch(origin)
 			{

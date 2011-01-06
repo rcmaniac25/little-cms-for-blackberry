@@ -2,12 +2,6 @@
 --Revision Used: ??/??/2010-- (the date on which the source code was pulled from GIT)
 
 TODO:
-Finish TODOs in PrintUtility
-Go through TODOs in helper package
-
-Correct file functions in cmscgats so they work for BlackBerry
-Go through helper classes and make sure documented
-Make sure byte order returned by BitConverter is correct (since it doesn't match .Net BitConverter right now)
 Testing (LCMS 2.0)
 
 Update LCMS 4 BB to LCMS 2.1
@@ -17,6 +11,8 @@ Update LCMS 4 BB to the same level as the GIT build
 If Test system has been updated then do testing
 
 Update PrintUtility FloatFormat so that it properly processes the values with exponent. Example: Double.MIN_VALUE is a subnormal number. The default manner of execution would consider the value to be zero since the number is so small. Make it so that it will scale the value for exponent.
+Update printf and scanf to follow: http://pubs.opengroup.org/onlinepubs/009695399/functions/printf.html, and http://pubs.opengroup.org/onlinepubs/009695399/functions/scanf.html (dedicated functions for printing 'e' and 'a', etc.)
+Try to figure out at least the first todo in VirtualPointer
 
 See notes
 

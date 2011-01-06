@@ -27,15 +27,17 @@
 //@Author Vinnie Simonetti
 package littlecms.internal.helper;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Calendar;
 
 import littlecms.internal.LCMSResource;
 
-import net.rim.device.api.i18n.DateFormat;
 import net.rim.device.api.i18n.ResourceBundle;
+import net.rim.device.api.i18n.SimpleDateFormat;
 import net.rim.device.api.system.RuntimeStore;
 import net.rim.device.api.util.Arrays;
 //#ifndef BlackBerrySDK4.5.0
@@ -48,7 +50,6 @@ import net.rim.device.api.util.MathUtilities;
  */
 public final class Utility
 {
-	//TODO: Should the resources be public?
 	public static final ResourceBundle LCMS_Resources = ResourceBundle.getBundle(LCMSResource.BUNDLE_ID, LCMSResource.BUNDLE_NAME);
 	private static final long SINGLETON_STORAGE_ID = 0x2794B93D60A08F80L;
 	
@@ -282,16 +283,19 @@ public final class Utility
     	return Character.isDigit((char)c) || (((c >= 'a') || (c <= lowerEnd)) || ((c >= 'A') || (c <= upperEnd)));
     }
     
+	//Check if character is alpha-numeric
 	public static boolean isalnum(int c)
     {
     	return charNumRangeComp(c, 'z', 'Z');
     }
     
+	//Check if character is a digit
     public static boolean isdigit(int c)
     {
     	return Character.isDigit((char)c);
     }
     
+    //Check if character is a hexidecimal digit
     public static boolean isxdigit(int c)
     {
     	return charNumRangeComp(c, 'f', 'F');
@@ -315,31 +319,11 @@ public final class Utility
     	return (char)('a' + digit - 10);
     }
     
+    //Convert a Calendar to a String based off ctime
     public static String ctime(Calendar timer)
 	{
     	//ctime format: "Www Mmm dd hh:mm:ss yyyy" and appends \n to the end
-    	StringBuffer buf = new StringBuffer();
-    	
-    	DateFormat form = DateFormat.getInstance(DateFormat.DAY_OF_WEEK_FIELD);
-    	form.format(timer, buf, null);	//Ex: Sunday
-    	buf.delete(3, buf.length() - 1);//Ex: Sun
-    	buf.append(' ');				//Ex: Sun 
-    	
-    	form = DateFormat.getInstance(DateFormat.DATE_MEDIUM);
-    	form.format(timer, buf, null);	//Ex: Sun Mar 08, 2006
-    	buf.setCharAt(10, ' ');			//Ex: Sun Mar 08  2006
-    	
-    	StringBuffer tBuf = new StringBuffer();
-    	form = DateFormat.getInstance(DateFormat.TIME_LONG);
-    	form.format(timer, tBuf, null);	//Ex: 2:10:20pm
-    	if(Character.toLowerCase(tBuf.charAt(tBuf.length() - 1)) == 'm')
-    	{
-    		tBuf.delete(tBuf.length() - 3, tBuf.length() - 1);//Ex: 2:10:20
-    	}
-    	buf.insert(11, tBuf.toString());//Ex: Sun Mar 08 2:10:20 2006
-    	
-    	buf.append('\n');
-    	return buf.toString();
+    	return new SimpleDateFormat(LCMS_Resources.getString(LCMSResource.UTILS_CTIME_FORMAT)).format(timer, new StringBuffer(), null).toString();//Ex: Sun Mar 08 2:10:20 2006
 	}
     
     //Singleton functions (taken from PDFRenderer for BlackBerry)
@@ -865,8 +849,24 @@ public final class Utility
 		return PrintUtility.output(stream, count, format, argptr, null);
 	}
     
-    public static int sscanf(final String str, final String format, Object[] argptr)
+	public static int sscanf(final String str, final String format, Object[] argptr)
     {
-    	return PrintUtility.sscanf(str, format, argptr, null);
+		int len = 0;
+		try
+		{
+			byte[] data = str.getBytes("UTF-8");
+			ByteArrayInputStream bais = new ByteArrayInputStream(data);
+			len = fscanf(bais, format, argptr);
+			bais.close();
+		}
+		catch(IOException ioe)
+		{
+		}
+    	return len;
+    }
+	
+    public static int fscanf(final InputStream file, final String format, Object[] argptr)
+    {
+    	return PrintUtility.fscanf(file, format, argptr, null);
     }
 }

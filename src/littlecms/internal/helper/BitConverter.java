@@ -38,7 +38,7 @@ import java.io.IOException;
 import littlecms.internal.LCMSResource;
 
 /**
- * Data type converter
+ * Data type converter, byte order is Little Endian.
  */
 public final class BitConverter
 {
@@ -112,6 +112,7 @@ public final class BitConverter
 		return getBytes(Double.doubleToLongBits(value));
 	}
 	
+	//Helper function to reduce code
 	private static void argumentCheck(byte[] value, int startIndex, int size)
 	{
 		if (value == null)

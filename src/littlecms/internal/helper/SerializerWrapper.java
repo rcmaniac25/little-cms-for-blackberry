@@ -25,6 +25,7 @@
 //@Author Vinnie Simonetti
 package littlecms.internal.helper;
 
+//Helper class so redundant code amongst serializers can be consolidated
 public abstract class SerializerWrapper implements VirtualPointer.Serializer
 {
     private boolean _canWrap, _canProcessArray;
@@ -44,6 +45,7 @@ public abstract class SerializerWrapper implements VirtualPointer.Serializer
     
     public int serialize(VirtualPointer vp, Object val)
     {
+    	//General checks if there is enough data, the "val" is not null, and the serializer can process the content
         if (vp.getAllocLen() < getSerializedSize(val) + vp.getPosition())
         {
             return VirtualPointer.Serializer.STATUS_NEED_MORE_DATA;
@@ -61,6 +63,7 @@ public abstract class SerializerWrapper implements VirtualPointer.Serializer
     
     public int deserialize(VirtualPointer vp, Object[] val)
     {
+    	//General checks if there is a place to put the object deserialized
         if (val == null || val.length < 1)
         {
             return VirtualPointer.Serializer.STATUS_REQUIRES_OBJECT;
@@ -101,6 +104,7 @@ public abstract class SerializerWrapper implements VirtualPointer.Serializer
     
     public boolean canProcess(Object val)
     {
+    	//Determines if a serializer can process an object based on Class
         if (val == null)
         {
             return false;

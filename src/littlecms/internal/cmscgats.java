@@ -27,6 +27,8 @@
 //
 package littlecms.internal;
 
+import javax.microedition.io.Connection;
+import javax.microedition.io.Connector;
 //#ifndef BlackBerrySDK4.5.0
 import net.rim.device.api.util.MathUtilities;
 //#endif
@@ -399,11 +401,10 @@ final class cmscgats
     // Guess whether the supplied path looks like an absolute path
     private static boolean isabsolutepath(final String path)
     {
-    	//TODO: This will not work on BlackBerry, redo
+    	//This only expects file paths
     	
-        char[] ThreeChars = new char[4];
-        
-        if(path == null)
+    	//First check general properties
+    	if(path == null)
         {
         	return false;
         }
@@ -412,10 +413,27 @@ final class cmscgats
         	return false;
         }
         
-        Utility.strncpy(ThreeChars, path, 3);
-        ThreeChars[3] = 0;
+        //Check if it has the proper protocol format for a file
+        if(!path.startsWith("file://"))
+        {
+        	return false;
+        }
+        if(path.charAt(7) != '/')
+        {
+        	return false;
+        }
         
-        return ThreeChars[0] == DIR_CHAR;
+        //Finally check that it isn't relative (this will throw an exception if relative)
+        try
+        {
+        	Connection con = Connector.open(path, Connector.READ);
+        	con.close();
+        }
+        catch(Exception e)
+        {
+        	return false;
+        }
+        return true;
     }
     
     // Makes a file path based on a given reference path
@@ -423,7 +441,7 @@ final class cmscgats
     private static boolean BuildAbsolutePath(final String relPath, final String basePath, StringBuffer buffer, int MaxLen)
     {
         int len;
-        //char[] temp = new char[MaxLen - 1];
+        char[] temp = new char[MaxLen - 1];
         
         // Already absolute?
         if (isabsolutepath(relPath))
@@ -437,7 +455,6 @@ final class cmscgats
         Utility.strncpy(buffer, basePath, MaxLen);
         buffer.setCharAt(MaxLen-1, '\0');
         
-        //XXX Make sure this works properly, expects standard URL which BlackBerry uses but which this was not made to handle the full format
         len = buffer.toString().lastIndexOf(DIR_CHAR);
         if (len == -1)
         {

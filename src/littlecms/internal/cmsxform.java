@@ -183,12 +183,12 @@ final class cmsxform
 		boolean primitive;
 		try
 		{
-			Object[] temp = (Object[])buffer;
-			primitive = true;
+			Object[] temp = (Object[])buffer; //If this works then it is an array of objects, else it is a primitve array
+			primitive = false;
 		}
 		catch(ClassCastException c)
 		{
-			primitive = false;
+			primitive = true;
 		}
 		if(primitive)
 		{
