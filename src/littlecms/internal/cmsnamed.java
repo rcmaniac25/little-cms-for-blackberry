@@ -235,6 +235,11 @@ final class cmsnamed
 		{
 			values[i] = (byte)code.charAt(i);
 		}
+		//Reverse first two bytes
+		byte b = values[0];
+		values[0] = values[1];
+		values[1] = b;
+		//Just make sure that the last byte is a zero. This is not really needed but is for safety
 		if(values[2] != 0)
 		{
 			throw new OutOfMemoryError();
@@ -341,7 +346,16 @@ final class cmsnamed
 			return null;
 		}
 		
-		System.arraycopy(mlu.Entries, 0, NewMlu.Entries, 0, mlu.UsedEntries);
+		//Copy entities manually so that they aren't affected by changes to the original entities
+		for(int i = 0; i < mlu.UsedEntries; i++)
+		{
+			NewMlu.Entries[i] = new _cmsMLUentry();
+			NewMlu.Entries[i].StrW = mlu.Entries[i].StrW;
+			NewMlu.Entries[i].Len = mlu.Entries[i].Len;
+			NewMlu.Entries[i].Country = mlu.Entries[i].Country;
+			NewMlu.Entries[i].Language = mlu.Entries[i].Language;
+		}
+		//System.arraycopy(mlu.Entries, 0, NewMlu.Entries, 0, mlu.UsedEntries);
 		NewMlu.UsedEntries = mlu.UsedEntries;
 		
 		// The MLU may be empty

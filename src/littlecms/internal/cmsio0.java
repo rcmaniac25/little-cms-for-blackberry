@@ -1426,6 +1426,7 @@ final class cmsio0
 	    cmsContext ContextID;
 	    
 	    //Manual equivalent of "memmove(&Keep, Icc, sizeof(_cmsICCPROFILE));"
+	    //XXX This might not work, figure out how to get it to work
 	    VirtualPointer vp = new VirtualPointer(Icc);
 	    Keep = (_cmsICCPROFILE)vp.getProcessor().readObject(_cmsICCPROFILE.class);
 	    
@@ -1646,7 +1647,7 @@ final class cmsio0
 	// That's the main read function
 	public static Object cmsReadTag(cmsHPROFILE hProfile, int sig)
 	{
-	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile; 
+	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
 	    cmsIOHANDLER io = Icc.IOhandler;
 	    cmsTagTypeHandler TypeHandler;
 	    cmsTagDescriptor  TagDescriptor;
@@ -1762,7 +1763,7 @@ final class cmsio0
 	// in that list, the previous version is deleted.
 	public static boolean cmsWriteTag(cmsHPROFILE hProfile, int sig, final Object data)
 	{
-	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;  
+	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
 	    cmsTagTypeHandler TypeHandler = null;
 	    cmsTagDescriptor TagDescriptor = null;
 	    int Type;

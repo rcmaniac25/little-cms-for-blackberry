@@ -52,8 +52,8 @@ final class cmsxform
 	private static volatile short[] Alarm;
 	private static volatile double[] GlobalAdaptationState;
 	
-	private static final long ALARM_UID = 0L;
-	private static final long GAS_UID = 0L;
+	private static final long ALARM_UID = 0x700168E434DDB320L;
+	private static final long GAS_UID = 0x63CF45CCC98E05ACL;
 	
 	static
 	{
@@ -180,27 +180,42 @@ final class cmsxform
 		{
 			return; //Buffer is a VirtualPointer
 		}
-		boolean primitive;
-		try
+		boolean primitive = false;
+		Class btype = buffer.getClass();
+		//If it isn't an array then it must be an Object
+		if(btype.isArray())
 		{
-			Object[] temp = (Object[])buffer; //If this works then it is an array of objects, else it is a primitve array
-			primitive = false;
-		}
-		catch(ClassCastException c)
-		{
-			primitive = true;
+			//Since it is an array we need to figure out if it is a primitive array or not
+			try
+			{
+				Object[] obj = (Object[])buffer;
+			}
+			catch(ClassCastException c)
+			{
+				primitive = true;
+			}
 		}
 		if(primitive)
 		{
-			readPrimitveArray(vp, buffer);
+			readPrimitiveArray(vp, buffer);
 		}
 		else
 		{
-			vp.getProcessor().readArray((Serializer)null, false, ((Object[])buffer).length, buffer);
+			//XXX This might not work for read only value types
+			VirtualPointer.TypeProcessor proc = vp.getProcessor();
+			if(btype.isArray())
+			{
+				Object[] oBuffer = (Object[])buffer;
+				proc.readArray(oBuffer[0].getClass(), false, oBuffer.length, buffer);
+			}
+			else
+			{
+				proc.readObject(buffer.getClass(), false, buffer);
+			}
 		}
 	}
 	
-	private static void readPrimitveArray(VirtualPointer vp, Object buffer)
+	private static void readPrimitiveArray(VirtualPointer vp, Object buffer)
 	{
 		//Slow, inefficient method of reading primitives but no other options exist
 		if(buffer instanceof byte[])
@@ -304,7 +319,7 @@ final class cmsxform
 		        else
 		        {
 		            // No gamut check at all
-		        	cmslut.cmsPipelineEvalFloat(fIn, fOut, p.Lut);     
+		        	cmslut.cmsPipelineEvalFloat(fIn, fOut, p.Lut);
 		        }
 		        
 		        // Back to asked representation
@@ -625,7 +640,7 @@ final class cmsxform
 	            ColorSpaceOut   = cmsio0.cmsGetColorSpace(hProfile);
 	        }
 	        
-	        PostColorSpace = ColorSpaceOut;     
+	        PostColorSpace = ColorSpaceOut;
 	    }
 	    
 	    Output[0] = PostColorSpace;
@@ -727,7 +742,7 @@ final class cmsxform
 	    InputFormat = temp1[0];
 	    OutputFormat = temp2[0];
 	    dwFlags = temp3[0];
-	    Lut = temp4[4];
+	    Lut = temp4[0];
 	    
 	    // All seems ok
 	    xform = AllocEmptyTransform(ContextID, InputFormat, OutputFormat, dwFlags);

@@ -29,8 +29,11 @@ import java.util.Calendar;
 import littlecms.internal.helper.SerializerWrapper;
 import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
+import littlecms.internal.helper.VirtualPointer.Serializer;
+import littlecms.internal.lcms2.cmsCIELCh;
 import littlecms.internal.lcms2.cmsCIELab;
 import littlecms.internal.lcms2.cmsCIEXYZ;
+import littlecms.internal.lcms2.cmsCIEXYZTRIPLE;
 import littlecms.internal.lcms2.cmsCIExyY;
 import littlecms.internal.lcms2.cmsCIExyYTRIPLE;
 import littlecms.internal.lcms2.cmsDateTimeNumber;
@@ -40,6 +43,7 @@ import littlecms.internal.lcms2.cmsICCHeader;
 import littlecms.internal.lcms2.cmsICCMeasurementConditions;
 import littlecms.internal.lcms2.cmsICCViewingConditions;
 import littlecms.internal.lcms2.cmsIOHANDLER;
+import littlecms.internal.lcms2.cmsJCh;
 import littlecms.internal.lcms2.cmsProfileID;
 import littlecms.internal.lcms2.cmsScreening;
 import littlecms.internal.lcms2.cmsScreeningChannel;
@@ -467,6 +471,45 @@ public final class Serializers
 					return true;
 				}
 			}, cmsDateTimeNumber.class);
+			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, cmsCIEXYZTRIPLE.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					cmsCIEXYZTRIPLE number = (cmsCIEXYZTRIPLE)val;
+					Serializer ser = VirtualPointer.getSerializer(cmsCIEXYZ.class);
+					proc.write(number.Red, true, ser);
+					proc.write(number.Green, true, ser);
+					proc.write(number.Blue, true, ser);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return new cmsCIEXYZTRIPLE();
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new cmsCIEXYZTRIPLE[size];
+				}
+				
+				public int getItemSize()
+				{
+					return cmsCIEXYZTRIPLE.SIZE;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					VirtualPointer.TypeProcessor type = vp.getProcessor();
+					cmsCIEXYZTRIPLE number = (cmsCIEXYZTRIPLE)val[index];
+					Serializer ser = VirtualPointer.getSerializer(cmsCIEXYZ.class);
+					type.readObject(ser, true, number.Red);
+					type.readObject(ser, true, number.Green);
+					type.readObject(ser, true, number.Blue);
+					return true;
+				}
+			}, cmsCIEXYZTRIPLE.class);
 			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, cmsEncodedXYZNumber.class)
 			{
 				public boolean actualWrite(VirtualPointer vp, Object val)
@@ -780,9 +823,10 @@ public final class Serializers
 				{
 					cmsCIExyYTRIPLE obj = (cmsCIExyYTRIPLE)val;
 					VirtualPointer.TypeProcessor proc = vp.getProcessor();
-					proc.write(obj.Red, true);
-					proc.write(obj.Green, true);
-					proc.write(obj.Blue, true);
+					Serializer ser = VirtualPointer.getSerializer(cmsCIExyY.class);
+					proc.write(obj.Red, true, ser);
+					proc.write(obj.Green, true, ser);
+					proc.write(obj.Blue, true, ser);
 					return true;
 				}
 				
@@ -805,9 +849,10 @@ public final class Serializers
 				{
 					cmsCIExyYTRIPLE obj = (cmsCIExyYTRIPLE)val[index];
 					VirtualPointer.TypeProcessor proc = vp.getProcessor();
-					proc.readObject(cmsCIExyY.class, true, obj.Red);
-					proc.readObject(cmsCIExyY.class, true, obj.Green);
-					proc.readObject(cmsCIExyY.class, true, obj.Blue);
+					Serializer ser = VirtualPointer.getSerializer(cmsCIExyY.class);
+					proc.readObject(ser, true, obj.Red);
+					proc.readObject(ser, true, obj.Green);
+					proc.readObject(ser, true, obj.Blue);
 					return true;
 				}
 			}, cmsCIExyYTRIPLE.class);
@@ -1027,8 +1072,9 @@ public final class Serializers
 				{
 					cmsICCViewingConditions obj = (cmsICCViewingConditions)val;
 					VirtualPointer.TypeProcessor proc = vp.getProcessor();
-					proc.write(obj.IlluminantXYZ, true);
-					proc.write(obj.SurroundXYZ, true);
+					Serializer ser = VirtualPointer.getSerializer(cmsCIEXYZ.class);
+					proc.write(obj.IlluminantXYZ, true, ser);
+					proc.write(obj.SurroundXYZ, true, ser);
 					proc.write(obj.IlluminantType, true);
 					return true;
 				}
@@ -1052,8 +1098,9 @@ public final class Serializers
 				{
 					cmsICCViewingConditions obj = (cmsICCViewingConditions)val[index];
 					VirtualPointer.TypeProcessor proc = vp.getProcessor();
-					proc.readObject(cmsCIEXYZ.class, true, obj.IlluminantXYZ);
-					proc.readObject(cmsCIEXYZ.class, true, obj.SurroundXYZ);
+					Serializer ser = VirtualPointer.getSerializer(cmsCIEXYZ.class);
+					proc.readObject(ser, true, obj.IlluminantXYZ);
+					proc.readObject(ser, true, obj.SurroundXYZ);
 					obj.IlluminantType = proc.readInt32(true);
 					return true;
 				}
@@ -1095,6 +1142,80 @@ public final class Serializers
 					return true;
 				}
 			}, cmsCIELab.class);
+			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, cmsCIELCh.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					cmsCIELCh obj = (cmsCIELCh)val;
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					proc.write(obj.L, true);
+					proc.write(obj.C, true);
+					proc.write(obj.h, true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return new cmsCIELCh();
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new cmsCIELCh[size];
+				}
+				
+				public int getItemSize()
+				{
+					return cmsCIELCh.SIZE;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					cmsCIELCh obj = (cmsCIELCh)val[index];
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					obj.L = proc.readDouble(true);
+					obj.C = proc.readDouble(true);
+					obj.h = proc.readDouble(true);
+					return true;
+				}
+			}, cmsCIELCh.class);
+			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, cmsJCh.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					cmsJCh obj = (cmsJCh)val;
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					proc.write(obj.J, true);
+					proc.write(obj.C, true);
+					proc.write(obj.h, true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return new cmsJCh();
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new cmsJCh[size];
+				}
+				
+				public int getItemSize()
+				{
+					return cmsJCh.SIZE;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					cmsJCh obj = (cmsJCh)val[index];
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					obj.J = proc.readDouble(true);
+					obj.C = proc.readDouble(true);
+					obj.h = proc.readDouble(true);
+					return true;
+				}
+			}, cmsJCh.class);
 			
 			Utility.singletonStorageSet(SERIALIZER_INITIALIZED_UID, new Boolean(true));
 		}

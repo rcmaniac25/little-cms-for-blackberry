@@ -559,7 +559,7 @@ final class cmscnvrt
 		            if (lIsInput)
 		            {
 		                // Input direction means non-pcs connection, so proceed like devicelinks
-		                Lut = cmsio1._cmsReadInputLUT(hProfile, Intent);       
+		                Lut = cmsio1._cmsReadInputLUT(hProfile, Intent);
 		                if (Lut == null)
 			            {
 			            	if (Result != null)

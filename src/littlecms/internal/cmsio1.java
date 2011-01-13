@@ -116,17 +116,15 @@ final class cmsio1
 	// Chromatic adaptation matrix. Fix some issues as well
 	public static boolean _cmsReadCHAD(cmsMAT3 Dest, cmsHPROFILE hProfile)
 	{
-	    cmsMAT3 Tag;
+	    double[] Tag;
 	    
 	    lcms2_internal._cmsAssert(Dest != null, "Dest != null");
 	    
-	    Tag = (cmsMAT3)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigChromaticAdaptationTag);
+	    Tag = (double[])cmsio0.cmsReadTag(hProfile, lcms2.cmsSigChromaticAdaptationTag);
 	    
 	    if (Tag != null)
 	    {
-	    	double[] temp = new double[3*3];
-	    	cmsmtrx._cmsMAT3get(Tag, temp, 0);
-	    	cmsmtrx._cmsMAT3set(Dest, temp, 0);
+	    	cmsmtrx._cmsMAT3set(Dest, Tag, 0);
 	        return true;
 	    }
 	    
@@ -254,7 +252,7 @@ final class cmsio1
 	        }
 	    }
 	    
-	    Shapes[0] = (cmsToneCurve)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigRedTRCTag);        
+	    Shapes[0] = (cmsToneCurve)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigRedTRCTag);
 	    Shapes[1] = (cmsToneCurve)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigGreenTRCTag);
 	    Shapes[2] = (cmsToneCurve)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigBlueTRCTag);
 	    

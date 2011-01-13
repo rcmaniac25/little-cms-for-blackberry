@@ -88,7 +88,7 @@ final class cmsintrp
 	
 	// This function precalculates as many parameters as possible to speed up the interpolation.
 	public static cmsInterpParams _cmsComputeInterpParamsEx(cmsContext ContextID, final int[] nSamples, int InputChan, int OutputChan, final Object Table, int dwFlags)
-	{        
+	{
 	    cmsInterpParams p;
 	    int i;
 	    

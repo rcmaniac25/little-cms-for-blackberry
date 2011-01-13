@@ -83,7 +83,7 @@ final class cmspack
 		public int Mask;
 		public cmsFormatter16 Frm;
 		
-		public cmsFormatters16(int Type, int Mask, cmsFormatter16 frm)
+		public cmsFormatters16(int Type, int Mask, cmsFormatter16 Frm)
 		{
 			this.Type = Type;
 			this.Mask = Mask;
@@ -97,7 +97,7 @@ final class cmspack
 		public int Mask;
 		public cmsFormatterFloat Frm;
 		
-		public cmsFormattersFloat(int Type, int Mask, cmsFormatterFloat frm)
+		public cmsFormattersFloat(int Type, int Mask, cmsFormatterFloat Frm)
 		{
 			this.Type = Type;
 			this.Mask = Mask;

@@ -93,16 +93,16 @@ final class cmswtpnt
 		else
 		{
 			// or for correlated color temperature (T) between 7000K and 25000K:
-		}
-		
-		if (T > 7000.0 && T <= 25000.0)
-		{
-			x = -2.0064*(1E9/T3) + 1.9018*(1E6/T2) + 0.24748*(1E3/T) + 0.237040;
-		}
-		else
-		{
-			cmserr.cmsSignalError(null, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSWTPNT_BAD_WHITEPOINT_TEMP), null);
-			return false;
+			
+			if (T > 7000.0 && T <= 25000.0)
+			{
+				x = -2.0064*(1E9/T3) + 1.9018*(1E6/T2) + 0.24748*(1E3/T) + 0.237040;
+			}
+			else
+			{
+				cmserr.cmsSignalError(null, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSWTPNT_BAD_WHITEPOINT_TEMP), null);
+				return false;
+			}
 		}
 		
 		// Obtain y(x)
@@ -285,7 +285,11 @@ final class cmswtpnt
 			return false;
 		}
 		
-		Tmp = r;
+		//Tmp = r; //This causes incorrect values because it's getting and setting from the same memory
+		Tmp = new cmsMAT3();
+		double[] tempVals = new double[9];
+		cmsmtrx._cmsMAT3get(r, tempVals, 0);
+		cmsmtrx._cmsMAT3set(Tmp, tempVals, 0);
 		cmsmtrx._cmsMAT3per(r, Bradford, Tmp);
 		
 		return true;
@@ -293,16 +297,16 @@ final class cmswtpnt
 	
 	// Build a White point, primary chromas transfer matrix from RGB to CIE XYZ
 	// This is just an approximation, I am not handling all the non-linear
-	// aspects of the RGB to XYZ process, and assumming that the gamma correction
-	// has transitive property in the tranformation chain.
+	// aspects of the RGB to XYZ process, and assuming that the gamma correction
+	// has transitive property in the transformation chain.
 	//
 	// the alghoritm:
 	//
 	//	            - First I build the absolute conversion matrix using
 	//	              primaries in XYZ. This matrix is next inverted
 	//	            - Then I eval the source white point across this matrix
-	//	              obtaining the coeficients of the transformation
-	//	            - Then, I apply these coeficients to the original matrix
+	//	              obtaining the coefficients of the transformation
+	//	            - Then, I apply these coefficients to the original matrix
 	//
 	public static boolean _cmsBuildRGB2XYZtransferMatrix(cmsMAT3 r, final cmsCIExyY WhitePt, final cmsCIExyYTRIPLE Primrs)
 	{

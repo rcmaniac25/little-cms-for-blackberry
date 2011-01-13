@@ -596,6 +596,7 @@ public class VirtualPointer
                 		{
                 			//Primitive array
                 			writePrimitiveArray(value, inc, size);
+                			this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
                 			return;
                 		}
                 		//Only exceptions to the cast rule is if the elements are String or VirtualPointer
@@ -603,6 +604,7 @@ public class VirtualPointer
                 		{
                 			//Primitive array
                 			writePrimitiveArray(value, inc, size);
+                			this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
                 			return;
                 		}
                 		len = objArray.length;
@@ -682,11 +684,11 @@ public class VirtualPointer
                 Class clazz2 = objArray[0].getClass();
                 synchronized (VirtualPointer.serializers)
                 {
-                    if (!VirtualPointer.serializers.containsKey(clazz))
+                    if (!VirtualPointer.serializers.containsKey(clazz.toString()))
                     {
                         VirtualPointer.setSerializer(ser, clazz); //Apparently not, add it so that future use can be done explicitly
                     }
-                    if (!VirtualPointer.serializers.containsKey(clazz2))
+                    if (!VirtualPointer.serializers.containsKey(clazz2.toString()))
                     {
                         VirtualPointer.setSerializer(ser, clazz2); //Apparently not, add it so that future use can be done explicitly
                     }
@@ -880,7 +882,7 @@ public class VirtualPointer
                 Class clazz = obj[0].getClass();
                 synchronized (VirtualPointer.serializers)
                 {
-                    if (!VirtualPointer.serializers.containsKey(clazz))
+                    if (!VirtualPointer.serializers.containsKey(clazz.toString()))
                     {
                         VirtualPointer.setSerializer(ser, clazz);
                     }
@@ -968,6 +970,11 @@ public class VirtualPointer
         	int[] count = new int[1];
         	Object[] result = new Object[3];
         	result[1] = count;
+        	if(org != null)
+    		{
+        		//If an original value already exists then add it to the results so that it can be used instead of making a new array
+    			result[2] = org;
+    		}
         	if(primitive)
         	{
         		readPrimitiveArray(primitiveType, len, lenIsBytes, result);
@@ -975,10 +982,6 @@ public class VirtualPointer
         	else
         	{
         		result[0] = new Integer(lenIsBytes ? -len : len);
-        		if(org != null)
-        		{
-        			result[2] = org;
-        		}
         		this.stat = ser.deserialize(this.vp, result); //Serializer's are required to support arrays
         	}
         	if (!inc)
@@ -1255,6 +1258,8 @@ public class VirtualPointer
 	
 	/*
      * TODO: Determine if resizing invalidates any pointers based off the data
+     * TODO: Create basic type serializers (Integer, Long, etc.)
+     * TODO: Figure out how to handle "other" resources. Like ones that can't be serialized. This a cmsPipeline, can't serialize the lerp functions.
      * TODO: Figure out (de)serialization system so that if an object is added it will be 'registered" with the pointer. So if the pointer is changed, the object changes too. Don't think there is a way to allow the object to change to change the pointer. Also if the pointer is "lost" but the object is "wrapped", the original pointer should be returned. If an object is read more then once then the original object should be returned.
      */
 	
@@ -1414,16 +1419,60 @@ public class VirtualPointer
 	    {
 	        throw new NullPointerException("obj");
 	    }
-	    if (ser == null)
+	    //An inefficient process using functions already defined
+	    VirtualPointer.TypeProcessor proc = this.getProcessor();
+	    try
 	    {
-	        ser = VirtualPointer.getSerializer(obj.getClass());
-	        if (ser == null)
-	        {
-	            throw new UnsupportedOperationException(Utility.LCMS_Resources.getString(LCMSResource.VP_NO_SERIALIZER));
-	        }
+	    	//Write the object and tell it to move the pointer
+	    	proc.write(obj, true, ser);
+	    	switch(proc.getStatus())
+	    	{
+		    	case VirtualPointer.Serializer.STATUS_SUCCESS:
+		    		break;
+		    	case VirtualPointer.Serializer.STATUS_NEED_MORE_DATA:
+		    		//Since it needs more data then I expect that it knows how much data is needed, so it has a serializer
+		    		if(ser == null)
+		    		{
+		    			Class clazz = obj.getClass();
+		    			if(clazz.isArray())
+		    			{
+		    				clazz = ((Object[])obj)[0].getClass();
+		    			}
+		    			ser = VirtualPointer.getSerializer(clazz);
+		    		}
+		    		this.data = null;
+			    	this.resize(ser.getSerializedSize(obj));
+			    	proc.write(obj, true, ser);
+		    		if(proc.getStatus() != VirtualPointer.Serializer.STATUS_SUCCESS)
+		    		{
+		    			//A. O.
+			    		throw new Exception();
+		    		}
+		    		break;
+	    		default:
+	    			//A. O.
+		    		throw new Exception();
+	    	}
+	    	//Now we have the position (AKA the length required to write the object), resize the pointer
+	    	if(this.data.length == 0)
+	    	{
+		    	this.data = null;
+		    	this.resize(this.dataPos);
+	    	}
 	    }
-	    resize(ser.getSerializedSize(obj));
-	    this.getProcessor().write(obj, false, ser);
+	    catch(Exception e)
+	    {
+	    	throw new UnsupportedOperationException(Utility.LCMS_Resources.getString(LCMSResource.VP_NO_SERIALIZER));
+	    }
+	    //Now write out the actual object
+	    if(this.dataPos == 0)
+	    {
+		    proc.write(obj, false, ser);
+	    }
+	    else
+	    {
+	    	this.dataPos = 0;
+	    }
 	}
     
     public VirtualPointer set(int value, int size)
@@ -1453,13 +1502,9 @@ public class VirtualPointer
         }
         else if (newsize == 0)
         {
-            //equivilant of "realloc(ptr, 0)"
+            //Equivalent of "realloc(ptr, 0)"
             this.free();
             return null;
-        }
-        else if (newsize == data.length)
-        {
-            return this;
         }
         else if (data == null)
         {
@@ -1470,8 +1515,14 @@ public class VirtualPointer
             this.types = new byte[newsize];
             this.len = new int[newsize];
 //#endif
+            //It is not expected that there are any children
+            return this;
         }
-        //equivilant of "realloc(ptr, 'size > 0')"
+        else if (newsize == data.length)
+        {
+            return this;
+        }
+        //Equivalent of "realloc(ptr, 'size > 0')"
         try
         {
             byte[] ndata = new byte[newsize];
@@ -1743,7 +1794,7 @@ public class VirtualPointer
         			int tLen = dataPos + len;
         			for(int i = dataPos, k = len - 1; i < tLen; i++, k--)
         			{
-        				value[k] = data[i];
+        				data[i] = value[k];
         			}
         		}
         		else

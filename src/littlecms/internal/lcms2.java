@@ -368,7 +368,7 @@ public class lcms2
     	
     	public void setID8(byte[] data)
     	{
-    		System.arraycopy(data, 0, this.data, 0, Math.min(8, data.length));
+    		System.arraycopy(data, 0, this.data, 0, Math.min(16, data.length));
     	}
     	
     	public short[] getID16()
@@ -973,7 +973,8 @@ public class lcms2
 	
 	/**
 	 * This function returns Little CMS to its default state, as no plug-ins were declared. There is no way to unregister a single plug-in, as a single call to 
-	 * {@link #cmsPlugin(Object)} function may register many different plug-ins simultaneously, then there is no way to identify which plug-in to unregister.
+	 * {@link #cmsPlugin(littlecms.internal.lcms2_plugin.cmsPluginBase)} function may register many different plug-ins simultaneously, then there is no way to 
+	 * identify which plug-in to unregister.
 	 */
 	public static void cmsUnregisterPlugins()
 	{
@@ -1563,7 +1564,7 @@ public class lcms2
 	 * Estimates the apparent gamma of the tone curve by using least squares fitting to a pure exponential expression in the <code>f(x) = x<sup>y</sup></code>. The 
 	 * parameter γ is estimated at the given precision.
 	 * @param t pointer to a tone curve object.
-	 * @param Precision The maximum standard deviation allowed on the residuals, 0.01 is a fair value, set it to a big number to fit any curve, mo matter how good is 
+	 * @param Precision The maximum standard deviation allowed on the residuals, 0.01 is a fair value, set it to a big number to fit any curve, no matter how good is 
 	 * the fit.
 	 * @return The estimated gamma at given precision, or -1.0 if the fitting has less precision.
 	 */
@@ -2179,8 +2180,8 @@ public class lcms2
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @param n Initial number of spot colors in the list
 	 * @param ColorantCount Number of channels of device space (i.e, 3 for RGB, 4 for CMYK, etc,)
-	 * @param Prefix fixed strings for all spot color names, e.g., “coated”, “system”, …
-	 * @param Suffix fixed strings for all spot color names, e.g., “coated”, “system”, …
+	 * @param Prefix fixed strings for all spot color names, e.g., "coated", "system", …
+	 * @param Suffix fixed strings for all spot color names, e.g., "coated", "system", …
 	 * @return A pointer to a newly created named color list dictionary on success, NULL on error.
 	 */
 	public static cmsNAMEDCOLORLIST cmsAllocNamedColorList(cmsContext ContextID, int n, int ColorantCount, final String Prefix, final String Suffix)
@@ -2445,7 +2446,7 @@ public class lcms2
 	}
 	
 	/**
-	 * The RAW version does the same as cmsWriteTag but without any interpretation of the data. Please note it is fair easy to deal with “cooked” structures, since 
+	 * The RAW version does the same as cmsWriteTag but without any interpretation of the data. Please note it is fair easy to deal with "cooked" structures, since 
 	 * there are primitives for allocating, deleting and modifying data. For RAW data you are responsible of everything. If you want to deal with a private tag, you 
 	 * may want to write a plug-in instead of messing up with raw data.
 	 * @param hProfile Handle to a profile object
@@ -2829,7 +2830,7 @@ public class lcms2
 	 * Creates an IO handler object from a disk-based file.
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @param FileName Full path of file resource
-	 * @param AccessMode “r” to read, “w” to write.
+	 * @param AccessMode "r" to read, "w" to write.
 	 * @return A pointer to an iohandler object on success, NULL on error.
 	 */
 	public static cmsIOHANDLER cmsOpenIOhandlerFromFile(cmsContext ContextID, final String FileName, final char AccessMode)
@@ -2852,7 +2853,7 @@ public class lcms2
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @param Buffer Points to a block of contiguous memory containing the data
 	 * @param size Buffer's size measured in bytes.
-	 * @param AccessMode “r” to read, “w” to write.
+	 * @param AccessMode "r" to read, "w" to write.
 	 * @return A pointer to an iohandler object on success, NULL on error.
 	 */
 	public static cmsIOHANDLER cmsOpenIOhandlerFromMem(cmsContext ContextID, byte[] Buffer, int size, final char AccessMode)
@@ -3691,7 +3692,7 @@ public class lcms2
 	// Tables
 	/**
 	 * This function returns the number of tables found in the current CGATS object.
-	 * @param A handle to a CGATS.17 object.
+	 * @param hIT8 A handle to a CGATS.17 object.
 	 * @return The number of tables on success, 0 on error.
 	 */
 	public static int cmsIT8TableCount(cmsHANDLE hIT8)
@@ -4044,8 +4045,8 @@ public class lcms2
 	
 	// Formatter for double
 	/**
-	 * Sets the format string for float numbers. It uses the “C” sprintf convention. The default format string is "%.10g"
-	 * @param A handle to a CGATS.17 object.
+	 * Sets the format string for float numbers. It uses the "C" sprintf convention. The default format string is "%.10g"
+	 * @param hIT8 A handle to a CGATS.17 object.
 	 */
 	public static void cmsIT8DefineDblFormat(cmsHANDLE hIT8, final String Formatter)
 	{
@@ -4056,7 +4057,7 @@ public class lcms2
 	
 	/**
 	 * Allocates an empty gamut boundary descriptor with no known points.
-	 * @param Pointer to a user-defined context cargo.
+	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @return A handle to a gamut boundary descriptor on success, NULL on error.
 	 */
 	public static cmsHANDLE cmsGBDAlloc(cmsContext ContextID)

@@ -185,6 +185,7 @@ final class cmsopt
 	    {
 	        if ((pt).Implements == UnaryOp)
 	        {
+	        	pt = (cmsStage)((pt).Next);
 	            _RemoveElement(previous);
 	            AnyOpt = true;
 	        }
@@ -239,7 +240,7 @@ final class cmsopt
 	        }
 	        else
 	        {
-	        	pt1 = (cmsStage)((pt1).Next);            
+	        	pt1 = (cmsStage)((pt1).Next);        
 	        }
 	    }
 	    

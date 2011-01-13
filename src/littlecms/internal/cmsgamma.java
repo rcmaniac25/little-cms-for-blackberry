@@ -87,7 +87,7 @@ final class cmsgamma
 	    }
 	}
 	
-	private static final long PARAMETRIC_CURVES_UID = 0L;
+	private static final long PARAMETRIC_CURVES_UID = 0x9EFD118D3D891666L;
 	
 	// As a way to install new parametric curves
 	public static boolean _cmsRegisterParametricCurvesPlugin(cmsPluginBase Data)
@@ -238,10 +238,13 @@ final class cmsgamma
 	    // Initialize members if requested
 	    if (Values != null && (nEntries > 0))
 	    {
+	    	System.arraycopy(Values, 0, p.Table16, 0, nEntries);
+	    	/*
 	        for (i=0; i < nEntries; i++)
 	        {
 	        	p.Table16[i] = Values[i];
 	        }
+	        */
 	    }
 	    
 	    // Initialize the segments stuff. The evaluator for each segment is located and a pointer to it
@@ -260,7 +263,7 @@ final class cmsgamma
 	            	p.SegInterp[i] = cmsintrp._cmsComputeInterpParams(ContextID, Segments[i].nGridPoints, 1, 1, null, lcms2_plugin.CMS_LERP_FLAGS_FLOAT);
 	            }
 	            
-	            cmsCurveSegment nSeg = new cmsCurveSegment();
+	            cmsCurveSegment nSeg = p.Segments[i];
 	            cmsCurveSegment oSeg = Segments[i];
 	            nSeg.x0 = oSeg.x0;
 	            nSeg.x1 = oSeg.x1;
@@ -756,7 +759,7 @@ final class cmsgamma
 	    int nGridPoints = 4096;
 	    
 	    lcms2_internal._cmsAssert(Segments != null, "Segments != null");
-
+	    
 	    // Optimizatin for identity curves. 
 	    if (nSegments == 1 && Segments[0].Type == 1)
 	    {

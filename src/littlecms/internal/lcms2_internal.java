@@ -146,8 +146,8 @@ final class lcms2_internal extends lcms2_plugin
 //#else
 	    final double _lcms_double2fixmagic = 68719476736.0 * 1.5;  // 2^36 * 1.5, (52-16=36) uses limited precision to floor
 	    
-	    //Always in little endian format
-	    return (int)(Double.doubleToLongBits(val + _lcms_double2fixmagic) & 0xFFFFFFFFL);
+	    //Java is always little endian with regards to storing and handling bytes (I/O being the exception)
+	    return (int)((Double.doubleToLongBits(val + _lcms_double2fixmagic) & 0xFFFFFFFFL) >> 16);
 //#endif
 	}
 	
@@ -747,7 +747,7 @@ final class lcms2_internal extends lcms2_plugin
 	}
 	
 	// Transformation
-	public static class _cmsTRANSFORM
+	public static class _cmsTRANSFORM implements cmsHTRANSFORM
 	{
 		public int InputFormat, OutputFormat; // Keep formats for further reference
 		

@@ -28,7 +28,9 @@
 package littlecms.internal;
 
 import littlecms.internal.helper.Utility;
+//#ifdef CMS_RAW_C
 import littlecms.internal.helper.VirtualPointer;
+//#endif
 import littlecms.internal.lcms2.cmsCIELCh;
 import littlecms.internal.lcms2.cmsCIELab;
 import littlecms.internal.lcms2.cmsCIEXYZ;
@@ -245,7 +247,7 @@ final class cmsvirt
 	        WhitePointXYZ = new cmsCIEXYZ();
 	        cmspcs.cmsxyY2XYZ(WhitePointXYZ, WhitePoint);
 	        CHAD = new cmsMAT3();
-	        cmswtpnt._cmsAdaptationMatrix(CHAD, null, WhitePointXYZ, lcms2.cmsD50_XYZ);     
+	        cmswtpnt._cmsAdaptationMatrix(CHAD, null, WhitePointXYZ, lcms2.cmsD50_XYZ);
 	        
 	        // This is a V4 tag, but many CMM does read and understand it no matter which version
 //#ifdef CMS_RAW_C
@@ -973,7 +975,10 @@ final class cmsvirt
 	public static cmsHPROFILE cmsCreate_sRGBProfileTHR(cmsContext ContextID)
 	{
 		cmsCIExyY D65 = new cmsCIExyY();
-		cmsCIExyYTRIPLE Rec709Primaries = new cmsCIExyYTRIPLE(new double[]{0.6400, 0.3300, 1.0, 0.3000, 0.6000, 1.0, 0.1500, 0.0600, 1.0});
+		cmsCIExyYTRIPLE Rec709Primaries = new cmsCIExyYTRIPLE(new double[]{
+				0.6400, 0.3300, 1.0, //Red
+				0.3000, 0.6000, 1.0, //Green
+				0.1500, 0.0600, 1.0});//Blue
 		cmsToneCurve[] Gamma22 = new cmsToneCurve[3];
 		cmsHPROFILE  hsRGB;
 		
