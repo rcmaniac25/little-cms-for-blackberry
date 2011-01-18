@@ -900,7 +900,7 @@ final class cmscgats
 	            return;
 	        }
 	        
-	        FileNest.Stream = Stream.fopen(FileNest.FileName.toString(), 'r');
+	        FileNest.Stream = Stream.fopen(FileNest.FileName.toString(), "r");
 	        if (FileNest.Stream == null)
 	        {
                 SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.FILE_NOT_FOUND), new Object[]{FileNest.FileName});
@@ -1762,7 +1762,7 @@ final class cmscgats
         int i;
         cmsIT8 it8 = (cmsIT8)hIT8;
         
-        sd.stream = Stream.fopen(cFileName, 'w');
+        sd.stream = Stream.fopen(cFileName, "w");
         if (sd.stream == null)
         {
         	return false;
@@ -2295,7 +2295,7 @@ final class cmscgats
        int Size;
        byte[] Ptr = new byte[133];
        
-       fp = Stream.fopen(FileName, 'r');
+       fp = Stream.fopen(FileName, "r");
        if (fp == null)
        {
            cmserr.cmsSignalError(null, lcms2.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.FILE_NOT_FOUND), new Object[]{FileName});
@@ -2382,7 +2382,7 @@ final class cmscgats
     		return null;
     	}
     	
-    	it8.FileStack[0].Stream = Stream.fopen(cFileName, 'r');
+    	it8.FileStack[0].Stream = Stream.fopen(cFileName, "r");
     	
     	if (it8.FileStack[0].Stream == null)
     	{

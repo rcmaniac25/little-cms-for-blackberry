@@ -342,11 +342,11 @@ public class lcms2
     /** ICC XYZ*/
     public static class cmsEncodedXYZNumber
     {
-    	public static final int SIZE = (2 * 3);
+    	public static final int SIZE = (4 * 3);
     	
-        public short X;
-        public short Y;
-        public short Z;
+        public int X;
+        public int Y;
+        public int Z;
     }
     
     /** Profile ID as computed by MD5 algorithm*/
@@ -2833,7 +2833,7 @@ public class lcms2
 	 * @param AccessMode "r" to read, "w" to write.
 	 * @return A pointer to an iohandler object on success, NULL on error.
 	 */
-	public static cmsIOHANDLER cmsOpenIOhandlerFromFile(cmsContext ContextID, final String FileName, final char AccessMode)
+	public static cmsIOHANDLER cmsOpenIOhandlerFromFile(cmsContext ContextID, final String FileName, final String AccessMode)
 	{
 		return cmsio0.cmsOpenIOhandlerFromFile(ContextID, FileName, AccessMode);
 	}
@@ -2903,7 +2903,7 @@ public class lcms2
 	 * @param sAccess "r" for normal operation, "w" for profile creation
 	 * @return A handle to an ICC profile object on success, NULL on error.
 	 */
-	public static cmsHPROFILE cmsOpenProfileFromFile(final String ICCProfile, final char sAccess)
+	public static cmsHPROFILE cmsOpenProfileFromFile(final String ICCProfile, final String sAccess)
 	{
 		return cmsio0.cmsOpenProfileFromFile(ICCProfile, sAccess);
 	}
@@ -2915,7 +2915,7 @@ public class lcms2
 	 * @param sAccess "r" for normal operation, "w" for profile creation
 	 * @return A handle to an ICC profile object on success, NULL on error.
 	 */
-	public static cmsHPROFILE cmsOpenProfileFromFileTHR(cmsContext ContextID, final String ICCProfile, final char sAccess)
+	public static cmsHPROFILE cmsOpenProfileFromFileTHR(cmsContext ContextID, final String ICCProfile, final String sAccess)
 	{
 		return cmsio0.cmsOpenProfileFromFileTHR(ContextID, ICCProfile, sAccess);
 	}
@@ -2926,7 +2926,7 @@ public class lcms2
 	 * @param sAccess "r" for normal operation, "w" for profile creation
 	 * @return A handle to an ICC profile object on success, NULL on error.
 	 */
-	public static cmsHPROFILE cmsOpenProfileFromStream(Stream ICCProfile, final char sAccess)
+	public static cmsHPROFILE cmsOpenProfileFromStream(Stream ICCProfile, final String sAccess)
 	{
 		return cmsio0.cmsOpenProfileFromStream(ICCProfile, sAccess);
 	}
@@ -2938,7 +2938,7 @@ public class lcms2
 	 * @param sAccess "r" for normal operation, "w" for profile creation
 	 * @return A handle to an ICC profile object on success, NULL on error.
 	 */
-	public static cmsHPROFILE cmsOpenProfileFromStreamTHR(cmsContext ContextID, Stream ICCProfile, final char sAccess)
+	public static cmsHPROFILE cmsOpenProfileFromStreamTHR(cmsContext ContextID, Stream ICCProfile, final String sAccess)
 	{
 		return cmsio0.cmsOpenProfileFromStreamTHR(ContextID, ICCProfile, sAccess);
 	}

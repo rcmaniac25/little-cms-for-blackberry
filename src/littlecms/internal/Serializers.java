@@ -98,6 +98,7 @@ public final class Serializers
 					return true;
 				}
 			}, Calendar.class);
+			VirtualPointer.setSerializer(VirtualPointer.getSerializer(Calendar.class), Calendar.getInstance().getClass()); //Since getInstance doesn't return a java.util.Calendar
 			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, StringBuffer.class)
 			{
 				public boolean actualWrite(VirtualPointer vp, Object val)
@@ -319,7 +320,7 @@ public final class Serializers
 					profile.model = type.readInt32(true);
 					profile.attributes = type.readInt64(true);
 					
-					profile.ProfileID = (cmsProfileID)type.readObject(cmsProfileID.class, true, profile.ProfileID);
+					type.readObject(cmsProfileID.class, true, profile.ProfileID);
 					
 					profile.TagCount = type.readInt32(true);
 					type.readArray(true, "int", lcms2_internal.MAX_TABLE_TAG, profile.TagNames);
@@ -541,9 +542,9 @@ public final class Serializers
 				{
 					VirtualPointer.TypeProcessor type = vp.getProcessor();
 					cmsEncodedXYZNumber number = (cmsEncodedXYZNumber)val[index];
-					number.X = type.readInt16(true);
-					number.Y = type.readInt16(true);
-					number.Z = type.readInt16(true);
+					number.X = type.readInt32(true);
+					number.Y = type.readInt32(true);
+					number.Z = type.readInt32(true);
 					return true;
 				}
 			}, cmsEncodedXYZNumber.class);

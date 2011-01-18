@@ -34,6 +34,9 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Calendar;
 
+import javax.microedition.io.Connector;
+import javax.microedition.io.file.FileConnection;
+
 import littlecms.internal.LCMSResource;
 
 import net.rim.device.api.i18n.ResourceBundle;
@@ -494,6 +497,30 @@ public final class Utility
 //#endif
 		}
 	}
+	
+	//C99 remove function
+	public static int remove(final String filename)
+	{
+		int result = -1;
+		try
+		{
+			FileConnection file = (FileConnection)Connector.open(filename, Connector.READ_WRITE);
+			if(file.exists())
+			{
+				file.delete();
+			}
+			if(!file.exists())
+			{
+				result = 0;
+			}
+			file.close();
+		}
+		catch(IOException e)
+		{
+			result = -2;
+		}
+		return result;
+	}
     
     //strlen
     
@@ -513,7 +540,7 @@ public final class Utility
     	int len = origin;
     	int aLen = chars.length;
     	while(len < aLen && chars[len++] != 0);
-    	if(len == aLen)
+    	if(len == aLen && chars[len - 1] != 0)
     	{
     		len++;
     	}
@@ -531,7 +558,7 @@ public final class Utility
     	int len = origin;
     	int aLen = chars.length;
     	while(len < aLen && chars[len++] != 0);
-    	if(len == aLen)
+    	if(len == aLen && chars[len - 1] != 0)
     	{
     		len++;
     	}
@@ -540,6 +567,7 @@ public final class Utility
     
     public static int strlen(VirtualPointer vp)
     {
+    	//Very inefficent... deal with it for now
     	int len = vp.getAllocLen();
     	byte[] dat = new byte[len - vp.getPosition()];
     	vp.readByteArray(dat, 0, dat.length, false, false);

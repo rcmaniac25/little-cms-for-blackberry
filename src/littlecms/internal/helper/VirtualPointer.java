@@ -1425,7 +1425,7 @@ public class VirtualPointer
 	    {
 	    	//Write the object and tell it to move the pointer
 	    	proc.write(obj, true, ser);
-	    	switch(proc.getStatus())
+	    	switch(proc.stat)
 	    	{
 		    	case VirtualPointer.Serializer.STATUS_SUCCESS:
 		    		break;
@@ -1443,7 +1443,7 @@ public class VirtualPointer
 		    		this.data = null;
 			    	this.resize(ser.getSerializedSize(obj));
 			    	proc.write(obj, true, ser);
-		    		if(proc.getStatus() != VirtualPointer.Serializer.STATUS_SUCCESS)
+		    		if(proc.stat != VirtualPointer.Serializer.STATUS_SUCCESS)
 		    		{
 		    			//A. O.
 			    		throw new Exception();

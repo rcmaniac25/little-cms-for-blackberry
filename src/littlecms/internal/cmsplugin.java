@@ -112,7 +112,7 @@ final class cmsplugin
 	    pOut[5] = pIn[2];
 	    pOut[4] = pIn[3];
 	    pOut[3] = pIn[4];
-	    pOut[2] = pIn[5];   
+	    pOut[2] = pIn[5];
 	    pOut[1] = pIn[6];
 	    pOut[0] = pIn[7];
 	    
@@ -196,7 +196,7 @@ final class cmsplugin
 	}
 	
 	//Little helper function in case a VirtualPointer is used.
-	public static boolean _cmsReadUInt16Array(cmsIOHANDLER io, int n, VirtualPointer vp)
+	public static boolean _cmsReadUInt16Array(cmsIOHANDLER io, int n, VirtualPointer vp, boolean reverseEndian)
 	{
 	    int i;
 	    
@@ -226,7 +226,7 @@ final class cmsplugin
 	        	    }
 	            	return false;
 	            }
-	            proc.write(temp[0], true);
+	            proc.write(reverseEndian ? _cmsAdjustEndianess16(temp[0]) : temp[0], true);
 	        }
 	        else
 	        {
@@ -299,6 +299,11 @@ final class cmsplugin
 	
 	public static boolean _cmsRead15Fixed16Number(cmsIOHANDLER io, double[] n)
 	{
+		return _cmsRead15Fixed16Number(io, n, true);
+	}
+	
+	public static boolean _cmsRead15Fixed16Number(cmsIOHANDLER io, double[] n, boolean reverseEndian)
+	{
 		byte[] tmp = new byte[4];
 	    
 	    lcms2_internal._cmsAssert(io != null, "io != null");
@@ -310,7 +315,12 @@ final class cmsplugin
 	    
 	    if (n != null)
 	    {
-	        n[0] = _cms15Fixed16toDouble(_cmsAdjustEndianess32(BitConverter.toInt32(tmp, 0)));
+	    	int t = BitConverter.toInt32(tmp, 0);
+	    	if(reverseEndian)
+	    	{
+	    		t = _cmsAdjustEndianess32(t);
+	    	}
+	        n[0] = _cms15Fixed16toDouble(t);
 	    }
 	    
 	    return true;
@@ -400,9 +410,10 @@ final class cmsplugin
 	}
 	
 	//Little helper function in case a VirtualPointer is used.
-	public static boolean _cmsWriteUInt16Array(cmsIOHANDLER io, int n, final VirtualPointer vp)
+	public static boolean _cmsWriteUInt16Array(cmsIOHANDLER io, int n, final VirtualPointer vp, boolean reverseEndian)
 	{
 	    int i;
+	    short t;
 	    
 	    lcms2_internal._cmsAssert(io != null, "io != null");
 	    lcms2_internal._cmsAssert(vp != null, "vp != null");
@@ -411,7 +422,8 @@ final class cmsplugin
 	    int pos = vp.getPosition();
 	    for (i = 0; i < n; i++)
 	    {
-	        if (!_cmsWriteUInt16Number(io, proc.readInt16(true)))
+	    	t = proc.readInt16(true);
+	        if (!_cmsWriteUInt16Number(io, reverseEndian ? _cmsAdjustEndianess16(t) : t))
 	        {
 	        	vp.setPosition(pos);
 	        	return false;
@@ -431,7 +443,7 @@ final class cmsplugin
 	    tmp = BitConverter.getBytes(_cmsAdjustEndianess32(n));
 	    if (!io.Write.run(io, /*sizeof(cmsUInt32Number)*/4, tmp))
 	    {
-	    	return false;   
+	    	return false;
 	    }
 	    
 	    return true;
@@ -471,11 +483,21 @@ final class cmsplugin
 	
 	public static boolean _cmsWrite15Fixed16Number(cmsIOHANDLER io, double n)
 	{
+		return _cmsWrite15Fixed16Number(io, n, false);
+	}
+	
+	public static boolean _cmsWrite15Fixed16Number(cmsIOHANDLER io, double n, boolean reverseEndian)
+	{
 	    byte[] tmp;
 	    
 	    lcms2_internal._cmsAssert(io != null, "io != null");
 	    
-	    tmp = BitConverter.getBytes(_cmsDoubleTo15Fixed16(n));
+	    int t = _cmsDoubleTo15Fixed16(n);
+	    if(reverseEndian)
+	    {
+	    	t = _cmsAdjustEndianess32(t);
+	    }
+	    tmp = BitConverter.getBytes(t);
 	    if (!io.Write.run(io, /*sizeof(cmsUInt32Number)*/4, tmp))
 	    {
 	    	return false;   
@@ -491,9 +513,9 @@ final class cmsplugin
 	    lcms2_internal._cmsAssert(io != null, "io != null");
 	    lcms2_internal._cmsAssert(XYZ != null, "XYZ != null");
 	    
-	    xyz.X = (short)_cmsAdjustEndianess32(_cmsDoubleTo15Fixed16(XYZ.X));
-	    xyz.Y = (short)_cmsAdjustEndianess32(_cmsDoubleTo15Fixed16(XYZ.Y));
-	    xyz.Z = (short)_cmsAdjustEndianess32(_cmsDoubleTo15Fixed16(XYZ.Z));
+	    xyz.X = _cmsAdjustEndianess32(_cmsDoubleTo15Fixed16(XYZ.X));
+	    xyz.Y = _cmsAdjustEndianess32(_cmsDoubleTo15Fixed16(XYZ.Y));
+	    xyz.Z = _cmsAdjustEndianess32(_cmsDoubleTo15Fixed16(XYZ.Z));
 	    
 	    return io.vpWrite(io, /*sizeof(cmsEncodedXYZNumber)*/cmsEncodedXYZNumber.SIZE, new VirtualPointer(xyz));
 	}
@@ -699,11 +721,11 @@ final class cmsplugin
 	}
 	
 	// Main plug-in dispatcher
-	public static boolean cmsPlugin(Object Plug_in)
+	public static boolean cmsPlugin(cmsPluginBase Plug_in)
 	{
 	    cmsPluginBase Plugin;
 	    
-	    for (Plugin = (cmsPluginBase)Plug_in; Plugin != null; Plugin = Plugin.Next)
+	    for (Plugin = Plug_in; Plugin != null; Plugin = Plugin.Next)
 	    {
 	    	if (Plugin.Magic != lcms2_plugin.cmsPluginMagicNumber)
 	    	{

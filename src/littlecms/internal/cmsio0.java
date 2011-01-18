@@ -513,7 +513,7 @@ final class cmsio0
 	
 	// Create a iohandler for disk based files. if FileName is NULL, then 'stream' member is also set
 	// to NULL and no real writting is performed. This only happens in writting access mode
-	public static cmsIOHANDLER cmsOpenIOhandlerFromFile(cmsContext ContextID, final String FileName, final char AccessMode)
+	public static cmsIOHANDLER cmsOpenIOhandlerFromFile(cmsContext ContextID, final String FileName, final String AccessMode)
 	{
 	    cmsIOHANDLER iohandler = null;
 	    Stream fm = null;
@@ -529,10 +529,10 @@ final class cmsio0
 	    iohandler = new cmsIOHANDLER();
 //#endif
 	    
-	    switch (AccessMode)
+	    switch (AccessMode.charAt(0))
 	    {
 		    case 'r':
-		        fm = Stream.fopen(FileName, 'r');
+		        fm = Stream.fopen(FileName, "r");
 		        if (fm == null)
 		        {
 //#ifdef CMS_RAW_C
@@ -543,7 +543,7 @@ final class cmsio0
 		        }
 		        break;
 		    case 'w':
-		        fm = Stream.fopen(FileName, 'w');
+		        fm = Stream.fopen(FileName, "w");
 		        if (fm == null)
 		        {
 //#ifdef CMS_RAW_C
@@ -557,7 +557,7 @@ final class cmsio0
 //#ifdef CMS_RAW_C
 		    	cmserr._cmsFree(ContextID, ioP);
 //#endif
-		    	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNK_ACCESS_MODE), new Object[]{new Character(AccessMode)});
+		    	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNK_ACCESS_MODE), new Object[]{AccessMode});
 		        return null;
 	    }
 	    
@@ -798,13 +798,12 @@ final class cmsio0
 	    Icc.Version         = cmsplugin._cmsAdjustEndianess32(Header.version);
 	    
 	    // Get size as reported in header
-	    HeaderSize = cmsplugin._cmsAdjustEndianess32(Header.size); //Figure out why this keeps coming out negative
+	    HeaderSize = cmsplugin._cmsAdjustEndianess32(Header.size);
 	    
 	    // Get creation date/time
 	    cmsplugin._cmsDecodeDateTimeNumber(Header.date, Icc.Created);
 	    
 	    // The profile ID are 32 raw bytes
-	    Icc.ProfileID = new cmsProfileID();
 	    Icc.ProfileID.setID8(Header.profileID.getID8());
 	    
 	    
@@ -814,7 +813,7 @@ final class cmsio0
 	    {
 	    	return false;
 	    }
-	    TagCount = temp2[0];
+	    TagCount = cmsplugin._cmsAdjustEndianess32(temp2[0]);
 	    if (TagCount > lcms2_internal.MAX_TABLE_TAG)
 	    {
 	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_TO_MANY_TAGS), new Object[]{new Integer(TagCount)});
@@ -830,17 +829,17 @@ final class cmsio0
 	        {
 	        	return false;
 	        }
-	        Tag.sig = temp2[0];
+	        Tag.sig = cmsplugin._cmsAdjustEndianess32(temp2[0]);
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	        {
 	        	return false;
 	        }
-	        Tag.offset = temp2[0];
+	        Tag.offset = cmsplugin._cmsAdjustEndianess32(temp2[0]);
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	        {
 	        	return false;
 	        }
-	        Tag.size = temp2[0];
+	        Tag.size = cmsplugin._cmsAdjustEndianess32(temp2[0]);
 	        
 	        // Perform some sanity check. Offset + size should fall inside file.
 	        if (Tag.offset + Tag.size > HeaderSize)
@@ -902,20 +901,21 @@ final class cmsio0
 	    Header.renderingIntent = cmsplugin._cmsAdjustEndianess32(Icc.RenderingIntent);
 	    
 	    // Illuminant is always D50
-	    Header.illuminant.X = (short)cmsplugin._cmsAdjustEndianess32(cmsplugin._cmsDoubleTo15Fixed16(lcms2.cmsD50_XYZ.X));
-	    Header.illuminant.Y = (short)cmsplugin._cmsAdjustEndianess32(cmsplugin._cmsDoubleTo15Fixed16(lcms2.cmsD50_XYZ.Y));
-	    Header.illuminant.Z = (short)cmsplugin._cmsAdjustEndianess32(cmsplugin._cmsDoubleTo15Fixed16(lcms2.cmsD50_XYZ.Z));
+	    Header.illuminant.X = cmsplugin._cmsAdjustEndianess32(cmsplugin._cmsDoubleTo15Fixed16(lcms2.cmsD50_XYZ.X));
+	    Header.illuminant.Y = cmsplugin._cmsAdjustEndianess32(cmsplugin._cmsDoubleTo15Fixed16(lcms2.cmsD50_XYZ.Y));
+	    Header.illuminant.Z = cmsplugin._cmsAdjustEndianess32(cmsplugin._cmsDoubleTo15Fixed16(lcms2.cmsD50_XYZ.Z));
 	    
 	    // Created by LittleCMS (that's me!)
 	    Header.creator      = cmsplugin._cmsAdjustEndianess32(lcms2.lcmsSignature);
 	    
-	    // Set profile ID. Endianess is always big endian   
-	    Header.profileID.setID8(Icc.ProfileID.getID8());
+	    // Set profile ID. Endianess is always big endian
+	    System.arraycopy(Icc.ProfileID.data, 0, Header.profileID.data, 0, cmsProfileID.SIZE);
 	    
 	    // Dump the header
 	    VirtualPointer vp = new VirtualPointer(Header);
 	    if (!Icc.IOhandler.vpWrite(Icc.IOhandler, /*sizeof(cmsICCHeader)*/cmsICCHeader.SIZE, vp))
 	    {
+	    	vp.free();
 	    	return false;
 	    }
 	    
@@ -931,8 +931,9 @@ final class cmsio0
 	    }
 	    
 	    // Store number of tags
-	    if (!cmsplugin._cmsWriteUInt32Number(Icc.IOhandler, Count))
+	    if (!cmsplugin._cmsWriteUInt32Number(Icc.IOhandler, cmsplugin._cmsAdjustEndianess32(Count)))
 	    {
+	    	vp.free();
 	    	return false;
 	    }
 	    
@@ -951,9 +952,11 @@ final class cmsio0
 	        proc.write(Tag);
 	        if (!Icc.IOhandler.vpWrite(Icc.IOhandler, /*sizeof(cmsTagEntry)*/cmsTagEntry.SIZE, vp))
 	        {
+	        	vp.free();
 	        	return false;
 	        }
 	    }
+	    vp.free();
 	    
 	    return true;
 	}
@@ -1152,7 +1155,7 @@ final class cmsio0
 	}
 	
 	// Create profile from disk file
-	public static cmsHPROFILE cmsOpenProfileFromFileTHR(cmsContext ContextID, final String lpFileName, final char sAccess)
+	public static cmsHPROFILE cmsOpenProfileFromFileTHR(cmsContext ContextID, final String lpFileName, final String sAccess)
 	{
 	    _cmsICCPROFILE NewIcc;
 	    cmsHPROFILE hEmpty = cmsCreateProfilePlaceholder(ContextID);
@@ -1171,7 +1174,7 @@ final class cmsio0
 		    return null;
 	    }
 	    
-	    if (sAccess == 'W' || sAccess == 'w')
+	    if (sAccess.charAt(0) == 'W' || sAccess.charAt(0) == 'w')
 	    {
 	        NewIcc.IsWrite = true;
 	        
@@ -1186,12 +1189,12 @@ final class cmsio0
 	    return hEmpty;
 	}
 	
-	public static cmsHPROFILE cmsOpenProfileFromFile(final String ICCProfile, final char sAccess)
+	public static cmsHPROFILE cmsOpenProfileFromFile(final String ICCProfile, final String sAccess)
 	{
 	    return cmsOpenProfileFromFileTHR(null, ICCProfile, sAccess);
 	}
 	
-	public static cmsHPROFILE cmsOpenProfileFromStreamTHR(cmsContext ContextID, Stream ICCProfile, final char sAccess)
+	public static cmsHPROFILE cmsOpenProfileFromStreamTHR(cmsContext ContextID, Stream ICCProfile, final String sAccess)
 	{
 	    _cmsICCPROFILE NewIcc;
 	    cmsHPROFILE hEmpty = cmsCreateProfilePlaceholder(ContextID);
@@ -1210,7 +1213,7 @@ final class cmsio0
 		    return null;
 	    }
 	    
-	    if (sAccess == 'w')
+	    if (sAccess.charAt(0) == 'w')
 	    {
 	        NewIcc.IsWrite = true;       
 	        return hEmpty;
@@ -1225,7 +1228,7 @@ final class cmsio0
 
 	}
 
-	public static cmsHPROFILE cmsOpenProfileFromStream(Stream ICCProfile, final char sAccess)
+	public static cmsHPROFILE cmsOpenProfileFromStream(Stream ICCProfile, final String sAccess)
 	{
 	    return cmsOpenProfileFromStreamTHR(null, ICCProfile, sAccess);
 	}
@@ -1387,7 +1390,7 @@ final class cmsio0
 	        // Align to 32 bit boundary.
 	        if (!cmsplugin._cmsWriteAlignment(io))
 	        {
-	        	return false;                   
+	        	return false;
 	        }
 	    }
 	    
@@ -1426,9 +1429,13 @@ final class cmsio0
 	    cmsContext ContextID;
 	    
 	    //Manual equivalent of "memmove(&Keep, Icc, sizeof(_cmsICCPROFILE));"
-	    //XXX This might not work, figure out how to get it to work
 	    VirtualPointer vp = new VirtualPointer(Icc);
 	    Keep = (_cmsICCPROFILE)vp.getProcessor().readObject(_cmsICCPROFILE.class);
+	    //Copy over the components that weren't copied
+	    Keep.IOhandler = Icc.IOhandler;
+	    Keep.ContextID = Icc.ContextID;
+	    System.arraycopy(Icc.TagPtrs, 0, Keep.TagPtrs, 0, lcms2_internal.MAX_TABLE_TAG);
+	    System.arraycopy(Icc.TagTypeHandlers, 0, Keep.TagTypeHandlers, 0, lcms2_internal.MAX_TABLE_TAG);
 	    
 	    ContextID = cmsGetProfileContextID(hProfile);
 	    PrevIO = Icc.IOhandler = cmsOpenIOhandlerFromNULL(ContextID);
@@ -1447,7 +1454,7 @@ final class cmsio0
 	    {
 	    	return 0;
 	    }
-
+	    
 	    UsedSpace = PrevIO.UsedSpace;
 	    
 	    // Pass #2 does save to iohandler
@@ -1458,25 +1465,45 @@ final class cmsio0
 	        if (!SetLinks(Icc))
 	        {
 	        	cmsCloseIOhandler(PrevIO);
-	        	//This is the equivilant of doing "memmove(&Icc, Keep, sizeof(_cmsICCPROFILE));" only it only copies over values that could have changed
+	        	//This is the equivilant of doing "memmove(&Icc, Keep, sizeof(_cmsICCPROFILE));"
 	        	vp.getProcessor().readObject(_cmsICCPROFILE.class, false, Icc);
+	        	//Copy over the components that weren't copied
+	    	    Icc.IOhandler = Keep.IOhandler;
+	    	    Icc.ContextID = Keep.ContextID;
+	    	    System.arraycopy(Keep.TagPtrs, 0, Icc.TagPtrs, 0, lcms2_internal.MAX_TABLE_TAG);
+	    	    System.arraycopy(Keep.TagTypeHandlers, 0, Icc.TagTypeHandlers, 0, lcms2_internal.MAX_TABLE_TAG);
 	    	    return 0;
 	        }
 	        if (!_cmsWriteHeader(Icc, UsedSpace))
 	        {
 	        	cmsCloseIOhandler(PrevIO);
 	        	vp.getProcessor().readObject(_cmsICCPROFILE.class, false, Icc);
+	        	//Copy over the components that weren't copied
+	    	    Icc.IOhandler = Keep.IOhandler;
+	    	    Icc.ContextID = Keep.ContextID;
+	    	    System.arraycopy(Keep.TagPtrs, 0, Icc.TagPtrs, 0, lcms2_internal.MAX_TABLE_TAG);
+	    	    System.arraycopy(Keep.TagTypeHandlers, 0, Icc.TagTypeHandlers, 0, lcms2_internal.MAX_TABLE_TAG);
 	    	    return 0;
 	        }
 	        if (!SaveTags(Icc, Keep))
 	        {
 	        	cmsCloseIOhandler(PrevIO);
 	        	vp.getProcessor().readObject(_cmsICCPROFILE.class, false, Icc);
+	        	//Copy over the components that weren't copied
+	    	    Icc.IOhandler = Keep.IOhandler;
+	    	    Icc.ContextID = Keep.ContextID;
+	    	    System.arraycopy(Keep.TagPtrs, 0, Icc.TagPtrs, 0, lcms2_internal.MAX_TABLE_TAG);
+	    	    System.arraycopy(Keep.TagTypeHandlers, 0, Icc.TagTypeHandlers, 0, lcms2_internal.MAX_TABLE_TAG);
 	    	    return 0;
 	        }
 	    }
 	    
 	    vp.getProcessor().readObject(_cmsICCPROFILE.class, false, Icc);
+	    //Copy over the components that weren't copied
+	    Icc.IOhandler = Keep.IOhandler;
+	    Icc.ContextID = Keep.ContextID;
+	    System.arraycopy(Keep.TagPtrs, 0, Icc.TagPtrs, 0, lcms2_internal.MAX_TABLE_TAG);
+	    System.arraycopy(Keep.TagTypeHandlers, 0, Icc.TagTypeHandlers, 0, lcms2_internal.MAX_TABLE_TAG);
 	    if (!cmsCloseIOhandler(PrevIO))
 	    {
 	    	return 0;
@@ -1485,35 +1512,11 @@ final class cmsio0
 	    return UsedSpace;
 	}
 	
-	//C remove function
-	private static int remove(final String filename)
-	{
-		int result = -1;
-		try
-		{
-			FileConnection file = (FileConnection)Connector.open(filename, Connector.WRITE);
-			if(file.exists())
-			{
-				file.delete();
-			}
-			if(!file.exists())
-			{
-				result = 0;
-			}
-			file.close();
-		}
-		catch(IOException e)
-		{
-			result = -2;
-		}
-		return result;
-	}
-	
 	// Low-level save to disk. 
 	public static boolean cmsSaveProfileToFile(cmsHPROFILE hProfile, final String FileName)
 	{   
 	    cmsContext ContextID = cmsGetProfileContextID(hProfile);
-	    cmsIOHANDLER io = cmsOpenIOhandlerFromFile(ContextID, FileName, 'w');
+	    cmsIOHANDLER io = cmsOpenIOhandlerFromFile(ContextID, FileName, "w");
 	    boolean rc;
 	    
 	    if (io == null)
@@ -1526,7 +1529,7 @@ final class cmsio0
 	    
 	    if (!rc) // remove() is C99 per 7.19.4.1
 	    {
-	    	remove(FileName); // We have to IGNORE return value in this case
+	    	Utility.remove(FileName); // We have to IGNORE return value in this case
 	    }
 	    return rc;
 	}

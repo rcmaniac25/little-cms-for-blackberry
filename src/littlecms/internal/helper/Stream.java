@@ -35,6 +35,7 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.file.FileConnection;
 
 //#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+import net.rim.device.api.io.FileNotFoundException;
 import net.rim.device.api.io.Seekable;
 //#endif
 
@@ -121,13 +122,21 @@ public abstract class Stream
 		return true; //O no, a seek operation failed. Treat this like a end of file.
 	}
 	
-	public static Stream fopen(final String filename, final char mode)
+	public static Stream fopen(final String filename, final String mode)
 	{
-		return new FileStream(filename, mode, 0);
+		FileStream fs = new FileStream(filename, mode, 0);
+		if(!fs.valid)
+		{
+			//Not a valid file
+			fs.close();
+			fs = null;
+		}
+		return fs;
 	}
 	
 	static class FileStream extends Stream
 	{
+		public boolean valid;
 		private FileConnection file;
 		private InputStream in;
 		private OutputStream out;
@@ -138,21 +147,49 @@ public abstract class Stream
 		private long pos;
 //#endif
 		
-		public FileStream(final String filename, final char mode, final long pos)
+		public FileStream(final String filename, final String mode, long pos)
 		{
-			int iMode = Connector.READ_WRITE;
-			switch(mode)
+			int iMode = 0;
+			int len = mode.length();
+			boolean startAtBeginning = true;
+		END_BAD:
+			for(int i = 0; i < len; i++)
 			{
-				case 'r':
-					iMode = Connector.READ;
-					break;
-				case 'w':
-					iMode = Connector.WRITE;
-					break;
+				//Full parameter checks are not really done since this function (though it can be accessed publicly) is only sent 'w' and 'r' by LCMS
+				switch(mode.charAt(i))
+				{
+					case 'r':
+						iMode |= Connector.READ;
+						break;
+					case 'w':
+						iMode |= Connector.WRITE;
+						break;
+					case 'b':
+						//Just in case extra (valid but not needed) parameters are entered
+						break;
+					case 'a':
+						startAtBeginning = false;
+						break;
+					case '+':
+						iMode |= Connector.READ_WRITE;
+						break;
+					default:
+						iMode = 0;
+						break END_BAD;
+				}
+			}
+			if(iMode == 0 || !filename.startsWith("file"))
+			{
+				//No valid parameter found
+				return;
+			}
+			if(startAtBeginning)
+			{
+				pos = 0;
 			}
 			try
 			{
-				file = (FileConnection)Connector.open(filename, iMode);
+				file = (FileConnection)Connector.open(filename, iMode == Connector.READ ? iMode : Connector.READ_WRITE);
 				if((iMode & Connector.READ) != 0)
 				{
 					in = file.openInputStream();
@@ -165,13 +202,24 @@ public abstract class Stream
 				}
 				if((iMode & Connector.WRITE) != 0)
 				{
+					if(!file.exists())
+					{
+						//Create the file automatically since in write mode
+						file.create();
+					}
 					out = file.openOutputStream(pos);
 				}
+				valid = true;
 			}
 			catch (IOException e)
 			{
 			}
 //#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+			if(!valid)
+			{
+				//No need to crash
+				return;
+			}
 			if((iMode & Connector.READ) != 0)
 			{
 				inSeek = (Seekable)in;
@@ -247,6 +295,7 @@ public abstract class Stream
 					in.read(new byte[count]);
 //#endif
 				}
+				written = count;
 			}
 			catch(IOException ioe)
 			{
@@ -275,6 +324,11 @@ public abstract class Stream
 					{
 					}
 					break;
+			}
+			if(absPos == getPosition())
+			{
+				//Nothing changed, return
+				return 0;
 			}
 			try
 			{
@@ -327,7 +381,7 @@ public abstract class Stream
 		
 		public long read(byte[] buffer, int offset, int size, int count)
 		{
-			if(in != null)
+			if(in == null)
 			{
 				return 0;
 			}

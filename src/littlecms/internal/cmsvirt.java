@@ -463,7 +463,7 @@ final class cmsvirt
 	    cmsio0.cmsSetColorSpace(hICC,  ColorSpace);
 	    cmsio0.cmsSetPCS(hICC,         ColorSpace);
 	    
-	    cmsio0.cmsSetHeaderRenderingIntent(hICC, lcms2.INTENT_PERCEPTUAL); 
+	    cmsio0.cmsSetHeaderRenderingIntent(hICC, lcms2.INTENT_PERCEPTUAL);
 	    
 	    // Set up channels
 	    nChannels = cmspcs.cmsChannelsOf(ColorSpace);

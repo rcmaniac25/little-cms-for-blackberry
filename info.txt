@@ -1,8 +1,39 @@
---Last update: 12/27/2010--
+--Last update: 01/13/2011--
 --Revision Used: ??/??/2010-- (the date on which the source code was pulled from GIT)
 
 TODO:
-Testing (LCMS 2.0)
+Testing (LCMS 2.0):
+-Make sure all data read/written is in the proper endian [Types:
+--MLU
+--XYZ
+--S15Fixed16
+--ParametricCurve
+--Chromaticity
+--ProfileSequenceDesc
+--Text_Description
+--ProfileSequenceId
+
+--LUTA2B-todo (read: ReadCLUT, ReadMatrix)(write: ReadCLUT, ReadMatrix)
+--vcgt-todo
+--Curve-todo
+--ViewingConditions-todo
+--Screening-todo
+--MPE-todo
+--CrdInfo-todo
+--UcrBg-todo
+--LUTB2A-todo
+--Data-todo
+--Measurement-todo
+--Signature-todo
+--NamedColor-todo
+--ColorantTable-todo
+--LUT16-todo
+--LUT8-todo
+--DateTime-todo
+--Text-todo
+--U16Fixed16-todo
+--ColorantOrderType-todo
+-]
 Get full JavaDoc to be created for lcms
 Release Version 2.0
 
@@ -13,9 +44,12 @@ Release version 2.1
 Update LCMS 4 BB to the same level as the GIT build
 If Test system has been updated then do testing
 
+Update Serializers so that they support arrays
 Update PrintUtility FloatFormat so that it properly processes the values with exponent. Example: Double.MIN_VALUE is a subnormal number. The default manner of execution would consider the value to be zero since the number is so small. Make it so that it will scale the value for exponent.
 Update printf and scanf to follow: http://pubs.opengroup.org/onlinepubs/009695399/functions/printf.html, and http://pubs.opengroup.org/onlinepubs/009695399/functions/scanf.html (dedicated functions for printing 'e' and 'a', etc.)
-Try to figure out at least the first todo in VirtualPointer
+Try to figure out at least the two todo in VirtualPointer
+
+Update Library so that it can (with the compile define "CMS_J2ME") be compiled sans BlackBerry APIs. This way it can be used to produce a J2ME version of LCMS.
 
 See notes
 
@@ -29,6 +63,7 @@ Strings follow the guidelines listed in "http://docs.blackberry.com/en/developer
 See if performance can be improved in cmsintrp, every delegate including and after Eval4InputsFloat recreates cmsInterpParams, the LutTable, and the input params. Sometimes twice, this is a HUGE waste of memory.
 Also, on a similar topic as above, nearly every class is a <need word bigger then HUGE> waste of memory. In C/C++ memory needed to be pre-allocated but in Java it does not, thus having the first operation in a function being create 4096 doubles (pretty sure I saw that somewhere) is just unacceptable.
 Finally, again based off the above note, something must be done about Strings. The whole "C-string" thing is just not needed and is a waste, since the dev isn't expected to pass in a null-terminated String in the first place it is unneeded to use a null-terminated String. Allocating StringBuffer's with a full-length null String is an even bigger waste. See if it is possible to work around this once everything is working.
+When reading/writing tags the endian on a bunch of elements are not correct and have been reversed. Clean this up because there are cases of "make data, reverse endian, put in variable, reverse endian for writing, (in write function) reverse endian for writing, write). They all create small arrays and take up precious time. It may be a IO operation but you don't want it to take forever.
 
 Defines:
 CMS_USE_BIG_ENDIAN //Not supported because BlackBerry is little endian, just here so it is explicitly known that it isn't supported [well it is used but it shouldn't be changed, it would screw up pretty much everything]
@@ -41,6 +76,7 @@ CMS_RAW_C //Code is similar, to near exact the same as C/C++, not fully used (ob
 CMS_REALLOC_PTR //By default a C pointer passed into a function is independent of the original pointer unless it is a pointer to the pointer. Since VirtualPointer is a Java class that operation is reversed. This definition reverses the process back to the C process but depending on if the dev is willing to use more memory and the operation is really necessary it can be changed.
 CMS_ENABLE_ASSERT //If not in debug compilation mode then assert is ignored, this explicitly enabled it.
 CMS_USE_NATIVE_BIGINT //Use a native big int for big number math. This requires Certicom signing if used. By default it is not used
+CMS_J2ME //J2ME only version of LCMS. No BlackBerry needed.
 
 Implementation Notes:
 cmsSigChromaticAdaptationTag returns a double[], not a cmsMAT3 as what might be expected.

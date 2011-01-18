@@ -944,6 +944,7 @@ final class cmsnamed
 	    
 	    for (i=0; i < n; i++)
 	    {
+	    	Seq.seq[i] = new cmsPSEQDESC();
 	        Seq.seq[i].Manufacturer = null;
 	        Seq.seq[i].Model        = null;
 	        Seq.seq[i].Description  = null;
@@ -999,6 +1000,7 @@ final class cmsnamed
 	    
 	    for (i=0; i < pseq.n; i++)
 	    {
+	    	NewSeq.seq[i] = new cmsPSEQDESC();
 	    	NewSeq.seq[i].attributes = pseq.seq[i].attributes;
 	    	
 	        NewSeq.seq[i].deviceMfg   = pseq.seq[i].deviceMfg;

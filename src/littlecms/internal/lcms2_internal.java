@@ -394,6 +394,7 @@ final class lcms2_internal extends lcms2_plugin
 	    	TagSaveAsRaw = new boolean[MAX_TABLE_TAG];
 	    	TagPtrs = new Object[MAX_TABLE_TAG];
 	    	TagTypeHandlers = new cmsTagTypeHandler[MAX_TABLE_TAG];
+	    	ProfileID = new cmsProfileID();
 	    }
 	}
 	
