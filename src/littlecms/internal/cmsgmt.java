@@ -490,7 +490,7 @@ final class cmsgmt
 		    	
 		    	for (i=0; i < bp.nOutputChans; i++)
 		    	{
-		    		bp.MaxInput[i] = In[i];
+		    		bp.MaxInput[i] = (In[i] & 0xFFFF);
 		    	}
 		    }
 		    

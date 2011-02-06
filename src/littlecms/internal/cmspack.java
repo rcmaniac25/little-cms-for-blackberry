@@ -1980,7 +1980,7 @@ final class cmspack
 	        for (i = 0; i < nChan; i++)
 	        {
 	        	output.setPosition(Inks + ((i * Stride) * 8));
-	        	proc.write(wOut[i] / maximum);
+	        	proc.write((wOut[i] & 0xFFFF) / maximum);
 	        }
 	        
 	        output.setPosition(Inks + /*sizeof(cmsFloat64Number)*/8);
@@ -1990,7 +1990,7 @@ final class cmspack
 	        for (i = 0; i < nChan; i++)
 	        {
 	        	output.setPosition(Inks + (i * 8));
-	        	proc.write(wOut[i] / maximum);
+	        	proc.write((wOut[i] & 0xFFFF) / maximum);
 	        }
 	        
 	        output.setPosition(Inks + (nChan + lcms2.T_EXTRA(Info.OutputFormat)) * /*sizeof(cmsFloat64Number)*/8);
@@ -2016,7 +2016,7 @@ final class cmspack
 	        for (i = 0; i < nChan; i++)
 	        {
 	        	output.setPosition(Inks + ((i * Stride) * 4));
-	        	proc.write((float)(wOut[i] / maximum));
+	        	proc.write((float)((wOut[i] & 0xFFFF) / maximum));
 	        }
 	        
 	        output.setPosition(Inks + /*sizeof(cmsFloat32Number)*/4);
@@ -2026,7 +2026,7 @@ final class cmspack
 	        for (i = 0; i < nChan; i++)
 	        {
 	        	output.setPosition(Inks + (i * 4));
-	        	proc.write((float)(wOut[i] / maximum));
+	        	proc.write((float)((wOut[i] & 0xFFFF) / maximum));
 	        }
 	        
 	        output.setPosition(Inks + (nChan + lcms2.T_EXTRA(Info.OutputFormat)) * /*sizeof(cmsFloat32Number)*/4);

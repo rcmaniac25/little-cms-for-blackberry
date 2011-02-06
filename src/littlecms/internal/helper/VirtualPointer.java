@@ -72,6 +72,21 @@ public class VirtualPointer
         	return this.stat;
         }
         
+        public int getPosition()
+        {
+        	return this.vp.getPosition();
+        }
+        
+        public void setPosition(int pos)
+        {
+        	this.vp.setPosition(pos);
+        }
+        
+        public void movePosition(int offset)
+        {
+        	this.vp.movePosition(offset);
+        }
+        
         public void write(byte value)
         {
             write(value, false);
@@ -223,7 +238,7 @@ public class VirtualPointer
 //#ifdef DEBUG
                 VirtualPointer.Char,
 //#endif
-                inc, true);
+                inc, false);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
         }
         
@@ -235,7 +250,7 @@ public class VirtualPointer
         public char readChar(boolean inc)
         {
             byte[] buffer = new byte[2];
-            vp.readByteArray(buffer, 0, 2, inc, true);
+            vp.readByteArray(buffer, 0, 2, inc, false);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
             return BitConverter.toChar(buffer, 0);
         }
@@ -504,17 +519,10 @@ public class VirtualPointer
             int index = readInt32(inc) - 1;
             if (index >= 0)
             {
-                try
+            	this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
+                synchronized (VirtualPointer.pointerRef)
                 {
-                    this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
-                    synchronized (VirtualPointer.pointerRef)
-                    {
-                    	return (VirtualPointer)VirtualPointer.pointerRef.get(index);
-                    }
-                }
-                catch(Exception e)
-                {
-                    //Not a valid index
+                	return (VirtualPointer)VirtualPointer.pointerRef.get(index);
                 }
             }
             this.stat = VirtualPointer.Serializer.STATUS_FAIL;
@@ -588,17 +596,14 @@ public class VirtualPointer
                 {
                 	if(array)
                 	{
-                		try
-                		{
-                			objArray = (Object[])value; //If value is an array of Objects then this should work, else it will throw a cast exception because they are primitives
-                		}
-                		catch(ClassCastException c)
+                		if(Utility.isPrimitive(value))
                 		{
                 			//Primitive array
                 			writePrimitiveArray(value, inc, size);
                 			this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
                 			return;
                 		}
+                		objArray = (Object[])value;
                 		//Only exceptions to the cast rule is if the elements are String or VirtualPointer
                 		if(value instanceof String[] || value instanceof VirtualPointer[])
                 		{
@@ -648,9 +653,14 @@ public class VirtualPointer
             {
             	if(array)
             	{
-            		try
+            		if(Utility.isPrimitive(value, true))
             		{
-            			objArray = (Object[])value; //If value is an array of Objects then this should work, else it will throw a cast exception because they are primitives
+            			//If it got this far then a serializer exists, continue processing
+            			len = -1;
+            		}
+            		else
+            		{
+            			objArray = (Object[])value;
             			len = objArray.length;
                 		//Make sure there are no null elements because there is no serialized value for null
                 		for(int i = 0; i < len; i++)
@@ -661,11 +671,6 @@ public class VirtualPointer
                 				return; //Can't handle null elements
                 			}
                 		}
-            		}
-            		catch(ClassCastException c)
-            		{
-            			//If it got this far then a serializer exists, continue processing
-            			len = -1;
             		}
             	}
             	else
@@ -1421,49 +1426,40 @@ public class VirtualPointer
 	    }
 	    //An inefficient process using functions already defined
 	    VirtualPointer.TypeProcessor proc = this.getProcessor();
-	    try
-	    {
-	    	//Write the object and tell it to move the pointer
-	    	proc.write(obj, true, ser);
-	    	switch(proc.stat)
-	    	{
-		    	case VirtualPointer.Serializer.STATUS_SUCCESS:
-		    		break;
-		    	case VirtualPointer.Serializer.STATUS_NEED_MORE_DATA:
-		    		//Since it needs more data then I expect that it knows how much data is needed, so it has a serializer
-		    		if(ser == null)
-		    		{
-		    			Class clazz = obj.getClass();
-		    			if(clazz.isArray())
-		    			{
-		    				clazz = ((Object[])obj)[0].getClass();
-		    			}
-		    			ser = VirtualPointer.getSerializer(clazz);
-		    		}
-		    		this.data = null;
-			    	this.resize(ser.getSerializedSize(obj));
-			    	proc.write(obj, true, ser);
-		    		if(proc.stat != VirtualPointer.Serializer.STATUS_SUCCESS)
-		    		{
-		    			//A. O.
-			    		throw new Exception();
-		    		}
-		    		break;
-	    		default:
-	    			//A. O.
-		    		throw new Exception();
-	    	}
-	    	//Now we have the position (AKA the length required to write the object), resize the pointer
-	    	if(this.data.length == 0)
-	    	{
-		    	this.data = null;
-		    	this.resize(this.dataPos);
-	    	}
-	    }
-	    catch(Exception e)
-	    {
-	    	throw new UnsupportedOperationException(Utility.LCMS_Resources.getString(LCMSResource.VP_NO_SERIALIZER));
-	    }
+	    //Write the object and tell it to move the pointer
+    	proc.write(obj, true, ser);
+    	switch(proc.stat)
+    	{
+	    	case VirtualPointer.Serializer.STATUS_SUCCESS:
+	    		break;
+	    	case VirtualPointer.Serializer.STATUS_NEED_MORE_DATA:
+	    		//Since it needs more data then I expect that it knows how much data is needed, so it has a serializer
+	    		if(ser == null)
+	    		{
+	    			Class clazz = obj.getClass();
+	    			if(clazz.isArray())
+	    			{
+	    				clazz = ((Object[])obj)[0].getClass();
+	    			}
+	    			ser = VirtualPointer.getSerializer(clazz);
+	    		}
+	    		this.data = null;
+		    	this.resize(ser.getSerializedSize(obj));
+		    	proc.write(obj, true, ser);
+	    		if(proc.stat != VirtualPointer.Serializer.STATUS_SUCCESS)
+	    		{
+	    			throw new UnsupportedOperationException(Utility.LCMS_Resources.getString(LCMSResource.VP_NO_SERIALIZER));
+	    		}
+	    		break;
+    		default:
+    			throw new UnsupportedOperationException(Utility.LCMS_Resources.getString(LCMSResource.VP_NO_SERIALIZER));
+    	}
+    	//Now we have the position (AKA the length required to write the object), resize the pointer
+    	if(this.data.length == 0)
+    	{
+	    	this.data = null;
+	    	this.resize(this.dataPos);
+    	}
 	    //Now write out the actual object
 	    if(this.dataPos == 0)
 	    {
@@ -1523,33 +1519,26 @@ public class VirtualPointer
             return this;
         }
         //Equivalent of "realloc(ptr, 'size > 0')"
-        try
+        byte[] ndata = new byte[newsize];
+        synchronized (data)
         {
-            byte[] ndata = new byte[newsize];
-            synchronized (data)
-            {
-                System.arraycopy(data, 0, ndata, 0, Math.min(newsize, data.length));
-            }
-            data = ndata;
+            System.arraycopy(data, 0, ndata, 0, Math.min(newsize, data.length));
+        }
+        data = ndata;
 //#ifdef DEBUG
-            int[] nlen = new int[newsize];
-            synchronized (len)
-            {
-            	System.arraycopy(len, 0, nlen, 0, Math.min(newsize, len.length));
-            }
-            len = nlen;
-            byte[] ntypes = new byte[newsize];
-            synchronized (types)
-            {
-            	System.arraycopy(types, 0, ntypes, 0, Math.min(newsize, types.length));
-            }
-            types = ntypes;
-//#endif
-        }
-        catch(Exception e)
+        int[] nlen = new int[newsize];
+        synchronized (len)
         {
-            return null;
+        	System.arraycopy(len, 0, nlen, 0, Math.min(newsize, len.length));
         }
+        len = nlen;
+        byte[] ntypes = new byte[newsize];
+        synchronized (types)
+        {
+        	System.arraycopy(types, 0, ntypes, 0, Math.min(newsize, types.length));
+        }
+        types = ntypes;
+//#endif
         if (children != null)
         {
             synchronized (children)
@@ -1929,12 +1918,20 @@ public class VirtualPointer
     
     public void setPosition(int pos)
     {
+    	if(pos < 0)
+    	{
+    		pos = Integer.MAX_VALUE + pos;
+    	}
         dataPos = pos;
     }
     
     public void movePosition(int offset)
     {
     	dataPos += offset;
+    	if(dataPos < 0)
+    	{
+    		dataPos = Integer.MAX_VALUE + dataPos;
+    	}
     }
     
     int getAllocLen()

@@ -292,7 +292,7 @@ public abstract class Stream
 //#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
 					inSeek.setPosition(inSeek.getPosition() + count);
 //#else
-					in.read(new byte[count]);
+					in.read(new byte[count], 0, count);
 //#endif
 				}
 				written = count;
@@ -342,33 +342,25 @@ public abstract class Stream
 					outSeek.setPosition(absPos);
 				}
 //#else
-				if(getPosition() < absPos)
+				if(in != null)
 				{
-					if(in != null)
+					long cpos = getPosition();
+					if(cpos < absPos)
+					{
+						in.read(new byte[(int)(absPos - cpos)], 0, (int)(absPos - cpos));
+					}
+					else
 					{
 						in.close();
 						in = file.openInputStream();
-						in.read(new byte[(int)absPos]);
-					}
-					if(out != null)
-					{
-						out.flush();
-						out.close();
-						out = file.openOutputStream(absPos);
+						in.read(new byte[(int)absPos], 0, (int)absPos);
 					}
 				}
-				else
+				if(out != null)
 				{
-					if(in != null)
-					{
-						in.read(new byte[(int)(absPos - pos)]);
-					}
-					if(out != null)
-					{
-						out.flush();
-						out.close();
-						out = file.openOutputStream(absPos);
-					}
+					out.flush();
+					out.close();
+					out = file.openOutputStream(absPos);
 				}
 				pos = absPos;
 //#endif

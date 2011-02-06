@@ -153,6 +153,238 @@ public final class Serializers
 					return true;
 				}
 			}, StringBuffer.class);
+			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, Byte.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					vp.getProcessor().write(((Byte)val).byteValue(), true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return null;
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new Byte[size];
+				}
+				
+				public int getItemSize()
+				{
+					return 1;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					val[index] = new Byte(vp.getProcessor().readInt8(true));
+					return true;
+				}
+			}, Byte.class);
+			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, Short.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					vp.getProcessor().write(((Short)val).shortValue(), true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return null;
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new Short[size];
+				}
+				
+				public int getItemSize()
+				{
+					return 2;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					val[index] = new Short(vp.getProcessor().readInt16(true));
+					return true;
+				}
+			}, Short.class);
+			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, Character.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					vp.getProcessor().write(((Character)val).charValue(), true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return null;
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new Character[size];
+				}
+				
+				public int getItemSize()
+				{
+					return 2;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					val[index] = new Character(vp.getProcessor().readChar(true));
+					return true;
+				}
+			}, Character.class);
+			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, Integer.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					vp.getProcessor().write(((Integer)val).intValue(), true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return null;
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new Integer[size];
+				}
+				
+				public int getItemSize()
+				{
+					return 4;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					val[index] = new Integer(vp.getProcessor().readInt32(true));
+					return true;
+				}
+			}, Integer.class);
+			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, Long.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					vp.getProcessor().write(((Long)val).longValue(), true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return null;
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new Long[size];
+				}
+				
+				public int getItemSize()
+				{
+					return 8;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					val[index] = new Long(vp.getProcessor().readInt64(true));
+					return true;
+				}
+			}, Long.class);
+			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, Float.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					vp.getProcessor().write(((Float)val).floatValue(), true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return null;
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new Float[size];
+				}
+				
+				public int getItemSize()
+				{
+					return 4;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					val[index] = new Float(vp.getProcessor().readFloat(true));
+					return true;
+				}
+			}, Float.class);
+			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, Double.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					vp.getProcessor().write(((Double)val).doubleValue(), true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return null;
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new Double[size];
+				}
+				
+				public int getItemSize()
+				{
+					return 8;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					val[index] = new Double(vp.getProcessor().readDouble(true));
+					return true;
+				}
+			}, Double.class);
+			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, Boolean.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					vp.getProcessor().write(((Boolean)val).booleanValue(), true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return null;
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new Boolean[size];
+				}
+				
+				public int getItemSize()
+				{
+					return 1;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					val[index] = new Boolean(vp.getProcessor().readBool(true));
+					return true;
+				}
+			}, Boolean.class);
 			
 			//LCMS
 			VirtualPointer.setSerializer(new EvenSimplierSerializer(false, cmsio0.FILENULL.class)
@@ -1268,7 +1500,7 @@ public final class Serializers
 				}
 				else
 				{
-					vals = (cmsDateTimeNumber[])val[2];
+					vals = (Object[])val[2];
 					elementCount = Math.min(elementCount, vals.length);
 				}
 				for(int i = 0; i < elementCount; i++)

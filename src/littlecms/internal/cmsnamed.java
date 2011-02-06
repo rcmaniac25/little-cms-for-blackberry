@@ -488,9 +488,10 @@ final class cmsnamed
         	len[0] = v.Len;
         }
         
+        int pos = mlu.MemPool.getPosition();
         mlu.MemPool.movePosition(v.StrW);
         String tempResult = mlu.MemPool.getProcessor().readString(false, true); // Found exact match
-        mlu.MemPool.setPosition(0);
+        mlu.MemPool.setPosition(pos);
         return tempResult;
 	}
 	
@@ -594,7 +595,7 @@ final class cmsnamed
 	    	StrLen[0] = BufferSize - /*sizeof(wchar_t)*/2;
 	    }
 	    
-	    Buffer.append(Wide);
+	    Utility.strncpy(Buffer, Wide, StrLen[0] / /*sizeof(wchar_t)*/2);
 		Buffer.setCharAt(StrLen[0] / /*sizeof(wchar_t)*/2, '\0');
 		
 	    return StrLen[0] + /*sizeof(wchar_t)*/2;
@@ -671,11 +672,13 @@ final class cmsnamed
 	public static cmsNAMEDCOLORLIST cmsAllocNamedColorList(cmsContext ContextID, int n, int ColorantCount, final String Prefix, final String Suffix)
 	{
 	    cmsNAMEDCOLORLIST v = new cmsNAMEDCOLORLIST();
-	   
+	    
+	    /*
 	    if (v == null)
 	    {
 	    	return null;
 	    }
+	    */
 	    
 	    v.List      = null;
 	    v.nColors   = 0;

@@ -27,12 +27,8 @@
 //
 package littlecms.internal;
 
-import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
-
-import javax.microedition.io.Connector;
-import javax.microedition.io.file.FileConnection;
 
 import littlecms.internal.helper.Stream;
 import littlecms.internal.helper.Utility;
@@ -1677,7 +1673,7 @@ final class cmsio0
 		
 		// We need to read it. Get the offset and size to the file
 	    Offset    = Icc.TagOffsets[n];
-	    TagSize   = Icc.TagSizes[n]; 
+	    TagSize   = Icc.TagSizes[n];
 	    
 	    // Seek to its location
 	    if (!io.Seek.run(io, Offset))

@@ -463,7 +463,7 @@ final class cmscnvrt
 		    	return null;
 		    }
 		    
-		    CurrentColorSpace = cmsio0.cmsGetColorSpace(hProfiles[0]);    
+		    CurrentColorSpace = cmsio0.cmsGetColorSpace(hProfiles[0]);
 		    
 		    for (i=0; i < nProfiles; i++)
 		    {
@@ -608,10 +608,10 @@ final class cmscnvrt
 		        
 		        // Concatenate to the output LUT
 		        cmslut.cmsPipelineCat(Result, Lut);
-		        cmslut.cmsPipelineFree(Lut);                            
+		        cmslut.cmsPipelineFree(Lut);
 		        
 		        // Update current space
-		        CurrentColorSpace = ColorSpaceOut;              
+		        CurrentColorSpace = ColorSpaceOut;
 		    }
 		    
 		    return Result;
@@ -846,7 +846,7 @@ final class cmscnvrt
 		    // Convert from 16 bits to floating point
 		    for (i=0; i < 4; i++)
 		    {
-		    	Inf[i] = (In[i] / 65535f);
+		    	Inf[i] = ((In[i] & 0xFFFF) / 65535f);
 		    }
 		    
 		    // Get the K across Tone curve

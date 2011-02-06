@@ -40,7 +40,6 @@ import littlecms.internal.lcms2_internal._cmsPipelineEvalFloatFn;
 import littlecms.internal.lcms2_internal._cmsStageCLutData;
 import littlecms.internal.lcms2_internal._cmsStageMatrixData;
 import littlecms.internal.lcms2_internal._cmsStageToneCurvesData;
-import littlecms.internal.lcms2_internal._cmsStage_struct;
 import littlecms.internal.lcms2_plugin._cmsOPTdupDataFn;
 import littlecms.internal.lcms2_plugin._cmsOPTeval16Fn;
 import littlecms.internal.lcms2_plugin._cmsOPTfreeDataFn;
@@ -96,7 +95,7 @@ final class cmslut
 	    
 	    for (i=0; i < n; i++)
 	    {     
-	        Out[i] = lcms2_internal._cmsQuickSaturateWord(In[i] * 65535.0);        
+	        Out[i] = lcms2_internal._cmsQuickSaturateWord(In[i] * 65535.0);
 	    }
 	}
 	
@@ -107,7 +106,7 @@ final class cmslut
 	    
 	    for (i=0; i < n; i++)
 	    {
-	        Out[i] = In[i] * (1F / 65535.0F);
+	        Out[i] = (In[i] & 0xFFFF) * (1F / 65535.0F);
 	    }
 	}
 	
@@ -565,11 +564,12 @@ final class cmslut
 		if (Table != null)
 		{
 			VirtualPointer.TypeProcessor proc = NewElem.Tab.getProcessor();
+			int pos = NewElem.Tab.getPosition();
 			for (i=0; i < n; i++)
 			{
 				proc.write(Table[i], true);
 			}
-			NewElem.Tab.setPosition(0);
+			NewElem.Tab.setPosition(pos);
 		}
 		
 		NewElem.Params = cmsintrp._cmsComputeInterpParamsEx(ContextID, clutPoints, inputChan, outputChan, NewElem.Tab, lcms2_plugin.CMS_LERP_FLAGS_16BITS);
@@ -640,11 +640,12 @@ final class cmslut
 		if (Table != null)
 		{
 			VirtualPointer.TypeProcessor proc = NewElem.Tab.getProcessor();
+			int pos = NewElem.Tab.getPosition();
 			for (i=0; i < n; i++)
 			{
 				proc.write(Table[i], true);
 			}
-			NewElem.Tab.setPosition(0);
+			NewElem.Tab.setPosition(pos);
 		}
 		
 		NewElem.Params = cmsintrp._cmsComputeInterpParamsEx(ContextID, clutPoints, inputChan, outputChan, NewElem.Tab, lcms2_plugin.CMS_LERP_FLAGS_FLOAT);
@@ -746,20 +747,21 @@ final class cmslut
 	            
 	            rest /= nSamples[t];
 	            
-	            In[t] = _cmsQuantizeVal(Colorant, nSamples[t]);                         
+	            In[t] = _cmsQuantizeVal(Colorant, nSamples[t]);
 	        }
 	        
 	        if (clut.Tab != null)
 	        {
 	        	VirtualPointer.TypeProcessor proc = clut.Tab.getProcessor();
+	        	int pos = clut.Tab.getPosition();
 	            for (t=0; t < nOutputs; t++)
 	            {
-	            	clut.Tab.setPosition((index + t) * 2);
+	            	clut.Tab.setPosition(pos + ((index + t) * 2));
 	            	Out[t] = proc.readInt16();
 	            }
-	            clut.Tab.setPosition(0);
+	            clut.Tab.setPosition(pos);
 	        }
-
+	        
 	        if (Sampler.run(In, Out, Cargo) == 0)
 	        {
 	        	return false;
@@ -770,12 +772,13 @@ final class cmslut
 	            if (clut.Tab != null)
 	            {
 	            	VirtualPointer.TypeProcessor proc = clut.Tab.getProcessor();
+	            	int pos = clut.Tab.getPosition();
 	                for (t=0; t < nOutputs; t++)
 	                {
-	                	clut.Tab.setPosition((index + t) * 2);
+	                	clut.Tab.setPosition(pos + ((index + t) * 2));
 	                	proc.write(Out[t]);
 	                }
-	                clut.Tab.setPosition(0);
+	                clut.Tab.setPosition(pos);
 	            }
 	        }
 
@@ -825,12 +828,13 @@ final class cmslut
 	        if (clut.Tab != null)
 	        {
 	        	VirtualPointer.TypeProcessor proc = clut.Tab.getProcessor();
+	        	int pos = clut.Tab.getPosition();
 	            for (t=0; t < nOutputs; t++)
 	            {
-	            	clut.Tab.setPosition((index + t) * 4);
+	            	clut.Tab.setPosition(pos + ((index + t) * 4));
 	            	Out[t] = proc.readFloat();
 	            }
-	            clut.Tab.setPosition(0);
+	            clut.Tab.setPosition(pos);
 	        }
 
 	        if (Sampler.run(In, Out, Cargo) == 0)
@@ -843,12 +847,13 @@ final class cmslut
 	            if (clut.Tab != null)
 	            {
 	            	VirtualPointer.TypeProcessor proc = clut.Tab.getProcessor();
+	            	int pos = clut.Tab.getPosition();
 	                for (t=0; t < nOutputs; t++)
 	                {
-	                	clut.Tab.setPosition((index + t) * 4);
+	                	clut.Tab.setPosition(pos + ((index + t) * 4));
 	                	proc.write(Out[t]);
 	                }
-	                clut.Tab.setPosition(0);
+	                clut.Tab.setPosition(pos);
 	            }
 	        }
 

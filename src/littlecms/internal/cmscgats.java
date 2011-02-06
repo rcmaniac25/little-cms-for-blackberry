@@ -1570,7 +1570,7 @@ final class cmscgats
         	str = " ";
         }
         
-        // Lenghth to write
+        // Length to write
         len = Utility.strlen(str);
         f.Used += len;
         

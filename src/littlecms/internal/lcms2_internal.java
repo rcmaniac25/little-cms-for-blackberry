@@ -147,13 +147,13 @@ final class lcms2_internal extends lcms2_plugin
 	    final double _lcms_double2fixmagic = 68719476736.0 * 1.5;  // 2^36 * 1.5, (52-16=36) uses limited precision to floor
 	    
 	    //Java is always little endian with regards to storing and handling bytes (I/O being the exception)
-	    return (int)((Double.doubleToLongBits(val + _lcms_double2fixmagic) & 0xFFFFFFFFL) >> 16);
+	    return ((int)(Double.doubleToLongBits(val + _lcms_double2fixmagic) & 0xFFFFFFFFL)) >> 16;
 //#endif
 	}
 	
 	// Fast floor restricted to 0..65535.0
 	public static short _cmsQuickFloorWord(double d) 
-	{ 
+	{
 	    return (short)(_cmsQuickFloor(d - 32767.0) + 32767); 
 	}
 	

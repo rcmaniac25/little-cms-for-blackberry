@@ -1176,14 +1176,11 @@ final class PrintUtility
                     }
                 }
             }
-            else
+            if (str.length() < width)
             {
-                if (str.length() < width)
-                {
-                	char[] chars = new char[width - str.length()];
-                	Arrays.fill(chars, ' ');
-                    str = new String(chars) + str;
-                }
+            	char[] chars = new char[width - str.length()];
+            	Arrays.fill(chars, ' ');
+                str = new String(chars) + str;
             }
             return str;
         }

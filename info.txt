@@ -12,28 +12,67 @@ Testing (LCMS 2.0):
 --ProfileSequenceDesc
 --Text_Description
 --ProfileSequenceId
+--Text
 
---LUTA2B-todo (read: ReadCLUT, ReadMatrix)(write: ReadCLUT, ReadMatrix)
+--Curve-todo (read-"Gamma curve")(write-"Gamma curve")
+--LUT16-todo (read: pre/post mpe)(write: pre/post mpe)
+--LUTA2B-todo (read: ReadMatrix)(write: ReadMatrix)
+--LUTB2A-todo (read: ReadMatrix)(write: ReadMatrix)
 --vcgt-todo
---Curve-todo
 --ViewingConditions-todo
 --Screening-todo
 --MPE-todo
 --CrdInfo-todo
 --UcrBg-todo
---LUTB2A-todo
 --Data-todo
 --Measurement-todo
 --Signature-todo
 --NamedColor-todo
 --ColorantTable-todo
---LUT16-todo
 --LUT8-todo
 --DateTime-todo
---Text-todo
 --U16Fixed16-todo
 --ColorantOrderType-todo
 -]
+Do cleanup operation for endian (see notes)[do this by checking every call to a read/write function in cmsplugin that has a endian argument]
+-Go through the following functions and make sure they don't need to be in 'C' format; they can be but don't need to):
+--cmsMLUsetASCII
+--cmsMLUsetWide
+--cmsMLUgetASCII
+--cmsMLUgetWide
+--cmsMLUgetTranslation
+--cmsAllocNamedColorList
+--cmsAppendNamedColor
+--cmsNamedColorIndex
+--cmsNamedColorInfo
+--cmsGetProfileInfo
+--cmsGetProfileInfoASCII
+--cmsOpenIOhandlerFromFile
+--cmsOpenProfileFromFileTHR
+--cmsGetSupportedIntents
+--cmsIT8LoadFromFile
+--cmsIT8SaveToFile
+--cmsIT8GetSheetType
+--cmsIT8SetSheetType
+--cmsIT8SetComment
+--cmsIT8SetPropertyStr
+--cmsIT8SetPropertyDbl
+--cmsIT8SetPropertyHex
+--cmsIT8SetPropertyUncooked
+--cmsIT8GetProperty
+--cmsIT8GetPropertyDbl
+--cmsIT8EnumProperties
+--cmsIT8GetDataRowCol
+--cmsIT8SetDataRowCol
+--cmsIT8GetData
+--cmsIT8GetDataDbl
+--cmsIT8SetData
+--cmsIT8SetDataDbl
+--cmsIT8FindDataFormat
+--cmsIT8SetDataFormat
+--cmsIT8GetPatchName
+--cmsIT8SetTableByLabel
+--cmsIT8DefineDblFormat
 Get full JavaDoc to be created for lcms
 Release Version 2.0
 
@@ -44,7 +83,6 @@ Release version 2.1
 Update LCMS 4 BB to the same level as the GIT build
 If Test system has been updated then do testing
 
-Update Serializers so that they support arrays
 Update PrintUtility FloatFormat so that it properly processes the values with exponent. Example: Double.MIN_VALUE is a subnormal number. The default manner of execution would consider the value to be zero since the number is so small. Make it so that it will scale the value for exponent.
 Update printf and scanf to follow: http://pubs.opengroup.org/onlinepubs/009695399/functions/printf.html, and http://pubs.opengroup.org/onlinepubs/009695399/functions/scanf.html (dedicated functions for printing 'e' and 'a', etc.)
 Try to figure out at least the two todo in VirtualPointer
@@ -80,6 +118,7 @@ CMS_J2ME //J2ME only version of LCMS. No BlackBerry needed.
 
 Implementation Notes:
 cmsSigChromaticAdaptationTag returns a double[], not a cmsMAT3 as what might be expected.
+RRT Signing is required.
 
 Small history on PrintUtility:
 Done Jan. 1, 2011 at 1:55AM over Steam:

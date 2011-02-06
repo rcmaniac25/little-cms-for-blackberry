@@ -621,10 +621,10 @@ final class cmsps2
 		    
 		    if (sc.FixWhite)
 		    {
-		        if (In[0] == 0xFFFF) // Only in L* = 100, ab = [-8..8]
+		        if (In[0] == (short)0xFFFF) // Only in L* = 100, ab = [-8..8]
 		        {
-		            if ((In[1] >= 0x7800 && In[1] <= 0x8800) &&
-		                (In[2] >= 0x7800 && In[2] <= 0x8800))
+		            if (((In[1] & 0xFFFF) >= 0x7800 && (In[1] & 0xFFFF) <= 0x8800) &&
+		                ((In[2] & 0xFFFF) >= 0x7800 && (In[2] & 0xFFFF) <= 0x8800))
 		            {
 		                short[] Black;
 		                short[] White;
@@ -652,7 +652,7 @@ final class cmsps2
 		    
 		    // Hadle the parenthesis on rows
 		    
-		    if (In[0] != sc.FirstComponent)
+		    if ((In[0] & 0xFFFF) != sc.FirstComponent)
 		    {
 		    	if (sc.FirstComponent != -1)
 		    	{
@@ -665,10 +665,10 @@ final class cmsps2
 		    	_cmsPSActualColumn[0] = 0;
 		    	
 		    	cmsplugin._cmsIOPrintf(sc.m, sc.PreMaj, null);
-		    	sc.FirstComponent = In[0];
+		    	sc.FirstComponent = (In[0] & 0xFFFF);
 		    }
 		    
-		    if (In[1] != sc.SecondComponent)
+		    if ((In[1] & 0xFFFF) != sc.SecondComponent)
 		    {
 		    	if (sc.SecondComponent != -1)
 		    	{
@@ -676,7 +676,7 @@ final class cmsps2
 	    		}
 		    	
 		    	cmsplugin._cmsIOPrintf(sc.m, sc.PreMin, null);
-		    	sc.SecondComponent = In[1];
+		    	sc.SecondComponent = (In[1] & 0xFFFF);
 		    }
 		    
 		    // Dump table.

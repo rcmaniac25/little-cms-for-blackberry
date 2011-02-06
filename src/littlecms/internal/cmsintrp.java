@@ -29,6 +29,7 @@ package littlecms.internal;
 
 import net.rim.device.api.util.Arrays;
 import littlecms.internal.helper.Utility;
+import littlecms.internal.helper.VirtualPointer;
 import littlecms.internal.lcms2.cmsContext;
 import littlecms.internal.lcms2_plugin._cmsInterpFn16;
 import littlecms.internal.lcms2_plugin._cmsInterpFnFloat;
@@ -107,8 +108,8 @@ final class cmsintrp
 	    p.dwFlags  = dwFlags;
 	    p.nInputs  = InputChan;
 	    p.nOutputs = OutputChan;
-	    p.Table     = Table;
-	    p.ContextID  = ContextID;
+	    p.Table    = Table;
+	    p.ContextID= ContextID;
 	    
 	    // Fill samples per input direction and domain (which is number of nodes minus one)
 	    for (i=0; i < InputChan; i++)
@@ -122,6 +123,7 @@ final class cmsintrp
 	    for (i=1; i < InputChan; i++)
 	    {
 	    	p.opta[i] = p.opta[i-1] * nSamples[InputChan-i];
+	    	//XXX If these values overflow and become negative it will screw up the rest of the processing. Workaround: unknown
 	    }
 	    
 	    if (!_cmsSetInterpolationRoutine(p))
@@ -169,7 +171,7 @@ final class cmsintrp
 	private static short LinearInterp(int a, int l, int h)
 	{
 	    int dif = (int)(h - l) * a + 0x8000;
-	    dif = (dif >> 16) + l;        
+	    dif = (dif >> 16) + l;
 	    return (short)(dif);
 	}
 	
@@ -178,28 +180,33 @@ final class cmsintrp
 	{
 		public void run(short[] Value, short[] Output, cmsInterpParams p)
 		{
-			short y1, y0; 
+			short y1, y0;
 		    int cell0, rest;
 		    int val3;
-		    final short[] LutTable = (short[])p.Table;
+		    final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p.Table).getProcessor();
+		    final int pos = LutTable.getPosition();
 		    
-		    // if last value... 
+		    // if last value...
 		    if ((Value[0] & 0xFFFF) == 0xffff)
 		    {
-		        Output[0] = LutTable[p.Domain[0]];
+		    	LutTable.setPosition(pos + (p.Domain[0] * 2));
+		    	Output[0] = LutTable.readInt16();
+		    	LutTable.setPosition(pos);
 		        return;
 		    }
 		    
-		    val3 = p.Domain[0] * Value[0];
+		    val3 = p.Domain[0] * (Value[0] & 0xFFFF);
 		    val3 = lcms2_internal._cmsToFixedDomain(val3);	// To fixed 15.16
 		    
 		    cell0 = lcms2_internal.FIXED_TO_INT(val3);		// Cell is 16 MSB bits
 		    rest  = lcms2_internal.FIXED_REST_TO_INT(val3);	// Rest is 16 LSB bits
 		    
-		    y0 = LutTable[cell0];
-		    y1 = LutTable[cell0+1];
+		    LutTable.setPosition(pos + (cell0 * 2));
+		    y0 = LutTable.readInt16(true);
+		    y1 = LutTable.readInt16();
+		    LutTable.setPosition(pos);
 		    
-		    Output[0] = LinearInterp(rest, y0, y1);
+		    Output[0] = LinearInterp(rest, y0 & 0xFFFF, y1 & 0xFFFF);
 		}
 	};
 	
@@ -211,12 +218,15 @@ final class cmsintrp
 			float y1, y0;
 			float val2, rest;
 			int cell0, cell1;
-			final float[] LutTable = (float[])p.Table;
+			final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p.Table).getProcessor();
+		    final int pos = LutTable.getPosition();
 			
 			// if last value...
 			if (Value[0] == 1.0)
 			{
-				Output[0] = LutTable[p.Domain[0]];
+				LutTable.setPosition(pos + (p.Domain[0] * 4));
+		    	Output[0] = LutTable.readFloat();
+		    	LutTable.setPosition(pos);
 				return;
 			}
 			
@@ -228,8 +238,11 @@ final class cmsintrp
 			// Rest is 16 LSB bits
 			rest = val2 - cell0;
 			
-			y0 = LutTable[cell0];
-			y1 = LutTable[cell1];
+			LutTable.setPosition(pos + (cell0 * 4));
+			y0 = LutTable.readFloat();
+			LutTable.setPosition(pos + (cell1 * 4));
+			y1 = LutTable.readFloat();
+			LutTable.setPosition(pos);
 			
 			Output[0] = y0 + (y1 - y0) * rest;
 		}
@@ -244,13 +257,14 @@ final class cmsintrp
 			int k0, k1, rk, K0, K1;
 			int v;
 			int OutChan;
-			final short[] LutTable = (short[])p16.Table;
+			final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p16.Table).getProcessor();
+		    final int pos = LutTable.getPosition();
 			
-			v = Input[0] * p16.Domain[0];
+			v = (Input[0] & 0xFFFF) * p16.Domain[0];
 			fk = lcms2_internal._cmsToFixedDomain(v);
 			
 			k0 = lcms2_internal.FIXED_TO_INT(fk);
-			rk = (short)lcms2_internal.FIXED_REST_TO_INT(fk);
+			rk = lcms2_internal.FIXED_REST_TO_INT(fk);
 			
 			k1 = k0 + ((Input[0] & 0xFFFF) != 0xFFFF ? 1 : 0);
 			
@@ -259,8 +273,12 @@ final class cmsintrp
 			
 			for (OutChan=0; OutChan < p16.nOutputs; OutChan++)
 			{
-				Output[OutChan] = LinearInterp(rk, LutTable[K0+OutChan], LutTable[K1+OutChan]);
+				LutTable.setPosition(pos + ((K0+OutChan) * 2));
+				short s1 = LutTable.readInt16();
+				LutTable.setPosition(pos + ((K1+OutChan) * 2));
+				Output[OutChan] = LinearInterp(rk, s1, LutTable.readInt16());
 			}
+			LutTable.setPosition(pos);
 		}
 	};
 	
@@ -273,12 +291,15 @@ final class cmsintrp
 			float val2, rest;
 		    int cell0, cell1;
 		    int OutChan;
-		    final float[] LutTable = (float[])p.Table;
+		    final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p.Table).getProcessor();
+		    final int pos = LutTable.getPosition();
 		    
 		    // if last value...
 		    if (Value[0] == 1.0)
 		    {
-		    	Output[0] = LutTable[p.Domain[0]];
+		    	LutTable.setPosition(pos + (p.Domain[0] * 4));
+		    	Output[0] = LutTable.readFloat();
+		    	LutTable.setPosition(pos);
 		    	return;
 		    }
 		    
@@ -295,25 +316,26 @@ final class cmsintrp
 		    
 		    for (OutChan=0; OutChan < p.nOutputs; OutChan++)
 		    {
-		    	y0 = LutTable[cell0 + OutChan];
-		    	y1 = LutTable[cell1 + OutChan];
+		    	LutTable.setPosition(pos + ((cell0 + OutChan) * 4));
+		    	y0 = LutTable.readFloat();
+		    	LutTable.setPosition(pos + ((cell1 + OutChan) * 4));
+		    	y1 = LutTable.readFloat();
 		    	
 		    	Output[OutChan] = y0 + (y1 - y0) * rest;
 		    }
+		    LutTable.setPosition(pos);
 		}
 	};
 	
-	private static float DENS(int i,int j,int k,float[] LutTable,int OutChan)
+	private static float DENSF(int i,int j,int k,VirtualPointer.TypeProcessor LutTable,int pos,int OutChan)
 	{
-		return (LutTable[(i)+(j)+(k)+OutChan]);
+		LutTable.setPosition(pos + (((i)+(j)+(k)+OutChan) * 4));
+		return LutTable.readFloat();
 	}
-	private static int DENS(int i,int j,int k,short[] LutTable,int OutChan)
+	private static int DENSS(int i,int j,int k,VirtualPointer.TypeProcessor LutTable,int pos,int OutChan)
 	{
-		return DENS(i,j,k,LutTable,0,OutChan);
-	}
-	private static int DENS(int i,int j,int k,short[] LutTable,int tableOffset,int OutChan)
-	{
-		return (LutTable[(i)+(j)+(k)+OutChan]);
+		LutTable.setPosition(pos + (((i)+(j)+(k)+OutChan) * 2));
+		return LutTable.readInt16() & 0xFFFF;
 	}
 	
 	// Trilinear interpolation (16 bits) - float version
@@ -326,7 +348,8 @@ final class cmsintrp
 		
 		public void run(float[] Input, float[] Output, cmsInterpParams p)
 		{
-			final float[] LutTable = (float[])p.Table; 
+			final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p.Table).getProcessor();
+		    final int pos = LutTable.getPosition();
 		    float      px, py, pz;
 		    int        x0, y0, z0,
 		               X0, Y0, Z0, X1, Y1, Z1;
@@ -358,15 +381,15 @@ final class cmsintrp
 		    
 		    for (OutChan = 0; OutChan < TotalOut; OutChan++)
 		    {
-		        d000 = DENS(X0, Y0, Z0, LutTable, OutChan);
-		        d001 = DENS(X0, Y0, Z1, LutTable, OutChan);
-		        d010 = DENS(X0, Y1, Z0, LutTable, OutChan);
-		        d011 = DENS(X0, Y1, Z1, LutTable, OutChan);
+		        d000 = DENSF(X0, Y0, Z0, LutTable, pos, OutChan);
+		        d001 = DENSF(X0, Y0, Z1, LutTable, pos, OutChan);
+		        d010 = DENSF(X0, Y1, Z0, LutTable, pos, OutChan);
+		        d011 = DENSF(X0, Y1, Z1, LutTable, pos, OutChan);
 		        
-		        d100 = DENS(X1, Y0, Z0, LutTable, OutChan);
-		        d101 = DENS(X1, Y0, Z1, LutTable, OutChan);
-		        d110 = DENS(X1, Y1, Z0, LutTable, OutChan);
-		        d111 = DENS(X1, Y1, Z1, LutTable, OutChan);
+		        d100 = DENSF(X1, Y0, Z0, LutTable, pos, OutChan);
+		        d101 = DENSF(X1, Y0, Z1, LutTable, pos, OutChan);
+		        d110 = DENSF(X1, Y1, Z0, LutTable, pos, OutChan);
+		        d111 = DENSF(X1, Y1, Z1, LutTable, pos, OutChan);
 		        
 		        dx00 = LERP(fx, d000, d100);
 		        dx01 = LERP(fx, d001, d101);
@@ -380,6 +403,7 @@ final class cmsintrp
 		        
 		        Output[OutChan] = dxyz;
 		    }
+		    LutTable.setPosition(pos);
 		}
 	};
 	
@@ -393,7 +417,8 @@ final class cmsintrp
 		
 		public void run(short[] Input, short[] Output, cmsInterpParams p)
 		{
-			final short[] LutTable = (short[])p.Table;
+			final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p.Table).getProcessor();
+		    final int pos = LutTable.getPosition();
 			int			OutChan, TotalOut;
 			int			fx, fy, fz;
 			int			rx, ry, rz;
@@ -406,15 +431,15 @@ final class cmsintrp
 			
 			TotalOut   = p.nOutputs;
 			
-			fx = lcms2_internal._cmsToFixedDomain((int)Input[0] * p.Domain[0]);
+			fx = lcms2_internal._cmsToFixedDomain((Input[0] & 0xFFFF) * p.Domain[0]);
 			x0 = lcms2_internal.FIXED_TO_INT(fx);
 			rx = lcms2_internal.FIXED_REST_TO_INT(fx); // Rest in 0..1.0 domain
 			
-			fy = lcms2_internal._cmsToFixedDomain((int)Input[1] * p.Domain[1]);
+			fy = lcms2_internal._cmsToFixedDomain((Input[1] & 0xFFFF) * p.Domain[1]);
 			y0 = lcms2_internal.FIXED_TO_INT(fy);
 			ry = lcms2_internal.FIXED_REST_TO_INT(fy);
 			
-			fz = lcms2_internal._cmsToFixedDomain((int)Input[2] * p.Domain[2]);
+			fz = lcms2_internal._cmsToFixedDomain((Input[2] & 0xFFFF) * p.Domain[2]);
 			z0 = lcms2_internal.FIXED_TO_INT(fz);
 			rz = lcms2_internal.FIXED_REST_TO_INT(fz);
 			
@@ -429,15 +454,15 @@ final class cmsintrp
 			
 			for (OutChan = 0; OutChan < TotalOut; OutChan++)
 			{
-		        d000 = DENS(X0, Y0, Z0, LutTable, OutChan);
-		        d001 = DENS(X0, Y0, Z1, LutTable, OutChan);
-		        d010 = DENS(X0, Y1, Z0, LutTable, OutChan);
-		        d011 = DENS(X0, Y1, Z1, LutTable, OutChan);
+		        d000 = DENSS(X0, Y0, Z0, LutTable, pos, OutChan);
+		        d001 = DENSS(X0, Y0, Z1, LutTable, pos, OutChan);
+		        d010 = DENSS(X0, Y1, Z0, LutTable, pos, OutChan);
+		        d011 = DENSS(X0, Y1, Z1, LutTable, pos, OutChan);
 		        
-		        d100 = DENS(X1, Y0, Z0, LutTable, OutChan);
-		        d101 = DENS(X1, Y0, Z1, LutTable, OutChan);
-		        d110 = DENS(X1, Y1, Z0, LutTable, OutChan);
-		        d111 = DENS(X1, Y1, Z1, LutTable, OutChan);
+		        d100 = DENSS(X1, Y0, Z0, LutTable, pos, OutChan);
+		        d101 = DENSS(X1, Y0, Z1, LutTable, pos, OutChan);
+		        d110 = DENSS(X1, Y1, Z0, LutTable, pos, OutChan);
+		        d111 = DENSS(X1, Y1, Z1, LutTable, pos, OutChan);
 		        
 		        dx00 = LERP(rx, d000, d100);
 		        dx01 = LERP(rx, d001, d101);
@@ -451,6 +476,7 @@ final class cmsintrp
 		        
 		        Output[OutChan] = (short)dxyz;
 			}
+			LutTable.setPosition(pos);
 		}
 	};
 	
@@ -459,7 +485,8 @@ final class cmsintrp
 	{
 		public void run(float[] Input, float[] Output, cmsInterpParams p)
 		{
-			final float[] LutTable = (float[])p.Table; 
+			final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p.Table).getProcessor();
+		    final int pos = LutTable.getPosition();
 		    float      px, py, pz;
 		    int        x0, y0, z0,
 		               X0, Y0, Z0, X1, Y1, Z1;
@@ -490,53 +517,53 @@ final class cmsintrp
 		    {
 		    	// These are the 6 Tetrahedral
 		    	
-		        c0 = DENS(X0, Y0, Z0, LutTable, OutChan);
+		        c0 = DENSF(X0, Y0, Z0, LutTable, pos, OutChan);
 		        
 		        if (rx >= ry && ry >= rz)
 		        {
-		            c1 = DENS(X1, Y0, Z0, LutTable, OutChan) - c0;
-		            c2 = DENS(X1, Y1, Z0, LutTable, OutChan) - DENS(X1, Y0, Z0, LutTable, OutChan);
-		            c3 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y1, Z0, LutTable, OutChan);
+		            c1 = DENSF(X1, Y0, Z0, LutTable, pos, OutChan) - c0;
+		            c2 = DENSF(X1, Y1, Z0, LutTable, pos, OutChan) - DENSF(X1, Y0, Z0, LutTable, pos, OutChan);
+		            c3 = DENSF(X1, Y1, Z1, LutTable, pos, OutChan) - DENSF(X1, Y1, Z0, LutTable, pos, OutChan);
 		        }
 		        else
 		        {
 		            if (rx >= rz && rz >= ry)
 		            {            
-		                c1 = DENS(X1, Y0, Z0, LutTable, OutChan) - c0;
-		                c2 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y0, Z1, LutTable, OutChan);
-		                c3 = DENS(X1, Y0, Z1, LutTable, OutChan) - DENS(X1, Y0, Z0, LutTable, OutChan);
+		                c1 = DENSF(X1, Y0, Z0, LutTable, pos, OutChan) - c0;
+		                c2 = DENSF(X1, Y1, Z1, LutTable, pos, OutChan) - DENSF(X1, Y0, Z1, LutTable, pos, OutChan);
+		                c3 = DENSF(X1, Y0, Z1, LutTable, pos, OutChan) - DENSF(X1, Y0, Z0, LutTable, pos, OutChan);
 		            }
 		            else
 		            {
 		                if (rz >= rx && rx >= ry)
 		                {
-		                    c1 = DENS(X1, Y0, Z1, LutTable, OutChan) - DENS(X0, Y0, Z1, LutTable, OutChan);
-		                    c2 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y0, Z1, LutTable, OutChan);
-		                    c3 = DENS(X0, Y0, Z1, LutTable, OutChan) - c0;
+		                    c1 = DENSF(X1, Y0, Z1, LutTable, pos, OutChan) - DENSF(X0, Y0, Z1, LutTable, pos, OutChan);
+		                    c2 = DENSF(X1, Y1, Z1, LutTable, pos, OutChan) - DENSF(X1, Y0, Z1, LutTable, pos, OutChan);
+		                    c3 = DENSF(X0, Y0, Z1, LutTable, pos, OutChan) - c0;
 		                }
 		                else
 		                {
 		                    if (ry >= rx && rx >= rz)
 		                    {
-		                        c1 = DENS(X1, Y1, Z0, LutTable, OutChan) - DENS(X0, Y1, Z0, LutTable, OutChan);
-		                        c2 = DENS(X0, Y1, Z0, LutTable, OutChan) - c0;
-		                        c3 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y1, Z0, LutTable, OutChan);
+		                        c1 = DENSF(X1, Y1, Z0, LutTable, pos, OutChan) - DENSF(X0, Y1, Z0, LutTable, pos, OutChan);
+		                        c2 = DENSF(X0, Y1, Z0, LutTable, pos, OutChan) - c0;
+		                        c3 = DENSF(X1, Y1, Z1, LutTable, pos, OutChan) - DENSF(X1, Y1, Z0, LutTable, pos, OutChan);
 		                    }
 		                    else
 		                    {
 		                        if (ry >= rz && rz >= rx)
 		                        {
-		                            c1 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X0, Y1, Z1, LutTable, OutChan);
-		                            c2 = DENS(X0, Y1, Z0, LutTable, OutChan) - c0;
-		                            c3 = DENS(X0, Y1, Z1, LutTable, OutChan) - DENS(X0, Y1, Z0, LutTable, OutChan);
+		                            c1 = DENSF(X1, Y1, Z1, LutTable, pos, OutChan) - DENSF(X0, Y1, Z1, LutTable, pos, OutChan);
+		                            c2 = DENSF(X0, Y1, Z0, LutTable, pos, OutChan) - c0;
+		                            c3 = DENSF(X0, Y1, Z1, LutTable, pos, OutChan) - DENSF(X0, Y1, Z0, LutTable, pos, OutChan);
 		                        }
 		                        else
 		                        {
 		                            if (rz >= ry && ry >= rx)
 		                            {             
-		                                c1 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X0, Y1, Z1, LutTable, OutChan);
-		                                c2 = DENS(X0, Y1, Z1, LutTable, OutChan) - DENS(X0, Y0, Z1, LutTable, OutChan);
-		                                c3 = DENS(X0, Y0, Z1, LutTable, OutChan) - c0;
+		                                c1 = DENSF(X1, Y1, Z1, LutTable, pos, OutChan) - DENSF(X0, Y1, Z1, LutTable, pos, OutChan);
+		                                c2 = DENSF(X0, Y1, Z1, LutTable, pos, OutChan) - DENSF(X0, Y0, Z1, LutTable, pos, OutChan);
+		                                c3 = DENSF(X0, Y0, Z1, LutTable, pos, OutChan) - c0;
 		                            }
 		                            else
 		                            {
@@ -550,6 +577,7 @@ final class cmsintrp
 		        
 		        Output[OutChan] = c0 + c1 * rx + c2 * ry + c3 * rz;
 		    }
+		    LutTable.setPosition(pos);
 		}
 	};
 	
@@ -557,7 +585,8 @@ final class cmsintrp
 	{
 		public void run(short[] Input, short[] Output, cmsInterpParams p)
 		{
-			final short[] LutTable = (short[])p.Table;
+			final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p.Table).getProcessor();
+		    final int pos = LutTable.getPosition();
 		    int fx, fy, fz;
 		    int rx, ry, rz;
 		    int x0, y0, z0;
@@ -566,9 +595,9 @@ final class cmsintrp
 		    int X0, X1, Y0, Y1, Z0, Z1;
 		    int TotalOut = p.nOutputs;
 		    
-		    fx  = lcms2_internal._cmsToFixedDomain((int) Input[0] * p.Domain[0]);
-		    fy  = lcms2_internal._cmsToFixedDomain((int) Input[1] * p.Domain[1]);
-		    fz  = lcms2_internal._cmsToFixedDomain((int) Input[2] * p.Domain[2]);
+		    fx  = lcms2_internal._cmsToFixedDomain((Input[0] & 0xFFFF) * p.Domain[0]);
+		    fy  = lcms2_internal._cmsToFixedDomain((Input[1] & 0xFFFF) * p.Domain[1]);
+		    fz  = lcms2_internal._cmsToFixedDomain((Input[2] & 0xFFFF) * p.Domain[2]);
 		    
 		    x0  = lcms2_internal.FIXED_TO_INT(fx);
 		    y0  = lcms2_internal.FIXED_TO_INT(fy); 
@@ -590,53 +619,53 @@ final class cmsintrp
 		    // These are the 6 Tetrahedral
 		    for (OutChan=0; OutChan < TotalOut; OutChan++)
 		    {
-		        c0 = DENS(X0, Y0, Z0, LutTable, OutChan);
+		        c0 = DENSS(X0, Y0, Z0, LutTable, pos, OutChan);
 		        
 		        if (rx >= ry && ry >= rz)
 		        {
-		            c1 = DENS(X1, Y0, Z0, LutTable, OutChan) - c0;
-		            c2 = DENS(X1, Y1, Z0, LutTable, OutChan) - DENS(X1, Y0, Z0, LutTable, OutChan);
-		            c3 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y1, Z0, LutTable, OutChan);
+		            c1 = DENSS(X1, Y0, Z0, LutTable, pos, OutChan) - c0;
+		            c2 = DENSS(X1, Y1, Z0, LutTable, pos, OutChan) - DENSS(X1, Y0, Z0, LutTable, pos, OutChan);
+		            c3 = DENSS(X1, Y1, Z1, LutTable, pos, OutChan) - DENSS(X1, Y1, Z0, LutTable, pos, OutChan);
 		        }
 		        else
 		        {
 		            if (rx >= rz && rz >= ry)
 		            {            
-		                c1 = DENS(X1, Y0, Z0, LutTable, OutChan) - c0;
-		                c2 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y0, Z1, LutTable, OutChan);
-		                c3 = DENS(X1, Y0, Z1, LutTable, OutChan) - DENS(X1, Y0, Z0, LutTable, OutChan);
+		                c1 = DENSS(X1, Y0, Z0, LutTable, pos, OutChan) - c0;
+		                c2 = DENSS(X1, Y1, Z1, LutTable, pos, OutChan) - DENSS(X1, Y0, Z1, LutTable, pos, OutChan);
+		                c3 = DENSS(X1, Y0, Z1, LutTable, pos, OutChan) - DENSS(X1, Y0, Z0, LutTable, pos, OutChan);
 		            }
 		            else
 		            {
 		                if (rz >= rx && rx >= ry)
 		                {
-		                    c1 = DENS(X1, Y0, Z1, LutTable, OutChan) - DENS(X0, Y0, Z1, LutTable, OutChan);
-		                    c2 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y0, Z1, LutTable, OutChan);
-		                    c3 = DENS(X0, Y0, Z1, LutTable, OutChan) - c0;                            
+		                    c1 = DENSS(X1, Y0, Z1, LutTable, pos, OutChan) - DENSS(X0, Y0, Z1, LutTable, pos, OutChan);
+		                    c2 = DENSS(X1, Y1, Z1, LutTable, pos, OutChan) - DENSS(X1, Y0, Z1, LutTable, pos, OutChan);
+		                    c3 = DENSS(X0, Y0, Z1, LutTable, pos, OutChan) - c0;                            
 		                }
 		                else
 		                {
 		                    if (ry >= rx && rx >= rz)
 		                    {
-		                        c1 = DENS(X1, Y1, Z0, LutTable, OutChan) - DENS(X0, Y1, Z0, LutTable, OutChan);
-		                        c2 = DENS(X0, Y1, Z0, LutTable, OutChan) - c0;
-		                        c3 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y1, Z0, LutTable, OutChan);
+		                        c1 = DENSS(X1, Y1, Z0, LutTable, pos, OutChan) - DENSS(X0, Y1, Z0, LutTable, pos, OutChan);
+		                        c2 = DENSS(X0, Y1, Z0, LutTable, pos, OutChan) - c0;
+		                        c3 = DENSS(X1, Y1, Z1, LutTable, pos, OutChan) - DENSS(X1, Y1, Z0, LutTable, pos, OutChan);
 		                    }
 		                    else
 		                    {
 		                        if (ry >= rz && rz >= rx)
 		                        {
-		                            c1 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X0, Y1, Z1, LutTable, OutChan);
-		                            c2 = DENS(X0, Y1, Z0, LutTable, OutChan) - c0;
-		                            c3 = DENS(X0, Y1, Z1, LutTable, OutChan) - DENS(X0, Y1, Z0, LutTable, OutChan);
+		                            c1 = DENSS(X1, Y1, Z1, LutTable, pos, OutChan) - DENSS(X0, Y1, Z1, LutTable, pos, OutChan);
+		                            c2 = DENSS(X0, Y1, Z0, LutTable, pos, OutChan) - c0;
+		                            c3 = DENSS(X0, Y1, Z1, LutTable, pos, OutChan) - DENSS(X0, Y1, Z0, LutTable, pos, OutChan);
 		                        }
 		                        else
 		                        {
 		                            if (rz >= ry && ry >= rx)
 		                            {             
-		                                c1 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X0, Y1, Z1, LutTable, OutChan);
-		                                c2 = DENS(X0, Y1, Z1, LutTable, OutChan) - DENS(X0, Y0, Z1, LutTable, OutChan);
-		                                c3 = DENS(X0, Y0, Z1, LutTable, OutChan) - c0;
+		                                c1 = DENSS(X1, Y1, Z1, LutTable, pos, OutChan) - DENSS(X0, Y1, Z1, LutTable, pos, OutChan);
+		                                c2 = DENSS(X0, Y1, Z1, LutTable, pos, OutChan) - DENSS(X0, Y0, Z1, LutTable, pos, OutChan);
+		                                c3 = DENSS(X0, Y0, Z1, LutTable, pos, OutChan) - c0;
 		                            }
 		                            else
 		                            {
@@ -650,8 +679,9 @@ final class cmsintrp
 		        
 		        Rest = c1 * rx + c2 * ry + c3 * rz;
 		        
-		        Output[OutChan] = (short)(((short)c0) + lcms2_internal.ROUND_FIXED_TO_INT(lcms2_internal._cmsToFixedDomain(Rest)));
+		        Output[OutChan] = (short)(c0 + lcms2_internal.ROUND_FIXED_TO_INT(lcms2_internal._cmsToFixedDomain(Rest)));
 		    }
+		    LutTable.setPosition(pos);
 		}
 	};
 	
@@ -659,8 +689,8 @@ final class cmsintrp
 	{
 		public void run(short[] Input, short[] Output, cmsInterpParams p16)
 		{
-			final short[] LutTable = (short[])p16.Table;
-			int LutTablePos = 0;
+			final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p16.Table).getProcessor();
+		    final int pos = LutTable.getPosition();
 		    int fk;
 		    int k0, rk;
 		    int K0, K1;
@@ -673,19 +703,19 @@ final class cmsintrp
 		    int OutChan;
 		    short[] Tmp1 = new short[lcms2_internal.MAX_STAGE_CHANNELS], Tmp2 = new short[lcms2_internal.MAX_STAGE_CHANNELS];
 		    
-		    fk  = lcms2_internal._cmsToFixedDomain((int)Input[0] * p16.Domain[0]);
-		    fx  = lcms2_internal._cmsToFixedDomain((int)Input[1] * p16.Domain[1]);
-		    fy  = lcms2_internal._cmsToFixedDomain((int)Input[2] * p16.Domain[2]);
-		    fz  = lcms2_internal._cmsToFixedDomain((int)Input[3] * p16.Domain[3]);
+		    fk  = lcms2_internal._cmsToFixedDomain((Input[0] & 0xFFFF) * p16.Domain[0]);
+		    fx  = lcms2_internal._cmsToFixedDomain((Input[1] & 0xFFFF) * p16.Domain[1]);
+		    fy  = lcms2_internal._cmsToFixedDomain((Input[2] & 0xFFFF) * p16.Domain[2]);
+		    fz  = lcms2_internal._cmsToFixedDomain((Input[3] & 0xFFFF) * p16.Domain[3]);
 		    
-		    k0  = lcms2_internal.FIXED_TO_INT(fk);     
+		    k0  = lcms2_internal.FIXED_TO_INT(fk);
 		    x0  = lcms2_internal.FIXED_TO_INT(fx);
-		    y0  = lcms2_internal.FIXED_TO_INT(fy); 
+		    y0  = lcms2_internal.FIXED_TO_INT(fy);
 		    z0  = lcms2_internal.FIXED_TO_INT(fz);
 		    
 		    rk  = lcms2_internal.FIXED_REST_TO_INT(fk);
-		    rx  = lcms2_internal.FIXED_REST_TO_INT(fx);   
-		    ry  = lcms2_internal.FIXED_REST_TO_INT(fy);      
+		    rx  = lcms2_internal.FIXED_REST_TO_INT(fx);
+		    ry  = lcms2_internal.FIXED_REST_TO_INT(fy);
 		    rz  = lcms2_internal.FIXED_REST_TO_INT(fz);
 		    
 		    K0 = p16.opta[3] * k0;
@@ -700,57 +730,57 @@ final class cmsintrp
 		    Z0 = p16.opta[0] * z0;
 		    Z1 = Z0 + (Input[3] == (short)0xFFFF ? 0 : p16.opta[0]);
 		    
-		    LutTablePos = K0;
+		    int tpos = pos + (K0 * 2);
 		    
 		    for (OutChan=0; OutChan < p16.nOutputs; OutChan++)
 		    {
-		        c0 = DENS(X0, Y0, Z0, LutTable, LutTablePos, OutChan);
+		        c0 = DENSS(X0, Y0, Z0, LutTable, tpos, OutChan);
 		        
 		        if (rx >= ry && ry >= rz)
 		        {
-		            c1 = DENS(X1, Y0, Z0, LutTable, LutTablePos, OutChan) - c0;
-		            c2 = DENS(X1, Y1, Z0, LutTable, LutTablePos, OutChan) - DENS(X1, Y0, Z0, LutTable, LutTablePos, OutChan);
-		            c3 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X1, Y1, Z0, LutTable, LutTablePos, OutChan);
+		            c1 = DENSS(X1, Y0, Z0, LutTable, tpos, OutChan) - c0;
+		            c2 = DENSS(X1, Y1, Z0, LutTable, tpos, OutChan) - DENSS(X1, Y0, Z0, LutTable, tpos, OutChan);
+		            c3 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X1, Y1, Z0, LutTable, tpos, OutChan);
 		        }
 		        else
 		        {
 		            if (rx >= rz && rz >= ry)
 		            {            
-		                c1 = DENS(X1, Y0, Z0, LutTable, LutTablePos, OutChan) - c0;
-		                c2 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X1, Y0, Z1, LutTable, LutTablePos, OutChan);
-		                c3 = DENS(X1, Y0, Z1, LutTable, LutTablePos, OutChan) - DENS(X1, Y0, Z0, LutTable, LutTablePos, OutChan);
+		                c1 = DENSS(X1, Y0, Z0, LutTable, tpos, OutChan) - c0;
+		                c2 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X1, Y0, Z1, LutTable, tpos, OutChan);
+		                c3 = DENSS(X1, Y0, Z1, LutTable, tpos, OutChan) - DENSS(X1, Y0, Z0, LutTable, tpos, OutChan);
 		            }
 		            else
 		            {
 		                if (rz >= rx && rx >= ry)
 		                {
-		                    c1 = DENS(X1, Y0, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y0, Z1, LutTable, LutTablePos, OutChan);
-		                    c2 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X1, Y0, Z1, LutTable, LutTablePos, OutChan);
-		                    c3 = DENS(X0, Y0, Z1, LutTable, LutTablePos, OutChan) - c0;
+		                    c1 = DENSS(X1, Y0, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y0, Z1, LutTable, tpos, OutChan);
+		                    c2 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X1, Y0, Z1, LutTable, tpos, OutChan);
+		                    c3 = DENSS(X0, Y0, Z1, LutTable, tpos, OutChan) - c0;
 		                }
 		                else
 		                {
 		                    if (ry >= rx && rx >= rz)
 		                    {
-		                        c1 = DENS(X1, Y1, Z0, LutTable, LutTablePos, OutChan) - DENS(X0, Y1, Z0, LutTable, LutTablePos, OutChan);
-		                        c2 = DENS(X0, Y1, Z0, LutTable, LutTablePos, OutChan) - c0;
-		                        c3 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X1, Y1, Z0, LutTable, LutTablePos, OutChan);
+		                        c1 = DENSS(X1, Y1, Z0, LutTable, tpos, OutChan) - DENSS(X0, Y1, Z0, LutTable, tpos, OutChan);
+		                        c2 = DENSS(X0, Y1, Z0, LutTable, tpos, OutChan) - c0;
+		                        c3 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X1, Y1, Z0, LutTable, tpos, OutChan);
 		                    }
 		                    else
 		                    {
 		                        if (ry >= rz && rz >= rx)
 		                        {
-		                            c1 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y1, Z1, LutTable, LutTablePos, OutChan);
-		                            c2 = DENS(X0, Y1, Z0, LutTable, LutTablePos, OutChan) - c0;
-		                            c3 = DENS(X0, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y1, Z0, LutTable, LutTablePos, OutChan);
+		                            c1 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y1, Z1, LutTable, tpos, OutChan);
+		                            c2 = DENSS(X0, Y1, Z0, LutTable, tpos, OutChan) - c0;
+		                            c3 = DENSS(X0, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y1, Z0, LutTable, tpos, OutChan);
 		                        }
 		                        else
 		                        {
 		                            if (rz >= ry && ry >= rx)
 		                            {             
-		                                c1 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y1, Z1, LutTable, LutTablePos, OutChan);
-		                                c2 = DENS(X0, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y0, Z1, LutTable, LutTablePos, OutChan);
-		                                c3 = DENS(X0, Y0, Z1, LutTable, LutTablePos, OutChan) - c0;
+		                                c1 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y1, Z1, LutTable, tpos, OutChan);
+		                                c2 = DENSS(X0, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y0, Z1, LutTable, tpos, OutChan);
+		                                c3 = DENSS(X0, Y0, Z1, LutTable, tpos, OutChan) - c0;
 		                            }
 		                            else 
 		                            {
@@ -764,60 +794,60 @@ final class cmsintrp
 		        
 		        Rest = c1 * rx + c2 * ry + c3 * rz;
 		        
-		        Tmp1[OutChan] = (short)(((short)c0) + lcms2_internal.ROUND_FIXED_TO_INT(lcms2_internal._cmsToFixedDomain(Rest)));
+		        Tmp1[OutChan] = (short)(c0 + lcms2_internal.ROUND_FIXED_TO_INT(lcms2_internal._cmsToFixedDomain(Rest)));
 		    }
 		    
-		    LutTablePos = K1;
+		    tpos = pos + (K1 * 2);
 		    
 		    for (OutChan=0; OutChan < p16.nOutputs; OutChan++)
 		    {
-		        c0 = DENS(X0, Y0, Z0, LutTable, LutTablePos, OutChan);
+		        c0 = DENSS(X0, Y0, Z0, LutTable, tpos, OutChan);
 		        
 		        if (rx >= ry && ry >= rz)
 		        {
-		            c1 = DENS(X1, Y0, Z0, LutTable, LutTablePos, OutChan) - c0;
-		            c2 = DENS(X1, Y1, Z0, LutTable, LutTablePos, OutChan) - DENS(X1, Y0, Z0, LutTable, LutTablePos, OutChan);
-		            c3 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X1, Y1, Z0, LutTable, LutTablePos, OutChan);
+		            c1 = DENSS(X1, Y0, Z0, LutTable, tpos, OutChan) - c0;
+		            c2 = DENSS(X1, Y1, Z0, LutTable, tpos, OutChan) - DENSS(X1, Y0, Z0, LutTable, tpos, OutChan);
+		            c3 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X1, Y1, Z0, LutTable, tpos, OutChan);
 		        }
 		        else
 		        {
 		            if (rx >= rz && rz >= ry)
 		            {
-		                c1 = DENS(X1, Y0, Z0, LutTable, LutTablePos, OutChan) - c0;
-		                c2 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X1, Y0, Z1, LutTable, LutTablePos, OutChan);
-		                c3 = DENS(X1, Y0, Z1, LutTable, LutTablePos, OutChan) - DENS(X1, Y0, Z0, LutTable, LutTablePos, OutChan);
+		                c1 = DENSS(X1, Y0, Z0, LutTable, tpos, OutChan) - c0;
+		                c2 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X1, Y0, Z1, LutTable, tpos, OutChan);
+		                c3 = DENSS(X1, Y0, Z1, LutTable, tpos, OutChan) - DENSS(X1, Y0, Z0, LutTable, tpos, OutChan);
 		            }
 		            else
 		            {
 		                if (rz >= rx && rx >= ry)
 		                {
-		                    c1 = DENS(X1, Y0, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y0, Z1, LutTable, LutTablePos, OutChan);
-		                    c2 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X1, Y0, Z1, LutTable, LutTablePos, OutChan);
-		                    c3 = DENS(X0, Y0, Z1, LutTable, LutTablePos, OutChan) - c0;
+		                    c1 = DENSS(X1, Y0, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y0, Z1, LutTable, tpos, OutChan);
+		                    c2 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X1, Y0, Z1, LutTable, tpos, OutChan);
+		                    c3 = DENSS(X0, Y0, Z1, LutTable, tpos, OutChan) - c0;
 		                }
 		                else
 		                {
 		                    if (ry >= rx && rx >= rz)
 		                    {
-		                        c1 = DENS(X1, Y1, Z0, LutTable, LutTablePos, OutChan) - DENS(X0, Y1, Z0, LutTable, LutTablePos, OutChan);
-		                        c2 = DENS(X0, Y1, Z0, LutTable, LutTablePos, OutChan) - c0;
-		                        c3 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X1, Y1, Z0, LutTable, LutTablePos, OutChan);
+		                        c1 = DENSS(X1, Y1, Z0, LutTable, tpos, OutChan) - DENSS(X0, Y1, Z0, LutTable, tpos, OutChan);
+		                        c2 = DENSS(X0, Y1, Z0, LutTable, tpos, OutChan) - c0;
+		                        c3 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X1, Y1, Z0, LutTable, tpos, OutChan);
 		                    }
 		                    else
 		                    {
 		                        if (ry >= rz && rz >= rx)
 		                        {
-		                            c1 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y1, Z1, LutTable, LutTablePos, OutChan);
-		                            c2 = DENS(X0, Y1, Z0, LutTable, LutTablePos, OutChan) - c0;
-		                            c3 = DENS(X0, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y1, Z0, LutTable, LutTablePos, OutChan);
+		                            c1 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y1, Z1, LutTable, tpos, OutChan);
+		                            c2 = DENSS(X0, Y1, Z0, LutTable, tpos, OutChan) - c0;
+		                            c3 = DENSS(X0, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y1, Z0, LutTable, tpos, OutChan);
 		                        }
 		                        else
 		                        {
 		                            if (rz >= ry && ry >= rx)
 		                            {             
-		                                c1 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y1, Z1, LutTable, LutTablePos, OutChan);
-		                                c2 = DENS(X0, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y0, Z1, LutTable, LutTablePos, OutChan);
-		                                c3 = DENS(X0, Y0, Z1, LutTable, LutTablePos, OutChan) - c0;
+		                                c1 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y1, Z1, LutTable, tpos, OutChan);
+		                                c2 = DENSS(X0, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y0, Z1, LutTable, tpos, OutChan);
+		                                c3 = DENSS(X0, Y0, Z1, LutTable, tpos, OutChan) - c0;
 		                            }
 		                            else
 		                            {
@@ -831,12 +861,13 @@ final class cmsintrp
 		        
 		        Rest = c1 * rx + c2 * ry + c3 * rz;
 		        
-		        Tmp2[OutChan] = (short)(((short)c0) + lcms2_internal.ROUND_FIXED_TO_INT(lcms2_internal._cmsToFixedDomain(Rest)));
+		        Tmp2[OutChan] = (short)(c0 + lcms2_internal.ROUND_FIXED_TO_INT(lcms2_internal._cmsToFixedDomain(Rest)));
 		    }
+		    LutTable.setPosition(pos);
 		    
 		    for (i=0; i < p16.nOutputs; i++)
 		    {
-		        Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);              
+		        Output[i] = LinearInterp(rk, Tmp1[i] & 0xFFFF, Tmp2[i] & 0xFFFF);
 		    }
 		}
 	};
@@ -863,11 +894,10 @@ final class cmsintrp
 	{
 		public void run(float[] Input, float[] Output, cmsInterpParams p)
 		{
-			final float[] LutTable = (float[])p.Table;
+			final VirtualPointer LutTable = (VirtualPointer)p.Table;
 			float rest;
 			float pk;
 			int k0, K0, K1;
-			float[] T;
 			int i;
 			float[] Tmp1 = new float[lcms2_internal.MAX_STAGE_CHANNELS], Tmp2 = new float[lcms2_internal.MAX_STAGE_CHANNELS];
 			cmsInterpParams p1;
@@ -882,22 +912,13 @@ final class cmsintrp
 			p1 = dupParams(p);
 			System.arraycopy(p.Domain, 1, p1.Domain, 0, 3);
 			
-			int temp = LutTable.length - K0;
-			T = new float[temp];
-			System.arraycopy(LutTable, K0, T, 0, temp);
-			p1.Table = T;
+			p1.Table = new VirtualPointer(LutTable, K0 * 4);
 			
 			float[] tempInput = new float[3];
 			System.arraycopy(Input, 1, tempInput, 0, 3);
 			TetrahedralInterpFloat.run(tempInput, Tmp1, p1);
 			
-			if(K0 != K1)
-			{
-				temp = LutTable.length - K1;
-				T = new float[temp];
-				System.arraycopy(LutTable, K1, T, 0, temp);
-				p1.Table = T;
-			}
+			((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 4));
 			TetrahedralInterpFloat.run(tempInput, Tmp2, p1);
 			
 			for (i=0; i < p.nOutputs; i++)
@@ -914,16 +935,15 @@ final class cmsintrp
 	{
 		public void run(short[] Input, short[] Output, cmsInterpParams p16)
 		{
-			final short[] LutTable = (short[])p16.Table;
+			final VirtualPointer LutTable = (VirtualPointer)p16.Table;
 			int fk;
 			int k0, rk;
 			int K0, K1;
-			short[] T;
 			int i;
 			short[] Tmp1 = new short[lcms2_internal.MAX_STAGE_CHANNELS], Tmp2 = new short[lcms2_internal.MAX_STAGE_CHANNELS];
 			cmsInterpParams p1;
 			
-			fk = lcms2_internal._cmsToFixedDomain(Input[0] * p16.Domain[0]);
+			fk = lcms2_internal._cmsToFixedDomain((Input[0] & 0xFFFF) * p16.Domain[0]);
 			k0 = lcms2_internal.FIXED_TO_INT(fk);
 			rk = lcms2_internal.FIXED_REST_TO_INT(fk);
 			
@@ -933,28 +953,19 @@ final class cmsintrp
 			p1 = dupParams(p16);
 			System.arraycopy(p16.Domain, 1, p1.Domain, 0, 4);
 			
-			int temp = LutTable.length - K0;
-			T = new short[temp];
-			System.arraycopy(LutTable, K0, T, 0, temp);
-			p1.Table = T;
+			p1.Table = new VirtualPointer(LutTable, K0 * 2);
 			
 			short[] tempInput = new short[3];
 			System.arraycopy(Input, 1, tempInput, 0, 4);
 			Eval4Inputs.run(tempInput, Tmp1, p1);
 			
-			if(K0 != K1)
-			{
-				temp = LutTable.length - K1;
-				T = new short[temp];
-				System.arraycopy(LutTable, K1, T, 0, temp);
-				p1.Table = T;
-			}
+			((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 2));
 			
 			Eval4Inputs.run(tempInput, Tmp2, p1);
 			
 			for (i=0; i < p16.nOutputs; i++)
 			{
-				Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
+				Output[i] = LinearInterp(rk, Tmp1[i] & 0xFFFF, Tmp2[i] & 0xFFFF);
 			}
 		}
 	};
@@ -963,11 +974,10 @@ final class cmsintrp
 	{
 		public void run(float[] Input, float[] Output, cmsInterpParams p)
 		{
-			final float[] LutTable = (float[])p.Table;
+			final VirtualPointer LutTable = (VirtualPointer)p.Table;
 			float rest;
 			float pk;
 			int k0, K0, K1;
-			float[] T;
 			int i;
 			float[] Tmp1 = new float[lcms2_internal.MAX_STAGE_CHANNELS], Tmp2 = new float[lcms2_internal.MAX_STAGE_CHANNELS];
 			cmsInterpParams p1;
@@ -982,22 +992,13 @@ final class cmsintrp
 			p1 = dupParams(p);
 			System.arraycopy(p.Domain, 1, p1.Domain, 0, 4);
 			
-			int temp = LutTable.length - K0;
-			T = new float[temp];
-			System.arraycopy(LutTable, K0, T, 0, temp);
-			p1.Table = T;
+			p1.Table = new VirtualPointer(LutTable, K0 * 4);
 			
 			float[] tempInput = new float[3];
 			System.arraycopy(Input, 1, tempInput, 0, 3);
 			Eval4InputsFloat.run(tempInput, Tmp1, p1);
 			
-			if(K0 != K1)
-			{
-				temp = LutTable.length - K1;
-				T = new float[temp];
-				System.arraycopy(LutTable, K1, T, 0, temp);
-				p1.Table = T;
-			}
+			((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 4));
 			
 			Eval4InputsFloat.run(tempInput, Tmp2, p1);
 			
@@ -1015,16 +1016,15 @@ final class cmsintrp
 	{
 		public void run(short[] Input, short[] Output, cmsInterpParams p16)
 		{
-			final short[] LutTable = (short[])p16.Table;
+			final VirtualPointer LutTable = (VirtualPointer)p16.Table;
 			int fk;
 			int k0, rk;
 			int K0, K1;
-			short[] T;
 			int i;
 			short[] Tmp1 = new short[lcms2_internal.MAX_STAGE_CHANNELS], Tmp2 = new short[lcms2_internal.MAX_STAGE_CHANNELS];
 			cmsInterpParams p1;
 			
-			fk = lcms2_internal._cmsToFixedDomain(Input[0] * p16.Domain[0]);
+			fk = lcms2_internal._cmsToFixedDomain((Input[0] & 0xFFFF) * p16.Domain[0]);
 			k0 = lcms2_internal.FIXED_TO_INT(fk);
 			rk = lcms2_internal.FIXED_REST_TO_INT(fk);
 			
@@ -1034,28 +1034,19 @@ final class cmsintrp
 			p1 = dupParams(p16);
 			System.arraycopy(p16.Domain, 1, p1.Domain, 0, 5);
 			
-			int temp = LutTable.length - K0;
-			T = new short[temp];
-			System.arraycopy(LutTable, K0, T, 0, temp);
-			p1.Table = T;
+			p1.Table = new VirtualPointer(LutTable, K0 * 2);
 			
 			short[] tempInput = new short[3];
 			System.arraycopy(Input, 1, tempInput, 0, 4);
 			Eval5Inputs.run(tempInput, Tmp1, p1);
 			
-			if(K0 != K1)
-			{
-				temp = LutTable.length - K1;
-				T = new short[temp];
-				System.arraycopy(LutTable, K1, T, 0, temp);
-				p1.Table = T;
-			}
+			((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 2));
 			
 			Eval5Inputs.run(tempInput, Tmp2, p1);
 			
 			for (i=0; i < p16.nOutputs; i++)
 			{
-				Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
+				Output[i] = LinearInterp(rk, Tmp1[i] & 0xFFFF, Tmp2[i] & 0xFFFF);
 			}
 		}
 	};
@@ -1064,11 +1055,10 @@ final class cmsintrp
 	{
 		public void run(float[] Input, float[] Output, cmsInterpParams p)
 		{
-			final float[] LutTable = (float[])p.Table;
+			final VirtualPointer LutTable = (VirtualPointer)p.Table;
 			float rest;
 			float pk;
 			int k0, K0, K1;
-			float[] T;
 			int i;
 			float[] Tmp1 = new float[lcms2_internal.MAX_STAGE_CHANNELS], Tmp2 = new float[lcms2_internal.MAX_STAGE_CHANNELS];
 			cmsInterpParams p1;
@@ -1083,22 +1073,13 @@ final class cmsintrp
 			p1 = dupParams(p);
 			System.arraycopy(p.Domain, 1, p1.Domain, 0, 5);
 			
-			int temp = LutTable.length - K0;
-			T = new float[temp];
-			System.arraycopy(LutTable, K0, T, 0, temp);
-			p1.Table = T;
+			p1.Table = new VirtualPointer(LutTable, K0 * 4);
 			
 			float[] tempInput = new float[3];
 			System.arraycopy(Input, 1, tempInput, 0, 3);
 			Eval5InputsFloat.run(tempInput, Tmp1, p1);
 			
-			if(K0 != K1)
-			{
-				temp = LutTable.length - K1;
-				T = new float[temp];
-				System.arraycopy(LutTable, K1, T, 0, temp);
-				p1.Table = T;
-			}
+			((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 4));
 			
 			Eval5InputsFloat.run(tempInput, Tmp2, p1);
 			
@@ -1116,16 +1097,15 @@ final class cmsintrp
 	{
 		public void run(short[] Input, short[] Output, cmsInterpParams p16)
 		{
-			final short[] LutTable = (short[])p16.Table;
+			final VirtualPointer LutTable = (VirtualPointer)p16.Table;
 			int fk;
 			int k0, rk;
 			int K0, K1;
-			short[] T;
 			int i;
 			short[] Tmp1 = new short[lcms2_internal.MAX_STAGE_CHANNELS], Tmp2 = new short[lcms2_internal.MAX_STAGE_CHANNELS];
 			cmsInterpParams p1;
 			
-			fk = lcms2_internal._cmsToFixedDomain(Input[0] * p16.Domain[0]);
+			fk = lcms2_internal._cmsToFixedDomain((Input[0] & 0xFFFF) * p16.Domain[0]);
 			k0 = lcms2_internal.FIXED_TO_INT(fk);
 			rk = lcms2_internal.FIXED_REST_TO_INT(fk);
 			
@@ -1135,28 +1115,19 @@ final class cmsintrp
 			p1 = dupParams(p16);
 			System.arraycopy(p16.Domain, 1, p1.Domain, 0, 6);
 			
-			int temp = LutTable.length - K0;
-			T = new short[temp];
-			System.arraycopy(LutTable, K0, T, 0, temp);
-			p1.Table = T;
+			p1.Table = new VirtualPointer(LutTable, K0 * 2);
 			
 			short[] tempInput = new short[3];
 			System.arraycopy(Input, 1, tempInput, 0, 4);
 			Eval6Inputs.run(tempInput, Tmp1, p1);
 			
-			if(K0 != K1)
-			{
-				temp = LutTable.length - K1;
-				T = new short[temp];
-				System.arraycopy(LutTable, K1, T, 0, temp);
-				p1.Table = T;
-			}
+			((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 2));
 			
 			Eval6Inputs.run(tempInput, Tmp2, p1);
 			
 			for (i=0; i < p16.nOutputs; i++)
 			{
-				Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
+				Output[i] = LinearInterp(rk, Tmp1[i] & 0xFFFF, Tmp2[i] & 0xFFFF);
 			}
 		}
 	};
@@ -1165,11 +1136,10 @@ final class cmsintrp
 	{
 		public void run(float[] Input, float[] Output, cmsInterpParams p)
 		{
-			final float[] LutTable = (float[])p.Table;
+			final VirtualPointer LutTable = (VirtualPointer)p.Table;
 			float rest;
 			float pk;
 			int k0, K0, K1;
-			float[] T;
 			int i;
 			float[] Tmp1 = new float[lcms2_internal.MAX_STAGE_CHANNELS], Tmp2 = new float[lcms2_internal.MAX_STAGE_CHANNELS];
 			cmsInterpParams p1;
@@ -1184,22 +1154,13 @@ final class cmsintrp
 			p1 = dupParams(p);
 			System.arraycopy(p.Domain, 1, p1.Domain, 0, 6);
 			
-			int temp = LutTable.length - K0;
-			T = new float[temp];
-			System.arraycopy(LutTable, K0, T, 0, temp);
-			p1.Table = T;
+			p1.Table = new VirtualPointer(LutTable, K0 * 4);
 			
 			float[] tempInput = new float[3];
 			System.arraycopy(Input, 1, tempInput, 0, 3);
 			Eval6InputsFloat.run(tempInput, Tmp1, p1);
 			
-			if(K0 != K1)
-			{
-				temp = LutTable.length - K1;
-				T = new float[temp];
-				System.arraycopy(LutTable, K1, T, 0, temp);
-				p1.Table = T;
-			}
+			((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 4));
 			
 			Eval6InputsFloat.run(tempInput, Tmp2, p1);
 			
@@ -1217,16 +1178,15 @@ final class cmsintrp
 	{
 		public void run(short[] Input, short[] Output, cmsInterpParams p16)
 		{
-			final short[] LutTable = (short[])p16.Table;
+			final VirtualPointer LutTable = (VirtualPointer)p16.Table;
 			int fk;
 			int k0, rk;
 			int K0, K1;
-			short[] T;
 			int i;
 			short[] Tmp1 = new short[lcms2_internal.MAX_STAGE_CHANNELS], Tmp2 = new short[lcms2_internal.MAX_STAGE_CHANNELS];
 			cmsInterpParams p1;
 			
-			fk = lcms2_internal._cmsToFixedDomain(Input[0] * p16.Domain[0]);
+			fk = lcms2_internal._cmsToFixedDomain((Input[0] & 0xFFFF) * p16.Domain[0]);
 			k0 = lcms2_internal.FIXED_TO_INT(fk);
 			rk = lcms2_internal.FIXED_REST_TO_INT(fk);
 			
@@ -1236,28 +1196,19 @@ final class cmsintrp
 			p1 = dupParams(p16);
 			System.arraycopy(p16.Domain, 1, p1.Domain, 0, 7);
 			
-			int temp = LutTable.length - K0;
-			T = new short[temp];
-			System.arraycopy(LutTable, K0, T, 0, temp);
-			p1.Table = T;
+			p1.Table = new VirtualPointer(LutTable, K0 * 2);
 			
 			short[] tempInput = new short[3];
 			System.arraycopy(Input, 1, tempInput, 0, 4);
 			Eval7Inputs.run(tempInput, Tmp1, p1);
 			
-			if(K0 != K1)
-			{
-				temp = LutTable.length - K1;
-				T = new short[temp];
-				System.arraycopy(LutTable, K1, T, 0, temp);
-				p1.Table = T;
-			}
+			((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 2));
 			
 			Eval7Inputs.run(tempInput, Tmp2, p1);
 			
 			for (i=0; i < p16.nOutputs; i++)
 			{
-				Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
+				Output[i] = LinearInterp(rk, Tmp1[i] & 0xFFFF, Tmp2[i] & 0xFFFF);
 			}
 		}
 	};
@@ -1266,11 +1217,10 @@ final class cmsintrp
 	{
 		public void run(float[] Input, float[] Output, cmsInterpParams p)
 		{
-			final float[] LutTable = (float[])p.Table;
+			final VirtualPointer LutTable = (VirtualPointer)p.Table;
 			float rest;
 			float pk;
 			int k0, K0, K1;
-			float[] T;
 			int i;
 			float[] Tmp1 = new float[lcms2_internal.MAX_STAGE_CHANNELS], Tmp2 = new float[lcms2_internal.MAX_STAGE_CHANNELS];
 			cmsInterpParams p1;
@@ -1285,22 +1235,13 @@ final class cmsintrp
 			p1 = dupParams(p);
 			System.arraycopy(p.Domain, 1, p1.Domain, 0, 7);
 			
-			int temp = LutTable.length - K0;
-			T = new float[temp];
-			System.arraycopy(LutTable, K0, T, 0, temp);
-			p1.Table = T;
+			p1.Table = new VirtualPointer(LutTable, K0 * 4);
 			
 			float[] tempInput = new float[3];
 			System.arraycopy(Input, 1, tempInput, 0, 3);
 			Eval7InputsFloat.run(tempInput, Tmp1, p1);
 			
-			if(K0 != K1)
-			{
-				temp = LutTable.length - K1;
-				T = new float[temp];
-				System.arraycopy(LutTable, K1, T, 0, temp);
-				p1.Table = T;
-			}
+			((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 4));
 			
 			Eval7InputsFloat.run(tempInput, Tmp2, p1);
 			

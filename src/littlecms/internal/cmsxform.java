@@ -30,7 +30,6 @@ package littlecms.internal;
 import net.rim.device.api.util.Arrays;
 import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
-import littlecms.internal.helper.VirtualPointer.Serializer;
 import littlecms.internal.lcms2.cmsContext;
 import littlecms.internal.lcms2.cmsHPROFILE;
 import littlecms.internal.lcms2.cmsHTRANSFORM;
@@ -155,6 +154,14 @@ final class cmsxform
 		VirtualPointer outBuf = buffer2vp(OutputBuffer);
 	    p.xform.run(p, inBuf, outBuf, Size);
 	    vp2buffer(outBuf, OutputBuffer);
+	    if(inBuf != InputBuffer)
+	    {
+	    	inBuf.free();
+	    }
+	    if(outBuf != OutputBuffer)
+	    {
+	    	outBuf.free();
+	    }
 	}
 	
 	private static VirtualPointer buffer2vp(final Object buffer)
@@ -186,14 +193,7 @@ final class cmsxform
 		if(btype.isArray())
 		{
 			//Since it is an array we need to figure out if it is a primitive array or not
-			try
-			{
-				Object[] obj = (Object[])buffer;
-			}
-			catch(ClassCastException c)
-			{
-				primitive = true;
-			}
+			primitive = Utility.isPrimitive(buffer);
 		}
 		if(primitive)
 		{
@@ -201,7 +201,7 @@ final class cmsxform
 		}
 		else
 		{
-			//XXX This might not work for read only value types
+			//XXX This might not work for read only value types, if that's the case then VirtualPointer should throw the exeception
 			VirtualPointer.TypeProcessor proc = vp.getProcessor();
 			if(btype.isArray())
 			{

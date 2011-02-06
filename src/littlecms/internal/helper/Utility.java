@@ -498,6 +498,34 @@ public final class Utility
 		}
 	}
 	
+	public static boolean isPrimitive(Object obj)
+	{
+		return isPrimitive(obj, false);
+	}
+	
+	public static boolean isPrimitive(Object obj, boolean readOnlyAllowed)
+	{
+		if(obj instanceof byte[] || obj instanceof short[] || obj instanceof char[] || obj instanceof int[] || obj instanceof long[] || 
+				obj instanceof float[] || obj instanceof double[] || obj instanceof boolean[] || obj instanceof String[] || obj instanceof VirtualPointer[])
+		{
+			return true;
+		}
+		if(readOnlyAllowed)
+		{
+			if(obj instanceof Byte[] || obj instanceof Short[] || obj instanceof Character[] || obj instanceof Integer[] || obj instanceof Long[] || 
+					obj instanceof Float[] || obj instanceof Double[] || obj instanceof Boolean[])
+			{
+				return true;
+			}
+			if(obj instanceof Byte || obj instanceof Short || obj instanceof Character || obj instanceof Integer || obj instanceof Long || 
+					obj instanceof Float || obj instanceof Double || obj instanceof Boolean)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	//C99 remove function
 	public static int remove(final String filename)
 	{
@@ -677,7 +705,7 @@ public final class Utility
     	int len = Math.min(strlen(src, srcOffset), count);
     	int appendPos = dst.length();
     	len += dstOffset;
-    	for(int d = dstOffset, s = srcOffset; d < len; d++)
+    	for(int d = dstOffset, s = srcOffset; d < len; d++, s++)
     	{
     		if(d >= appendPos)
     		{

@@ -561,8 +561,8 @@ final class cmsvirt
 		    
 		    InkLimit = (InkLimit * 655.35);
 		    
-		    SumCMY   = In[0]  + In[1] + In[2];
-		    SumCMYK  = SumCMY + In[3];      
+		    SumCMY   = (In[0] & 0xFFFF) + (In[1] & 0xFFFF) + (In[2] & 0xFFFF);
+		    SumCMYK  = SumCMY + (In[3] & 0xFFFF);      
 		    
 		    if (SumCMYK > InkLimit)
 		    {
@@ -577,9 +577,9 @@ final class cmsvirt
 		    	Ratio = 1;
 		    }
 		    
-		    Out[0] = lcms2_internal._cmsQuickSaturateWord(In[0] * Ratio);	// C
-		    Out[1] = lcms2_internal._cmsQuickSaturateWord(In[1] * Ratio);	// M
-		    Out[2] = lcms2_internal._cmsQuickSaturateWord(In[2] * Ratio);	// Y
+		    Out[0] = lcms2_internal._cmsQuickSaturateWord((In[0] & 0xFFFF) * Ratio);	// C
+		    Out[1] = lcms2_internal._cmsQuickSaturateWord((In[1] & 0xFFFF) * Ratio);	// M
+		    Out[2] = lcms2_internal._cmsQuickSaturateWord((In[2] & 0xFFFF) * Ratio);	// Y
 		    
 		    Out[3] = In[3];													// K (untouched)
 		    
@@ -658,7 +658,7 @@ final class cmsvirt
 		    
 		    return null;
 	    }
-
+	    
 	    if (!cmslut.cmsStageSampleCLut16bit(CLUT, InkLimitingSampler, new double[]{Limit}, 0))
 	    {
 	    	if (LUT != null)
@@ -821,11 +821,6 @@ final class cmsvirt
 	    
 	    if (!SetTextTags(hProfile, "Lab identity built-in"))
 	    {
-	    	if (LUT != null)
-		    {
-		    	cmslut.cmsPipelineFree(LUT);
-		    }
-		    
 		    if (hProfile != null)
 		    {
 		    	cmsio0.cmsCloseProfile(hProfile);
@@ -892,11 +887,6 @@ final class cmsvirt
 	    
 	    if (!SetTextTags(hProfile, "XYZ identity built-in"))
 	    {
-	    	if (LUT != null)
-		    {
-		    	cmslut.cmsPipelineFree(LUT);
-		    }
-		    
 		    if (hProfile != null)
 		    {
 		    	cmsio0.cmsCloseProfile(hProfile);
@@ -1017,6 +1007,12 @@ final class cmsvirt
 		public double Hue;
 		public double Saturation;
 		public cmsCIEXYZ WPsrc, WPdest;
+		
+		public BCHSWADJUSTS()
+		{
+			WPsrc = new cmsCIEXYZ();
+			WPdest = new cmsCIEXYZ();
+		}
 	}
 	
 	private static final cmsSAMPLER16 bchswSampler = new cmsSAMPLER16()
@@ -1073,11 +1069,9 @@ final class cmsvirt
 		bchsw.Saturation = Saturation;
 		
 		cmswtpnt.cmsWhitePointFromTemp(WhitePnt, TempSrc);
-		bchsw.WPsrc = new cmsCIEXYZ();
 		cmspcs.cmsxyY2XYZ(bchsw.WPsrc, WhitePnt);
 		
 		cmswtpnt.cmsWhitePointFromTemp(WhitePnt, TempDest);
-		bchsw.WPdest = new cmsCIEXYZ();
 		cmspcs.cmsxyY2XYZ(bchsw.WPdest, WhitePnt);
 		
 		hICC = cmsio0.cmsCreateProfilePlaceholder(ContextID);
@@ -1163,11 +1157,6 @@ final class cmsvirt
 	    
 	    if (!SetTextTags(hProfile, "NULL profile built-in"))
 	    {
-	    	if (LUT != null)
-		    {
-		    	cmslut.cmsPipelineFree(LUT);
-		    }
-		    
 		    if (hProfile != null)
 		    {
 		    	cmsio0.cmsCloseProfile(hProfile);
@@ -1184,11 +1173,6 @@ final class cmsvirt
 	    LUT = cmslut.cmsPipelineAlloc(ContextID, 1, 1);
 	    if (LUT == null)
 	    {
-	    	if (LUT != null)
-		    {
-		    	cmslut.cmsPipelineFree(LUT);
-		    }
-		    
 		    if (hProfile != null)
 		    {
 		    	cmsio0.cmsCloseProfile(hProfile);
@@ -1197,7 +1181,7 @@ final class cmsvirt
 		    return null;
 	    }
 	    
-	    EmptyTab = cmsgamma.cmsBuildTabulatedToneCurve16(ContextID, 2, Zero);       
+	    EmptyTab = cmsgamma.cmsBuildTabulatedToneCurve16(ContextID, 2, Zero);
 	    PostLin = cmslut.cmsStageAllocToneCurves(ContextID, 1, new cmsToneCurve[]{EmptyTab});
 	    cmsgamma.cmsFreeToneCurve(EmptyTab);
 	    
@@ -1232,7 +1216,7 @@ final class cmsvirt
 		    return null;
 	    }
 	    
-	    cmslut.cmsPipelineFree(LUT);       
+	    cmslut.cmsPipelineFree(LUT);
 	    return hProfile;
 	}
 	

@@ -190,13 +190,13 @@ final class cmspcs
 	
 	private static double L2float2(short v)
 	{
-		return v / 652.800;
+		return (v & 0xFFFF) / 652.800;
 	}
 	
 	// the a/b part
 	private static double ab2float2(short v)
 	{   
-		return (v / 256.0) - 128.0;
+		return ((v & 0xFFFF) / 256.0) - 128.0;
 	}
 	
 	private static short L2Fix2(double L)
@@ -211,13 +211,13 @@ final class cmspcs
 	
 	private static double L2float4(short v)
 	{
-	    return v / 655.35;
+	    return (v & 0xFFFF) / 655.35;
 	}
 
 	// the a/b part
 	private static double ab2float4(short v)
 	{
-	    return (v / 257.0) - 128.0;
+	    return ((v & 0xFFFF) / 257.0) - 128.0;
 	}
 	
 	public static void cmsLabEncoded2FloatV2(cmsCIELab Lab, final short[] wLab)
@@ -458,7 +458,7 @@ final class cmspcs
 	    int fix32;
 	    
 	    // From 1.15 to 15.16
-	    fix32 = v << 1;
+	    fix32 = (v & 0xFFFF) << 1;
 	    
 	    // From fixed 15.16 to cmsFloat64Number
 	    return cmsplugin._cms15Fixed16toDouble(fix32);

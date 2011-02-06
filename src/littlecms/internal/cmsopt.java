@@ -154,7 +154,8 @@ final class cmsopt
 	
 	// Simple optimizations ----------------------------------------------------------------------------------------------------------
 	
-	//NOTE: The following 3 functions are modified from the original code so that _RemoveElement actually removes the element.
+	//NOTE: The following 3 functions are modified from the original code so that _RemoveElement actually removes the element. Instead of removing "the" element,
+	//it removes the "next" element so that references can be maintained.
 	
 	// Remove an element in linked chain
 	private static void _RemoveElement(cmsStage head)
@@ -201,6 +202,7 @@ final class cmsopt
 	    	pt = Lut.Elements;
 	    	Lut.Elements = (cmsStage)pt.Next;
 	    	cmslut.cmsStageFree(pt);
+	    	AnyOpt = true;
 	    }
 	    
 	    return AnyOpt;
@@ -222,33 +224,40 @@ final class cmsopt
 	    
 	    cmsStage previous = pt1;
 	    pt1 = (cmsStage)pt1.Next;
-	    initialIm = pt1.Implements == Op1;
+	    if(pt1 != null)
+	    {
+	    	initialIm = previous.Implements == Op1 && pt1.Implements == Op2;
+	    }
 	    
 	    while (pt1 != null)
 	    {
 	        pt2 = (cmsStage)((pt1).Next);
 	        if (pt2 == null)
 	        {
-	        	return AnyOpt;
+	        	break;
 	        }
 	        
 	        if ((pt1).Implements == Op1 && (pt2).Implements == Op2)
 	        {
 	            _RemoveElement(pt1);
 	            _RemoveElement(previous);
+	            pt1 = (cmsStage)((previous).Next);
 	            AnyOpt = true;
 	        }
 	        else
 	        {
+	        	previous = pt1;
 	        	pt1 = (cmsStage)((pt1).Next);        
 	        }
 	    }
 	    
 	    if(initialIm)
 	    {
+	    	_RemoveElement(Lut.Elements);
 	    	pt1 = Lut.Elements;
 	    	Lut.Elements = (cmsStage)pt1.Next;
 	    	cmslut.cmsStageFree(pt1);
+	    	AnyOpt = true;
 	    }
 	    
 	    return AnyOpt;
@@ -429,7 +438,7 @@ final class cmsopt
 		    // From 16 bit to floating point
 		    for (i = 0; i < Lut.InputChannels; i++)
 		    {
-		    	InFloat[i] = (In[i] / 65535f);
+		    	InFloat[i] = ((In[i] & 0xFFFF) / 65535f);
 		    }
 		    
 		    // Evaluate in floating point

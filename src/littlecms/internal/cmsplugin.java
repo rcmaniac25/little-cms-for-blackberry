@@ -165,6 +165,11 @@ final class cmsplugin
 	
 	public static boolean _cmsReadUInt16Array(cmsIOHANDLER io, int n, short[] Array)
 	{
+		return _cmsReadUInt16Array(io, n, Array, false);
+	}
+	
+	public static boolean _cmsReadUInt16Array(cmsIOHANDLER io, int n, short[] Array, boolean reverseEndian)
+	{
 	    int i;
 	    
 	    lcms2_internal._cmsAssert(io != null, "io != null");
@@ -182,7 +187,7 @@ final class cmsplugin
 	            {
 	            	return false;
 	            }
-	            Array[i] = temp[0];
+	            Array[i] = reverseEndian ? _cmsAdjustEndianess16(temp[0]) : temp[0];
 	        }
 	        else
 	        {
@@ -393,6 +398,11 @@ final class cmsplugin
 	
 	public static boolean _cmsWriteUInt16Array(cmsIOHANDLER io, int n, final short[] Array)
 	{
+		return _cmsWriteUInt16Array(io, n, Array, false);
+	}
+	
+	public static boolean _cmsWriteUInt16Array(cmsIOHANDLER io, int n, final short[] Array, boolean reverseEndian)
+	{
 	    int i;
 	    
 	    lcms2_internal._cmsAssert(io != null, "io != null");
@@ -400,6 +410,10 @@ final class cmsplugin
 	    
 	    for (i = 0; i < n; i++)
 	    {
+	    	if(reverseEndian)
+	    	{
+	    		Array[i] = _cmsAdjustEndianess16(Array[i]);
+	    	}
 	        if (!_cmsWriteUInt16Number(io, Array[i]))
 	        {
 	        	return false;
@@ -528,7 +542,7 @@ final class cmsplugin
 		lsb = (byte)(fixed8 & 0xff);
 		msb = (byte)((fixed8 >> 8) & 0xff);
 		
-		return (msb + (lsb / 256.0));
+		return ((msb & 0xFF) + ((lsb & 0xFF) / 256.0));
 	}
 	
 	public static short _cmsDoubleTo8Fixed8(double val)
