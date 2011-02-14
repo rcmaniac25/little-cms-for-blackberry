@@ -508,8 +508,8 @@ final class cmsio0
 	}
 	
 	// Create a iohandler for disk based files. if FileName is NULL, then 'stream' member is also set
-	// to NULL and no real writting is performed. This only happens in writting access mode
-	public static cmsIOHANDLER cmsOpenIOhandlerFromFile(cmsContext ContextID, final String FileName, final String AccessMode)
+	// to NULL and no real writting is performed. This only happens in writing access mode
+	public static cmsIOHANDLER cmsOpenIOhandlerFromFile(cmsContext ContextID, String FileName, final String AccessMode)
 	{
 	    cmsIOHANDLER iohandler = null;
 	    Stream fm = null;
@@ -525,6 +525,7 @@ final class cmsio0
 	    iohandler = new cmsIOHANDLER();
 //#endif
 	    
+	    FileName = FileName.substring(0, Utility.strlen(FileName)); //Clean the String just in case
 	    switch (AccessMode.charAt(0))
 	    {
 		    case 'r':

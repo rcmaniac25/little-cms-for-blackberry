@@ -4007,13 +4007,13 @@ final class cmstypes
 	    }
 	    
 	    if (offsetMat != 0)
-	    {           
+	    {
 	        mpe = ReadMatrix(self, io, BaseOffset + offsetMat);
 	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
 	    }
 	    
 	    if (offsetB != 0)
-	    {                                        
+	    {
 	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetB, outputChan);
 	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
 	    }
@@ -4490,8 +4490,8 @@ final class cmstypes
 	    }
 	    
 	    if (offsetB != 0)
-	    {                                        
-	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetB, outputChan);
+	    {
+	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetB, inputChan);
 	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
 	    }
 	    
@@ -4503,7 +4503,7 @@ final class cmstypes
 	    
 	    if (offsetM != 0)
 	    {
-	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetM, outputChan);
+	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetM, inputChan);
 	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
 	    }
 	    
@@ -4515,7 +4515,7 @@ final class cmstypes
 	    
 	    if (offsetA!= 0)
 	    {
-	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetA, inputChan);
+	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetA, outputChan);
 	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
 	    }
 	    

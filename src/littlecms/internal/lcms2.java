@@ -2097,6 +2097,31 @@ public class lcms2
 	}
 	
 	/**
+	 * Gets an ASCII (7 bit) entry for the given Language and country. Set Buffer to NULL to get the required size. Unlike 
+	 * {@link #cmsMLUgetASCII(cmsMLU, String, String, StringBuffer, int) cmsMLUgetASCII}, this function will return a Java String that simply terminates instead of
+	 * using a null char to terminate the String.
+	 * @param mlu a pointer to a multilocalized unicode object.
+	 * @param LanguageCode Array of 2 chars describing the language
+	 * @param CountryCode Array of 2 chars describing the country
+	 * @param Buffer Pointer to a byte buffer
+	 * @param BufferSize Size of given buffer.
+	 * @return Number of bytes read into buffer.
+	 */
+	public static int cmsMLUgetASCIICleaned(cmsMLU mlu, final String LanguageCode, final String CountryCode, StringBuffer Buffer, int BufferSize)
+	{
+		int len = cmsnamed.cmsMLUgetASCII(mlu, LanguageCode, CountryCode, Buffer, BufferSize);
+		if(len > 0)
+		{
+			len--;
+		}
+		if(Buffer != null)
+		{
+			Buffer.setLength(len);
+		}
+		return len;
+	}
+	
+	/**
 	 * Gets a UNICODE char (16 bit) entry for the given Language and country. Set Buffer to NULL to get the required size.
 	 * @param mlu a pointer to a multilocalized unicode object.
 	 * @param LanguageCode Array of 3 chars describing the language
@@ -2111,6 +2136,31 @@ public class lcms2
 	}
 	
 	/**
+	 * Gets a UNICODE char (16 bit) entry for the given Language and country. Set Buffer to NULL to get the required size. Unlike 
+	 * {@link #cmsMLUgetWide(cmsMLU, String, String, StringBuffer, int) cmsMLUgetWide}, this function will return a Java String that simply terminates instead of
+	 * using a null char to terminate the String.
+	 * @param mlu a pointer to a multilocalized unicode object.
+	 * @param LanguageCode Array of 2 chars describing the language
+	 * @param CountryCode Array of 2 chars describing the country
+	 * @param Buffer Pointer to a char buffer
+	 * @param BufferSize Size of given buffer.
+	 * @return Number of bytes read into buffer.
+	 */
+	public static int cmsMLUgetWideCleaned(cmsMLU mlu, final String LanguageCode, final String CountryCode, StringBuffer Buffer, int BufferSize)
+	{
+		int len = cmsnamed.cmsMLUgetWide(mlu, LanguageCode, CountryCode, Buffer, BufferSize);
+		if(len > 0)
+		{
+			len--;
+		}
+		if(Buffer != null)
+		{
+			Buffer.setLength(len);
+		}
+		return len;
+	}
+	
+	/**
 	 * Obtains the translation rule for given multilocalized unicode object.
 	 * @param mlu a pointer to a multilocalized unicode object.
 	 * @param LanguageCode Array of 3 chars describing the language
@@ -2122,6 +2172,25 @@ public class lcms2
 	public static boolean cmsMLUgetTranslation(cmsMLU mlu, final String LanguageCode, final String CountryCode, StringBuffer ObtainedLanguage, StringBuffer ObtainedCountry)
 	{
 		return cmsnamed.cmsMLUgetTranslation(mlu, LanguageCode, CountryCode, ObtainedLanguage, ObtainedCountry);
+	}
+	
+	/**
+	 * Obtains the translation rule for given multilocalized unicode object. Unlike 
+	 * {@link #cmsMLUgetTranslation(cmsMLU, String, String, StringBuffer, StringBuffer) cmsMLUgetTranslation}, this function will return Java Strings that simply 
+	 * terminates instead of using a null char to terminate the String.
+	 * @param mlu a pointer to a multilocalized unicode object.
+	 * @param LanguageCode Array of 2 chars describing the language
+	 * @param CountryCode Array of 2 chars describing the country
+	 * @param ObtainedLanguage Array of 2 chars to get the language translation.
+	 * @param ObtainedCountry Array of 2 chars to get the country translation.
+	 * @return TRUE on success, FALSE on error
+	 */
+	public static boolean cmsMLUgetTranslationCleaned(cmsMLU mlu, final String LanguageCode, final String CountryCode, StringBuffer ObtainedLanguage, StringBuffer ObtainedCountry)
+	{
+		boolean ret = cmsnamed.cmsMLUgetTranslation(mlu, LanguageCode, CountryCode, ObtainedLanguage, ObtainedCountry);
+		ObtainedLanguage.setLength(2);
+		ObtainedCountry.setLength(2);
+		return ret;
 	}
 	
 	// Undercolorremoval & black generation -------------------------------------------------------------------------------------
@@ -2808,6 +2877,32 @@ public class lcms2
 	}
 	
 	/**
+	 * Gets several information strings from the profile, dealing with localization. Strings are returned as chars. Unlike 
+	 * {@link #cmsGetProfileInfo(cmsHPROFILE, int, String, String, StringBuffer, int) cmsGetProfileInfo}, this function will return Java Strings that simply 
+	 * terminates instead of using a null char to terminate the String.
+	 * @param hProfile Handle to a profile object
+	 * @param Info A selector of which info to return
+	 * @param LanguageCode first name language code from ISO-639/2.
+	 * @param CountryCode first name region code from ISO-3166.
+	 * @param Buffer pointer to a memory block to get the result. NULL to calculate size only
+	 * @param BufferSize Amount of byes allocated in Buffer, or 0 to calculate size only.
+	 * @return Number of required bytes to hold the result. 0 on error.
+	 */
+	public static int cmsGetProfileInfoCleaned(cmsHPROFILE hProfile, int Info, final String LanguageCode, final String CountryCode, StringBuffer Buffer, int BufferSize)
+	{
+		int len = cmsio1.cmsGetProfileInfo(hProfile, Info, LanguageCode, CountryCode, Buffer, BufferSize);
+		if(len > 0)
+		{
+			len--;
+		}
+		if(Buffer != null)
+		{
+			Buffer.setLength(len);
+		}
+		return len;
+	}
+	
+	/**
 	 * Gets several information strings from the profile, dealing with localization. Strings are returned as ASCII.
 	 * @param hProfile Handle to a profile object
 	 * @param Info A selector of which info to return
@@ -2820,6 +2915,32 @@ public class lcms2
 	public static int cmsGetProfileInfoASCII(cmsHPROFILE hProfile, int Info, final String LanguageCode, final String CountryCode, StringBuffer Buffer, int BufferSize)
 	{
 		return cmsio1.cmsGetProfileInfoASCII(hProfile, Info, LanguageCode, CountryCode, Buffer, BufferSize);
+	}
+	
+	/**
+	 * Gets several information strings from the profile, dealing with localization. Strings are returned as ASCII. Unlike 
+	 * {@link #cmsGetProfileInfoASCIICleaned(cmsHPROFILE, int, String, String, StringBuffer, int) cmsGetProfileInfoASCIICleaned}, this function will return Java 
+	 * Strings that simply terminates instead of using a null char to terminate the String.
+	 * @param hProfile Handle to a profile object
+	 * @param Info A selector of which info to return
+	 * @param LanguageCode first name language code from ISO-639/2.
+	 * @param CountryCode first name region code from ISO-3166.
+	 * @param Buffer pointer to a memory block to get the result. NULL to calculate size only
+	 * @param BufferSize Amount of byes allocated in Buffer, or 0 to calculate size only.
+	 * @return Number of required bytes to hold the result. 0 on error.
+	 */
+	public static int cmsGetProfileInfoASCIICleaned(cmsHPROFILE hProfile, int Info, final String LanguageCode, final String CountryCode, StringBuffer Buffer, int BufferSize)
+	{
+		int len = cmsio1.cmsGetProfileInfoASCII(hProfile, Info, LanguageCode, CountryCode, Buffer, BufferSize);
+		if(len > 0)
+		{
+			len--;
+		}
+		if(Buffer != null)
+		{
+			Buffer.setLength(len);
+		}
+		return len;
 	}
 	
 	// IO handlers ----------------------------------------------------------------------------------------------------------

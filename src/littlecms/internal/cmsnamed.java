@@ -431,6 +431,8 @@ final class cmsnamed
 	    	return null;
 	    }
 	    
+	    int pos = mlu.MemPool.getPosition();
+	    VirtualPointer.TypeProcessor proc = mlu.MemPool.getProcessor();
 	    for (i=0; i < mlu.UsedEntries; i++)
 	    {
 	        v = mlu.Entries[i];
@@ -459,8 +461,8 @@ final class cmsnamed
 	                }
 	                
 	                mlu.MemPool.movePosition(v.StrW);
-	                String tempResult = mlu.MemPool.getProcessor().readString(false, true); // Found exact match
-	                mlu.MemPool.setPosition(0);
+	                String tempResult = proc.readString(false, true); // Found exact match
+	                mlu.MemPool.setPosition(pos);
 	                return tempResult;
 	            }
 	        }
@@ -488,9 +490,8 @@ final class cmsnamed
         	len[0] = v.Len;
         }
         
-        int pos = mlu.MemPool.getPosition();
         mlu.MemPool.movePosition(v.StrW);
-        String tempResult = mlu.MemPool.getProcessor().readString(false, true); // Found exact match
+        String tempResult = proc.readString(false, true); // Found exact match
         mlu.MemPool.setPosition(pos);
         return tempResult;
 	}
@@ -538,7 +539,7 @@ final class cmsnamed
 	    	ASCIIlen = BufferSize - 1;
 	    }
 	    
-	    // Precess each character
+	    // Process each character
 	    for (i=0; i < ASCIIlen; i++)
 	    { 
 	        if (Wide.charAt(i) == '\0')
@@ -606,9 +607,19 @@ final class cmsnamed
 		byte[] values = BitConverter.getBytes(code);
 		for(int i = 0; i < 2; i++)
 		{
-			buf.setCharAt(i, (char)values[i]);
+			if(buf.length() > i)
+			{
+				buf.setCharAt(i, (char)values[i]);
+			}
+			else
+			{
+				buf.append((char)values[i]);
+			}
 		}
-		buf.setCharAt(2, '\0');
+		if(buf.length() > 2)
+		{
+			buf.setCharAt(2, '\0');
+		}
 	}
 	
 	// Get also the language and country
@@ -689,8 +700,8 @@ final class cmsnamed
 	    	GrowNamedColorList(v);
 	    }
 	    
-	    v.Prefix.append(Prefix);
-	    v.Suffix.append(Suffix);
+	    Utility.strncpy(v.Prefix, Prefix, Utility.strlen(Prefix));
+	    Utility.strncpy(v.Suffix, Suffix, Utility.strlen(Suffix));
 	    v.ColorantCount = ColorantCount;
 	    
 	    return v;
@@ -771,7 +782,8 @@ final class cmsnamed
 	    
 	    if (Name != null)
 	    {
-	    	NamedColorList.List[NamedColorList.nColors].Name.append(Name);
+	    	StringBuffer buf = NamedColorList.List[NamedColorList.nColors].Name;
+	    	Utility.strncpy(buf, Name, Utility.strlen(buf.toString()));
 	    }
 	    else
 	    {
@@ -796,6 +808,8 @@ final class cmsnamed
 	public static boolean cmsNamedColorInfo(final cmsNAMEDCOLORLIST NamedColorList, int nColor, StringBuffer Name, StringBuffer Prefix, StringBuffer Suffix, 
 			short[] PCS, short[] Colorant)
 	{
+		String str;
+		
 	    if (NamedColorList == null)
 	    {
 	    	return false;
@@ -808,15 +822,18 @@ final class cmsnamed
 	    
 	    if (Name != null)
 	    {
-	    	Name.append(NamedColorList.List[nColor].Name.toString());
+	    	str = NamedColorList.List[nColor].Name.toString();
+	    	Utility.strncpy(Name, str, Utility.strlen(str));
 	    }
 	    if (Prefix != null)
 	    {
-	    	Prefix.append(NamedColorList.Prefix.toString());
+	    	str = NamedColorList.Prefix.toString();
+	    	Utility.strncpy(Prefix, str, Utility.strlen(str));
 	    }
 	    if (Suffix != null)
 	    {
-	    	Suffix.append(NamedColorList.Suffix.toString());
+	    	str = NamedColorList.Suffix.toString();
+	    	Utility.strncpy(Suffix, str, Utility.strlen(str));
 	    }
 	    if (PCS != null)
 	    {

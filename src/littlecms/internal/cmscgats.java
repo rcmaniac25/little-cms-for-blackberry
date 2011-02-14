@@ -1756,12 +1756,13 @@ final class cmscgats
     }
     
     // Saves whole file
-    public static boolean cmsIT8SaveToFile(cmsHANDLE hIT8, final String cFileName)
+    public static boolean cmsIT8SaveToFile(cmsHANDLE hIT8, String cFileName)
     {
         SAVESTREAM sd = new SAVESTREAM();
         int i;
         cmsIT8 it8 = (cmsIT8)hIT8;
         
+        cFileName = cFileName.substring(0, Utility.strlen(cFileName));
         sd.stream = Stream.fopen(cFileName, "w");
         if (sd.stream == null)
         {
@@ -2361,7 +2362,7 @@ final class cmscgats
         return hIT8;
     }
     
-    public static cmsHANDLE cmsIT8LoadFromFile(cmsContext ContextID, final String cFileName)
+    public static cmsHANDLE cmsIT8LoadFromFile(cmsContext ContextID, String cFileName)
     {
     	cmsHANDLE hIT8;
     	cmsIT8 it8;
@@ -2369,6 +2370,7 @@ final class cmscgats
     	
     	lcms2_internal._cmsAssert(cFileName != null, "cFileName != null");
     	
+    	cFileName = cFileName.substring(0, Utility.strlen(cFileName));
     	type = IsMyFile(cFileName);
     	if (!type)
     	{
@@ -2744,6 +2746,7 @@ final class cmscgats
     		return Data.getProcessor().readString();
     	}
     	
+    	buffer.ensureCapacity(MAXSTR);
     	Utility.strncpy(buffer, Data, MAXSTR-1);        
     	buffer.setCharAt(MAXSTR-1, '\0');
     	String str = buffer.toString();

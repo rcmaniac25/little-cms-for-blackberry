@@ -1244,6 +1244,7 @@ final class cmscnvrt
 	    
 	    fl.Intent  = Plugin.Intent;
 	    fl.Description = Plugin.Description.toString();
+	    fl.Description = fl.Description.substring(0, Utility.strlen(fl.Description)); //Clean up string, jsut in case
 	    if(fl.Description.length() > 255)
 	    {
 	    	fl.Description = fl.Description.substring(0, 255);

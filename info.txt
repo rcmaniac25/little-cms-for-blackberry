@@ -35,44 +35,6 @@ Testing (LCMS 2.0):
 --ColorantOrderType-todo
 -]
 Do cleanup operation for endian (see notes)[do this by checking every call to a read/write function in cmsplugin that has a endian argument]
--Go through the following functions and make sure they don't need to be in 'C' format; they can be but don't need to):
---cmsMLUsetASCII
---cmsMLUsetWide
---cmsMLUgetASCII
---cmsMLUgetWide
---cmsMLUgetTranslation
---cmsAllocNamedColorList
---cmsAppendNamedColor
---cmsNamedColorIndex
---cmsNamedColorInfo
---cmsGetProfileInfo
---cmsGetProfileInfoASCII
---cmsOpenIOhandlerFromFile
---cmsOpenProfileFromFileTHR
---cmsGetSupportedIntents
---cmsIT8LoadFromFile
---cmsIT8SaveToFile
---cmsIT8GetSheetType
---cmsIT8SetSheetType
---cmsIT8SetComment
---cmsIT8SetPropertyStr
---cmsIT8SetPropertyDbl
---cmsIT8SetPropertyHex
---cmsIT8SetPropertyUncooked
---cmsIT8GetProperty
---cmsIT8GetPropertyDbl
---cmsIT8EnumProperties
---cmsIT8GetDataRowCol
---cmsIT8SetDataRowCol
---cmsIT8GetData
---cmsIT8GetDataDbl
---cmsIT8SetData
---cmsIT8SetDataDbl
---cmsIT8FindDataFormat
---cmsIT8SetDataFormat
---cmsIT8GetPatchName
---cmsIT8SetTableByLabel
---cmsIT8DefineDblFormat
 Get full JavaDoc to be created for lcms
 Release Version 2.0
 
@@ -118,6 +80,7 @@ CMS_J2ME //J2ME only version of LCMS. No BlackBerry needed.
 
 Implementation Notes:
 cmsSigChromaticAdaptationTag returns a double[], not a cmsMAT3 as what might be expected.
+Some extra functions to handle any functions that take/return Strings so they handle Java Strings (no null terminator though it is supported). These functions have "Cleaned" appeneded to the end of the function.
 RRT Signing is required.
 
 Small history on PrintUtility:

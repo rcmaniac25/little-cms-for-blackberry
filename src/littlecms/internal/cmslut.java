@@ -72,7 +72,7 @@ final class cmslut
 	    ph.FreePtr        = FreePtr;               
 	    ph.Data           = Data;
 	    
-	    return ph; 
+	    return ph;
 	}
 	
 	private static final _cmsStageEvalFn EvaluateIdentity = new _cmsStageEvalFn()
@@ -792,7 +792,7 @@ final class cmslut
 	public static boolean cmsStageSampleCLutFloat(cmsStage mpe, cmsSAMPLERFLOAT Sampler, Object Cargo, int dwFlags)
 	{
 	    int i, t, nTotalPoints, index, rest;
-	    int nInputs, nOutputs;  
+	    int nInputs, nOutputs;
 	    int[] nSamples;
 	    float[] In = new float[lcms2.cmsMAXCHANNELS], Out = new float[lcms2_internal.MAX_STAGE_CHANNELS];
 	    _cmsStageCLutData clut = (_cmsStageCLutData)mpe.Data;
