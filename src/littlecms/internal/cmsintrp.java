@@ -554,7 +554,7 @@ final class cmsintrp
 	{
 		private int LERP(int a,int l,int h)
 		{
-			return (short)(l + lcms2_internal.ROUND_FIXED_TO_INT(((h-l)*a)));
+			return (l + lcms2_internal.ROUND_FIXED_TO_INT(((h-l)*a))) & 0xFFFF;
 		}
 		
 		public void run(short[] Input, short[] Output, cmsInterpParams p)
@@ -1449,7 +1449,7 @@ final class cmsintrp
 				
 				p1.Table = new VirtualPointer(LutTable, K0 * 2);
 				
-				short[] tempInput = new short[3];
+				short[] tempInput = new short[4];
 				System.arraycopy(Input, 1, tempInput, 0, 4);
 				Eval4Inputs.run(tempInput, Tmp1, p1);
 				
@@ -1466,7 +1466,7 @@ final class cmsintrp
 				System.arraycopy(LutTable, K0, T, 0, temp);
 				p1.Table = T;
 				
-				short[] tempInput = new short[3];
+				short[] tempInput = new short[4];
 				System.arraycopy(Input, 1, tempInput, 0, 4);
 				Eval4Inputs.run(tempInput, Tmp1, p1);
 				
@@ -1514,8 +1514,8 @@ final class cmsintrp
 				
 				p1.Table = new VirtualPointer(LutTable, K0 * 4);
 				
-				float[] tempInput = new float[3];
-				System.arraycopy(Input, 1, tempInput, 0, 3);
+				float[] tempInput = new float[4];
+				System.arraycopy(Input, 1, tempInput, 0, 4);
 				Eval4InputsFloat.run(tempInput, Tmp1, p1);
 				
 				((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 4));
@@ -1531,8 +1531,8 @@ final class cmsintrp
 				System.arraycopy(LutTable, K0, T, 0, temp);
 				p1.Table = T;
 				
-				float[] tempInput = new float[3];
-				System.arraycopy(Input, 1, tempInput, 0, 3);
+				float[] tempInput = new float[4];
+				System.arraycopy(Input, 1, tempInput, 0, 4);
 				Eval4InputsFloat.run(tempInput, Tmp1, p1);
 				
 				if(K0 != K1)
@@ -1582,8 +1582,8 @@ final class cmsintrp
 				
 				p1.Table = new VirtualPointer(LutTable, K0 * 2);
 				
-				short[] tempInput = new short[3];
-				System.arraycopy(Input, 1, tempInput, 0, 4);
+				short[] tempInput = new short[5];
+				System.arraycopy(Input, 1, tempInput, 0, 5);
 				Eval5Inputs.run(tempInput, Tmp1, p1);
 				
 				((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 2));
@@ -1599,8 +1599,8 @@ final class cmsintrp
 				System.arraycopy(LutTable, K0, T, 0, temp);
 				p1.Table = T;
 				
-				short[] tempInput = new short[3];
-				System.arraycopy(Input, 1, tempInput, 0, 4);
+				short[] tempInput = new short[5];
+				System.arraycopy(Input, 1, tempInput, 0, 5);
 				Eval5Inputs.run(tempInput, Tmp1, p1);
 				
 				if(K0 != K1)
@@ -1647,8 +1647,8 @@ final class cmsintrp
 				
 				p1.Table = new VirtualPointer(LutTable, K0 * 4);
 				
-				float[] tempInput = new float[3];
-				System.arraycopy(Input, 1, tempInput, 0, 3);
+				float[] tempInput = new float[5];
+				System.arraycopy(Input, 1, tempInput, 0, 5);
 				Eval5InputsFloat.run(tempInput, Tmp1, p1);
 				
 				((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 4));
@@ -1664,8 +1664,8 @@ final class cmsintrp
 				System.arraycopy(LutTable, K0, T, 0, temp);
 				p1.Table = T;
 				
-				float[] tempInput = new float[3];
-				System.arraycopy(Input, 1, tempInput, 0, 3);
+				float[] tempInput = new float[5];
+				System.arraycopy(Input, 1, tempInput, 0, 5);
 				Eval5InputsFloat.run(tempInput, Tmp1, p1);
 				
 				if(K0 != K1)
@@ -1715,8 +1715,8 @@ final class cmsintrp
 				
 				p1.Table = new VirtualPointer(LutTable, K0 * 2);
 				
-				short[] tempInput = new short[3];
-				System.arraycopy(Input, 1, tempInput, 0, 4);
+				short[] tempInput = new short[6];
+				System.arraycopy(Input, 1, tempInput, 0, 6);
 				Eval6Inputs.run(tempInput, Tmp1, p1);
 				
 				((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 2));
@@ -1732,8 +1732,8 @@ final class cmsintrp
 				System.arraycopy(LutTable, K0, T, 0, temp);
 				p1.Table = T;
 				
-				short[] tempInput = new short[3];
-				System.arraycopy(Input, 1, tempInput, 0, 4);
+				short[] tempInput = new short[6];
+				System.arraycopy(Input, 1, tempInput, 0, 6);
 				Eval6Inputs.run(tempInput, Tmp1, p1);
 				
 				if(K0 != K1)
@@ -1780,8 +1780,8 @@ final class cmsintrp
 				
 				p1.Table = new VirtualPointer(LutTable, K0 * 4);
 				
-				float[] tempInput = new float[3];
-				System.arraycopy(Input, 1, tempInput, 0, 3);
+				float[] tempInput = new float[6];
+				System.arraycopy(Input, 1, tempInput, 0, 6);
 				Eval6InputsFloat.run(tempInput, Tmp1, p1);
 				
 				((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 4));
@@ -1797,8 +1797,8 @@ final class cmsintrp
 				System.arraycopy(LutTable, K0, T, 0, temp);
 				p1.Table = T;
 				
-				float[] tempInput = new float[3];
-				System.arraycopy(Input, 1, tempInput, 0, 3);
+				float[] tempInput = new float[6];
+				System.arraycopy(Input, 1, tempInput, 0, 6);
 				Eval6InputsFloat.run(tempInput, Tmp1, p1);
 				
 				if(K0 != K1)
@@ -1848,8 +1848,8 @@ final class cmsintrp
 				
 				p1.Table = new VirtualPointer(LutTable, K0 * 2);
 				
-				short[] tempInput = new short[3];
-				System.arraycopy(Input, 1, tempInput, 0, 4);
+				short[] tempInput = new short[7];
+				System.arraycopy(Input, 1, tempInput, 0, 7);
 				Eval7Inputs.run(tempInput, Tmp1, p1);
 				
 				((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 2));
@@ -1865,8 +1865,8 @@ final class cmsintrp
 				System.arraycopy(LutTable, K0, T, 0, temp);
 				p1.Table = T;
 				
-				short[] tempInput = new short[3];
-				System.arraycopy(Input, 1, tempInput, 0, 4);
+				short[] tempInput = new short[7];
+				System.arraycopy(Input, 1, tempInput, 0, 7);
 				Eval7Inputs.run(tempInput, Tmp1, p1);
 				
 				if(K0 != K1)
@@ -1913,8 +1913,8 @@ final class cmsintrp
 				
 				p1.Table = new VirtualPointer(LutTable, K0 * 4);
 				
-				float[] tempInput = new float[3];
-				System.arraycopy(Input, 1, tempInput, 0, 3);
+				float[] tempInput = new float[7];
+				System.arraycopy(Input, 1, tempInput, 0, 7);
 				Eval7InputsFloat.run(tempInput, Tmp1, p1);
 				
 				((VirtualPointer)p1.Table).setPosition(LutTable.getPosition() + (K1 * 4));
@@ -1930,8 +1930,8 @@ final class cmsintrp
 				System.arraycopy(LutTable, K0, T, 0, temp);
 				p1.Table = T;
 				
-				float[] tempInput = new float[3];
-				System.arraycopy(Input, 1, tempInput, 0, 3);
+				float[] tempInput = new float[7];
+				System.arraycopy(Input, 1, tempInput, 0, 7);
 				Eval7InputsFloat.run(tempInput, Tmp1, p1);
 				
 				if(K0 != K1)
