@@ -62,82 +62,144 @@ public final class Utility
 		return MathUtilities.exp(power * MathUtilities.log(base));
 	}
 	
-	//Following code taken from J4ME (http://code.google.com/p/j4me/)
-	public static final double PIover2 = Math.PI / 2;
-	public static final double PIover4 = Math.PI / 4;
-	public static final double PIover6 = Math.PI / 6;
-	public static final double PIover12 = Math.PI / 12;
-	/**
-	 * Constant used in the <code>atan</code> calculation.
-	 */
-	private static final double ATAN_CONSTANT = 1.732050807569;
+	//atan code and constants taken from cmath.tgz (http://www.netlib.org/cephes/)
 	
-	public static double atan (double a)
+	/*
+	Cephes Math Library Release 2.8:  June, 2000
+	Copyright 1984, 1995, 2000 by Stephen L. Moshier
+	*/
+	private static final double[] P = {
+	    -8.750608600031904122785E-1,
+	    -1.615753718733365076637E1,
+	    -7.500855792314704667340E1,
+	    -1.228866684490136173410E2,
+	    -6.485021904942025371773E1
+    };
+    private static final double[] Q = {
+	    /* 1.000000000000000000000E0, */
+	     2.485846490142306297962E1,
+	     1.650270098316988542046E2,
+	     4.328810604912902668951E2,
+	     4.853903996359136964868E2,
+	     1.945506571482613964425E2
+    };
+    
+    /* tan( 3*pi/8 ) */
+    private static final double T3P8 = 2.41421356237309504880;
+    private static final double MOREBITS = 6.123233995736765886130E-17;
+    
+    //polevl and p1evl taken from Java-ML 0.1.6 (Java Machine Learning Library)(http://java-ml.sourceforge.net/)
+    /*
+    Copyright (C) 1999 CERN - European Organization for Nuclear Research.
+    Permission to use, copy, modify, distribute and sell this software and its documentation for any purpose 
+    is hereby granted without fee, provided that the above copyright notice appear in all copies and 
+    that both that copyright notice and this permission notice appear in supporting documentation. 
+    CERN makes no representations about the suitability of this software for any purpose. 
+    It is provided "as is" without expressed or implied warranty.
+    */
+    private static double p1evl(double x, double[] coef, int N)
+    {
+        double ans;
+        
+        ans = x + coef[0];
+        
+        for (int i = 1; i < N; i++)
+        {
+            ans = ans * x + coef[i];
+        }
+        
+        return ans;
+    }
+    
+    private static double polevl(double x, double[] coef, int N)
+    {
+        double ans;
+        ans = coef[0];
+        
+        for (int i = 1; i <= N; i++)
+        {
+        	ans = ans * x + coef[i];
+        }
+        
+        return ans;
+    }
+	
+	public static double atan(double x)
 	{
 		// Special cases.
-		if ( Double.isNaN(a) )
+		if (Double.isNaN(x))
 		{
 			return Double.NaN;
 		}
 		
-		if ( a == 0.0 )
+		if(Double.isInfinite(x))
 		{
-			return a;
+			if(x < 0)
+			{
+				return -PIover2;
+			}
+			else
+			{
+				return PIover2;
+			}
+		}
+		
+		if (x == 0.0)
+		{
+			return x;
 		}
 		
 		// Compute the arc tangent.
-		boolean negative = false;
-		boolean greaterThanOne = false;
-		int i = 0;
-		
-		if ( a < 0.0 )
-		{
-			a = -a;
-			negative = true;
-		}
-		
-		if ( a > 1.0 )
-		{
-			a = 1.0 / a;
-			greaterThanOne = true;
-		}
-		
-		double t;
-		
-		for ( ; a > PIover12; a *= t )
-		{
-			i++;
-			t = a + ATAN_CONSTANT;
-			t = 1.0 / t;
-			a *= ATAN_CONSTANT;
-			a--;
-		}
-		
-		double aSquared = a * a;
-		
-		double arcTangent = aSquared + 1.4087812;
-		arcTangent = 0.55913709 / arcTangent;
-		arcTangent += 0.60310578999999997;
-		arcTangent -= 0.051604539999999997 * aSquared;
-		arcTangent *= a;
-		
-		for ( ; i > 0; i-- )
-		{
-			arcTangent += PIover6;
-		}
-		
-		if ( greaterThanOne )
-		{
-			arcTangent = PIover2 - arcTangent;
-		}
-		
-		if ( negative )
-		{
-			arcTangent = -arcTangent;
-		}
-		
-		return arcTangent;
+        double y, z;
+        short sign, flag;
+        
+        //make argument positive and save the sign
+        sign = 1;
+        if (x < 0.0)
+        {
+            sign = -1;
+            x = -x;
+        }
+        //range reduction
+        flag = 0;
+        if (x > T3P8)
+        {
+            y = PIover2;
+            flag = 1;
+            x = -(1.0 / x);
+        }
+        else if (x <= 0.66)
+        {
+            y = 0.0;
+        }
+        else
+        {
+            y = PIover4;
+            flag = 2;
+            x = (x - 1.0) / (x + 1.0);
+        }
+        z = x * x;
+        z = z * polevl(z, P, 4) / p1evl(z, Q, 5);
+        z = x * z + x;
+        if (flag == 2)
+        {
+        	z += 0.5 * MOREBITS;
+        }
+        else if (flag == 1)
+        {
+        	z += MOREBITS;
+        }
+        y = y + z;
+        if (sign < 0)
+        {
+        	y = -y;
+        }
+        return y;
 	}
+	
+	//Following code taken from J4ME (http://code.google.com/p/j4me/)
+	private static final double PIover2 = Math.PI / 2;
+	private static final double PIover4 = Math.PI / 4;
 	
 	public static double atan2(double y, double x)
 	{

@@ -371,7 +371,7 @@ final class cmspcs
 	// Auxiliar: Square
 	private static double Sqr(double v)
 	{
-	    return v * v; 
+	    return v * v;
 	}
 	// From cylindrical coordinates. No check is performed, then negative values are allowed
 	public static void cmsLab2LCh(cmsCIELCh LCh, final cmsCIELab Lab)

@@ -793,6 +793,7 @@ final class cmsgamma
 	    cmsCurveSegment[] Seg = new cmsCurveSegment[2];
 	    
 	    // Initialize segmented curve part up to 0
+	    Seg[0] = new cmsCurveSegment();
 	    Seg[0].x0 = -1;
 	    Seg[0].x1 = 0;
 	    Seg[0].Type = 6;
@@ -804,8 +805,9 @@ final class cmsgamma
 	    Seg[0].Params[4] = 0;
 	    
 	    // From zero to any
+	    Seg[1] = new cmsCurveSegment();
 	    Seg[1].x0 = 0;
-	    Seg[1].x1 = 1f;   
+	    Seg[1].x1 = 1f;
 	    Seg[1].Type = 0;
 	    
 	    Seg[1].nGridPoints = nEntries;
@@ -1342,7 +1344,7 @@ final class cmsgamma
 	        In = (short)lcms2_internal._cmsQuickSaturateWord(v * 65535.0);
 	        Out = cmsEvalToneCurve16(Curve, In);
 	        
-	        return (Out * (1 / 65535f));
+	        return ((Out & 0xFFFF) * (1 / 65535f));
 	    }
 	    
 	    return (float)EvalSegmentedFn(Curve, v);
