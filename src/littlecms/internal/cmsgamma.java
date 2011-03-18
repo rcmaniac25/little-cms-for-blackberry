@@ -972,7 +972,7 @@ final class cmsgamma
 	    for (i=0; i < nResultingPoints; i++)
 	    {
 	        t = ((float)i) / (nResultingPoints-1);
-	        x = cmsEvalToneCurveFloat(X,  t);
+	        x = cmsEvalToneCurveFloat(X, t);
 	        Res[i] = cmsEvalToneCurveFloat(Yreversed, x);
 	    }
 	    
@@ -1000,13 +1000,13 @@ final class cmsgamma
 	    }
 	    
 	    // Let's see if ascending or descending. 
-	    if (LutTable[0] < LutTable[p.Domain[0]])
+	    if ((LutTable[0] & 0xFFFF) < (LutTable[p.Domain[0]] & 0xFFFF))
 	    {
 	        // Table is overall ascending
 	        for (i=p.Domain[0]-1; i >=0; --i)
 	        {
-	            y0 = LutTable[i]; 
-	            y1 = LutTable[i+1];
+	            y0 = (LutTable[i] & 0xFFFF); 
+	            y1 = (LutTable[i+1] & 0xFFFF);
 	            
 	            if (y0 <= y1) // Increasing
 	            {
@@ -1032,8 +1032,8 @@ final class cmsgamma
 	        // Table is overall descending
 	        for (i=0; i < p.Domain[0]; i++)
 	        {
-	            y0 = LutTable[i]; 
-	            y1 = LutTable[i+1];
+	            y0 = (LutTable[i] & 0xFFFF); 
+	            y1 = (LutTable[i+1] & 0xFFFF);
 	            
 	            if (y0 <= y1) // Increasing
 	            {
@@ -1089,15 +1089,15 @@ final class cmsgamma
 	    // Iterate across Y axis
 	    for (i=0; i <  nResultSamples; i++)
 	    {
-	        y = i * 65535.0 / (nResultSamples - 1);
+	        y = (i * 65535.0) / (nResultSamples - 1);
 	        
 	        // Find interval in which y is within. 
 	        j = GetInterval(y, InCurve.Table16, InCurve.InterpParams);
 	        if (j >= 0)
 	        {
 	            // Get limits of interval
-	            x1 = InCurve.Table16[j]; 
-	            x2 = InCurve.Table16[j+1];
+	            x1 = (InCurve.Table16[j] & 0xFFFF); 
+	            x2 = (InCurve.Table16[j+1] & 0xFFFF);
 	            
 	            y1 = (j * 65535.0) / (InCurve.nEntries - 1);
 	            y2 = ((j+1) * 65535.0 ) / (InCurve.nEntries - 1);
@@ -1268,7 +1268,7 @@ final class cmsgamma
 	    
 	    for (i=0; i < Curve.nEntries; i++)
 	    {
-	        diff = Math.abs((int)Curve.Table16[i] - (int)cmslut._cmsQuantizeVal(i, Curve.nEntries));
+	        diff = Math.abs((Curve.Table16[i] & 0xFFFF) - (cmslut._cmsQuantizeVal(i, Curve.nEntries) & 0xFFFF));
 	        if (diff > 0x0f)
 	        {
 	        	return false;
@@ -1309,7 +1309,7 @@ final class cmsgamma
 	{
 	    lcms2_internal._cmsAssert(t != null, "t != null");
 	    
-	    return t.Table16[0] > t.Table16[t.nEntries-1];
+	    return (t.Table16[0] & 0xFFFF) > (t.Table16[t.nEntries-1] & 0xFFFF);
 	}
 	
 	// Another info fn: is out gamma table multisegment?

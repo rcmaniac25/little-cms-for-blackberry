@@ -1473,7 +1473,7 @@ public class lcms2
 	 * @param nPoints Sample rate for resulting tone curve.
 	 * @return Pointer to a newly created tone curve object on success, NULL on error.
 	 */
-	public static cmsToneCurve cmsJoinToneCurve(cmsContext ContextID, final cmsToneCurve X,  final cmsToneCurve Y, int nPoints)
+	public static cmsToneCurve cmsJoinToneCurve(cmsContext ContextID, final cmsToneCurve X, final cmsToneCurve Y, int nPoints)
 	{
 		return cmsgamma.cmsJoinToneCurve(ContextID, X, Y, nPoints);
 	}

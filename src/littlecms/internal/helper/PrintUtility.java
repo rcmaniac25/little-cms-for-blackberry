@@ -2519,7 +2519,7 @@ final class PrintUtility
             }
             else
             {
-                if (Math.abs(exp) >= 63)
+                if (Math.abs(exp) >= 62)
                 {
                     if (exp > 0)
                     {

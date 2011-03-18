@@ -375,12 +375,12 @@ public final class LargeNumber
                 while(number.compare(radRef) >= 0)
                 {
                 	number = number.divideAndMod(radRef, mod);
-                	builder.insert(0, Utility.forDigit((int)mod[0].longValue(), radix));
+                	builder.append(Utility.forDigit((int)mod[0].longValue(), radix));
                 }
                 if(!number.zero())
                 {
                 	//In case another digit exists
-                	builder.insert(0, Utility.forDigit((int)number.longValue(), radix));
+                	builder.append(Utility.forDigit((int)number.longValue(), radix));
                 }
             	/*
                 //All operations are done backwords. So the number 123 is stored 321.

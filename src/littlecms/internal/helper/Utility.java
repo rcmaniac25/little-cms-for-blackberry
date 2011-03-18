@@ -68,6 +68,9 @@ public final class Utility
 	Cephes Math Library Release 2.8:  June, 2000
 	Copyright 1984, 1995, 2000 by Stephen L. Moshier
 	*/
+	/* arctan(x)  = x + x^3 P(x^2)/Q(x^2)
+	   0 <= x <= 0.66
+	   Peak relative error = 2.6e-18  */
 	private static final double[] P = {
 	    -8.750608600031904122785E-1,
 	    -1.615753718733365076637E1,
@@ -86,6 +89,7 @@ public final class Utility
     
     /* tan( 3*pi/8 ) */
     private static final double T3P8 = 2.41421356237309504880;
+    /* pi/2 = PIO2 + MOREBITS.  */
     private static final double MOREBITS = 6.123233995736765886130E-17;
     
     //polevl and p1evl taken from Java-ML 0.1.6 (Java Machine Learning Library)(http://java-ml.sourceforge.net/)
