@@ -62,7 +62,6 @@ import littlecms.internal.lcms2_plugin.cmsPluginTagType;
 import littlecms.internal.lcms2_plugin.cmsTagDescriptor;
 import littlecms.internal.lcms2_plugin.cmsTagTypeHandler;
 import littlecms.internal.lcms2_plugin.cmsMAT3;
-import littlecms.internal.helper.BitConverter;
 import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
 
@@ -1386,11 +1385,15 @@ final class cmstypes
 	    }
 	    
 	    // Create memory
-	    Text = new StringBuffer(new String(new char[size]));
+	    Text = new StringBuffer(size);
 	    cmsnamed.cmsMLUgetASCII(mlu, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, Text, size);
 	    
+	    byte[] tbBuffer = new byte[size];
+        byte[] by = Text.toString().getBytes(); //getBytes should return an ISO-8859-1 encoded array, which if only ASCII is returned will be an ASCII array
+        System.arraycopy(by, 0, tbBuffer, 0, by.length);
+	    
 	    // Write it, including separator
-	    rc = io.Write.run(io, size, Text.toString().getBytes()); //getBytes should return an ISO-8859-1 encoded array, which if only ASCII is returned will be an ASCII array
+	    rc = io.Write.run(io, size, tbBuffer);
 	    
 	    return rc;
 	}
@@ -1789,8 +1792,8 @@ final class cmstypes
 	    else
 	    {
 	        // Create independent buffers
-	    	Text = new StringBuffer(new String(new char[len]));
-	    	Wide = new StringBuffer(new String(new char[len]));
+	    	Text = new StringBuffer(len);
+	    	Wide = new StringBuffer(len);
 	        
 	        // Get both representations.
 	    	cmsnamed.cmsMLUgetASCII(mlu, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, Text, len * /*sizeof(char)*/1);
@@ -1810,7 +1813,12 @@ final class cmstypes
 	    {
 	    	return rc;
 	    }
-	    if (!io.Write.run(io, len, Text.toString().getBytes()))
+	    
+	    byte[] tbBuffer = new byte[len];
+        byte[] by = Text.toString().getBytes();
+        System.arraycopy(by, 0, tbBuffer, 0, by.length);
+        
+	    if (!io.Write.run(io, len, tbBuffer))
 	    {
 	    	return rc;
 	    }
@@ -1832,14 +1840,18 @@ final class cmstypes
 	    	return rc;
 	    }
 	    
+	    char[] tBuffer = new char[len];
+        char[] cy = Wide.toString().toCharArray();
+        System.arraycopy(by, 0, tBuffer, 0, cy.length);
+	    
 		// Note that in some compilers sizeof(cmsUInt16Number) != sizeof(wchar_t)
-	    if (!_cmsWriteWCharArray(io, len, Wide.toString().toCharArray()))
+	    if (!_cmsWriteWCharArray(io, len, tBuffer))
 	    {
-	    	return rc;            
+	    	return rc;
 	    }
 	    if (!cmsplugin._cmsWriteUInt16Array(io, len_filler_alignment + 1, new short[len_filler_alignment + 1]))
 	    {
-	    	return rc;   
+	    	return rc;
 	    }
 	    
 	    // ScriptCode Code & count (unused)
@@ -4804,16 +4816,18 @@ final class cmstypes
 
 	    for (i = 0; i < nColors; i++)
 	    {
-	    	StringBuffer root = new StringBuffer(new String(new char[33]));
+	    	StringBuffer root = new StringBuffer(33);
 	        short[] PCS = new short[3];
 	        
 	        if (!cmsnamed.cmsNamedColorInfo(NamedColorList, i, root, null, null, PCS, null))
 	        {
 	        	return false;
 	        }
-	        root.setCharAt(32, '\0');
+	        byte[] rBuffer = new byte[32];
+	        byte[] by = root.toString().getBytes();
+	        System.arraycopy(by, 0, rBuffer, 0, by.length);
 	        
-	        if (!io.Write.run(io, 32, root.toString().getBytes()))
+	        if (!io.Write.run(io, 32, rBuffer))
 	        {
 	        	return false;
 	        }
@@ -4868,17 +4882,17 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    vendorFlag = temp[0];
+	    vendorFlag = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    count = temp[0];
+	    count = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    nDeviceCoords = temp[0];
+	    nDeviceCoords = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    
 	    if (io.vpRead(io, prefix, 32, 1) != 1)
 	    {
@@ -4913,12 +4927,12 @@ final class cmstypes
 		    {
 		    	return null;
 		    }
-	        if (!cmsplugin._cmsReadUInt16Array(io, 3, PCS))
+	        if (!cmsplugin._cmsReadUInt16Array(io, 3, PCS, true))
 	        {
 	        	cmsnamed.cmsFreeNamedColorList(v);
 	    	    return null;
 	        }
-	        if (!cmsplugin._cmsReadUInt16Array(io, nDeviceCoords, Colorant))
+	        if (!cmsplugin._cmsReadUInt16Array(io, nDeviceCoords, Colorant, true))
 	        {
 	        	cmsnamed.cmsFreeNamedColorList(v);
 	    	    return null;
@@ -4949,11 +4963,11 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, nColors))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(nColors)))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, NamedColorList.ColorantCount))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(NamedColorList.ColorantCount)))
 	    {
 	    	return false;
 	    }
@@ -4974,21 +4988,25 @@ final class cmstypes
 	    {
 	    	short[] PCS = new short[3];
 	    	short[] Colorant = new short[lcms2.cmsMAXCHANNELS];
-	    	StringBuffer Root = new StringBuffer(new String(new char[33]));
+	    	StringBuffer Root = new StringBuffer(33);
 	    	
 	    	if (!cmsnamed.cmsNamedColorInfo(NamedColorList, i, Root, null, null, PCS, Colorant))
 		    {
 		    	return false;
 		    }
-	    	if (!io.Write.run(io, 32, Root.toString().getBytes()))
+	    	byte[] rBuffer = new byte[32];
+	        byte[] by = Root.toString().getBytes();
+	        System.arraycopy(by, 0, rBuffer, 0, by.length);
+	        
+	    	if (!io.Write.run(io, 32, rBuffer))
 		    {
 		    	return false;
 		    }
-	    	if (!cmsplugin._cmsWriteUInt16Array(io, 3, PCS))
+	    	if (!cmsplugin._cmsWriteUInt16Array(io, 3, PCS, true))
 		    {
 		    	return false;
 		    }
-	    	if (!cmsplugin._cmsWriteUInt16Array(io, NamedColorList.ColorantCount, Colorant))
+	    	if (!cmsplugin._cmsWriteUInt16Array(io, NamedColorList.ColorantCount, Colorant, true))
 		    {
 		    	return false;
 		    }
@@ -5448,7 +5466,11 @@ final class cmstypes
 	    	return false;
 	    }
 	    
-	    if (!io.Write.run(io, TextSize, Text.toString().getBytes()))
+	    byte[] tbBuffer = new byte[TextSize];
+        byte[] by = Text.toString().getBytes();
+        System.arraycopy(by, 0, tbBuffer, 0, by.length);
+	    
+	    if (!io.Write.run(io, TextSize, tbBuffer))
 	    {
 	    	return false;
 	    }
@@ -5564,7 +5586,11 @@ final class cmstypes
 	    	return false;
 	    }
 	    
-	    if (!io.Write.run(io, TextSize, Text.toString().getBytes()))
+	    byte[] tbBuffer = new byte[TextSize];
+        byte[] by = Text.toString().getBytes();
+        System.arraycopy(by, 0, tbBuffer, 0, by.length);
+	    
+	    if (!io.Write.run(io, TextSize, tbBuffer))
 	    {
 	    	return false;
 	    }

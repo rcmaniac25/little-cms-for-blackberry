@@ -1001,7 +1001,7 @@ final class cmsps2
 	    cmsHTRANSFORM xform;
 	    cmsHPROFILE   hLab;
 	    int i, nColors;
-	    StringBuffer ColorName = new StringBuffer(new String(new char[32]));
+	    StringBuffer ColorName = new StringBuffer(32);
 	    cmsNAMEDCOLORLIST NamedColorList;
 	    
 		hLab  = cmsvirt.cmsCreateLab4ProfileTHR(m.ContextID, null);
@@ -1423,7 +1423,7 @@ final class cmsps2
 	    cmsHTRANSFORM xform;    
 	    int i, nColors, nColorant;
 	    int OutputFormat;
-	    StringBuffer ColorName = new StringBuffer(new String(new char[32]));
+	    StringBuffer ColorName = new StringBuffer(32);
 	    StringBuffer Colorant = new StringBuffer(128);
 		cmsNAMEDCOLORLIST NamedColorList;
 		

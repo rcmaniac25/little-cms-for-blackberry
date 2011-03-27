@@ -1587,11 +1587,18 @@ final class cmsio0
 	    	return false;
 	    }
 	    
-	    // Was open in write mode?   
+	    // Was open in write mode?
 	    if (Icc.IsWrite)
 	    {
 	        Icc.IsWrite = false; // Assure no further writing
-	        rc &= cmsSaveProfileToFile(hProfile, Icc.IOhandler.PhysicalFile.toString());        
+	        if(Icc.IOhandler != null)
+	        {
+	        	rc &= (cmsSaveProfileToIOhandler(hProfile, Icc.IOhandler) != 0);
+	        }
+	        else
+	        {
+	        	rc &= cmsSaveProfileToFile(hProfile, Icc.IOhandler.PhysicalFile.toString());
+	        }
 	    }
 	    
 	    for (int i = 0; i < Icc.TagCount; i++)

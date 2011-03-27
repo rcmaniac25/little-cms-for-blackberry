@@ -447,13 +447,19 @@ final class cmscgats
         if (isabsolutepath(relPath))
         {
         	Utility.strncpy(buffer, relPath, MaxLen);
-        	buffer.setCharAt(MaxLen-1, '\0');
+        	if(buffer.length() > MaxLen-1)
+        	{
+        		buffer.setCharAt(MaxLen-1, '\0');
+        	}
             return true;
         }
         
         // No, search for last
         Utility.strncpy(buffer, basePath, MaxLen);
-        buffer.setCharAt(MaxLen-1, '\0');
+        if(buffer.length() > MaxLen-1)
+    	{
+    		buffer.setCharAt(MaxLen-1, '\0');
+    	}
         
         len = buffer.toString().lastIndexOf(DIR_CHAR);
         if (len == -1)
@@ -485,8 +491,8 @@ final class cmscgats
     // Syntax error
     private static boolean SynError(cmsIT8 it8, final String Txt, Object[] args)
     {
-    	StringBuffer Buffer = new StringBuffer(new String(new char[256]));
-    	StringBuffer ErrMsg = new StringBuffer(new String(new char[1024]));
+    	StringBuffer Buffer = new StringBuffer(256);
+    	StringBuffer ErrMsg = new StringBuffer(1024);
         
         Utility.vsnprintf(Buffer, 255, Txt, args);
         
@@ -2616,7 +2622,7 @@ final class cmscgats
     public static boolean cmsIT8SetDataRowColDbl(cmsHANDLE hIT8, int row, int col, double Val)
     {
         cmsIT8 it8 = (cmsIT8)hIT8;
-        StringBuffer Buff = new StringBuffer(new String(new char[256]));
+        StringBuffer Buff = new StringBuffer(256);
         
         lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
         
@@ -2714,7 +2720,7 @@ final class cmscgats
     public static boolean cmsIT8SetDataDbl(cmsHANDLE hIT8, final String cPatch, final String cSample, double Val)
     {
         cmsIT8 it8 = (cmsIT8)hIT8;
-        StringBuffer Buff = new StringBuffer(new String(new char[256]));
+        StringBuffer Buff = new StringBuffer(256);
         
         lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
         
@@ -2747,8 +2753,11 @@ final class cmscgats
     	}
     	
     	buffer.ensureCapacity(MAXSTR);
-    	Utility.strncpy(buffer, Data, MAXSTR-1);        
-    	buffer.setCharAt(MAXSTR-1, '\0');
+    	Utility.strncpy(buffer, Data, MAXSTR-1);       
+    	if(buffer.length() > MAXSTR-1)
+    	{
+    		buffer.setCharAt(MAXSTR-1, '\0');
+    	}
     	String str = buffer.toString();
     	return str.substring(0, Utility.strlen(str));
     }

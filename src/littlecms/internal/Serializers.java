@@ -138,18 +138,8 @@ public final class Serializers
 				
 				public boolean readData(VirtualPointer vp, Object[] val, int index)
 				{
-					StringBuffer buf = (StringBuffer)val[index];
 					String str = vp.getProcessor().readString(true);
-					if(buf.length() == buf.capacity())
-					{
-						//Preallocated StringBuffer
-						Utility.strncpy(buf, str, Utility.strlen(str));
-					}
-					else
-					{
-						//Normal StringBuffer
-						buf.append(str);
-					}
+					Utility.strncpy((StringBuffer)val[index], str, Utility.strlen(str));
 					return true;
 				}
 			}, StringBuffer.class);

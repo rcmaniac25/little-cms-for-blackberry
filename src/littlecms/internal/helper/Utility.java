@@ -617,6 +617,11 @@ public final class Utility
 	}
     
     //strlen
+	
+	public static int strlen(StringBuffer str)
+    {
+		return str.length() == 0 ? str.capacity() : strlen(str.toString());
+    }
     
     public static int strlen(String str)
     {
@@ -633,6 +638,10 @@ public final class Utility
     	//This will work on both C style strings and Java strings
     	int len = origin;
     	int aLen = chars.length;
+    	if(aLen == 0)
+    	{
+    		return 0;
+    	}
     	while(len < aLen && chars[len++] != 0);
     	if(len == aLen && chars[len - 1] != 0)
     	{
@@ -651,6 +660,10 @@ public final class Utility
     	//This will work on both C style strings and Java strings
     	int len = origin;
     	int aLen = chars.length;
+    	if(aLen == 0)
+    	{
+    		return 0;
+    	}
     	while(len < aLen && chars[len++] != 0);
     	if(len == aLen && chars[len - 1] != 0)
     	{
@@ -739,6 +752,10 @@ public final class Utility
     {
     	int len = Math.min(strlen(src, srcOffset), count);
     	System.arraycopy(src, srcOffset, dst, dstOffset, len);
+    	if(dst.length > (len + dstOffset))
+    	{
+    		dst[len + dstOffset] = '\0';
+    	}
     	return len;
     }
     
@@ -751,6 +768,10 @@ public final class Utility
     		dat[i] = (byte)src[srcOffset + i];
     	}
     	dst.writeRaw(dat, 0, len, dstOffset);
+    	if(dst.getAllocLen() > (len + dstOffset))
+    	{
+    		dst.writeRaw(0, len + dstOffset + dst.getPosition()); //Null char
+    	}
     	return len;
     }
     
@@ -758,6 +779,10 @@ public final class Utility
     {
     	int len = Math.min(strlen(src, srcOffset), count);
     	dst.writeRaw(src, srcOffset, len, dstOffset);
+    	if(dst.getAllocLen() > (len + dstOffset))
+    	{
+    		dst.writeRaw(0, len + dstOffset + dst.getPosition()); //Null char
+    	}
     	return len;
     }
     
@@ -771,7 +796,8 @@ public final class Utility
     	int len = Math.min(strlen(src, srcOffset), count);
     	int appendPos = dst.length();
     	len += dstOffset;
-    	for(int d = dstOffset, s = srcOffset; d < len; d++, s++)
+    	int d, s;
+    	for(d = dstOffset, s = srcOffset; d < len; d++, s++)
     	{
     		if(d >= appendPos)
     		{
@@ -781,6 +807,14 @@ public final class Utility
     		{
     			dst.setCharAt(d, src[s]);
     		}
+    	}
+    	if(d >= appendPos)
+    	{
+    		dst.append('\0');
+    	}
+    	else
+    	{
+    		dst.setCharAt(d, '\0');
     	}
     	return len - dstOffset;
     }

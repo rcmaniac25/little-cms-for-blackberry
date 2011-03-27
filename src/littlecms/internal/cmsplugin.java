@@ -679,7 +679,7 @@ final class cmsplugin
 	public static boolean _cmsIOPrintf(cmsIOHANDLER io, final String frm, Object[] args)
 	{
 		int len;
-		StringBuffer Buffer = new StringBuffer(new String(new char[2048]));
+		StringBuffer Buffer = new StringBuffer(2048);
 		boolean rc;
 		
 		lcms2_internal._cmsAssert(io != null, "io != null");

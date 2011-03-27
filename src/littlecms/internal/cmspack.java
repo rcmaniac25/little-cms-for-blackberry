@@ -1193,8 +1193,8 @@ final class cmspack
 	    
 	    if (Extra == 0 && SwapFirst)
 	    {
-	        swap1.memmove(1, 0, (nChan-1) * /*sizeof(cmsUInt16Number)*/2);
-	    	swap1.writeRaw(v & 0xFF);
+	        swap1.memmove(1 * 2, 0, (nChan-1) * /*sizeof(cmsUInt16Number)*/2);
+	        swap1.getProcessor().write(v);
 	    }
 	    
 	    return output;

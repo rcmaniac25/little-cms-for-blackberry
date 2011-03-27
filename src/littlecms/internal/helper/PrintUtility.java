@@ -172,6 +172,10 @@ final class PrintUtility
                 }
             }
         }
+        if(count < max)
+        {
+        	out.print('\0');
+        }
         //Reset the cache values so that if the cache is reused it doesn't contain the same values used in this current operation
         if(formatCache != null && formatCache.length > 0)
 		{
@@ -1516,8 +1520,7 @@ final class PrintUtility
                 }
                 else if(obj instanceof VirtualPointer)
                 {
-                	VirtualPointer.TypeProcessor proc = ((VirtualPointer)obj).getProcessor();
-                	proc.write(sVal);
+                	((VirtualPointer)obj).getProcessor().write(sVal);
                 }
                 else
                 {

@@ -344,6 +344,11 @@ public class VirtualPointer
 			try
 			{
 				data = tvalue.toString().getBytes(enc);
+				int len = Utility.strlen(data);
+				if(len != data.length)
+				{
+					data = Arrays.copy(data, 0, len);
+				}
 			}
 			catch (UnsupportedEncodingException e)
 			{
@@ -1983,6 +1988,7 @@ public class VirtualPointer
     {
     	StringBuffer str = new StringBuffer();
     	Utility.sprintf(str, "%p", new Object[]{this});
+    	str.deleteCharAt(str.length() - 1);
     	return str.toString();
     }
     

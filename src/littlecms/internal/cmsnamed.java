@@ -540,20 +540,37 @@ final class cmsnamed
 	    }
 	    
 	    // Process each character
+	    int appendPos = Buffer.length();
+	    char c;
 	    for (i=0; i < ASCIIlen; i++)
-	    { 
-	        if (Wide.charAt(i) == '\0')
-	        {
-	        	Buffer.setCharAt(i, '\0');
-	        }
-	        else
-	        {
-	        	Buffer.setCharAt(i, (char)((byte)Wide.charAt(i)));
-	        }
+	    {
+	    	if (i >= (ASCIIlen - 1) || Wide.charAt(i) == '\0')
+	    	{
+	    		c = '\0';
+	    	}
+	    	else
+	    	{
+	    		c = (char)((byte)Wide.charAt(i));
+	    	}
+	    	if(i >= appendPos)
+        	{
+        		Buffer.append(c);
+        	}
+        	else
+        	{
+        		Buffer.setCharAt(i, c);
+        	}
 	    }
 	    
 		// We put a termination "\0"
-	    Buffer.setCharAt(ASCIIlen, '\0');
+	    if(ASCIIlen >= appendPos)
+	    {
+	    	Buffer.append('\0');
+	    }
+	    else
+	    {
+	    	Buffer.setCharAt(ASCIIlen, '\0');
+	    }
 	    return ASCIIlen + 1;
 	}
 	
@@ -597,7 +614,14 @@ final class cmsnamed
 	    }
 	    
 	    Utility.strncpy(Buffer, Wide, StrLen[0] / /*sizeof(wchar_t)*/2);
-		Buffer.setCharAt(StrLen[0] / /*sizeof(wchar_t)*/2, '\0');
+	    if(StrLen[0] / /*sizeof(wchar_t)*/2 <= Buffer.length())
+	    {
+	    	Buffer.append('\0');
+	    }
+	    else
+	    {
+	    	Buffer.setCharAt(StrLen[0] / /*sizeof(wchar_t)*/2, '\0');
+	    }
 		
 	    return StrLen[0] + /*sizeof(wchar_t)*/2;
 	}
@@ -605,9 +629,10 @@ final class cmsnamed
 	private static void shortToCode(final short code, StringBuffer buf)
 	{
 		byte[] values = BitConverter.getBytes(code);
+		int appendPos = buf.length();
 		for(int i = 0; i < 2; i++)
 		{
-			if(buf.length() > i)
+			if(i < appendPos)
 			{
 				buf.setCharAt(i, (char)values[i]);
 			}
@@ -672,7 +697,10 @@ final class cmsnamed
 	    }
 	    
 	    NewPtr = new _cmsNAMEDCOLOR[size];
-	    System.arraycopy(v.List, 0, NewPtr, 0, v.Allocated);
+	    if(v.List != null)
+	    {
+	    	System.arraycopy(v.List, 0, NewPtr, 0, v.Allocated);
+	    }
 	    
 	    v.List      = NewPtr;
 	    v.Allocated = size;
@@ -691,9 +719,9 @@ final class cmsnamed
 	    }
 	    */
 	    
-	    v.List      = null;
-	    v.nColors   = 0;
-	    v.ContextID  = ContextID;
+	    v.List		= null;
+	    v.nColors	= 0;
+	    v.ContextID	= ContextID;
 	    
 	    while (v.Allocated < n)
 	    {
@@ -770,6 +798,7 @@ final class cmsnamed
 	        }
 	    }
 	    
+	    NamedColorList.List[NamedColorList.nColors] = new _cmsNAMEDCOLOR();
 	    for (i=0; i < NamedColorList.ColorantCount; i++)
 	    {
 	    	NamedColorList.List[NamedColorList.nColors].DeviceColorant[i] = Colorant == null? 0 : Colorant[i];
@@ -780,14 +809,21 @@ final class cmsnamed
 	    	NamedColorList.List[NamedColorList.nColors].PCS[i] = PCS == null ? 0 : PCS[i];
 	    }
 	    
+	    StringBuffer buf = NamedColorList.List[NamedColorList.nColors].Name;
 	    if (Name != null)
 	    {
-	    	StringBuffer buf = NamedColorList.List[NamedColorList.nColors].Name;
-	    	Utility.strncpy(buf, Name, Utility.strlen(buf.toString()));
+	    	Utility.strncpy(buf, Name, Utility.strlen(buf));
 	    }
 	    else
 	    {
-	    	NamedColorList.List[NamedColorList.nColors].Name.setCharAt(0, '\0');
+	    	if(buf.length() > 0)
+	    	{
+	    		buf.setCharAt(0, '\0');
+	    	}
+	    	else
+	    	{
+	    		buf.append('\0');
+	    	}
 	    }
 	    
 	    NamedColorList.nColors++;

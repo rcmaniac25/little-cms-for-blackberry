@@ -85,11 +85,11 @@ final class lcms2_internal extends lcms2_plugin
 	// A fast way to convert from/to 16 <-> 8 bits
 	public static short FROM_8_TO_16(int rgb)
 	{
-		return (short)((((short)(rgb)) << 8)|(rgb));
+		return (short)(((rgb & 0xFF) << 8)|(rgb & 0xFF));
 	}
 	public static byte FROM_16_TO_8(short rgb)
 	{
-		return (byte)((((rgb) * 65281 + 8388608) >> 24) & 0xFF);
+		return (byte)((((rgb & 0xFFFF) * 65281 + 8388608) >> 24) & 0xFF);
 	}
 	
 	public static void _cmsAssert(boolean test, String exp)

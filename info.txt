@@ -13,6 +13,7 @@ Testing (LCMS 2.0):
 --Text_Description
 --ProfileSequenceId
 --Text
+--NamedColor
 
 --Curve-todo (read-"Gamma curve")(write-"Gamma curve")
 --LUT16-todo (read: pre/post mpe)(write: pre/post mpe)
@@ -27,7 +28,6 @@ Testing (LCMS 2.0):
 --Data-todo
 --Measurement-todo
 --Signature-todo
---NamedColor-todo
 --ColorantTable-todo
 --LUT8-todo
 --DateTime-todo
@@ -35,6 +35,8 @@ Testing (LCMS 2.0):
 --ColorantOrderType-todo
 -]
 Do cleanup operation for endian (see notes)[do this by checking every call to a read/write function in cmsplugin that has a endian argument]
+-Consolidate cmspack functions so that formatters don't just simply call the "actual function"
+-Optimize memory in cmsintrp so that it simply passes allocated memory and an index instead of reallocating memory every time certain functions are used used
 Get full JavaDoc to be created for lcms
 Release Version 2.0
 
@@ -45,6 +47,7 @@ Release version 2.1
 Update LCMS 4 BB to the same level as the GIT build
 If Test system has been updated then do testing
 
+Comment PrintUtility and LargeNumber
 Update PrintUtility FloatFormat so that it properly processes the values with exponent. Example: Double.MIN_VALUE is a subnormal number. The default manner of execution would consider the value to be zero since the number is so small. Make it so that it will scale the value for exponent.
 Update printf and scanf to follow: http://pubs.opengroup.org/onlinepubs/009695399/functions/printf.html, and http://pubs.opengroup.org/onlinepubs/009695399/functions/scanf.html (dedicated functions for printing 'e' and 'a', etc.)
 Try to figure out at least the two todo in VirtualPointer
