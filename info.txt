@@ -3,37 +3,6 @@
 
 TODO:
 Testing (LCMS 2.0):
--Make sure all data read/written is in the proper endian [Types:
---MLU
---XYZ
---S15Fixed16
---ParametricCurve
---Chromaticity
---ProfileSequenceDesc
---Text_Description
---ProfileSequenceId
---Text
---NamedColor
-
---Curve-todo (read-"Gamma curve")(write-"Gamma curve")
---LUT16-todo (read: pre/post mpe)(write: pre/post mpe)
---LUTA2B-todo (read: ReadMatrix)(write: ReadMatrix)
---LUTB2A-todo (read: ReadMatrix)(write: ReadMatrix)
---vcgt-todo
---ViewingConditions-todo
---Screening-todo
---MPE-todo
---CrdInfo-todo
---UcrBg-todo
---Data-todo
---Measurement-todo
---Signature-todo
---ColorantTable-todo
---LUT8-todo
---DateTime-todo
---U16Fixed16-todo
---ColorantOrderType-todo
--]
 Do cleanup operation for endian (see notes)[do this by checking every call to a read/write function in cmsplugin that has a endian argument]
 -Consolidate cmspack functions so that formatters don't just simply call the "actual function"
 -Optimize memory in cmsintrp so that it simply passes allocated memory and an index instead of reallocating memory every time certain functions are used used
@@ -75,7 +44,7 @@ CMS_DONT_USE_PTHREADS
 CMS_USE_PROFILE_BLACK_POINT_TAG
 CMS_STRICT_CGATS
 CMS_USE_IO_BIT_CONVERTER //Use java.io to convert value types to bytes and back
-CMS_RAW_C //Code is similar, to near exact the same as C/C++, not fully used (obviously cumbersome)
+CMS_RAW_C //Code is similar, to near exact the same as C/C++, not fully used (obviously cumbersome) or implemented. If used there is no guarantee that it will work.
 CMS_REALLOC_PTR //By default a C pointer passed into a function is independent of the original pointer unless it is a pointer to the pointer. Since VirtualPointer is a Java class that operation is reversed. This definition reverses the process back to the C process but depending on if the dev is willing to use more memory and the operation is really necessary it can be changed.
 CMS_ENABLE_ASSERT //If not in debug compilation mode then assert is ignored, this explicitly enabled it.
 CMS_USE_NATIVE_BIGINT //Use a native big int for big number math. This requires Certicom signing if used. By default it is not used

@@ -25,6 +25,8 @@
 package littlecms.internal.helper;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Random;
 import java.util.Vector;
@@ -498,10 +500,18 @@ public class VirtualPointer
             {
                 synchronized (VirtualPointer.pointerRef)
                 {
-                	index = VirtualPointer.pointerRef.getKey(value);
+                	if(!this.vp.cleanChildren())
+                	{
+                		VirtualPointer.clearRefPointers();
+                	}
+                	if(value.ref == null)
+                	{
+                		value.ref = new WeakReference(value);
+                	}
+                	index = VirtualPointer.pointerRef.getKey(value.ref);
                 	if(index < 0)
                     {
-                		index = VirtualPointer.pointerRef.addAndGetIndex(value);
+                		index = VirtualPointer.pointerRef.addAndGetIndex(value.ref);
                     }
                 	index++;
                 }
@@ -525,9 +535,18 @@ public class VirtualPointer
             if (index >= 0)
             {
             	this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
+            	if(!this.vp.cleanChildren())
+            	{
+            		VirtualPointer.clearRefPointers();
+            	}
                 synchronized (VirtualPointer.pointerRef)
                 {
-                	return (VirtualPointer)VirtualPointer.pointerRef.get(index);
+                	WeakReference ref = (WeakReference)VirtualPointer.pointerRef.get(index);
+                	VirtualPointer vp = (VirtualPointer)ref.get();
+                	if(vp != null)
+                	{
+                		return vp;
+                	}
                 }
             }
             this.stat = VirtualPointer.Serializer.STATUS_FAIL;
@@ -1307,6 +1326,7 @@ public class VirtualPointer
     private TypeProcessor processor;
     private boolean resizeable;
     private Vector children;
+    private WeakReference ref;
     protected VirtualPointer parent;
 //#ifdef DEBUG
     private byte[] types;
@@ -1410,8 +1430,13 @@ public class VirtualPointer
 	    {
 		    synchronized (parent.children)
 		    {
-		        parent.children.addElement(this);
+		    	if(this.ref == null)
+            	{
+            		this.ref = new WeakReference(this);
+            	}
+		        parent.children.addElement(this.ref);
 		    }
+		    parent.cleanChildren();
 	    }
 	    this.parent = parent;
 	    this.dataPos = (parent == null ? 0 : parent.dataPos) + pos;
@@ -1548,10 +1573,11 @@ public class VirtualPointer
         {
             synchronized (children)
             {
+            	cleanChildren();
             	int count = children.size();
                 for (int i = 0; i < count; i++)
                 {
-                    ((VirtualPointer)children.elementAt(i)).inResize(this);
+                    ((VirtualPointer)((WeakReference)children.elementAt(i)).get()).inResize(this);
                 }
             }
         }
@@ -1584,6 +1610,76 @@ public class VirtualPointer
     	return data == null;
     }
     
+    private boolean cleanChildren()
+    {
+    	if(this.children != null)
+    	{
+    		boolean checkRef = false;
+    		//First see if any "children" are inaccessable
+    		for(int i = this.children.size() - 1; i >= 0; i--)
+    		{
+    			WeakReference ref = (WeakReference)this.children.elementAt(i);
+    			VirtualPointer vp = (VirtualPointer)ref.get();
+    			if(vp == null)
+    			{
+    				//Found one
+    				ref.clear(); //Just in case
+    				checkRef = true;
+    				this.children.removeElementAt(i);
+    			}
+    			else
+    			{
+    				vp.cleanChildren();
+    			}
+    		}
+    		if(this.children.size() == 0)
+    		{
+    			this.children = null;
+    		}
+    		if(checkRef)
+        	{
+    			//If an inaccessable VirtualPointer is found then check pointerRef because it means that one might be invalid there
+    			VirtualPointer.clearRefPointers();
+    			return true;
+        	}
+    	}
+    	return false;
+    }
+    
+    private static void clearRefPointers()
+    {
+    	synchronized (VirtualPointer.pointerRef)
+    	{
+    		//Find null sources
+    		Enumeration en = VirtualPointer.pointerRef.elements();
+    		Vector v = null;
+    		while(en.hasMoreElements())
+    		{
+    			WeakReference ref = (WeakReference)en.nextElement();
+    			if(ref != null)
+    			{
+    				if(ref.get() == null)
+    				{
+    					ref.clear(); //Just in case
+    					if(v == null)
+    					{
+    						v = new Vector();
+    					}
+    					v.addElement(ref);
+    				}
+    			}
+    		}
+    		//Remove null sources
+    		if(v != null)
+    		{
+    			for(int i = v.size() - 1; i >= 0; i--)
+    			{
+    				VirtualPointer.pointerRef.remove(v.elementAt(i));
+    			}
+    		}
+		}
+    }
+    
     public void free()
     {
         if (data == null)
@@ -1600,7 +1696,11 @@ public class VirtualPointer
         {
             synchronized (parent.children)
             {
-                parent.children.removeElement(this);
+            	if(this.ref == null)
+            	{
+            		this.ref = new WeakReference(this);
+            	}
+                parent.children.removeElement(this.ref);
             }
             parent.free(); //This is because, since the event was removed, this won't get called again by the parent
         }
@@ -1609,11 +1709,15 @@ public class VirtualPointer
         	synchronized (children)
             {
         		int count = children.size();
-        		VirtualPointer[] tE = new VirtualPointer[count];
+        		WeakReference[] tE = new WeakReference[count];
         		children.copyInto(tE); //Free function will remove itself from "events", so copy the list
                 for (int i = 0; i < count; i++)
                 {
-                    tE[i].inFree(this);
+                	VirtualPointer vp = (VirtualPointer)tE[i].get();
+                	if(vp != null)
+                	{
+                		vp.inFree(this);
+                	}
                 }
             }
         }

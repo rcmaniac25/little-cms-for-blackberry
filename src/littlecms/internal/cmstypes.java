@@ -224,6 +224,7 @@ final class cmstypes
 //#ifdef CMS_RAW_C
 	    VirtualPointer ElementOffsets = null, ElementSizes = null;
 	    VirtualPointer.TypeProcessor offProc, sizeProc;
+	    int op, sp;
 //#else
 	    int[] ElementOffsets = null, ElementSizes = null;
 //#endif
@@ -243,6 +244,7 @@ final class cmstypes
 		    }
 		    return false;
 	    }
+	    op = ElementOffsets.getPosition();
 	    offProc = ElementOffsets.getProcessor();
 //#else
 	    ElementOffsets = new int[Count];
@@ -262,6 +264,7 @@ final class cmstypes
 		    }
 		    return false;
 	    }
+	    sp = ElementSizes.getPosition();
 	    sizeProc = ElementSizes.getProcessor();
 //#else
 	    ElementSizes = new int[Count];
@@ -311,8 +314,8 @@ final class cmstypes
 //#endif
 	    }
 //#ifdef CMS_RAW_C
-	    ElementOffsets.setPosition(0);
-	    ElementSizes.setPosition(0);
+	    ElementOffsets.setPosition(op);
+	    ElementSizes.setPosition(sp);
 //#endif
 	    
 	    // Seek to each element and read it
@@ -379,6 +382,7 @@ final class cmstypes
 //#ifdef CMS_RAW_C
         VirtualPointer ElementOffsets = null, ElementSizes = null;
         VirtualPointer.TypeProcessor offProc, sizeProc;
+        int op, sp;
 //#else
         int[] ElementOffsets = null, ElementSizes = null;
 //#endif
@@ -398,6 +402,7 @@ final class cmstypes
             }
             return false;
         }
+        op = ElementOffsets.getPosition();
         offProc = ElementOffsets.getProcessor();
 //#else
         ElementOffsets = new int[Count];
@@ -417,6 +422,7 @@ final class cmstypes
             }
             return false;
         }
+        sp = ElementSizes.getPosition();
         sizeProc = ElementSizes.getProcessor();
 //#else
         ElementSizes = new int[Count];
@@ -512,8 +518,8 @@ final class cmstypes
         }
         
 //#ifdef CMS_RAW_C
-        ElementOffsets.setPosition(0);
-        ElementSizes.setPosition(0);
+        ElementOffsets.setPosition(op);
+        ElementSizes.setPosition(sp);
 //#endif
         
         for (i = 0; i < Count; i++)
@@ -897,7 +903,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    Count = temp[0];
+	    Count = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    if (Count > lcms2.cmsMAXCHANNELS)
 	    {
 	    	return null;
@@ -962,7 +968,7 @@ final class cmstypes
 //-	    ColorantOrder.setPosition(pos);
 //-endif
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, Count))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(Count)))
 	    {
 	    	return false;
 	    }
@@ -1007,6 +1013,7 @@ final class cmstypes
 //#ifdef CMS_RAW_C
 		VirtualPointer array_double;
 		VirtualPointer.TypeProcessor proc;
+		int pos;
 //#else
 		double[] array_double;
 //#endif
@@ -1021,6 +1028,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
+	    pos = array_double.getPosition();
 	    proc = array_double.getProcessor();
 //#else
 	    array_double = new double[n];
@@ -1042,7 +1050,7 @@ final class cmstypes
 //#endif
 	    }
 //#ifdef CMS_RAW_C
-	    array_double.setPosition(0);
+	    array_double.setPosition(pos);
 //#endif
 	    
 	    nItems[0] = n;
@@ -1108,6 +1116,7 @@ final class cmstypes
 //#ifdef CMS_RAW_C
 		VirtualPointer array_double;
 		VirtualPointer.TypeProcessor proc;
+		int pos;
 //#else
 		double[] array_double;
 //#endif
@@ -1122,6 +1131,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
+	    pos = array_double.getPositions();
 	    proc = array_double.getProcessor();
 //#else
 	    array_double = new double[n];
@@ -1137,13 +1147,15 @@ final class cmstypes
 	            return null;
 	        }
 	        
+	        v[0] = cmsplugin._cmsAdjustEndianess32(v[0]);
+	        
 	        // Convert to double
 //#ifdef CMS_RAW_C
-	        proc.write((double)(v[0] / 65536.0), true);
+	        proc.write((double)((v[0] & 0xFFFFFFFFL) / 65536.0), true);
 	    }
-	    array_double.setPosition(0);
+	    array_double.setPosition(pos);
 //#else
-	    	array_double[i] = (double)(v[0] / 65536.0);
+	    	array_double[i] = (double)((v[0] & 0xFFFFFFFFL) / 65536.0);
 		}
 //#endif
 	    
@@ -1170,7 +1182,7 @@ final class cmstypes
             int v = (int)Math.floor(Value[i]*65536.0 + 0.5);
 //#endif
             
-            if (!cmsplugin._cmsWriteUInt32Number(io, v))
+            if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(v)))
             {
             	return false;    
             }
@@ -1228,9 +1240,9 @@ final class cmstypes
 	    	return null;
 	    }
 //-ifdef CMS_RAW_C
-//-	    SigPtr.getProcessor().write(temp[0]);
+//-	    SigPtr.getProcessor().write(cmsplugin._cmsAdjustEndianess32(temp[0]));
 //-else
-	    SigPtr = new Integer(temp[0]);
+	    SigPtr = new Integer(cmsplugin._cmsAdjustEndianess32(temp[0]));
 //-endif
 	    nItems[0] = 1;
 	    
@@ -1246,7 +1258,7 @@ final class cmstypes
 //-else
 	    Integer SigPtr = (Integer)Ptr; 
 	    
-	    return cmsplugin._cmsWriteUInt32Number(io, SigPtr.intValue());
+	    return cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(SigPtr.intValue()));
 //-endif
 	}
 	
@@ -1278,6 +1290,7 @@ final class cmstypes
 	{
 //#ifdef CMS_RAW_C
 		VirtualPointer Text = null;
+		int pos;
 //#else
 		byte[] Text = null;
 //#endif
@@ -1308,6 +1321,7 @@ final class cmstypes
 		    
 		    return null;
 	    }
+	    pos = Text.getPosition();
 //#else
 	    Text = new byte[SizeOfTag + 1];
 //#endif
@@ -1334,9 +1348,9 @@ final class cmstypes
 	    
 	    // Make sure text is properly ended
 //#ifdef CMS_RAW_C
-	    Text.setPosition(SizeOfTag);
+	    Text.setPosition(pos + SizeOfTag);
 	    Text.getProcessor().write((byte)0);
-	    Text.setPosition(0);
+	    Text.setPosition(pos);
 //#else
 	    Text[SizeOfTag] = 0;
 //#endif
@@ -1390,7 +1404,7 @@ final class cmstypes
 	    
 	    byte[] tbBuffer = new byte[size];
         byte[] by = Text.toString().getBytes(); //getBytes should return an ISO-8859-1 encoded array, which if only ASCII is returned will be an ASCII array
-        System.arraycopy(by, 0, tbBuffer, 0, by.length);
+        System.arraycopy(by, 0, tbBuffer, 0, Utility.strlen(by));
 	    
 	    // Write it, including separator
 	    rc = io.Write.run(io, size, tbBuffer);
@@ -1428,6 +1442,7 @@ final class cmstypes
 	{
 //#ifdef CMS_RAW_C
 		VirtualPointer BinData;
+		int pos;
 //#else
 		cmsICCData BinData;
 //#endif
@@ -1437,11 +1452,12 @@ final class cmstypes
 	    LenOfData = SizeOfTag - /*sizeof(cmsUInt32Number)*/4;
 	    
 //#ifdef CMS_RAW_C
-	    BinData = cmserr._cmsMalloc(self.ContextID, /*sizeof(cmsICCData)*/cmsICCData.SIZE); //cmsICCData usually has at least 1 byte of data and the rest is just "taked on" so this would read "sizeof(cmsICCData) + LenOfData - 1", this is a little different
+	    BinData = cmserr._cmsMalloc(self.ContextID, /*sizeof(cmsICCData)*/cmsICCData.SIZE); //cmsICCData usually has at least 1 byte of data and the rest is just "tacked on" so this would read "sizeof(cmsICCData) + LenOfData - 1", this is a little different
 	    if (BinData == null)
 	    {
 	    	return null;
 	    }
+	    pos = BinData.getPosition();
 //#else
 	    BinData = new cmsICCData();
 //#endif
@@ -1460,9 +1476,9 @@ final class cmstypes
 	    	return null;
 	    }
 //#ifdef CMS_RAW_C
-	    BinData.getProcessor().write(temp[0], true);
+	    BinData.getProcessor().write(cmsplugin._cmsAdjustEndianess32(temp[0]), true);
 //#else
-	    BinData.flag = temp[0];
+	    BinData.flag = cmsplugin._cmsAdjustEndianess32(temp[0]);
 //#endif
 	    
 	    VirtualPointer data = cmserr._cmsMalloc(self.ContextID, LenOfData);
@@ -1475,7 +1491,7 @@ final class cmstypes
 	    }
 //#ifdef CMS_RAW_C
 	    BinData.getProcessor().write(data);
-	    BinData.setPosition(0);
+	    BinData.setPosition(pos);
 //#else
 	    BinData.data = data;
 //#endif
@@ -1497,15 +1513,16 @@ final class cmstypes
 	{
 //#ifdef CMS_RAW_C
 		VirtualPointer BinData = (VirtualPointer)Ptr;
-		BinData.setPosition(4);
+		int pos = BinData.getPosition();
+		BinData.setPosition(pos + 4);
 //#else
 		cmsICCData BinData = (cmsICCData)Ptr;
 //#endif
 	    
 //#ifdef CMS_RAW_C
-		if (!cmsplugin._cmsWriteUInt32Number(io, BinData.getProcessor().readInt32(true)))
+		if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(BinData.getProcessor().readInt32(true))))
 //#else
-		if (!cmsplugin._cmsWriteUInt32Number(io, BinData.flag))
+		if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(BinData.flag)))
 //#endif
 		{
 			return false;
@@ -1513,7 +1530,7 @@ final class cmstypes
 		
 //#ifdef CMS_RAW_C
 		VirtualPointer data = BinData.getProcessor().readVirtualPointer();
-		BinData.setPosition(0);
+		BinData.setPosition(pos);
 		return io.vpWrite(io, BinData.getProcessor().readInt32(), data);
 //#else
 		return io.vpWrite(io, BinData.len, BinData.data);
@@ -1524,24 +1541,26 @@ final class cmstypes
 	{
 //#ifdef CMS_RAW_C
 		VirtualPointer BinData = (VirtualPointer)Ptr;
+		int pos = BinData.getPosition();
 		int len = BinData.getProcessor().readInt32();
 		
 		VirtualPointer dup = cmserr._cmsDupMem(self.ContextID, BinData, cmsICCData.SIZE);
+		int posD = dup.getPosition();
 		
-		BinData.setPosition(4 * 2);
+		BinData.setPosition(pos + (4 * 2));
 		
-		dup.setPosition(4 * 2);
+		dup.setPosition(posD + (4 * 2));
 		dup.getProcessor().write(cmserr._cmsDupMem(self.ContextID, BinData.getProcessor().readVirtualPointer(), len));
-		dup.setPosition(0);
+		dup.setPosition(posD);
 		
-		BinData.setPosition(0);
+		BinData.setPosition(pos);
 //#else
 		cmsICCData BinData = (cmsICCData)Ptr;
 		cmsICCData dup = new cmsICCData();
 		
 		dup.len = BinData.len;
 		dup.flag = BinData.flag;
-		dup.data = cmserr._cmsDupMem(self.ContextID, dup.data, BinData.len);
+		dup.data = cmserr._cmsDupMem(self.ContextID, BinData.data, BinData.len);
 //#endif
 		
 		return dup;
@@ -1564,6 +1583,7 @@ final class cmstypes
 	{
 //#ifdef CMS_RAW_C
 		VirtualPointer Text = null;
+		int pos;
 //#else
 		byte[] Text = null;
 //#endif
@@ -1619,6 +1639,7 @@ final class cmstypes
 		    }
 		    return null;
 	    }
+	    pos = Text.getPosition();
 //#else
 	    Text = new byte[AsciiCount + 1];
 //#endif
@@ -1646,9 +1667,9 @@ final class cmstypes
 	    
 	    // Make sure there is a terminator
 //#ifdef CMS_RAW_C
-	    Text.setPosition(AsciiCount);
+	    Text.setPosition(pos + AsciiCount);
 	    Text.getProcessor().write((byte)0);
-	    Text.setPosition(0);
+	    Text.setPosition(pos);
 //#else
 	    Text[AsciiCount] = 0;
 //#endif
@@ -1816,7 +1837,7 @@ final class cmstypes
 	    
 	    byte[] tbBuffer = new byte[len];
         byte[] by = Text.toString().getBytes();
-        System.arraycopy(by, 0, tbBuffer, 0, by.length);
+        System.arraycopy(by, 0, tbBuffer, 0, Utility.strlen(by));
         
 	    if (!io.Write.run(io, len, tbBuffer))
 	    {
@@ -1842,7 +1863,7 @@ final class cmstypes
 	    
 	    char[] tBuffer = new char[len];
         char[] cy = Wide.toString().toCharArray();
-        System.arraycopy(by, 0, tBuffer, 0, cy.length);
+        System.arraycopy(cy, 0, tBuffer, 0, Utility.strlen(cy));
 	    
 		// Note that in some compilers sizeof(cmsUInt16Number) != sizeof(wchar_t)
 	    if (!_cmsWriteWCharArray(io, len, tBuffer))
@@ -1929,11 +1950,11 @@ final class cmstypes
 		    	short[] SingleGammaFixed = new short[1];
                 double[] SingleGamma;
                 
-                if (!cmsplugin._cmsReadUInt16Number(io, SingleGammaFixed)) //TODO Endian
+                if (!cmsplugin._cmsReadUInt16Number(io, SingleGammaFixed))
                 {
                 	return null;
                 }
-                SingleGamma = new double[]{cmsplugin._cms8Fixed8toDouble(SingleGammaFixed[0])}; //TODO Endian
+                SingleGamma = new double[]{cmsplugin._cms8Fixed8toDouble(cmsplugin._cmsAdjustEndianess16(SingleGammaFixed[0]))};
                 
                 nItems[0] = 1;
                 return cmsgamma.cmsBuildParametricToneCurve(self.ContextID, 1, SingleGamma);
@@ -1964,11 +1985,11 @@ final class cmstypes
 	    	// Single gamma, preserve number
 	    	short SingleGammaFixed = cmsplugin._cmsDoubleTo8Fixed8(Curve.Segments[0].Params[0]);
 	    	
-	    	if (!cmsplugin._cmsWriteUInt32Number(io, 1)) //TODO Endian
+	    	if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(1)))
 	    	{
 	    		return false;
 	    	}
-	    	if (!cmsplugin._cmsWriteUInt16Number(io, SingleGammaFixed)) //TODO Endian
+	    	if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16(SingleGammaFixed)))
 	    	{
 	    		return false;
 	    	}
@@ -2156,7 +2177,10 @@ final class cmstypes
 	
 	private static Object Type_DateTime_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
 	{
-		return cmserr._cmsDupMem(self.ContextID, new VirtualPointer(Ptr), /*sizeof(Calendar)*/8).getProcessor().readObject(Calendar.class);
+		VirtualPointer vp = cmserr._cmsDupMem(self.ContextID, new VirtualPointer(Ptr), /*sizeof(Calendar)*/(4 * 6));
+		Calendar cal = (Calendar)vp.getProcessor().readObject(Calendar.class);
+		cmserr._cmsFree(self.ContextID, vp); //Just so that it registers as "freeing" the memory
+		return cal;
 	}
 	
 	private static void Type_DateTime_Free(cmsTagTypeHandler self, Object Ptr)
@@ -2183,7 +2207,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    mc.Observer = temp[0];
+	    mc.Observer = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    if (!cmsplugin._cmsReadXYZNumber(io, mc.Backing))
 	    {
 	    	return null;
@@ -2192,9 +2216,9 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    mc.Geometry = temp[0];
+	    mc.Geometry = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    double[] temp2 = new double[1];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2, false))
 	    {
 	    	return null;
 	    }
@@ -2203,17 +2227,17 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    mc.IlluminantType = temp[0];
+	    mc.IlluminantType = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    
 	    nItems[0] = 1;
-	    return cmserr._cmsDupMem(self.ContextID, new VirtualPointer(mc), /*sizeof(cmsICCMeasurementConditions)*/cmsICCMeasurementConditions.SIZE).getProcessor().readObject(cmsICCMeasurementConditions.class);
+	    return mc;
 	}
 	
 	private static boolean Type_Measurement_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
 		cmsICCMeasurementConditions mc =(cmsICCMeasurementConditions)Ptr;
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, mc.Observer))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(mc.Observer)))
 	    {
 	    	return false;
 	    }
@@ -2221,7 +2245,7 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, mc.Geometry))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(mc.Geometry)))
 	    {
 	    	return false;
 	    }
@@ -2229,7 +2253,7 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, mc.IlluminantType))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(mc.IlluminantType)))
 	    {
 	    	return false;
 	    }
@@ -2239,12 +2263,27 @@ final class cmstypes
 	
 	private static Object Type_Measurement_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
 	{
+//#ifdef CMS_RAW_C
 		return cmserr._cmsDupMem(self.ContextID, new VirtualPointer(Ptr), /*sizeof(cmsICCMeasurementConditions)*/cmsICCMeasurementConditions.SIZE).getProcessor().readObject(cmsICCMeasurementConditions.class);
+//#else
+		cmsICCMeasurementConditions mc = new cmsICCMeasurementConditions();
+		cmsICCMeasurementConditions org = (cmsICCMeasurementConditions)Ptr;
+		mc.Observer = org.Observer;
+		mc.Geometry = org.Geometry;
+		mc.Flare = org.Flare;
+		mc.IlluminantType = org.IlluminantType;
+		mc.Backing.X = org.Backing.X;
+		mc.Backing.Y = org.Backing.Y;
+		mc.Backing.Z = org.Backing.Z;
+		return mc;
+//#endif
 	}
 	
 	private static void Type_Measurement_Free(cmsTagTypeHandler self, Object Ptr)
 	{
-		//Would free memory but never actually allocating memory (except for dup/read functions which is not a real issue)
+//#ifdef CMS_RAW_C
+		cmserr._cmsFree(self.ContextID, (VirtualPointer)Ptr);
+//#endif
 	}
 	
 	// ********************************************************************************
@@ -2261,7 +2300,7 @@ final class cmstypes
 	private static Object Type_MLU_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
 	{
 		cmsMLU mlu;
-	    int Count, RecLen, NumOfWchar;       
+	    int Count, RecLen, NumOfWchar;
 	    int SizeOfHeader;
 	    int Len, Offset;
 	    int i;
@@ -2369,7 +2408,7 @@ final class cmstypes
 	    
 	    NumOfWchar = SizeOfTag / /*sizeof(cmsUInt16Number)*/2;
 	    
-	    if (!cmsplugin._cmsReadUInt16Array(io, NumOfWchar, Block, true))
+	    if (!cmsplugin._cmsReadUInt16Array(io, NumOfWchar, Block, false))
 	    {
 	    	if (mlu != null)
 		    {
@@ -2425,7 +2464,7 @@ final class cmstypes
 	        }
 	    }
 	    
-	    if (!cmsplugin._cmsWriteUInt16Array(io, mlu.PoolUsed / /*sizeof(cmsUInt16Number)*/2, mlu.MemPool, true))
+	    if (!cmsplugin._cmsWriteUInt16Array(io, mlu.PoolUsed / /*sizeof(cmsUInt16Number)*/2, mlu.MemPool, false))
 	    {
 	    	return false;
 	    }
@@ -2506,7 +2545,7 @@ final class cmstypes
 	{
 	    cmsStage mpe;
 	    VirtualPointer Temp = null;
-	    int i, j;
+	    int i, j, pos;
 	    cmsToneCurve[] Tables = new cmsToneCurve[lcms2.cmsMAXCHANNELS];
 	    
 	    if (nChannels > lcms2.cmsMAXCHANNELS)
@@ -2519,6 +2558,7 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
+	    pos = Temp.getPosition();
 	    
 	    for (i = 0; i < nChannels; i++)
 	    {
@@ -2565,7 +2605,7 @@ final class cmstypes
 	        {
 	        	Tables[i].Table16[j] = lcms2_internal.FROM_8_TO_16(proc.readInt8(true));
 	        }
-	        Temp.setPosition(0);
+	        Temp.setPosition(pos);
 	    }
 	    
 	    cmserr._cmsFree(ContextID, Temp);
@@ -2728,7 +2768,7 @@ final class cmstypes
 	    
 	    // Read the Matrix
 	    double[] temp = new double[1];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2737,7 +2777,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[0] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2746,7 +2786,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[1] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2755,7 +2795,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[2] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2764,7 +2804,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[3] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2773,7 +2813,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[4] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2782,7 +2822,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[5] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2791,7 +2831,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[6] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2800,7 +2840,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[7] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -3134,7 +3174,7 @@ final class cmstypes
 	    	    return false;
 	        }
 	        
-	        if (!cmsplugin._cmsReadUInt16Array(io, nEntries, Tables[i].Table16))
+	        if (!cmsplugin._cmsReadUInt16Array(io, nEntries, Tables[i].Table16, true))
 	        {
 	        	for (i = 0; i < nChannels; i++)
 	    	    {
@@ -3195,7 +3235,7 @@ final class cmstypes
 	            	val = cmslut._cmsQuantizeVal(j, nEntries);
 	            }
 	            
-	            if (!cmsplugin._cmsWriteUInt16Number(io, val))
+	            if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16(val)))
 	            {
 	            	return false;
 	            }
@@ -3641,7 +3681,7 @@ final class cmstypes
 	    
 	    if (PreMPE != null)
 	    {
-	        if (!Write16bitTables(self.ContextID, io, PreMPE)) //TODO Endian?
+	        if (!Write16bitTables(self.ContextID, io, PreMPE))
 	        {
 	        	return false;
 	        }
@@ -3661,7 +3701,7 @@ final class cmstypes
 	    // The postlinearization table
 	    if (PostMPE != null)
 	    {
-	        if (!Write16bitTables(self.ContextID, io, PostMPE)) //TODO Endian?
+	        if (!Write16bitTables(self.ContextID, io, PostMPE))
 	        {
 	        	return false;
 	        }
@@ -3700,63 +3740,63 @@ final class cmstypes
 	    
 	    // Read the Matrix
 	    double[] temp = new double[1];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	return null;
 	    }
 	    dMat[0] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	return null;
 	    }
 	    dMat[1] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	return null;
 	    }
 	    dMat[2] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	return null;
 	    }
 	    dMat[3] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	return null;
 	    }
 	    dMat[4] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	return null;
 	    }
 	    dMat[5] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	return null;
 	    }
 	    dMat[6] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	return null;
 	    }
 	    dMat[7] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	return null;
 	    }
 	    dMat[8] = temp[0];
 	    
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	return null;
 	    }
 	    dOff[0] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	return null;
 	    }
 	    dOff[1] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
 	    {
 	    	return null;
 	    }
@@ -4764,7 +4804,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    Count = temp[0];
+	    Count = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    
 	    if (Count > lcms2.cmsMAXCHANNELS)
 	    {
@@ -4782,7 +4822,7 @@ final class cmstypes
 	    	    return null;
 	        }
 	        
-	        if (!cmsplugin._cmsReadUInt16Array(io, 3, PCS))
+	        if (!cmsplugin._cmsReadUInt16Array(io, 3, PCS, true))
 	        {
 	        	nItems[0] = 0;
 	    	    cmsnamed.cmsFreeNamedColorList(List);
@@ -4809,7 +4849,7 @@ final class cmstypes
 	    
 	    nColors = cmsnamed.cmsNamedColorCount(NamedColorList);
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, nColors))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(nColors)))
 	    {
 	    	return false;
 	    }
@@ -4825,13 +4865,13 @@ final class cmstypes
 	        }
 	        byte[] rBuffer = new byte[32];
 	        byte[] by = root.toString().getBytes();
-	        System.arraycopy(by, 0, rBuffer, 0, by.length);
+	        System.arraycopy(by, 0, rBuffer, 0, Utility.strlen(by));
 	        
 	        if (!io.Write.run(io, 32, rBuffer))
 	        {
 	        	return false;
 	        }
-	        if (!cmsplugin._cmsWriteUInt16Array(io, 3, PCS))
+	        if (!cmsplugin._cmsWriteUInt16Array(io, 3, PCS, true))
 	        {
 	        	return false;
 	        }
@@ -4996,7 +5036,7 @@ final class cmstypes
 		    }
 	    	byte[] rBuffer = new byte[32];
 	        byte[] by = Root.toString().getBytes();
-	        System.arraycopy(by, 0, rBuffer, 0, by.length);
+	        System.arraycopy(by, 0, rBuffer, 0, Utility.strlen(by));
 	        
 	    	if (!io.Write.run(io, 32, rBuffer))
 		    {
@@ -5383,7 +5423,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    CountUcr = temp[0];
+	    CountUcr = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	    
 	    n.Ucr = cmsgamma.cmsBuildTabulatedToneCurve16(self.ContextID, CountUcr, null);
@@ -5392,7 +5432,7 @@ final class cmstypes
 	    	return null;
 	    }
 	    
-	    if (!cmsplugin._cmsReadUInt16Array(io, CountUcr, n.Ucr.Table16))
+	    if (!cmsplugin._cmsReadUInt16Array(io, CountUcr, n.Ucr.Table16, true))
 	    {
 	    	return null;
 	    }
@@ -5403,7 +5443,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    CountBg = temp[0];
+	    CountBg = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	    
 	    n.Bg = cmsgamma.cmsBuildTabulatedToneCurve16(self.ContextID, CountBg, null);
@@ -5411,7 +5451,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    if (!cmsplugin._cmsReadUInt16Array(io, CountBg, n.Bg.Table16))
+	    if (!cmsplugin._cmsReadUInt16Array(io, CountBg, n.Bg.Table16, true))
 	    {
 	    	return null;
 	    }
@@ -5424,7 +5464,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    ASCIIString.writeRaw(0, SizeOfTag);
+	    ASCIIString.writeRaw(0, ASCIIString.getPosition() + SizeOfTag);
 	    cmsnamed.cmsMLUsetASCII(n.Desc, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, ASCIIString.getProcessor().readString(false, false));
 	    cmserr._cmsFree(self.ContextID, ASCIIString);
 	    
@@ -5439,21 +5479,21 @@ final class cmstypes
 	    StringBuffer Text;
 	    
 	    // First curve is Under color removal
-	    if (!cmsplugin._cmsWriteUInt32Number(io, Value.Ucr.nEntries))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(Value.Ucr.nEntries)))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Array(io, Value.Ucr.nEntries, Value.Ucr.Table16))
+	    if (!cmsplugin._cmsWriteUInt16Array(io, Value.Ucr.nEntries, Value.Ucr.Table16, true))
 	    {
 	    	return false;
 	    }
 	    
-	    // Then black generation    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, Value.Bg.nEntries))
+	    // Then black generation
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(Value.Bg.nEntries)))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Array(io, Value.Bg.nEntries, Value.Bg.Table16))
+	    if (!cmsplugin._cmsWriteUInt16Array(io, Value.Bg.nEntries, Value.Bg.Table16, true))
 	    {
 	    	return false;
 	    }
@@ -5468,7 +5508,7 @@ final class cmstypes
 	    
 	    byte[] tbBuffer = new byte[TextSize];
         byte[] by = Text.toString().getBytes();
-        System.arraycopy(by, 0, tbBuffer, 0, by.length);
+        System.arraycopy(by, 0, tbBuffer, 0, Utility.strlen(by));
 	    
 	    if (!io.Write.run(io, TextSize, tbBuffer))
 	    {
@@ -5528,7 +5568,7 @@ final class cmstypes
 	// Auxiliar, read an string specified as count + string
 	private static boolean ReadCountAndSting(cmsTagTypeHandler self, cmsIOHANDLER io, cmsMLU mlu, int[] SizeOfTag, final String Section)
 	{
-	    int Count;
+	    int Count, pos;
 	    VirtualPointer Text;
 	    
 	    if (SizeOfTag[0] < /*sizeof(cmsUInt32Number)*/4)
@@ -5541,7 +5581,7 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
-	    Count = temp[0];
+	    Count = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    
 	    if (SizeOfTag[0] < Count + /*sizeof(cmsUInt32Number)*/4)
 	    {
@@ -5552,6 +5592,7 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
+	    pos = Text.getPosition();
 	    
 	    if (io.vpRead(io, Text, /*sizeof(cmsUInt8Number)*/1, Count) != Count)
 	    {
@@ -5559,13 +5600,13 @@ final class cmstypes
 	        return false;
 	    }
 	    
-	    Text.writeRaw(0, Count);
+	    Text.writeRaw(0, Count + pos);
 	    
 	    cmsnamed.cmsMLUsetASCII(mlu, "PS", Section, Text.getProcessor().readString(false, false));
 	    cmserr._cmsFree(self.ContextID, Text);
 	    
 	    SizeOfTag[0] -= (Count + /*sizeof(cmsUInt32Number)*/4);
-	    return true;    
+	    return true;
 	}
 	
 	private static boolean WriteCountAndSting(cmsTagTypeHandler self, cmsIOHANDLER io, cmsMLU mlu, final String Section)
@@ -5576,7 +5617,7 @@ final class cmstypes
 	    TextSize = cmsnamed.cmsMLUgetASCII(mlu, "PS", Section, null, 0);
 	    Text = new StringBuffer(TextSize);
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, TextSize))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(TextSize)))
 	    {
 	    	return false;
 	    }
@@ -5588,7 +5629,7 @@ final class cmstypes
 	    
 	    byte[] tbBuffer = new byte[TextSize];
         byte[] by = Text.toString().getBytes();
-        System.arraycopy(by, 0, tbBuffer, 0, by.length);
+        System.arraycopy(by, 0, tbBuffer, 0, Utility.strlen(by));
 	    
 	    if (!io.Write.run(io, TextSize, tbBuffer))
 	    {
@@ -5693,22 +5734,23 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    sc.Flag = temp[0];
+	    sc.Flag = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    sc.nChannels = temp[0];
+	    sc.nChannels = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    
 	    double[] temp2 = new double[1];
 	    for (i = 0; i < sc.nChannels; i++)
 	    {
-	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
+	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp2, false))
 		    {
 		    	return null;
 		    }
+	        sc.Channels[i] = new lcms2_internal.cmsScreeningChannel();
 	        sc.Channels[i].Frequency = temp2[0];
-	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
+	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp2, false))
 		    {
 		    	return null;
 		    }
@@ -5717,7 +5759,7 @@ final class cmstypes
 		    {
 		    	return null;
 		    }
-	        sc.Channels[i].SpotShape = temp[0];
+	        sc.Channels[i].SpotShape = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    }
 	    
 	    nItems[0] = 1;
@@ -5730,26 +5772,38 @@ final class cmstypes
 		cmsScreening sc = (cmsScreening)Ptr; 
 	    int i;
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, sc.Flag))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(sc.Flag)))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, sc.nChannels))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(sc.nChannels)))
 	    {
 	    	return false;
 	    }
 	    
+	    double freq, angle;
+	    int shape;
 	    for (i = 0; i < sc.nChannels; i++)
 	    {
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, sc.Channels[i].Frequency))
+	    	if (sc.Channels[i] == null)
+	    	{
+	    		freq = angle = shape = 0;
+	    	}
+	    	else
+	    	{
+		        freq = sc.Channels[i].Frequency;
+		        angle = sc.Channels[i].ScreenAngle;
+		        shape = sc.Channels[i].SpotShape;
+	    	}
+	    	if (!cmsplugin._cmsWrite15Fixed16Number(io, freq))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, sc.Channels[i].ScreenAngle))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, angle))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWriteUInt32Number(io, sc.Channels[i].SpotShape))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(shape)))
 		    {
 		    	return false;
 		    }
@@ -5760,12 +5814,32 @@ final class cmstypes
 	
 	private static Object Type_Screening_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
 	{
+//#ifdef CMS_RAW_C
 		return cmserr._cmsDupMem(self.ContextID, new VirtualPointer(Ptr), /*sizeof(cmsScreening)*/cmsScreening.SIZE).getProcessor().readObject(cmsScreening.class);
+//#else
+		cmsScreening sc = new cmsScreening();
+		cmsScreening org = (cmsScreening)Ptr;
+		sc.Flag = org.Flag;
+		sc.nChannels = org.nChannels;
+		for(int i = 0; i < lcms2.cmsMAXCHANNELS; i++)
+		{
+			if(org.Channels[i] != null)
+			{
+				sc.Channels[i] = new lcms2.cmsScreeningChannel();
+				sc.Channels[i].Frequency = org.Channels[i].Frequency;
+				sc.Channels[i].ScreenAngle = org.Channels[i].ScreenAngle;
+				sc.Channels[i].SpotShape = org.Channels[i].SpotShape;
+			}
+		}
+		return sc;
+//#endif
 	}
 	
 	private static void Type_Screening_Free(cmsTagTypeHandler self, Object Ptr)
 	{
-		//Would free memory but never actually allocating memory (except for dup/read functions which is not a real issue)
+//#ifdef CMS_RAW_C
+		cmserr._cmsFree(self.ContextID, (VirtualPointer)Ptr);
+//#endif
 	}
 	
 	// ********************************************************************************
@@ -5797,7 +5871,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    vc.IlluminantType = temp[0];
+	    vc.IlluminantType = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    
 	    nItems[0] = 1;
 	    
@@ -5806,7 +5880,7 @@ final class cmstypes
 	
 	private static boolean Type_ViewingConditions_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
-		cmsICCViewingConditions sc = (cmsICCViewingConditions)Ptr; 
+		cmsICCViewingConditions sc = (cmsICCViewingConditions)Ptr;
         
 	    if (!cmsplugin._cmsWriteXYZNumber(io, sc.IlluminantXYZ))
 	    {
@@ -5816,7 +5890,7 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, sc.IlluminantType))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(sc.IlluminantType)))
 	    {
 	    	return false;
 	    }
@@ -5826,12 +5900,27 @@ final class cmstypes
 	
 	private static Object Type_ViewingConditions_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
 	{
-		return cmserr._cmsDupMem(self.ContextID, new VirtualPointer(Ptr), /*sizeof(cmsICCViewingConditions)*/cmsScreening.SIZE).getProcessor().readObject(cmsICCViewingConditions.class);
+//#ifdef CMS_RAW_C
+		return cmserr._cmsDupMem(self.ContextID, new VirtualPointer(Ptr), /*sizeof(cmsICCViewingConditions)*/cmsICCViewingConditions.SIZE).getProcessor().readObject(cmsICCViewingConditions.class);
+//#else
+		cmsICCViewingConditions vc = new cmsICCViewingConditions();
+		cmsICCViewingConditions org = (cmsICCViewingConditions)Ptr;
+		vc.IlluminantType = org.IlluminantType;
+		vc.IlluminantXYZ.X = org.IlluminantXYZ.X;
+		vc.IlluminantXYZ.Y = org.IlluminantXYZ.Y;
+		vc.IlluminantXYZ.Z = org.IlluminantXYZ.Z;
+		vc.SurroundXYZ.X = org.SurroundXYZ.X;
+		vc.SurroundXYZ.Y = org.SurroundXYZ.Y;
+		vc.SurroundXYZ.Z = org.SurroundXYZ.Z;
+		return vc;
+//#endif
 	}
 	
 	private static void Type_ViewingConditions_Free(cmsTagTypeHandler self, Object Ptr)
 	{
-		//Would free memory but never actually allocating memory (except for dup/read functions which is not a real issue)
+//#ifdef CMS_RAW_C
+		cmserr._cmsFree(self.ContextID, (VirtualPointer)Ptr);
+//#endif
 	}
 	
 	// ********************************************************************************
@@ -5869,7 +5958,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    ElementSig = temp[0];
+	    ElementSig = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    
 	    // That should be a segmented curve
 	    if (ElementSig != lcms2.cmsSigSegmentedCurve)
@@ -5881,40 +5970,34 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    /*
 	    short[] temp2 = new short[1];
 	    if (!cmsplugin._cmsReadUInt16Number(io, temp2))
 	    {
 	    	return null;
 	    }
-	    nSegments = temp2[0];
+	    nSegments = cmsplugin._cmsAdjustEndianess16(temp2[0]);
 	    if (!cmsplugin._cmsReadUInt16Number(io, null))
 	    {
 	    	return null;
 	    }
-	    */
-	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
-	    {
-	    	return null;
-	    }
-	    nSegments = (short)temp[0];
+	    
 	    Segments = new cmsCurveSegment[nSegments];
 	    
 	    // Read breakpoints
-	    //float[] temp3 = new float[1];
+	    float[] temp3 = new float[1];
 	    for (i = 0; i < nSegments - 1; i++)
 	    {
+	    	Segments[i] = new cmsCurveSegment();
 	    	Segments[i].x0 = PrevBreak;
-	    	//if (!cmsplugin._cmsReadFloat32Number(io, temp3))
-    		if (!cmsplugin._cmsReadUInt32Number(io, temp))
+	    	if (!cmsplugin._cmsReadFloat32Number(io, temp3))
 	    	{
 	    		return null;
 	    	}
-	    	//Segments[i].x1 = temp3[0];
-    		Segments[i].x1 = Float.intBitsToFloat(temp[0]);
+	    	Segments[i].x1 = temp3[0];
 	    	PrevBreak = Segments[i].x1;
 	    }
 	    
+	    Segments[nSegments-1] = new cmsCurveSegment();
 	    Segments[nSegments-1].x0 = PrevBreak;
 	    Segments[nSegments-1].x1 = 1E22F; // A big float number
 	    
@@ -5925,7 +6008,7 @@ final class cmstypes
 	    	{
 	    		return null;
 	    	}
-	    	ElementSig = temp[0];
+	    	ElementSig = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    	if (!cmsplugin._cmsReadUInt32Number(io, null))
 	    	{
 	    		return null;
@@ -5953,7 +6036,7 @@ final class cmstypes
 		                {
 		                	return null;
 		                }
-		    			Type = (short)temp[0];
+		    			Type = (short)cmsplugin._cmsAdjustEndianess32(temp[0]);
 		                
 		                Segments[i].Type = Type + 6;
 		                if (Type > 2)
@@ -5964,18 +6047,11 @@ final class cmstypes
 		                for (j = 0; j < ParamsByType[Type]; j++)
 		                {
 		                	float f;
-		                	/*
 		                	if (!cmsplugin._cmsReadFloat32Number(io, temp3))
 		                	{
 		                		return null;
 		                	}
 		                	f = temp3[0];
-		                	*/
-		                	if (!cmsplugin._cmsReadUInt32Number(io, temp))
-		                	{
-		                		return null;
-		                	}
-		                	f = Float.intBitsToFloat(temp[0]);
 		                    Segments[i].Params[j] = f;
 		                }
 	                }
@@ -5988,25 +6064,18 @@ final class cmstypes
 		                {
 		                	return null;
 		                }
-                		Count = temp[0];
+                		Count = cmsplugin._cmsAdjustEndianess32(temp[0]);
                 		
                 		Segments[i].nGridPoints = Count;
                 		Segments[i].SampledPoints = new float[Count];
                 		
                 		for (j = 0; j < Count; j++)
                 		{
-                			/*
                 			if (!cmsplugin._cmsReadFloat32Number(io, temp3))
                 			{
                 				return null;
                 			}
                 			Segments[i].SampledPoints[j] = temp3[0];
-                			*/
-                			if (!cmsplugin._cmsReadUInt32Number(io, temp))
-                			{
-                				return null;
-                			}
-                			Segments[i].SampledPoints[j] = Float.intBitsToFloat(temp[0]);
                 		}
 	                }
 	                break;
@@ -6031,9 +6100,9 @@ final class cmstypes
 		public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag)
 		{
 			cmsToneCurve[] GammaTables = (cmsToneCurve[])Cargo;
-		      
-		      GammaTables[n] = ReadSegmentedCurve(self, io);
-		      return (GammaTables[n] != null);
+			
+			GammaTables[n] = ReadSegmentedCurve(self, io);
+			return (GammaTables[n] != null);
 		}
 	};
 	
@@ -6054,12 +6123,12 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    InputChans = temp[0];
+	    InputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
 	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    OutputChans = temp[0];
+	    OutputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
 	    
 	    if (InputChans != OutputChans)
 	    {
@@ -6096,7 +6165,7 @@ final class cmstypes
 	    cmsCurveSegment[] Segments = g.Segments;
 	    int nSegments = g.nSegments;
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, lcms2.cmsSigSegmentedCurve))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(lcms2.cmsSigSegmentedCurve)))
 	    {
 	    	return false;
 	    }
@@ -6104,7 +6173,7 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)nSegments))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)nSegments)))
 	    {
 	    	return false;
 	    }
@@ -6130,7 +6199,7 @@ final class cmstypes
 	        if (ActualSeg.Type == 0)
 	        {
 	            // This is a sampled curve
-	            if (!cmsplugin._cmsWriteUInt32Number(io, lcms2.cmsSigSampledCurveSeg))
+	            if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(lcms2.cmsSigSampledCurveSeg)))
 	            {
 	            	return false;
 	            }
@@ -6138,7 +6207,7 @@ final class cmstypes
 	            {
 	            	return false;
 	            }
-	            if (!cmsplugin._cmsWriteUInt32Number(io, ActualSeg.nGridPoints))
+	            if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(ActualSeg.nGridPoints)))
 	            {
 	            	return false;
 	            }
@@ -6157,7 +6226,7 @@ final class cmstypes
 	            int[] ParamsByType = { 4, 5, 5 };
 	            
 	            // This is a formula-based
-	            if (!cmsplugin._cmsWriteUInt32Number(io, lcms2.cmsSigFormulaCurveSeg))
+	            if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(lcms2.cmsSigFormulaCurveSeg)))
 		        {
 		        	return false;
 		        }
@@ -6173,7 +6242,7 @@ final class cmstypes
 		        	return false;
 		        }
 	            
-	            if (!cmsplugin._cmsWriteUInt16Number(io, (short)Type))
+	            if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)Type)))
 		        {
 		        	return false;
 		        }
@@ -6223,11 +6292,11 @@ final class cmstypes
 	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
 	    
 	    // Write the header. Since those are curves, input and output channels are same
-	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.InputChannels))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)mpe.InputChannels)))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.InputChannels))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)mpe.InputChannels)))
 	    {
 	    	return false;
 	    }
@@ -6258,12 +6327,12 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    InputChans = temp[0];
+	    InputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
 	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    OutputChans = temp[0];
+	    OutputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
 	    
 	    nElems = InputChans * OutputChans;
 	    
@@ -6304,11 +6373,11 @@ final class cmstypes
 	    cmsStage mpe = (cmsStage)Ptr;
 	    _cmsStageMatrixData Matrix = (_cmsStageMatrixData)mpe.Data;
 	    
-	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.InputChannels))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)mpe.InputChannels)))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.OutputChannels))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)mpe.OutputChannels)))
 	    {
 	    	return false;
 	    }
@@ -6358,12 +6427,12 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    InputChans = temp[0];
+	    InputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
 	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    OutputChans = temp[0];
+	    OutputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
 	    
 	    if (io.Read.run(io, Dimensions8, /*sizeof(cmsUInt8Number)*/1, 16) != 16)
 	    {
@@ -6438,11 +6507,11 @@ final class cmstypes
 	    	return false;
 	    }
 	    
-	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.InputChannels))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)mpe.InputChannels)))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.OutputChannels))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)mpe.OutputChannels)))
 	    {
 	    	return false;
 	    }
@@ -6573,7 +6642,7 @@ final class cmstypes
 		    {
 		    	return false;
 		    }
-		    ElementSig = temp[0];
+		    ElementSig = cmsplugin._cmsAdjustEndianess32(temp[0]);
 		    
 		    // The reserved placeholder
 		    if (!cmsplugin._cmsReadUInt32Number(io, null))
@@ -6631,12 +6700,12 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    InputChans = temp[0];
+	    InputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
 	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    OutputChans = temp[0];
+	    OutputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
 	    
 	    // Allocates an empty LUT
 	    NewLUT = cmslut.cmsPipelineAlloc(self.ContextID, InputChans, OutputChans);
@@ -6650,7 +6719,7 @@ final class cmstypes
 	    	return null;
 	    }
 	    
-	    if (!ReadPositionTable(self, io, ElementCount[0], BaseOffset, NewLUT, ReadMPEElem))
+	    if (!ReadPositionTable(self, io, cmsplugin._cmsAdjustEndianess32(ElementCount[0]), BaseOffset, NewLUT, ReadMPEElem))
 	    {
 	        if (NewLUT != null)
 	        {
@@ -6688,15 +6757,15 @@ final class cmstypes
 	    ElementSizes = new int[ElemCount];
 	    
 	    // Write the head
-	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)inputChan))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)inputChan)))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)outputChan))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)outputChan)))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, (short)ElemCount))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(ElemCount)))
 	    {
 	    	return false;
 	    }
@@ -6706,7 +6775,7 @@ final class cmstypes
 	    // Write a fake directory to be filled latter on
 	    for (i = 0; i < ElemCount; i++)
 	    {
-	        if (!cmsplugin._cmsWriteUInt32Number(io, 0)) // Offset 
+	        if (!cmsplugin._cmsWriteUInt32Number(io, 0)) // Offset
 		    {
 		    	return false;
 		    }
@@ -6735,7 +6804,7 @@ final class cmstypes
                 return false;
 	        }
 	        
-	        if (!cmsplugin._cmsWriteUInt32Number(io, ElementSig))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(ElementSig)))
 		    {
 		    	return false;
 		    }
@@ -6768,11 +6837,11 @@ final class cmstypes
 	    
 	    for (i = 0; i < ElemCount; i++)
 	    {
-	        if (!cmsplugin._cmsWriteUInt32Number(io, ElementOffsets[i]))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(ElementOffsets[i])))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWriteUInt32Number(io, ElementSizes[i]))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(ElementSizes[i])))
 		    {
 		    	return false;
 		    }
@@ -6824,7 +6893,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    TagType = temp[0];
+	    TagType = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    
 	    // Allocate space for the array
 	    Curves = new cmsToneCurve[3];
@@ -6845,7 +6914,7 @@ final class cmstypes
 		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 		    	    return null;
 		    	}
-		    	nChannels = temp2[0];
+		    	nChannels = cmsplugin._cmsAdjustEndianess16(temp2[0]);
 		    	
 		    	if (nChannels != 3)
 		    	{
@@ -6862,14 +6931,14 @@ final class cmstypes
 		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 		    	    return null;
 		    	}
-		    	nElems = temp2[0];
+		    	nElems = cmsplugin._cmsAdjustEndianess16(temp2[0]);
 		    	if (!cmsplugin._cmsReadUInt16Number(io, temp2))
 		    	{
 		    		// Regret, free all resources
 		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 		    	    return null;
 		    	}
-		    	nBytes = temp2[0];
+		    	nBytes = cmsplugin._cmsAdjustEndianess16(temp2[0]);
 		    	
 		    	// Populate tone curves
 		    	for (n = 0; n < 3; n++)
@@ -6901,7 +6970,7 @@ final class cmstypes
 			    			break;
 		    			// One word 0..65535
 		    			case 2:
-		    				if (!cmsplugin._cmsReadUInt16Array(io, nElems, Curves[n].Table16))
+		    				if (!cmsplugin._cmsReadUInt16Array(io, nElems, Curves[n].Table16, true))
 		    		    	{
 		    		    		// Regret, free all resources
 		    		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
@@ -6928,21 +6997,21 @@ final class cmstypes
 		    	// Populate tone curves
 		    	for (n = 0; n < 3; n++)
 		    	{
-		    		if (!cmsplugin._cmsRead15Fixed16Number(io, Params))
+		    		if (!cmsplugin._cmsRead15Fixed16Number(io, Params, false))
 			    	{
 			    		// Regret, free all resources
 			    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 			    	    return null;
 			    	}
 		    		Colorant[n].Gamma = Params[0];
-		    		if (!cmsplugin._cmsRead15Fixed16Number(io, Params))
+		    		if (!cmsplugin._cmsRead15Fixed16Number(io, Params, false))
 			    	{
 			    		// Regret, free all resources
 			    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 			    	    return null;
 			    	}
 		    		Colorant[n].Min = Params[0];
-		    		if (!cmsplugin._cmsRead15Fixed16Number(io, Params))
+		    		if (!cmsplugin._cmsRead15Fixed16Number(io, Params, false))
 			    	{
 			    		// Regret, free all resources
 			    		cmsgamma.cmsFreeToneCurveTriple(Curves);
@@ -7007,7 +7076,7 @@ final class cmstypes
 			cmsgamma.cmsGetToneCurveParametricType(Curves[1]) == 5 &&
 			cmsgamma.cmsGetToneCurveParametricType(Curves[2]) == 5)
 		{
-			if (!cmsplugin._cmsWriteUInt32Number(io, cmsVideoCardGammaFormulaType))
+			if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(cmsVideoCardGammaFormulaType)))
 			{
 				return false;
 			}
@@ -7041,19 +7110,19 @@ final class cmstypes
 		else
 		{
 			// Always store as a table of 256 words
-			if (!cmsplugin._cmsWriteUInt32Number(io, cmsVideoCardGammaTableType))
+			if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(cmsVideoCardGammaTableType)))
 			{
 				return false;
 			}
-			if (!cmsplugin._cmsWriteUInt16Number(io, (short)3))
+			if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)3)))
 			{
 				return false;
 			}
-			if (!cmsplugin._cmsWriteUInt16Number(io, (short)256))
+			if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)256)))
 			{
 				return false;
 			}
-			if (!cmsplugin._cmsWriteUInt16Number(io, (short)2))
+			if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)2)))
 			{
 				return false;
 			}
@@ -7065,7 +7134,7 @@ final class cmstypes
 					float v = cmsgamma.cmsEvalToneCurveFloat(Curves[i], (float)(j / 255.0));
 					short n = lcms2_internal._cmsQuickSaturateWord(v * 65535.0);
 					
-					if (!cmsplugin._cmsWriteUInt16Number(io, n))
+					if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16(n)))
 					{
 						return false;
 					}

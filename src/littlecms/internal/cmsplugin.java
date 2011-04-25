@@ -279,7 +279,7 @@ final class cmsplugin
 	    
 	    if (n != null)
 	    {
-	    	n[0] = Float.intBitsToFloat(_cmsAdjustEndianess32(BitConverter.toInt32(tmp, 0)));
+	    	n[0] = Float.intBitsToFloat(BitConverter.toInt32(tmp, 0));
 	    }
 	    return true;
 	}
@@ -292,7 +292,7 @@ final class cmsplugin
 	    
 	    if (io.Read.run(io, tmp, /*sizeof(cmsUInt64Number)*/8, 1) != 1)
 	    {
-	    	return false;   
+	    	return false;
 	    }
 	    
 	    if (n != null)
@@ -469,7 +469,7 @@ final class cmsplugin
 	    
 	    lcms2_internal._cmsAssert(io != null, "io != null");
 	    
-	    tmp = BitConverter.getBytes(_cmsAdjustEndianess32(Float.floatToIntBits(n)));
+	    tmp = BitConverter.getBytes(Float.floatToIntBits(n));
 	    if (!io.Write.run(io, /*sizeof(cmsUInt32Number)*/4, tmp))
 	    {
 	    	return false;   
@@ -600,7 +600,7 @@ final class cmsplugin
 	    Dest.hours   = _cmsAdjustEndianess16((short)Source.get(Calendar.HOUR_OF_DAY));
 	    Dest.day     = _cmsAdjustEndianess16((short)Source.get(Calendar.DAY_OF_MONTH));
 	    Dest.month   = _cmsAdjustEndianess16((short)(Source.get(Calendar.MONTH) + 1));
-	    Dest.year    = _cmsAdjustEndianess16((short)(Source.get(Calendar.YEAR)));
+	    Dest.year    = _cmsAdjustEndianess16((short)Source.get(Calendar.YEAR));
 	}
 	
 	// Read base and return type base

@@ -140,7 +140,7 @@ final class cmsio0
 	    {
 			public boolean run(_cms_io_handler iohandler)
 			{
-				FILENULL ResData = (FILENULL)iohandler.stream;
+				FILENULL ResData = (FILENULL)iohandler.stream; //Do this to make sure that if has the appropriate backing
 				
 //#ifdef CMS_RAW_C
 				cmserr._cmsFree(iohandler.ContextID, new VirtualPointer(ResData));
@@ -884,7 +884,7 @@ final class cmsio0
 	    
 	    Header.magic       = cmsplugin._cmsAdjustEndianess32(lcms2.cmsMagicNumber);
 	    
-	    Header.platform    = cmsplugin._cmsAdjustEndianess32(lcms2.cmsSigRim);
+	    Header.platform    = cmsplugin._cmsAdjustEndianess32(lcms2.cmsSigRim); //No real information on what "platform" is supposed to be. It seems to be the OS the profile was made on/for. In this case, it's a BlackBerry.
 	    
 	    Header.flags        = cmsplugin._cmsAdjustEndianess32(Icc.flags);
 	    Header.manufacturer = cmsplugin._cmsAdjustEndianess32(Icc.manufacturer);
@@ -1613,7 +1613,7 @@ final class cmsio0
 	            }
 	            else
 	            {
-	            	cmserr._cmsFree(Icc.ContextID, new VirtualPointer(Icc.TagPtrs[i]));
+	            	cmserr._cmsFree(Icc.ContextID, (VirtualPointer)Icc.TagPtrs[i]);
 	            }
 	        }
 	    }

@@ -73,7 +73,14 @@ public final class Serializers
 			{
 				public boolean actualWrite(VirtualPointer vp, Object val)
 				{
-					vp.getProcessor().write(((Calendar)val).getTime().getTime(), true);
+					Calendar cal = (Calendar)val;
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					proc.write(cal.get(Calendar.SECOND), true);
+					proc.write(cal.get(Calendar.MINUTE), true);
+					proc.write(cal.get(Calendar.HOUR_OF_DAY), true);
+					proc.write(cal.get(Calendar.DAY_OF_MONTH), true);
+					proc.write(cal.get(Calendar.MONTH), true);
+					proc.write(cal.get(Calendar.YEAR), true);
 					return true;
 				}
 				
@@ -89,12 +96,19 @@ public final class Serializers
 				
 				public int getItemSize()
 				{
-					return 8;
+					return 4 * 6;
 				}
 				
 				public boolean readData(VirtualPointer vp, Object[] val, int index)
 				{
-					((Calendar)val[index]).getTime().setTime(vp.getProcessor().readInt64(true));
+					Calendar cal = (Calendar)val[index];
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					cal.set(Calendar.SECOND, proc.readInt32(true));
+					cal.set(Calendar.MINUTE, proc.readInt32(true));
+					cal.set(Calendar.HOUR_OF_DAY, proc.readInt32(true));
+					cal.set(Calendar.DAY_OF_MONTH, proc.readInt32(true));
+					cal.set(Calendar.MONTH, proc.readInt32(true));
+					cal.set(Calendar.YEAR, proc.readInt32(true));
 					return true;
 				}
 			}, Calendar.class);

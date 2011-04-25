@@ -251,6 +251,7 @@ final class cmsnamed
 	public static boolean cmsMLUsetASCII(cmsMLU mlu, final String LanguageCode, final String CountryCode, final String ASCIIString)
 	{
 	    int i, len = Utility.strlen(ASCIIString)+1;
+	    int nLen = Math.min(len, ASCIIString.length());
 	    char[] WStr;
 	    boolean rc;
 	    short Lang  = cmsplugin._cmsAdjustEndianess16(codeAsShort(LanguageCode));
@@ -262,8 +263,8 @@ final class cmsnamed
 	    }
 	    
 	    WStr = new char[len];
-
-	    for (i=0; i < len; i++)
+	    
+	    for (i=0; i < nLen; i++)
 	    {
 	    	WStr[i] = (char)((byte)ASCIIString.charAt(i)); //Since it is ASCII, make sure it is ASCII
 	    }

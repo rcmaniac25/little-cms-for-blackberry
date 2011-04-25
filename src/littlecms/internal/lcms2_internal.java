@@ -135,6 +135,10 @@ final class lcms2_internal extends lcms2_plugin
 	
 	// -----------------------------------------------------------------------------------------------------------
 	
+//#ifndef CMS_DONT_USE_FAST_FLOOR
+	private static final double _lcms_double2fixmagic = 68719476736.0 * 1.5;  // 2^36 * 1.5, (52-16=36) uses limited precision to floor
+//#endif
+	
 	// Fast floor conversion logic. Thanks to Sree Kotay and Stuart Nixon 
 	// note than this only works in the range ..-32767...+32767 because 
 	// mantissa is interpreted as 15.16 fixed point.
@@ -144,8 +148,6 @@ final class lcms2_internal extends lcms2_plugin
 //#ifdef CMS_DONT_USE_FAST_FLOOR
 	    return (int)Math.floor(val);
 //#else
-	    final double _lcms_double2fixmagic = 68719476736.0 * 1.5;  // 2^36 * 1.5, (52-16=36) uses limited precision to floor
-	    
 	    //Java is always little endian with regards to storing and handling bytes (I/O being the exception)
 	    return ((int)(Double.doubleToLongBits(val + _lcms_double2fixmagic) & 0xFFFFFFFFL)) >> 16;
 //#endif
@@ -349,7 +351,7 @@ final class lcms2_internal extends lcms2_plugin
 	public static class _cmsICCPROFILE implements cmsHPROFILE
 	{
 		//Calendar, header values, tag count, iswrite
-		public static final int SIZE = 8 + (4 * 8) + 8 + cmsProfileID.SIZE + 4 + (MAX_TABLE_TAG * ((4 * 4) + 1)) + 1;
+		public static final int SIZE = (4 * 6) + (4 * 8) + 8 + cmsProfileID.SIZE + 4 + (MAX_TABLE_TAG * ((4 * 4) + 1)) + 1;
 		
 		// I/O handler
 		public cmsIOHANDLER IOhandler;
@@ -360,7 +362,7 @@ final class lcms2_internal extends lcms2_plugin
 	    // Creation time
 		public Calendar Created;
 	    
-	    // Only most important items found in ICC profiles   
+	    // Only most important items found in ICC profiles
 		public int Version;
 		public int DeviceClass;
 		public int ColorSpace;
