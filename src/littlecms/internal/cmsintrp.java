@@ -829,12 +829,16 @@ final class cmsintrp
 		}
 	};
 	
-	
-	private static final _cmsInterpFn16 TetrahedralInterp16 = new _cmsInterpFn16()
+	private final static class TetrahedralInterp16Impl implements _cmsInterpFn16, lcms2_internal._cmsOPTeval16Fn
 	{
+		public void run(short[] In, short[] Out, Object Data)
+		{
+			run(In, Out, (cmsInterpParams)Data);
+		}
+		
 		public void run(short[] Input, short[] Output, cmsInterpParams p)
 		{
-		    int fx, fy, fz;
+			int fx, fy, fz;
 		    int rx, ry, rz;
 		    int x0, y0, z0;
 		    int c0, c1, c2, c3, Rest;       
@@ -850,8 +854,8 @@ final class cmsintrp
 		    y0  = lcms2_internal.FIXED_TO_INT(fy); 
 		    z0  = lcms2_internal.FIXED_TO_INT(fz);
 		    
-		    rx  = lcms2_internal.FIXED_REST_TO_INT(fx);   
-		    ry  = lcms2_internal.FIXED_REST_TO_INT(fy);      
+		    rx  = lcms2_internal.FIXED_REST_TO_INT(fx);
+		    ry  = lcms2_internal.FIXED_REST_TO_INT(fy);
 		    rz  = lcms2_internal.FIXED_REST_TO_INT(fz);
 		    
 		    X0 = p.opta[2] * x0;
@@ -1006,7 +1010,9 @@ final class cmsintrp
 			    }
 		    }
 		}
-	};
+	}
+	
+	private static final _cmsInterpFn16 TetrahedralInterp16 = new TetrahedralInterp16Impl();
 	
 	private static final _cmsInterpFn16 Eval4Inputs = new _cmsInterpFn16()
 	{

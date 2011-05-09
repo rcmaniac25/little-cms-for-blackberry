@@ -63,7 +63,8 @@ final class cmspack
 	{
 	    int a;
 	    
-	    a = (x << 8 | x) >> 8;  // * 257 / 256
+	    a = x & 0xFFFF;
+	    a = (a << 8 | a) >> 8;  // * 257 / 256
 	    if ( a > 0xffff)
 	    {
 	    	return (short)0xffff;
@@ -74,7 +75,7 @@ final class cmspack
 	// * 0xf00 / 0xffff = * 256 / 257
 	private static short FomLabV4ToLabV2(short x) 
 	{
-	    return (short)(((x << 8) + 0x80) / 257);
+	    return (short)((((x & 0xFFFF) << 8) + 0x80) / 257);
 	}
 	
 	public static class cmsFormatters16
@@ -2008,7 +2009,7 @@ final class cmspack
 		int Inks = output.getPosition();
 	    int nChan = lcms2.T_CHANNELS(Info.OutputFormat);
 	    int i;
-	    double maximum = IsInkSpace(Info.InputFormat) ? 655.35 : 65535.0;
+	    double maximum = IsInkSpace(Info.OutputFormat) ? 655.35 : 65535.0;
 	    
 	    VirtualPointer.TypeProcessor proc = output.getProcessor();
 	    if (lcms2.T_PLANAR(Info.OutputFormat))

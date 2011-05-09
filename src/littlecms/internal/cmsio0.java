@@ -632,11 +632,11 @@ final class cmsio0
 	
 	public static cmsContext cmsGetProfileContextID(cmsHPROFILE hProfile)
 	{
-	     _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;  
-	     
-	    if (Icc == null)
+		_cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
+		
+		if (Icc == null)
 	    {
-	    	return null;
+			return null;
 	    }
 	    return Icc.ContextID;
 	}

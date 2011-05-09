@@ -211,7 +211,10 @@ public abstract class Stream
 				}
 				valid = true;
 			}
-			catch (IOException e)
+			catch (IOException e) //IO errors
+			{
+			}
+			catch (IllegalArgumentException e) //Bad file name
 			{
 			}
 //#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
@@ -435,21 +438,24 @@ public abstract class Stream
 		
 		public int close()
 		{
-			try
+			if(file != null)
 			{
-				if(in != null)
+				try
 				{
-					in.close();
+					if(in != null)
+					{
+						in.close();
+					}
+					if(out != null)
+					{
+						out.close();
+					}
+					file.close();
 				}
-				if(out != null)
+				catch (IOException e)
 				{
-					out.close();
+					return -1;
 				}
-				file.close();
-			}
-			catch (IOException e)
-			{
-				return -1;
 			}
 			return 0;
 		}

@@ -774,9 +774,9 @@ final class cmsvirt
 		    
 		    return null;
 	    }
-
+	    
 	    cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_BEGIN, cmslut._cmsStageAllocIdentityCLut(ContextID, 3));
-
+	    
 	    if (!cmsio0.cmsWriteTag(hProfile, lcms2.cmsSigAToB0Tag, LUT))
 	    {
 	    	if (LUT != null)

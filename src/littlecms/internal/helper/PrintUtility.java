@@ -2399,7 +2399,7 @@ final class PrintUtility
         				break;
         			}
         		}
-        		if(((i - 1) == (len - 1)) && (this.precision == -1))
+        		if((index != -1) && ((i - 1) == (len - 1)) && (this.precision == -1))
         		{
         			//Only remove zeros if it is an integer and the precision isn't predefined
         			if(alt)

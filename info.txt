@@ -3,9 +3,12 @@
 
 TODO:
 Testing (LCMS 2.0):
-Do cleanup operation for endian (see notes)[do this by checking every call to a read/write function in cmsplugin that has a endian argument]
+-All tests in testcms
+-Do cleanup operation for endian (see notes)[do this by checking every call to a read/write function in cmsplugin that has a endian argument]
 -Consolidate cmspack functions so that formatters don't just simply call the "actual function"
 -Optimize memory in cmsintrp so that it simply passes allocated memory and an index instead of reallocating memory every time certain functions are used used
+-Optimize cmsxform.cmsDoTransform so that pointers are reused
+-Profile to check memory usage (function calls are less important since they are dynamically chosen and could vary greatly. No real consistancy)
 Get full JavaDoc to be created for lcms
 Release Version 2.0
 

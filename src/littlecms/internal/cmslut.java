@@ -94,7 +94,7 @@ final class cmslut
 	    int i;
 	    
 	    for (i=0; i < n; i++)
-	    {     
+	    {
 	        Out[i] = lcms2_internal._cmsQuickSaturateWord(In[i] * 65535.0);
 	    }
 	}
@@ -332,7 +332,7 @@ final class cmslut
 		        	Tmp += Data.Offset[i];
 		        }
 		        
-		        Out[i] = (float)Tmp;     
+		        Out[i] = (float)Tmp;
 		    }
 		    
 		    // Output in 0..1.0 domain
@@ -469,7 +469,7 @@ final class cmslut
 	    
 	    for (rv = 1; b > 0; b--)
 	    {
-	    	rv *= Dims[b-1];
+	    	rv *= (Dims[b-1] & 0xFFFFFFFFL);
 	    }
 	    
 	    return rv;
@@ -738,6 +738,7 @@ final class cmslut
 	    nTotalPoints = CubeSize(nSamples, nInputs);
 	    
 	    index = 0;
+	    
 	    for (i = 0; i < nTotalPoints; i++)
 	    {
 	        rest = i;
@@ -882,9 +883,9 @@ final class cmslut
 	        rest = i;
 	        for (t = nInputs-1; t >=0; --t)
 	        {
-	            int Colorant = rest % clutPoints[t];
+	            int Colorant = (int)(((long)rest) % (clutPoints[t] & 0xFFFFFFFFL));
 	            
-	            rest /= clutPoints[t];
+	            rest /= (clutPoints[t] & 0xFFFFFFFFL);
 	            In[t] = _cmsQuantizeVal(Colorant, clutPoints[t]);
 	        }
 	        
@@ -942,7 +943,7 @@ final class cmslut
 		    final double XYZadj = 1.0 / lcms2_internal.MAX_ENCODEABLE_XYZ;
 		    
 		    // V4 rules
-		    Lab.L = In[0] * 100.0;        
+		    Lab.L = In[0] * 100.0;
 		    Lab.a = In[1] * 255.0 - 128.0;
 		    Lab.b = In[2] * 255.0 - 128.0;
 		    

@@ -727,10 +727,6 @@ final class cmscnvrt
 		    
 		    if (bp.cmyk2cmyk == null)
 		    {
-			    if (bp.KTone != null)
-			    {
-			    	cmsgamma.cmsFreeToneCurve(bp.KTone);
-			    }
 			    if (Result != null)
 			    {
 			    	cmslut.cmsPipelineFree(Result);
@@ -740,10 +736,10 @@ final class cmscnvrt
 		    
 		    // Now, compute the tone curve
 		    bp.KTone = cmsgmt._cmsBuildKToneCurve(ContextID, 
-		        4096, 
+		        4096,
 		        nProfiles,
 		        ICCIntents, 
-		        hProfiles, 
+		        hProfiles,
 		        BPC,
 		        AdaptationStates,
 		        dwFlags);
@@ -753,10 +749,6 @@ final class cmscnvrt
 		    	if (bp.cmyk2cmyk != null)
 			    {
 			    	cmslut.cmsPipelineFree(bp.cmyk2cmyk);
-			    }
-			    if (bp.KTone != null)
-			    {
-			    	cmsgamma.cmsFreeToneCurve(bp.KTone);
 			    }
 			    if (Result != null)
 			    {

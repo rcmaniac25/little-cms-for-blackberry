@@ -91,6 +91,13 @@ final class cmsxform
 	    
 	    lcms2_internal._cmsAssert(NewAlarm != null, "NewAlarm != null");
 	    
+	    if(NewAlarm.length < lcms2.cmsMAXCHANNELS)
+	    {
+	    	short[] alarm = new short[lcms2.cmsMAXCHANNELS];
+	    	System.arraycopy(NewAlarm, 0, alarm, 0, NewAlarm.length);
+	    	NewAlarm = alarm;
+	    }
+	    
 	    for (i = 0; i < lcms2.cmsMAXCHANNELS; i++)
 	    {
 	    	Alarm[i] = NewAlarm[i];
@@ -104,7 +111,7 @@ final class cmsxform
 	    
 	    lcms2_internal._cmsAssert(OldAlarm != null, "OldAlarm != null");
 	    
-	    for (i=0; i < lcms2.cmsMAXCHANNELS; i++)
+	    for (i=OldAlarm.length - 1; i >= 0 && i < lcms2.cmsMAXCHANNELS; i--)
 	    {
 	    	OldAlarm[i] = Alarm[i];
 	    }
@@ -174,7 +181,8 @@ final class cmsxform
 		{
 			return (VirtualPointer)buffer;
 		}
-		return new VirtualPointer(buffer);
+		VirtualPointer.Serializer ser = buffer == null ? null : VirtualPointer.getSerializer(buffer.getClass());
+		return new VirtualPointer(buffer, ser);
 	}
 	
 	private static void vp2buffer(VirtualPointer vp, Object buffer)

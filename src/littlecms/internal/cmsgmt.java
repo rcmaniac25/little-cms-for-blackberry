@@ -105,7 +105,7 @@ final class cmsgmt
 	private static cmsToneCurve ComputeKToLstar(cmsContext ContextID, int nPoints, int nProfiles, final int[] Intents, final cmsHPROFILE[] hProfiles, 
 			final boolean[] BPC, final double[] AdaptationStates, int dwFlags)
 	{
-	    cmsToneCurve out = null;   
+	    cmsToneCurve out = null;
 	    int i;
 	    cmsHTRANSFORM xform;
 	    cmsCIELab Lab = new cmsCIELab();
@@ -503,7 +503,7 @@ final class cmsgmt
 	{
 	    cmsTACestimator bp = new cmsTACestimator();
 	    int dwFormatter;
-	    int[] GridPoints = new int[lcms2_plugin.MAX_INPUT_DIMENSIONS];        
+	    int[] GridPoints = new int[lcms2_plugin.MAX_INPUT_DIMENSIONS];
 	    cmsHPROFILE hLab;
 	    cmsContext ContextID = cmsio0.cmsGetProfileContextID(hProfile);
 	    

@@ -157,110 +157,138 @@ final class cmsopt
 	//NOTE: The following 3 functions are modified from the original code so that _RemoveElement actually removes the element. Instead of removing "the" element,
 	//it removes the "next" element so that references can be maintained.
 	
-	// Remove an element in linked chain
-	private static void _RemoveElement(cmsStage head)
+	private static class ChainHolder
 	{
-	    cmsStage mpe = (cmsStage)head.Next;
-	    cmsStage next = (cmsStage)mpe.Next;
-	    head.Next = next;
-	    cmslut.cmsStageFree(mpe);
+		public ChainHolder next;
+		public cmsStage cur;
+		public ChainHolder prev;
+		
+		public static ChainHolder MakeChain(cmsStage firstStage)
+		{
+			ChainHolder root;
+			ChainHolder chain = root = new ChainHolder();
+			chain.prev = null;
+			chain.cur = firstStage;
+			while(firstStage != null && firstStage.Next != null)
+			{
+				ChainHolder t = new ChainHolder();
+				firstStage = t.cur = (cmsStage)firstStage.Next;
+				t.prev = chain;
+				chain.next = t;
+				chain = t;
+			}
+			return root;
+		}
+		
+		public cmsStage First()
+		{
+			if(prev != null)
+			{
+				return prev.First();
+			}
+			return cur;
+		}
+	}
+	
+	// Remove an element in linked chain
+	private static void _RemoveElement(ChainHolder head)
+	{
+		cmsStage mpe = head.cur;
+		head.cur = null;
+		
+		//Remove current element, replace with next element
+		if(head.next != null)
+		{
+			head.cur = head.next.cur;
+			head.next = head.next.next;
+		}
+		//Make sure previous element (both the actual element and chain holder element) is modified for next node (not current node)
+		if(head.prev != null)
+		{
+			head.prev.cur.Next = head.cur;
+			if(head.prev.next.cur == null)
+			{
+				head.prev.next = null;
+			}
+		}
+		
+		cmslut.cmsStageFree(mpe);
 	}
 	
 	// Remove all identities in chain. Note that pt actually is a double pointer to the element that holds the pointer. 
 	private static boolean _Remove1Op(cmsPipeline Lut, int UnaryOp)
 	{
-		cmsStage pt = Lut.Elements;
-	    boolean AnyOpt = false;
-	    boolean initialIm = false;
-	    
-	    if(pt == null)
-	    {
-	    	return AnyOpt;
-	    }
-	    
-	    cmsStage previous = pt;
-	    pt = (cmsStage)pt.Next;
-	    initialIm = pt.Implements == UnaryOp;
-	    
-	    while (pt != null)
-	    {
-	        if ((pt).Implements == UnaryOp)
-	        {
-	        	pt = (cmsStage)((pt).Next);
-	            _RemoveElement(previous);
-	            AnyOpt = true;
-	        }
-	        else
-	        {
-	        	previous = pt;
-	        	pt = (cmsStage)((pt).Next);
-	        }
-	    }
-	    
-	    if(initialIm)
-	    {
-	    	pt = Lut.Elements;
-	    	Lut.Elements = (cmsStage)pt.Next;
-	    	cmslut.cmsStageFree(pt);
-	    	AnyOpt = true;
-	    }
-	    
-	    return AnyOpt;
+		ChainHolder pt = ChainHolder.MakeChain(Lut.Elements);
+		boolean AnyOpt = false;
+		
+		while(pt.cur != null)
+		{
+			if(pt.cur.Implements == UnaryOp)
+			{
+				_RemoveElement(pt);
+				AnyOpt = true;
+			}
+			else
+			{
+				if(pt.next == null)
+				{
+					break;
+				}
+				pt = pt.next;
+			}
+		}
+		
+		if(AnyOpt)
+		{
+			Lut.Elements = pt.First();
+		}
+		
+		return AnyOpt;
 	}
 	
 	// Same, but only if two adjacent elements are found
 	private static boolean _Remove2Op(cmsPipeline Lut, int Op1, int Op2)
-	{   
-	    cmsStage pt1;
-	    cmsStage pt2;
-	    boolean AnyOpt = false;
-	    boolean initialIm = false;
-	    
-	    pt1 = Lut.Elements;
-	    if (pt1 == null)
-	    {
-	    	return AnyOpt;
-	    }
-	    
-	    cmsStage previous = pt1;
-	    pt1 = (cmsStage)pt1.Next;
-	    if(pt1 != null)
-	    {
-	    	initialIm = previous.Implements == Op1 && pt1.Implements == Op2;
-	    }
-	    
-	    while (pt1 != null)
-	    {
-	        pt2 = (cmsStage)((pt1).Next);
-	        if (pt2 == null)
-	        {
-	        	break;
-	        }
-	        
-	        if ((pt1).Implements == Op1 && (pt2).Implements == Op2)
-	        {
+	{
+		ChainHolder pt1;
+		ChainHolder pt2;
+		boolean AnyOpt = false;
+		
+		pt1 = ChainHolder.MakeChain(Lut.Elements);
+		if(pt1.cur == null)
+		{
+			return AnyOpt;
+		}
+		
+		while(pt1.cur != null)
+		{
+			pt2 = pt1.next;
+			if(pt2 == null || pt2.cur == null)
+			{
+				break;
+			}
+			
+			if(pt1.cur.Implements == Op1 && pt2.cur.Implements == Op2)
+			{
+				_RemoveElement(pt2);
 	            _RemoveElement(pt1);
-	            _RemoveElement(previous);
-	            pt1 = (cmsStage)((previous).Next);
 	            AnyOpt = true;
-	        }
-	        else
-	        {
-	        	previous = pt1;
-	        	pt1 = (cmsStage)((pt1).Next);        
-	        }
-	    }
-	    
-	    if(initialIm)
-	    {
-	    	_RemoveElement(Lut.Elements);
-	    	pt1 = Lut.Elements;
-	    	Lut.Elements = (cmsStage)pt1.Next;
-	    	cmslut.cmsStageFree(pt1);
-	    	AnyOpt = true;
-	    }
-	    
-	    return AnyOpt;
+			}
+			else
+			{
+				if(pt1.next == null)
+				{
+					break;
+				}
+				pt1 = pt1.next;
+			}
+		}
+		
+		if(AnyOpt)
+		{
+			Lut.Elements = pt1.First();
+		}
+		
+		return AnyOpt;
 	}
 	
 	// Preoptimize just gets rif of no-ops coming paired. Conversion from v2 to v4 followed 
@@ -879,7 +907,23 @@ final class cmsopt
 		    
 		    if (DataSetIn == null && DataSetOut == null)
 		    {
-		        cmslut._cmsPipelineSetOptimizationParameters(Dest, (_cmsOPTeval16Fn)DataCLUT.Params.Interpolation.get16(), DataCLUT.Params, null, null);
+		    	final _cmsInterpFn16 interp = DataCLUT.Params.Interpolation.get16();
+		    	_cmsOPTeval16Fn eval;
+		    	if(interp instanceof _cmsOPTeval16Fn)
+		    	{
+		    		eval = (_cmsOPTeval16Fn)interp;
+		    	}
+		    	else
+		    	{
+		    		eval = new _cmsOPTeval16Fn()
+		    		{
+		    			public void run(short[] In, short[] Out, Object Data)
+		    			{
+		    				interp.run(In, Out, (cmsInterpParams)Data);
+						}
+					};
+		    	}
+		        cmslut._cmsPipelineSetOptimizationParameters(Dest, eval, DataCLUT.Params, null, null);
 		    }
 		    else
 		    {
@@ -1587,7 +1631,7 @@ final class cmsopt
 		    
 		    for (i=0; i < Data.nCurves; i++)
 		    {
-		    	Out[i] = Data.Curves[i][In[i]];
+		    	Out[i] = Data.Curves[i][In[i] & 0xFFFF];
 		    }
 		}
 	};
@@ -1601,7 +1645,7 @@ final class cmsopt
 		    
 		    for (i=0; i < Lut.InputChannels; i++)
 		    {
-		    	Out[i] = In[i];   
+		    	Out[i] = In[i];
 		    }
 		}
 	};

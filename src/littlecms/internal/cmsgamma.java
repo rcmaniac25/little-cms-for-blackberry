@@ -1287,17 +1287,17 @@ final class cmsgamma
 	    lcms2_internal._cmsAssert(t != null, "t != null");
 	    
 	    n    = t.nEntries;
-	    last = t.Table16[n-1];
+	    last = t.Table16[n-1] & 0xFFFF;
 	    
 	    for (i = n-2; i >= 0; --i)
 	    {
-	        if (t.Table16[i] > last)
+	        if ((t.Table16[i] & 0xFFFF) > last)
 	        {
 	        	return false;
 	        }
 	        else
 	        {
-	        	last = t.Table16[i];
+	        	last = t.Table16[i] & 0xFFFF;
 	        }
 	    }
 	    
