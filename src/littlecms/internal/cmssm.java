@@ -98,6 +98,12 @@ final class cmssm
 	{
 		public cmsVEC3 a;
 		public cmsVEC3 u;
+		
+		public cmsLine()
+		{
+			a = new cmsVEC3();
+			u = new cmsVEC3();
+		}
 	}
 	
 	// A plane using the parametric form
@@ -107,6 +113,13 @@ final class cmssm
 		public cmsVEC3 b;
 		public cmsVEC3 v;
 		public cmsVEC3 w;
+		
+		public cmsPlane()
+		{
+			b = new cmsVEC3();
+			v = new cmsVEC3();
+			w = new cmsVEC3();
+		}
 	}
 	
 	// --------------------------------------------------------------------------------------------
@@ -185,8 +198,8 @@ final class cmssm
 	// The limits are the centers of each sector, so
 	private static void QuantizeToSector(final cmsSpherical sp, int[] alpha, int[] theta)
 	{   
-	    alpha[0] = (int)Math.floor(((sp.alpha * (SECTORS)) * (1.0 / 360.0)));            
-	    theta[0] = (int)Math.floor(((sp.theta * (SECTORS)) / (1.0 / 180.0)));    
+	    alpha[0] = (int)Math.floor(((sp.alpha * (SECTORS)) * (1.0 / 360.0)));
+	    theta[0] = (int)Math.floor(((sp.theta * (SECTORS)) / (1.0 / 180.0)));
 	    
 		if (alpha[0] >= SECTORS)
 		{
@@ -516,7 +529,7 @@ final class cmssm
 	    cmsVEC3 Centre;
 	    cmsLine ray;
 	    int nCloseSectors;
-	    cmsGDBPoint[] Close = new cmsGDBPoint[NSTEPS]; 
+	    cmsGDBPoint[] Close = new cmsGDBPoint[NSTEPS];
 	    cmsSpherical closel, templ;
 	    cmsLine edge;
 	    int k, m;
@@ -581,7 +594,7 @@ final class cmssm
 	                 templ.alpha >= (alpha*360.0/SECTORS) &&
 	                 templ.alpha <= ((alpha+1)*360.0/SECTORS)) {
 	            	
-	                closel = templ;         
+	                closel = templ;
 	            }
 	        }
 	    }
@@ -602,7 +615,8 @@ final class cmssm
 	    lcms2_internal._cmsAssert(hGBD != null, "hGBD != null");
 	    
 	    // Interpolate black
-	    for (alpha = 0; alpha <= SECTORS; alpha++)
+	    //XXX All three "alpha" loops use <= which causes index out of bounds issues. Based on testing with the C LCMS, the "extra" element is skipped anyway since the memory at that index is rarely zero (the value that defines "process this element").
+	    for (alpha = 0; alpha < SECTORS; alpha++)
 	    {
 	    	if (!InterpolateMissingSector(gbd, alpha, 0))
 	    	{
@@ -611,7 +625,7 @@ final class cmssm
 	    }
 	    
 	    // Interpolate white
-	    for (alpha = 0; alpha <= SECTORS; alpha++)
+	    for (alpha = 0; alpha < SECTORS; alpha++)
 	    {
 	    	if (!InterpolateMissingSector(gbd, alpha, SECTORS-1))
 	    	{
@@ -622,7 +636,7 @@ final class cmssm
 	    // Interpolate Mid
 	    for (theta = 1; theta < SECTORS; theta++)
 	    {
-	        for (alpha = 0; alpha <= SECTORS; alpha++)
+	        for (alpha = 0; alpha < SECTORS; alpha++)
 	        {
 	        	if (!InterpolateMissingSector(gbd, alpha, theta))
 		    	{

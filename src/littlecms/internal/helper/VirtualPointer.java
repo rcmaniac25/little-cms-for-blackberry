@@ -1550,6 +1550,7 @@ public class VirtualPointer
         }
         //Equivalent of "realloc(ptr, 'size > 0')"
         byte[] ndata = new byte[newsize];
+        //Technically, if a pointer gets reallocated to a new pointer (so the original pointer no longer exists), the old pointer is freed. Since we know all our children, we can simply update them ourselves.
         synchronized (data)
         {
             System.arraycopy(data, 0, ndata, 0, Math.min(newsize, data.length));

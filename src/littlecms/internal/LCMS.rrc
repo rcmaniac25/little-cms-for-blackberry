@@ -111,5 +111,5 @@ PRINTUTIL_NULL_POINTER_ERR#0="null pointer return";
 PRINTUTIL_UNK_ARG#0=": Unknown argument, defaulting to ";
 PRINTUTIL_UNSIGNED_NUMBER_UNPARSEABLE_LARGE#0="Number is too large or too small to be a LargeNumber.";
 PRINTUTIL_UNSIGNED_NUMBER_UNPARSEABLE_LONG#0="Number is too large or too small to be a unsigned long.";
-UTILS_CTIME_FORMAT#0="EEE MMM dd hh':'mm':'ss yyyy'\n'";
+UTILS_CTIME_FORMAT#0="EEE MMM dd HH':'mm':'ss yyyy'\n'";
 VP_NO_SERIALIZER#0="obj needs Serializer in order to be converted to pointer";

@@ -202,7 +202,12 @@ public abstract class Stream
 				}
 				if((iMode & Connector.WRITE) != 0)
 				{
-					if(!file.exists())
+					if(file.exists())
+					{
+						//Make sure that none of the previous data exists in the file once processed.
+						file.truncate(0);
+					}
+					else
 					{
 						//Create the file automatically since in write mode
 						file.create();
@@ -448,6 +453,7 @@ public abstract class Stream
 					}
 					if(out != null)
 					{
+						out.flush();
 						out.close();
 					}
 					file.close();

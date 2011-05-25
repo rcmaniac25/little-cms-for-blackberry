@@ -46,8 +46,8 @@ public
 //#endif
 final class cmscgats
 {
-	private static final int MAXID     =  128; // Max lenght of identifier
-	private static final int MAXSTR    = 1024; // Max lenght of string
+	private static final int MAXID     =  128; // Max length of identifier
+	private static final int MAXSTR    = 1024; // Max length of string
 	private static final int MAXTABLES =  255; // Max Number of tables in a single stream
 	private static final int MAXINCLUDE=   20; // Max number of nested includes
 	
@@ -89,12 +89,12 @@ final class cmscgats
     // Linked list of variable names
     private static class KEYVALUE
     {
-    	public KEYVALUE Next;
-    	public String   Keyword;       // Name of variable
-        public KEYVALUE NextSubkey;    // If key is a dictionary, points to the next item
-        public String   Subkey;        // If key is a dictionary, points to the subkey name
-        public Object   Value;         // Points to value
-        public int      WriteAs;       // How to write the value
+    	public KEYVALUE			Next;
+    	public String			Keyword;	// Name of variable
+        public KEYVALUE			NextSubkey;	// If key is a dictionary, points to the next item
+        public String			Subkey;		// If key is a dictionary, points to the subkey name
+        public VirtualPointer	Value;		// Points to value
+        public int				WriteAs;	// How to write the value
     }
     
     // Linked list of memory chunks (Memory sink)
@@ -377,19 +377,19 @@ final class cmscgats
     // Checks if c is a separator
     private static boolean isseparator(int c)
     {
-            return (c == ' ') || (c == '\t') || (c == '\r');
+    	return (c == ' ') || (c == '\t') || (c == '\r');
     }
     
     // Checks whatever if c is a valid identifier char
     private static boolean ismiddle(int c)
     {
-       return (!isseparator(c) && (c != '#') && (c !='\"') && (c != '\'') && (c > 32) && (c < 127));
+    	return (!isseparator(c) && (c != '#') && (c !='\"') && (c != '\'') && (c > 32) && (c < 127));
     }
     
     // Checks whatsever if c is a valid identifier middle char.
     private static boolean isidchar(int c)
     {
-       return Utility.isalnum(c) || ismiddle(c);
+    	return Utility.isalnum(c) || ismiddle(c);
     }
     
     // Checks whatsever if c is a valid identifier first char.
@@ -552,7 +552,7 @@ final class cmscgats
         while (r >= l)
         {
             x = (l+r)/2;
-            res = lcms2.cmsstrcasecmp(id, TabKeys[x-1].id);
+            res = cmserr.cmsstrcasecmp(id, TabKeys[x-1].id);
             if (res == 0)
             {
             	return TabKeys[x-1].sy;
@@ -1225,7 +1225,7 @@ final class cmscgats
         	t = it8.Tab[it8.TablesCount] = new TABLE();
         }
         
-        t.HeaderList = null;
+        t.HeaderList = new KEYVALUE[1];
         t.DataFormat = null;
         t.Data       = null;
         
@@ -1270,12 +1270,13 @@ final class cmscgats
         it8.nTable = 0;
         
         it8.ContextID = ContextID;
+        it8.Allocator = new SUBALLOCATOR();
         it8.Allocator.Used = 0;
         it8.Allocator.Block = null;
         it8.Allocator.BlockSize = 0;  
         
-        it8.ValidKeywords = null;
-        it8.ValidSampleID = null;
+        it8.ValidKeywords = new KEYVALUE[1];
+        it8.ValidSampleID = new KEYVALUE[1];
         
         it8.sy = SNONE;
         it8.ch = ' ';
@@ -1287,9 +1288,9 @@ final class cmscgats
         it8.IncludeSP = 0;
         it8.lineno = 1;
         
-        System.arraycopy(it8.DoubleFormatter, 0, DEFAULT_DBL_FORMAT.toCharArray(), 0, DEFAULT_DBL_FORMAT.length());
+        System.arraycopy(DEFAULT_DBL_FORMAT.toCharArray(), 0, it8.DoubleFormatter, 0, DEFAULT_DBL_FORMAT.length());
         it8.DoubleFormatter[DEFAULT_DBL_FORMAT.length()] = 0;
-        System.arraycopy(it8.SheetType, 0, "CGATS.17".toCharArray(), 0, 8);
+        System.arraycopy("CGATS.17".toCharArray(), 0, it8.SheetType, 0, 8);
         it8.SheetType[8] = 0;
         
         // Initialize predefined properties & data
@@ -1363,7 +1364,7 @@ final class cmscgats
         
         Utility.sprintf(Buffer, Utility.cstringCreation(it8.DoubleFormatter), new Object[]{new Double(Val)});
         
-        return AddToList(it8, GetTable(it8).HeaderList, cProp, null, Utility.cstringCreation(Buffer), WRITE_UNCOOKED) != null;    
+        return AddToList(it8, GetTable(it8).HeaderList, cProp, null, Utility.cstringCreation(Buffer), WRITE_UNCOOKED) != null;
     }
     
     public static boolean cmsIT8SetPropertyHex(cmsHANDLE hIT8, final String cProp, int Val)
@@ -1371,9 +1372,9 @@ final class cmscgats
         cmsIT8 it8 = (cmsIT8)hIT8;
         char[] Buffer = new char[1024];
         
-        Utility.sprintf(Buffer, "%d", new Object[]{new Double(Val)});
+        Utility.sprintf(Buffer, "%d", new Object[]{new Integer(Val)});
         
-        return AddToList(it8, GetTable(it8).HeaderList, cProp, null, Utility.cstringCreation(Buffer), WRITE_HEXADECIMAL) != null;    
+        return AddToList(it8, GetTable(it8).HeaderList, cProp, null, Utility.cstringCreation(Buffer), WRITE_HEXADECIMAL) != null;
     }
     
     public static boolean cmsIT8SetPropertyUncooked(cmsHANDLE hIT8, final String Key, final String Buffer)
@@ -1398,7 +1399,7 @@ final class cmscgats
         
         if (IsAvailableOnList(GetTable(it8).HeaderList[0], Key, null, p))
         {
-            return (String)p[0].Value;
+            return p[0].Value.getProcessor().readString();
         }
         return null;
     }
@@ -1424,7 +1425,7 @@ final class cmscgats
         
         if (IsAvailableOnList(GetTable(it8).HeaderList[0], Key, SubKey, p))
         {
-            return (String)p[0].Value;
+            return p[0].Value.getProcessor().readString();
         }
         return null;
     }
@@ -1659,7 +1660,7 @@ final class cmscgats
                 switch (p.WriteAs)
                 {
 	                case WRITE_UNCOOKED:
-	                        Writef(fp, "\t%s", new Object[]{p.Value});                    
+	                        Writef(fp, "\t%s", new Object[]{p.Value});
 	                        break;
 	                        
 	                case WRITE_STRINGIFY:
@@ -1667,11 +1668,11 @@ final class cmscgats
 	                        break;
 	                        
 	                case WRITE_HEXADECIMAL:
-	                        Writef(fp, "\t0x%X", new Object[]{Integer.valueOf((String)p.Value)});
+	                        Writef(fp, "\t0x%X", new Object[]{Integer.valueOf(p.Value.getProcessor().readString())});
 	                        break;
 	                        
 	                case WRITE_BINARY:
-	                        Writef(fp, "\t0x%B", new Object[]{Integer.valueOf((String)p.Value)});
+	                        Writef(fp, "\t0x%B", new Object[]{Integer.valueOf(p.Value.getProcessor().readString())});
 	                        break;
 	                        
 	                case WRITE_PAIR:
@@ -1842,7 +1843,7 @@ final class cmscgats
     
     private static boolean DataFormatSection(cmsIT8 it8)
     {
-        int iField = 0;    
+        int iField = 0;
         TABLE t = GetTable(it8);
         
         InSymbol(it8); // Eats "BEGIN_DATA_FORMAT"
@@ -1918,7 +1919,7 @@ final class cmscgats
                 iField++;
                 
                 InSymbol(it8);
-                SkipEOLN(it8);           
+                SkipEOLN(it8);
             }
         }
         
@@ -2082,7 +2083,7 @@ final class cmscgats
     private static boolean ParseIT8(cmsIT8 it8, boolean nosheet)
     {
         int SheetTypePtr = 0;
-
+        
         if (!nosheet)
         {
         	// First line is a very special case.
@@ -2398,8 +2399,16 @@ final class cmscgats
     		return null;
     	}
     	
-    	Utility.strncpy(it8.FileStack[0].FileName, cFileName, lcms2.cmsMAX_PATH-1);    
-        it8.FileStack[0].FileName.setCharAt(lcms2.cmsMAX_PATH-1, '\0');
+    	Utility.strncpy(it8.FileStack[0].FileName, cFileName, lcms2.cmsMAX_PATH-1);
+    	if(it8.FileStack[0].FileName.length() < lcms2.cmsMAX_PATH)
+    	{
+    		it8.FileStack[0].FileName.append('\0');
+    	}
+    	else
+    	{
+    		it8.FileStack[0].FileName.setLength(lcms2.cmsMAX_PATH);
+    		it8.FileStack[0].FileName.setCharAt(lcms2.cmsMAX_PATH-1, '\0');
+    	}
         
         if (!ParseIT8(it8, !type))
         {
@@ -2616,7 +2625,7 @@ final class cmscgats
         
         lcms2_internal._cmsAssert(hIT8 != null, "hIT8 != null");
     	
-        return SetData(it8, row, col, Val);        
+        return SetData(it8, row, col, Val);
     }
     
     public static boolean cmsIT8SetDataRowColDbl(cmsHANDLE hIT8, int row, int col, double Val)

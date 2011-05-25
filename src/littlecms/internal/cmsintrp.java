@@ -1014,11 +1014,16 @@ final class cmsintrp
 	
 	private static final _cmsInterpFn16 TetrahedralInterp16 = new TetrahedralInterp16Impl();
 	
-	private static final _cmsInterpFn16 Eval4Inputs = new _cmsInterpFn16()
+	private final static class Eval4InputsImpl implements _cmsInterpFn16, lcms2_internal._cmsOPTeval16Fn
 	{
+		public void run(short[] In, short[] Out, Object Data)
+		{
+			run(In, Out, (cmsInterpParams)Data);
+		}
+		
 		public void run(short[] Input, short[] Output, cmsInterpParams p16)
 		{
-		    int fk;
+			int fk;
 		    int k0, rk;
 		    int K0, K1;
 		    int fx, fy, fz;
@@ -1340,7 +1345,9 @@ final class cmsintrp
 		        Output[i] = LinearInterp(rk, Tmp1[i] & 0xFFFF, Tmp2[i] & 0xFFFF);
 		    }
 		}
-	};
+	}
+	
+	private static final _cmsInterpFn16 Eval4Inputs = new Eval4InputsImpl();
 	
 	private static cmsInterpParams dupParams(cmsInterpParams p)
 	{

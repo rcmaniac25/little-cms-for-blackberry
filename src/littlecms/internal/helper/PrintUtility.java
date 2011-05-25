@@ -50,21 +50,18 @@ public
 final class PrintUtility
 {
 	/* 
-	 * This mostly follows the specification mentioned http://www.cplusplus.com/reference/clibrary/cstdio/printf/
+	 * This mostly follows the specification mentioned http://pubs.opengroup.org/onlinepubs/009695399/functions/printf.html and http://pubs.opengroup.org/onlinepubs/009695399/functions/scanf.html
 	 * 
 	 * Implementation specific components:
 	 * Precision:
 	 * 	If no precision is mentioned then the default precision is 6.
 	 * 
 	 * Formats:
-	 * 	f, F: Fixed-point printing, if the number is an integer then the trailing zeros are removed unless the '#' flag is used which case the decimal and one zero 
-	 * 		will be retained. Also if it is an integer and a precision is specified then it will follow the precision instead of removing the decimal.
-	 *	e, E: Same as 'f' and 'F' but with exponent notation (+/-d.ddd e-/+00).
 	 *	p: Bit of inside information, it prints out the position the pointer is currently at. A new VirtualPointer will be 0000:0000. Moving 16 bytes in will print
 	 *		out 0000:000F.
 	 */
 	
-	public static int output(PrintStream out, int max, final String format, Object[] args, Object[][] formatCache)
+	public static int output(PrintStream out, int max, final String format, Object[] args, Object[][] formatCache, int cacheIndex)
 	{
 		if(max == 0)
         {
@@ -73,16 +70,16 @@ final class PrintUtility
         }
 		//Cache the format if possible
 		Object[] formats;
-		if(formatCache != null && formatCache.length > 0 && formatCache[0] != null)
+		if(formatCache != null && formatCache.length > 0 && cacheIndex >= 0 && cacheIndex < formatCache.length && formatCache[cacheIndex] != null)
 		{
-			formats = formatCache[0];
+			formats = formatCache[cacheIndex];
 		}
 		else
 		{
 			formats = breakFormat(format, null);
-			if(formatCache != null && formatCache.length > 0)
+			if(formatCache != null && formatCache.length > 0 && cacheIndex >= 0 && cacheIndex < formatCache.length)
 			{
-				formatCache[0] = formats;
+				formatCache[cacheIndex] = formats;
 			}
 		}
         if (max < 0)
@@ -190,7 +187,7 @@ final class PrintUtility
         return count;
 	}
 	
-	public static int fscanf(final InputStream file, final String format, Object[] argptr, Object[][] formatCache)
+	public static int fscanf(final InputStream file, final String format, Object[] argptr, Object[][] formatCache, int cacheIndex)
     {
 		//First thing to do is get the actual formated data
 		byte[] bytes = null;
@@ -210,17 +207,17 @@ final class PrintUtility
 		boolean doValidate = true;
 		Object[] formats;
 		//..and possibly cache it
-		if(formatCache != null && formatCache.length > 0 && formatCache[0] != null)
+		if(formatCache != null && formatCache.length > 0 && cacheIndex >= 0 && cacheIndex < formatCache.length && formatCache[cacheIndex] != null)
 		{
 			doValidate = false;
-			formats = formatCache[0];
+			formats = formatCache[cacheIndex];
 		}
 		else
 		{
 			formats = breakFormat(format, null);
-			if(formatCache != null && formatCache.length > 0)
+			if(formatCache != null && formatCache.length > 0 && cacheIndex >= 0 && cacheIndex < formatCache.length)
 			{
-				formatCache[0] = formats;
+				formatCache[cacheIndex] = formats;
 			}
 		}
 		//Now get the string data
@@ -523,7 +520,7 @@ final class PrintUtility
 		String temp = (String)Utility.singletonStorageGet(SPECIFIERS_UID);
 		if(temp == null)
 		{
-			SPECIFIERS = "cdieEfFgGosuxXpn";
+			SPECIFIERS = "cspdieEfFgGouxXn";
 			FLAGS = "-+ #0";
 			WIDTH_PRECISION = "123456789*0"; //Zero is added at end so that when FULL_FORMAT is generated there isn't two zeros in the format. It wouldn't cause an error but it would be one more char to check that isn't needed.
 			LENGTH = "hlLzjt";
@@ -1158,10 +1155,12 @@ final class PrintUtility
             {
                 if (flags.indexOf('-') >= 0)
                 {
+                	/*
                     if (flags.indexOf('0') >= 0)
                     {
                     	throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.BAD_STRING_FORMAT));
                     }
+                    */
                     //Left align
                     if (str.length() < width)
                     {
@@ -1170,8 +1169,9 @@ final class PrintUtility
                         str += new String(chars);
                     }
                 }
-                else if (flags.indexOf('0') >= 0)
+                else if (this.precision == -1 && flags.indexOf('0') >= 0 && SPECIFIERS.indexOf(this.type) > 2)
                 {
+                	//Pad with zeros (for everything but char, string, and pointer) when precision not specified
                     if (str.length() < width)
                     {
                     	char[] chars = new char[width - str.length()];
@@ -1182,6 +1182,7 @@ final class PrintUtility
             }
             if (str.length() < width)
             {
+            	//Right align
             	char[] chars = new char[width - str.length()];
             	Arrays.fill(chars, ' ');
                 str = new String(chars) + str;
@@ -1328,8 +1329,15 @@ final class PrintUtility
                 else if (obj instanceof VirtualPointer)
                 {
                 	VirtualPointer.TypeProcessor proc = ((VirtualPointer)obj).getProcessor();
-                	char c = this.length != 'l' ? ((char)proc.readInt8()) : proc.readChar();
-                	str = c + "";
+                	if(charType)
+                	{
+	                	char c = this.length != 'l' ? ((char)proc.readInt8()) : proc.readChar();
+	                	str = c + "";
+                	}
+                	else
+                	{
+                		str = proc.readString();
+                	}
                 }
                 else
                 {
@@ -1532,6 +1540,8 @@ final class PrintUtility
 	
 	private static class IntFormatElement extends GeneralFormatElement
     {
+		private static LargeNumber[] MAX;
+		
         private boolean signed;
         private boolean basicType;
 
@@ -1570,36 +1580,44 @@ final class PrintUtility
         {
             StringBuffer bu = new StringBuffer();
             long value = 0;
+            int bCount = 1;
             switch(this.length)
         	{
         		default:
         			if(obj instanceof Byte)
                 	{
                 		value = ((Byte)obj).byteValue();
+                		bCount = 1;
                 	}
                 	else if(obj instanceof Short)
                 	{
                 		value = ((Short)obj).shortValue();
+                		bCount = 2;
                 	}
                 	else if(obj instanceof Integer)
                 	{
                 		value = ((Integer)obj).intValue();
+                		bCount = 4;
                 	}
                 	else if(obj instanceof Long)
                 	{
                 		value = ((Long)obj).longValue();
+                		bCount = 8;
                 	}
                 	else if(obj instanceof Float)
                 	{
                 		value = Float.floatToIntBits(((Float)obj).floatValue());
+                		bCount = 4;
                 	}
                 	else if(obj instanceof Double)
                 	{
                 		value = Double.doubleToLongBits(((Double)obj).doubleValue());
+                		bCount = 8;
                 	}
                 	else if(obj instanceof VirtualPointer)
                 	{
                 		value = ((VirtualPointer)obj).getProcessor().readInt32();
+                		bCount = 4;
                 	}
                 	else
                 	{
@@ -1611,25 +1629,30 @@ final class PrintUtility
         			if(super.lengthDoubleSize)
         			{
         				value = ((Character)obj).charValue();
+        				bCount = 2;
         			}
         			else
         			{
         				value = ((Short)obj).shortValue();
+        				bCount = 2;
         			}
         			break;
         		case 'z':
         		case 'j':
         		case 't':
         			value = ((Integer)obj).intValue();
+        			bCount = 4;
         			break;
         		case 'l':
         			if(super.lengthDoubleSize)
         			{
         				value = ((Long)obj).longValue();
+        				bCount = 8;
         			}
         			else
         			{
         				value = ((Integer)obj).longValue();
+        				bCount = 4;
         			}
         			break;
         	}
@@ -1663,7 +1686,15 @@ final class PrintUtility
                 }
                 else
                 {
-                	str = Long.toString(value, 8);
+                	//It's actually an unsigned print out
+                	if(value < 0)
+                	{
+                		str = negNumberToUnsigned(bCount, value).toString(8);
+                	}
+                	else
+                	{
+                		str = Long.toString(value, 8);
+                	}
                     if (flags != null && flags.indexOf('#') >= 0 && value != 0)
                     {
                         bu.append('0');
@@ -1681,7 +1712,14 @@ final class PrintUtility
             {
                 if (basicType)
                 {
-                	str = new LargeNumber(value).toString();
+                	if(value < 0)
+                	{
+                		str = negNumberToUnsigned(bCount, value).toString();
+                	}
+                	else
+                	{
+                		str = Long.toString(value);
+                	}
                 	//str = ulongToString(value);
                 	if (str.length() < this.length)
                     {
@@ -1696,7 +1734,7 @@ final class PrintUtility
                 	if(value < 0)
                 	{
                 		//If the value is negative then converting to hex with the built in functions will append a '-' sign to it. This is not how printf works so do it with LargeNumber.
-                		str = new LargeNumber(value).toString(16);
+                		str = negNumberToUnsigned(bCount, value).toString(16);
                 	}
                 	else
                 	{
@@ -1717,6 +1755,31 @@ final class PrintUtility
                 }
             }
             return bu.toString();
+        }
+        
+        private static LargeNumber negNumberToUnsigned(int byteCount, long value)
+        {
+        	LargeNumber num = new LargeNumber(value);
+        	if(IntFormatElement.MAX == null)
+        	{
+        		IntFormatElement.MAX = new LargeNumber[4];
+        	}
+        	LargeNumber and = null;
+        	for(int i = 0; i < 4; i++)
+        	{
+        		if(byteCount == 1 << i)
+        		{
+        			if(IntFormatElement.MAX[i] == null)
+        			{
+        				byte[] bytes = new byte[8];
+        				Arrays.fill(bytes, (byte)255, 8 - byteCount, byteCount);
+        				IntFormatElement.MAX[i] = new LargeNumber(BitConverter.toInt64(bytes, 0));
+        			}
+        			and = IntFormatElement.MAX[i];
+        			break;
+        		}
+        	}
+    		return num.and(and);
         }
         
         /*
@@ -2313,8 +2376,15 @@ final class PrintUtility
 	            		//If a formatter or sign was added then make sure the final value has it too.
 	            		expBuf.append(temp.charAt(0));
 	            	}
-	            	StringUtilities.append(expBuf, temp, off, index - off); //Copy whole number
-	            	StringUtilities.append(expBuf, temp, index + 1, tlen - (index + 1)); //Copy decimal
+	            	if(index != -1)
+	            	{
+	            		StringUtilities.append(expBuf, temp, off, index - off); //Copy whole number
+	            		StringUtilities.append(expBuf, temp, index + 1, tlen - (index + 1)); //Copy decimal
+	            	}
+	            	else
+	            	{
+	            		StringUtilities.append(expBuf, temp, 0, tlen); //Copy everything
+	            	}
 	            	//Trim zeros before finishing formatting
 	            	//-First from the front
 	            	boolean dec = false;
@@ -2374,7 +2444,7 @@ final class PrintUtility
 	        		}
 	            	
 	            	//Now write out the exponent
-	            	expBuf.append('e').append(exp < 0 ? '-' : '+');
+	            	expBuf.append(caps ? 'E' : 'e').append(exp < 0 ? '-' : '+');
 	            	exp = Math.abs(exp);
 	            	if(exp < 10)
 	            	{
@@ -2384,6 +2454,7 @@ final class PrintUtility
 	            	expBuf.append(exp);
                 }
             }
+            /* Leave decimal digits
             if (fixedBuf != null && !Double.isInfinite(value) && !Double.isNaN(value))
             {
             	String temp = fixedBuf.toString();
@@ -2412,6 +2483,7 @@ final class PrintUtility
         			}
         		}
             }
+            */
             
             //Return the correct type
             /*
@@ -2422,55 +2494,89 @@ final class PrintUtility
             String result;
             if (type == 'g' || type == 'G')
             {
-            	if(!alt)
+            	StringBuffer builder;
+            	if (!Double.isNaN(value) && !Double.isInfinite(value))
             	{
-            		//If not alternative then trailing zeros should be removed (decimal included [in removal] if the number is an integer)
-            		
-	            	//First process the fixed point
-            		String temp = fixedBuf.toString();
-            		int index = temp.indexOf(decimalPoint);
-            		if(index == -1)
-            		{
-	            		for(int i = fixedBuf.length() - 1; i >= 0; i--)
+            		String temp;
+                	int index;
+	            	if(alt)
+	            	{
+	            		//Alt form, g/G requires the decimal point
+	            		
+	            		//First fixed-point
+	            		temp = fixedBuf.toString();
+	            		index = temp.indexOf(decimalPoint);
+	            		
+	            		if(index == -1)
 	            		{
-	            			char c = temp.charAt(i);
-	            			if(c != '0')
-	            			{
-	            				int start = i;
-	            				if(c != decimalPoint)
-	            				{
-	            					start++;
-	            				}
-	            				fixedBuf.delete(start, fixedBuf.length());
-	            				break;
-	            			}
+	            			//Decimal point doesn't exist, add it
+	            			fixedBuf.append(".0");
 	            		}
-            		}
+	            		
+	            		//Now process the exponent
+	            		temp = expBuf.toString();
+	            		index = temp.indexOf(decimalPoint);
+	            		
+	            		if(index == -1)
+	            		{
+	            			expBuf.insert(temp.indexOf('e'), ".0");
+	            		}
+	            	}
+	            	else
+	            	{
+	            		//If not alternative then trailing zeros should be removed (decimal included [in removal] if the number is an integer)
+	            		
+		            	//First process the fixed point
+	            		temp = fixedBuf.toString();
+	            		index = temp.indexOf(decimalPoint);
+	            		if(index != -1)
+	            		{
+	            			//Remove excess zeros
+		            		for(int i = fixedBuf.length() - 1; i >= 0; i--)
+		            		{
+		            			char c = temp.charAt(i);
+		            			if(c != '0')
+		            			{
+		            				int start = i;
+		            				if(c != decimalPoint)
+		            				{
+		            					start++;
+		            				}
+		            				fixedBuf.delete(start, fixedBuf.length());
+		            				break;
+		            			}
+		            		}
+	            		}
+		            	
+		            	//Now process the exponent
+	            		temp = expBuf.toString();
+	            		index = temp.indexOf(decimalPoint);
+	            		if(index != -1)
+	            		{
+		            		for(int i = temp.indexOf('e') - 1; i >= 0; i--)
+		            		{
+		            			char c = temp.charAt(i);
+		            			if(c != '0')
+		            			{
+		            				int start = i;
+		            				if(c != decimalPoint)
+		            				{
+		            					start++;
+		            				}
+		            				expBuf.delete(start, temp.indexOf('e'));
+		            				break;
+		            			}
+		            		}
+	            		}
+	            	}
 	            	
-	            	//Now process the exponent
-            		temp = expBuf.toString();
-            		index = temp.indexOf(decimalPoint);
-            		if(index == -1)
-            		{
-	            		for(int i = temp.indexOf('e') - 1; i >= 0; i--)
-	            		{
-	            			char c = temp.charAt(i);
-	            			if(c != '0')
-	            			{
-	            				int start = i;
-	            				if(c != decimalPoint)
-	            				{
-	            					start++;
-	            				}
-	            				fixedBuf.delete(start, temp.indexOf('e'));
-	            				break;
-	            			}
-	            		}
-            		}
+	            	//Compare length. Shortest one is returned.
+	                builder = expBuf.length() < fixedBuf.length() ? expBuf : fixedBuf; //Fixed point is the "false" value so if they are equal in length then fixed-point takes precedence over exponent
             	}
-            	
-            	//Compare length. Shortest one is returned.
-                StringBuffer builder = expBuf.length() < fixedBuf.length() ? expBuf : fixedBuf; //Fixed point is the "false" value so if they are equal in length then fixed-point takes precedence over exponent
+            	else
+            	{
+            		builder = fixedBuf; //Simply take the fixed-point buffer for infinite/NaN results
+            	}
                 result = builder.toString();
             }
             else
@@ -2519,16 +2625,24 @@ final class PrintUtility
             if (exp == 0 || mantissa == 0)
             {
                 buf.append(mantissa);
+                //To maintain decimal
+                if(p > 0)
+                {
+                	buf.append(decimalPoint);
+                	char[] chars = new char[p];
+                    Arrays.fill(chars, '0');
+                    buf.append(chars);
+                }
             }
             else
             {
-                if (Math.abs(exp) >= 62)
+                if (Math.abs(exp) >= 60)
                 {
                     if (exp > 0)
                     {
                         //Create the floating point value by multiplication (mantissa * 2^exp), using really big numbers
                         //-Precision is not needed since it only covers decimal point
-                        new LargeNumber(mantissa).multiply(new LargeNumber(exp)).toString(buf);
+                        new LargeNumber(mantissa).multiply(new LargeNumber(exp)).toString(buf, true);
                         buf.append(decimalPoint);
                         char[] chars = new char[p];
                         Arrays.fill(chars, '0');
@@ -2558,7 +2672,7 @@ final class PrintUtility
                             {
                                 mod = new LargeNumber[1];
                             }
-                            man.divideAndMod(exponent, mod).toString(buf);
+                            man.divideAndMod(exponent, mod).toString(buf, true);
                             rem = mod[0].multiply(ten);
                         }
                         else
@@ -2578,7 +2692,7 @@ final class PrintUtility
                                     {
                                         mod = new LargeNumber[1];
                                     }
-                                    rem.divideAndMod(exponent, mod).toString(buf);
+                                    rem.divideAndMod(exponent, mod).toString(buf, true);
                                     if(p >= 0)
                                     {
                                     	rem = mod[0].multiply(ten);
@@ -2667,7 +2781,7 @@ final class PrintUtility
                         if (result < 0) //Possible highest exponent before overflow occurs: 10 (0x1FFFFFFFFFFFFF * 2^10 = 0x7FFFFFFFFFFFFC00, 0x3FF diff before overflow. 0x1FFFFFFFFFFFFF * 2^11 = 1844674407370954956, which is overflow for a signed long)
                         {
                             //Overflow
-                            new LargeNumber(mantissa).multiply(new LargeNumber(exp)).toString(buf);
+                            new LargeNumber(mantissa).multiply(new LargeNumber(exp)).toString(buf, true);
                         }
                         else
                         {

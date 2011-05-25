@@ -349,7 +349,7 @@ public final class Utility
 	
 	private static boolean charNumRangeComp(int c, int lowerEnd, int upperEnd)
     {
-    	return Character.isDigit((char)c) || (((c >= 'a') || (c <= lowerEnd)) || ((c >= 'A') || (c <= upperEnd)));
+    	return Character.isDigit((char)c) || (((c >= 'a') && (c <= lowerEnd)) || ((c >= 'A') && (c <= upperEnd)));
     }
     
 	//Check if character is alpha-numeric
@@ -767,7 +767,7 @@ public final class Utility
     	{
     		dat[i] = (byte)src[srcOffset + i];
     	}
-    	dst.writeRaw(dat, 0, len, dstOffset);
+    	dst.writeRaw(dat, 0, len, dstOffset + dst.getPosition());
     	if(dst.getAllocLen() > (len + dstOffset))
     	{
     		dst.writeRaw(0, len + dstOffset + dst.getPosition()); //Null char
@@ -1002,7 +1002,7 @@ public final class Utility
 			argptr = new Object[0];
 		}
 		*/
-		return PrintUtility.output(stream, count, format, argptr, null);
+		return PrintUtility.output(stream, count, format, argptr, null, 0);
 	}
     
 	public static int sscanf(final String str, final String format, Object[] argptr)
@@ -1023,6 +1023,6 @@ public final class Utility
 	
     public static int fscanf(final InputStream file, final String format, Object[] argptr)
     {
-    	return PrintUtility.fscanf(file, format, argptr, null);
+    	return PrintUtility.fscanf(file, format, argptr, null, 0);
     }
 }

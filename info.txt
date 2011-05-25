@@ -1,14 +1,16 @@
---Last update: 01/13/2011--
+--Last update: 05/23/2011--
 --Revision Used: ??/??/2010-- (the date on which the source code was pulled from GIT)
 
 TODO:
 Testing (LCMS 2.0):
--All tests in testcms
 -Do cleanup operation for endian (see notes)[do this by checking every call to a read/write function in cmsplugin that has a endian argument]
 -Consolidate cmspack functions so that formatters don't just simply call the "actual function"
 -Optimize memory in cmsintrp so that it simply passes allocated memory and an index instead of reallocating memory every time certain functions are used used
 -Optimize cmsxform.cmsDoTransform so that pointers are reused
--Profile to check memory usage (function calls are less important since they are dynamically chosen and could vary greatly. No real consistancy)
+-Profile to check memory usage (function calls are less important since they are dynamically chosen and could vary greatly. No real consistency)
+-Test on actual device
+--Test 4.5 version
+--Test 5.0 version
 Get full JavaDoc to be created for lcms
 Release Version 2.0
 
@@ -22,7 +24,21 @@ If Test system has been updated then do testing
 Comment PrintUtility and LargeNumber
 Update PrintUtility FloatFormat so that it properly processes the values with exponent. Example: Double.MIN_VALUE is a subnormal number. The default manner of execution would consider the value to be zero since the number is so small. Make it so that it will scale the value for exponent.
 Update printf and scanf to follow: http://pubs.opengroup.org/onlinepubs/009695399/functions/printf.html, and http://pubs.opengroup.org/onlinepubs/009695399/functions/scanf.html (dedicated functions for printing 'e' and 'a', etc.)
+-printf
+--add flag support: '
+--add formatter: a, A
+--add formatter: C
+--add formatter: S
+--add error returns
+--make sure that "alt" format works properly
+--make sure that "length" components are used properly (they are relatively pointless but increase performance a little since the guess work is removed from data type)
+--make sure that "d, i, o, u, x, X" print out properly
+--make sure that "f, F, e, E, a, A" print out properly (in conjunction with the rest of next "todo").
+--make sure floating point print, prints exponent notation properly (AKA non-zero digits are brought to the front. Might require separate exponent print function [probably desirable])
+-scanf
+--TODO
 Try to figure out at least the two todo in VirtualPointer
+-Also, partial rewrite. Data, type, and length should be stored in own type. This can then be passed around between different virtual pointer instances (which can have different positions and be doing different things). This removes the "parent/child" pointers and replaces it with "server/client" and allows GC to get rid of everything when nothing is referencing the "internal pointer".
 
 Update Library so that it can (with the compile define "CMS_J2ME") be compiled sans BlackBerry APIs. This way it can be used to produce a J2ME version of LCMS.
 
@@ -55,11 +71,12 @@ CMS_J2ME //J2ME only version of LCMS. No BlackBerry needed.
 
 Implementation Notes:
 cmsSigChromaticAdaptationTag returns a double[], not a cmsMAT3 as what might be expected.
-Some extra functions to handle any functions that take/return Strings so they handle Java Strings (no null terminator though it is supported). These functions have "Cleaned" appeneded to the end of the function.
+Some extra functions to handle any functions that take/return Strings so they handle Java Strings (no null terminator though it is supported). These functions have "Cleaned" appended to the end of the function.
 RRT Signing is required.
+cmssm.cmsGDBCompute's "alpha" loops where changed so they don't use <= and instead use just <
 
 Small history on PrintUtility:
 Done Jan. 1, 2011 at 1:55AM over Steam:
 rcmaniac25: Just a few more lines of code and floating point printing will finally be done.
-rcmaniac25: a month and a half. Nearly 40k lines of test code. Two previous attempts at librarys. About 300 test cases. Three automated utilities. 5 research papers. Hours of online research. One CS professor referenced. 4 decompiled OS files (totaling about 20k ASM codes). 3 OSs inspected. About 13 photos. And god knows how much food and liquid. It will finally be done...
+rcmaniac25: a month and a half. Nearly 40k lines of test code. Two previous attempts at libraries. About 300 test cases. Three automated utilities. 5 research papers. Hours of online research. One CS professor referenced. 4 decompiled OS files (totaling about 20k ASM codes). 3 OSs inspected. About 13 photos. And god knows how much food and liquid. It will finally be done...
 rcmaniac25: That month and a half were just for this code. The many OS components and the other libraries took a couple months themselves

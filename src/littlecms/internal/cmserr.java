@@ -52,22 +52,25 @@ final class cmserr
 	// that hopefully would be fully portable.
 	
 	// compare two strings ignoring case
-	public static int cmsstrcasecmp(final String s1, final String s2)
+	public static int cmsstrcasecmp(String s1, String s2)
 	{
 		int us1 = 0;
 		int us2 = 0;
-		final int s1len = s1.length();
-		final int s2len = s2.length();
+		//Just as Marti was tired of incompatibilities, I am tired of trying to get this to work without a null char at the end
+		if(!s1.endsWith("\0"))
+		{
+			s1 += '\0';
+		}
+		if(!s2.endsWith("\0"))
+		{
+			s2 += '\0';
+		}
 		
 		while(Character.toUpperCase(s1.charAt(us1)) == Character.toUpperCase(s2.charAt(us2++)))
 		{
-			if(++us1 == s1len)
+			if(Character.toUpperCase(s1.charAt(us1++)) == '\0')
 			{
 				return 0;
-			}
-			if(us2 == s2len)
-			{
-				break;
 			}
 		}
 		return Character.toUpperCase(s1.charAt(us1)) - Character.toUpperCase(s2.charAt(--us2));
@@ -96,7 +99,7 @@ final class cmserr
 	// prevent bogus or malintentionated code to allocate huge blocks that otherwise lcms
 	// would never need.
 	
-	public static final int MAX_MEMORY_FOR_ALLOC_MB = 128;
+	public static final int MAX_MEMORY_FOR_ALLOC_MB = 32;
 	public static final int MAX_MEMORY_FOR_ALLOC = (1024 * 1024 * MAX_MEMORY_FOR_ALLOC_MB);
 	
 	// User may override this behaviour by using a memory plug-in, which basically replaces

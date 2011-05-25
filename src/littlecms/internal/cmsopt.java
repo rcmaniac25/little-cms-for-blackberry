@@ -653,7 +653,7 @@ final class cmsopt
 	    
 	    if (WhitesAreEqual(nOuts, WhitePointOut, ObtainedOut))
 	    {
-	    	return true; // whites already match 
+	    	return true; // whites already match
 	    }
 	    
 	    // Check if the LUT comes as Prelin, CLUT or Postlin. We allow all combinations

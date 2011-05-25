@@ -252,6 +252,17 @@ public final class LargeNumber
         //return this.subtract(this.divide(num).multiply(this));
     }
     
+    public LargeNumber and(LargeNumber num)
+    {
+    	if(this.zero() || num.zero())
+    	{
+    		return new LargeNumber(0L);
+    	}
+    	byte[] result = new byte[this.value.length];
+        and(this.value, num.value, result);
+        return new LargeNumber(result);
+    }
+    
     private static boolean equals(byte[] src1, byte[] src2)
     {
         return compare(src1, src2) == 0;
@@ -333,20 +344,30 @@ public final class LargeNumber
     
     public String toString()
     {
-    	return toString(null);
+    	return toString(null, 10, false);
     }
     
     public String toString(int radix)
     {
-    	return toString(null, radix);
+    	return toString(null, radix, false);
     }
     
     public String toString(StringBuffer builder)
     {
-    	return toString(builder, 10);
+    	return toString(builder, 10, false);
+    }
+    
+    public String toString(StringBuffer builder, boolean append)
+    {
+    	return toString(builder, 10, append);
     }
     
     public String toString(StringBuffer builder, int radix)
+    {
+    	return toString(builder, radix, false);
+    }
+    
+    public String toString(StringBuffer builder, int radix, boolean append)
     {
         if (value != null)
         {
@@ -360,11 +381,25 @@ public final class LargeNumber
             }
             if (this.zero())
             {
-                builder.append('0');
+            	if(append)
+            	{
+            		builder.append('0');
+            	}
+            	else
+            	{
+            		builder.insert(0, '0');
+            	}
             }
             else if (this.one())
             {
-                builder.append('1');
+            	if(append)
+            	{
+            		builder.append('1');
+            	}
+            	else
+            	{
+            		builder.insert(0, '1');
+            	}
             }
             else
             {
@@ -372,15 +407,32 @@ public final class LargeNumber
                 LargeNumber radRef = new LargeNumber((long)radix);
                 LargeNumber number = new LargeNumber(this);
                 LargeNumber[] mod = new LargeNumber[1];
+                char c;
                 while(number.compare(radRef) >= 0)
                 {
                 	number = number.divideAndMod(radRef, mod);
-                	builder.append(Utility.forDigit((int)mod[0].longValue(), radix));
+                	c = Utility.forDigit((int)mod[0].longValue(), radix);
+                	if(append)
+                	{
+                		builder.append(c);
+                	}
+                	else
+                	{
+                		builder.insert(0, c);
+                	}
                 }
                 if(!number.zero())
                 {
                 	//In case another digit exists
-                	builder.append(Utility.forDigit((int)number.longValue(), radix));
+                	c = Utility.forDigit((int)number.longValue(), radix);
+                	if(append)
+                	{
+                		builder.append(c);
+                	}
+                	else
+                	{
+                		builder.insert(0, c);
+                	}
                 }
             	/*
                 //All operations are done backwords. So the number 123 is stored 321.
@@ -580,6 +632,15 @@ public final class LargeNumber
     	{
     		//Throws an exception on a divide-by-zero exception. It will never get here bcause of checks done in other functions
     	}
+    }
+    
+    private static void and(byte[] src1, byte[] src2, byte[] dest)
+    {
+        //All excess bytes will simply result in zero.
+        for(int i = src1.length - 1, k = src2.length - 1; i >= 0 && k >= 0; i--, k--)
+        {
+        	dest[i] = (byte)(src1[i] & src2[i]);
+        }
     }
 //#else
     public LargeNumber(int exp)
@@ -978,6 +1039,17 @@ public final class LargeNumber
                     //*/
                 }
             }
+        }
+    }
+    
+    private static void and(byte[] src1, byte[] src2, byte[] dest)
+    {
+    	int len1 = src1.length;
+        int len2 = src2.length;
+        int max = Math.min(len1, len2); //All excess bytes will simply result in zero.
+        for(int i = 0; i < max; i++)
+        {
+        	dest[i] = (byte)(src1[i] & src2[i]);
         }
     }
 //#endif

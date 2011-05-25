@@ -879,11 +879,11 @@ final class cmsvirt
 	    	return null;
 	    }
 	    
-	    lcms2.cmsSetProfileVersion(hProfile, 4.2);
+	    cmsio0.cmsSetProfileVersion(hProfile, 4.2);
 	    
-	    lcms2.cmsSetDeviceClass(hProfile, lcms2.cmsSigAbstractClass);
-	    lcms2.cmsSetColorSpace(hProfile,  lcms2.cmsSigXYZData);
-	    lcms2.cmsSetPCS(hProfile,         lcms2.cmsSigXYZData);
+	    cmsio0.cmsSetDeviceClass(hProfile, lcms2.cmsSigAbstractClass);
+	    cmsio0.cmsSetColorSpace(hProfile,  lcms2.cmsSigXYZData);
+	    cmsio0.cmsSetPCS(hProfile,         lcms2.cmsSigXYZData);
 	    
 	    if (!SetTextTags(hProfile, "XYZ identity built-in"))
 	    {

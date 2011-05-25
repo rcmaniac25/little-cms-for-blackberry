@@ -329,7 +329,7 @@ final class cmsps2
 	// Convert to byte
 	private static byte Word2Byte(short w)
 	{
-	    return (byte)Math.floor(w / 257.0 + 0.5);
+	    return (byte)Math.floor((w & 0xFFFF) / 257.0 + 0.5);
 	}
 	
 	// Convert to byte (using ICC2 notation)
@@ -351,7 +351,7 @@ final class cmsps2
 	
 	private static void WriteByte(cmsIOHANDLER m, byte b)
 	{
-		cmsplugin._cmsIOPrintf(m, "%02x", new Object[]{new Byte(b)});	
+		cmsplugin._cmsIOPrintf(m, "%02x", new Object[]{new Byte(b)});
 		_cmsPSActualColumn[0] += 2;
 		
 		if (_cmsPSActualColumn[0] > MAXPSCOLS)
@@ -413,7 +413,7 @@ final class cmsps2
 	}
 	
 	// Emits White & Black point. White point is always D50, Black point is the device 
-	// Black point adapted to D50. 
+	// Black point adapted to D50.
 	
 	private static void EmitWhiteBlackD50(cmsIOHANDLER m, cmsCIEXYZ BlackPoint)
 	{
@@ -440,11 +440,11 @@ final class cmsps2
 	        case lcms2.INTENT_RELATIVE_COLORIMETRIC: intent = "RelativeColorimetric"; break;
 	        case lcms2.INTENT_ABSOLUTE_COLORIMETRIC: intent = "AbsoluteColorimetric"; break;
 	        case lcms2.INTENT_SATURATION:            intent = "Saturation"; break;
-
+	        
 	        default: intent = "Undefined"; break;
 	    }
 	    
-	    cmsplugin._cmsIOPrintf(m, "/RenderingIntent (%s)\n", new Object[]{intent});    
+	    cmsplugin._cmsIOPrintf(m, "/RenderingIntent (%s)\n", new Object[]{intent});
 	}
 	
 	//
@@ -526,12 +526,12 @@ final class cmsps2
 	    
 	    for (i=0; i < Table.nEntries; i++)
 	    {
-	    	cmsplugin._cmsIOPrintf(m, "%d ", new Object[]{new Short(Table.Table16[i])});
+	    	cmsplugin._cmsIOPrintf(m, "%d ", new Object[]{new Integer(Table.Table16[i] & 0xFFFF)});
 	    }
 	    
 	    cmsplugin._cmsIOPrintf(m, "] ", null);                        // v tab
 	    
-	    cmsplugin._cmsIOPrintf(m, "dup ", null);                      // v tab tab        
+	    cmsplugin._cmsIOPrintf(m, "dup ", null);                      // v tab tab
 	    cmsplugin._cmsIOPrintf(m, "length 1 sub ", null);             // v tab dom
 	    cmsplugin._cmsIOPrintf(m, "3 -1 roll ", null);                // tab dom v
 	    cmsplugin._cmsIOPrintf(m, "mul ", null);                      // tab val2
@@ -540,18 +540,18 @@ final class cmsps2
 	    cmsplugin._cmsIOPrintf(m, "floor cvi ", null);                // tab val2 val2 cell0
 	    cmsplugin._cmsIOPrintf(m, "exch ", null);                     // tab val2 cell0 val2
 	    cmsplugin._cmsIOPrintf(m, "ceiling cvi ", null);              // tab val2 cell0 cell1
-	    cmsplugin._cmsIOPrintf(m, "3 index ", null);                  // tab val2 cell0 cell1 tab 
+	    cmsplugin._cmsIOPrintf(m, "3 index ", null);                  // tab val2 cell0 cell1 tab
 	    cmsplugin._cmsIOPrintf(m, "exch ", null);                     // tab val2 cell0 tab cell1
 	    cmsplugin._cmsIOPrintf(m, "get ", null);                      // tab val2 cell0 y1
 	    cmsplugin._cmsIOPrintf(m, "4 -1 roll ", null);                // val2 cell0 y1 tab
-	    cmsplugin._cmsIOPrintf(m, "3 -1 roll ", null);                // val2 y1 tab cell0 
-	    cmsplugin._cmsIOPrintf(m, "get ", null);                      // val2 y1 y0 
+	    cmsplugin._cmsIOPrintf(m, "3 -1 roll ", null);                // val2 y1 tab cell0
+	    cmsplugin._cmsIOPrintf(m, "get ", null);                      // val2 y1 y0
 	    cmsplugin._cmsIOPrintf(m, "dup ", null);                      // val2 y1 y0 y0
-	    cmsplugin._cmsIOPrintf(m, "3 1 roll ", null);                 // val2 y0 y1 y0 
+	    cmsplugin._cmsIOPrintf(m, "3 1 roll ", null);                 // val2 y0 y1 y0
 	    cmsplugin._cmsIOPrintf(m, "sub ", null);                      // val2 y0 (y1-y0)
 	    cmsplugin._cmsIOPrintf(m, "3 -1 roll ", null);                // y0 (y1-y0) val2
 	    cmsplugin._cmsIOPrintf(m, "dup ", null);                      // y0 (y1-y0) val2 val2
-	    cmsplugin._cmsIOPrintf(m, "floor cvi ", null);                // y0 (y1-y0) val2 floor(val2) 
+	    cmsplugin._cmsIOPrintf(m, "floor cvi ", null);                // y0 (y1-y0) val2 floor(val2)
 	    cmsplugin._cmsIOPrintf(m, "sub ", null);                      // y0 (y1-y0) rest
 	    cmsplugin._cmsIOPrintf(m, "mul ", null);                      // y0 t1
 	    cmsplugin._cmsIOPrintf(m, "add ", null);                      // y
@@ -585,13 +585,13 @@ final class cmsps2
 	    int i;
 	    
 	    for(i=0; i < n; i++)
-	    {                
+	    {
 			if (i > 0 && GammaTableEquals(g[i-1].Table16, g[i].Table16, g[i].nEntries))
 			{
 	            cmsplugin._cmsIOPrintf(m, "dup ", null);
 	        }
 	        else
-	        {    
+	        {
 				Emit1Gamma(m, g[i]);
 	        }
 	    }
@@ -707,12 +707,12 @@ final class cmsps2
 	    sc.FirstComponent = -1;
 	    sc.SecondComponent = -1;
 		sc.Pipeline = (_cmsStageCLutData)mpe.Data;
-	    sc.m   = m;    
+	    sc.m   = m;
 	    sc.PreMaj = PreMaj;
 	    sc.PostMaj= PostMaj;
 	    
 	    sc.PreMin   = PreMin;
-	    sc.PostMin  = PostMin;    
+	    sc.PostMin  = PostMin;
 	    sc.FixWhite = FixWhite;
 	    sc.ColorSpace = ColorSpace;
 	    
@@ -720,7 +720,7 @@ final class cmsps2
 	    
 		for (i=0; i < sc.Pipeline.Params.nInputs; i++)
 		{
-			cmsplugin._cmsIOPrintf(m, " %d ", new Object[]{new Integer(sc.Pipeline.Params.nSamples[i])});
+			cmsplugin._cmsIOPrintf(m, " %d ", new Object[]{new Long(sc.Pipeline.Params.nSamples[i] & 0xFFFFFFFFL)});
 		}
 		
 		cmsplugin._cmsIOPrintf(m, " [\n", null);
@@ -775,7 +775,7 @@ final class cmsps2
 		
 		for( i=0; i < 3; i++ )
 		{
-			cmsplugin._cmsIOPrintf(m, "%.6f %.6f %.6f ", new Object[]{new Double(Matrix[0 + 3*i]), new Double(Matrix[1 + 3*i]), new Double(Matrix[2 + 3*i])});		
+			cmsplugin._cmsIOPrintf(m, "%.6f %.6f %.6f ", new Object[]{new Double(Matrix[0 + 3*i]), new Double(Matrix[1 + 3*i]), new Double(Matrix[2 + 3*i])});
 		}
 		
 		cmsplugin._cmsIOPrintf(m, "]\n", null);
@@ -841,7 +841,7 @@ final class cmsps2
 	    EmitWhiteBlackD50(m, BlackPoint);
 	    EmitIntent(m, Intent);
 	    
-	    cmsplugin._cmsIOPrintf(m, "   >>\n", null);       
+	    cmsplugin._cmsIOPrintf(m, "   >>\n", null);
 	    cmsplugin._cmsIOPrintf(m, "]\n", null);
 	    
 	    return 1;
@@ -934,7 +934,7 @@ final class cmsps2
 			    	
 			    	dwFlags |= lcms2.cmsFLAGS_FORCE_CLUT;
 			    	cmsPipeline[] temp = new cmsPipeline[]{DeviceLink};
-			    	cmsopt._cmsOptimizePipeline(new cmsPipeline[]{DeviceLink}, Intent, new int[]{InputFormat}, new int[]{OutFrm}, new int[]{dwFlags});
+			    	cmsopt._cmsOptimizePipeline(temp, Intent, new int[]{InputFormat}, new int[]{OutFrm}, new int[]{dwFlags});
 			    	DeviceLink = temp[0];
 			    	
 			    	rc = EmitCIEBasedDEF(m, DeviceLink, Intent, BlackPointAdaptedToD50);
@@ -981,7 +981,7 @@ final class cmsps2
 	        {
 	            rc = EmitCIEBasedABC(m, GetPtrToMatrix(Matrix), 
 				                        cmslut._cmsStageGetPtrToCurveSet(Shaper), 
-										BlackPointAdaptedToD50);      
+										BlackPointAdaptedToD50);
 	        }
 	        else 
 	        {
@@ -1341,7 +1341,7 @@ final class cmsps2
 		// We need a CLUT
 		dwFlags |= lcms2.cmsFLAGS_FORCE_CLUT;
 		cmsPipeline[] temp = new cmsPipeline[]{DeviceLink};
-		cmsopt._cmsOptimizePipeline(new cmsPipeline[]{DeviceLink}, RelativeEncodingIntent, new int[]{InFrm}, new int[]{OutputFormat}, new int[]{dwFlags});
+		cmsopt._cmsOptimizePipeline(temp, RelativeEncodingIntent, new int[]{InFrm}, new int[]{OutputFormat}, new int[]{dwFlags});
 		DeviceLink = temp[0];
 		
 	    cmsplugin._cmsIOPrintf(m, "<<\n", null);
@@ -1390,7 +1390,7 @@ final class cmsps2
 	    cmslut.cmsPipelineFree(DeviceLink);
 	    cmsxform.cmsDeleteTransform(xform);
 	    
-	    return 1;   
+	    return 1;
 	}
 	
 	// Builds a ASCII string containing colorant list in 0..1.0 range
@@ -1482,7 +1482,7 @@ final class cmsps2
 	// implemented as matrix-shaper.
 	
 	private static int GenerateCRD(cmsContext ContextID, cmsHPROFILE hProfile, int Intent, int dwFlags, cmsIOHANDLER mem)
-	{    
+	{
 		int dwBytesUsed;
 		
 		if ((dwFlags & lcms2.cmsFLAGS_NODEFAULTRESOURCEDEF) == 0)
