@@ -1,12 +1,9 @@
---Last update: 05/23/2011--
+--Last update: 05/27/2011--
 --Revision Used: ??/??/2010-- (the date on which the source code was pulled from GIT)
 
 TODO:
 Testing (LCMS 2.0):
 -Do cleanup operation for endian (see notes)[do this by checking every call to a read/write function in cmsplugin that has a endian argument]
--Consolidate cmspack functions so that formatters don't just simply call the "actual function"
--Optimize memory in cmsintrp so that it simply passes allocated memory and an index instead of reallocating memory every time certain functions are used used
--Optimize cmsxform.cmsDoTransform so that pointers are reused
 -Profile to check memory usage (function calls are less important since they are dynamically chosen and could vary greatly. No real consistency)
 -Test on actual device
 --Test 4.5 version
@@ -16,10 +13,12 @@ Release Version 2.0
 
 Update LCMS 4 BB to LCMS 2.1
 Testing (LCMS 2.1)
+Get full JavaDoc to be created for lcms
 Release version 2.1
 
 Update LCMS 4 BB to the same level as the GIT build
 If Test system has been updated then do testing
+Get full JavaDoc to be created for lcms
 
 Comment PrintUtility and LargeNumber
 Update PrintUtility FloatFormat so that it properly processes the values with exponent. Example: Double.MIN_VALUE is a subnormal number. The default manner of execution would consider the value to be zero since the number is so small. Make it so that it will scale the value for exponent.
@@ -40,6 +39,9 @@ Update printf and scanf to follow: http://pubs.opengroup.org/onlinepubs/00969539
 Try to figure out at least the two todo in VirtualPointer
 -Also, partial rewrite. Data, type, and length should be stored in own type. This can then be passed around between different virtual pointer instances (which can have different positions and be doing different things). This removes the "parent/child" pointers and replaces it with "server/client" and allows GC to get rid of everything when nothing is referencing the "internal pointer".
 
+Figure out multi-threading so that buffers can be used instead of constant creation/destruction of memory
+-Optimize memory in cmsintrp so that it simply passes allocated memory and an index instead of reallocating memory every time certain functions are used used
+-Optimize cmsxform.cmsDoTransform so that pointers are reused
 Update Library so that it can (with the compile define "CMS_J2ME") be compiled sans BlackBerry APIs. This way it can be used to produce a J2ME version of LCMS.
 
 See notes

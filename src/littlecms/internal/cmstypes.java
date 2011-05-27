@@ -744,7 +744,7 @@ final class cmstypes
 	    Table = temp[0];
 	    
 	    double[] temp2 = new double[1];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
 //#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
@@ -752,7 +752,7 @@ final class cmstypes
 		    return null;
 	    }
 	    chrm.Red.x = temp2[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
 //#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
@@ -763,7 +763,7 @@ final class cmstypes
 	    
 	    chrm.Red.Y = 1.0;
 	    
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
 //#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
@@ -771,7 +771,7 @@ final class cmstypes
 		    return null;
 	    }
 	    chrm.Green.x = temp2[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
 //#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
@@ -782,7 +782,7 @@ final class cmstypes
 	    
 	    chrm.Green.Y = 1.0;
 	    
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
 //#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
@@ -790,7 +790,7 @@ final class cmstypes
 		    return null;
 	    }
 	    chrm.Blue.x = temp2[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
 //#ifdef CMS_RAW_C
 		    cmserr._cmsFree(self.ContextID, chrmP);
@@ -1036,7 +1036,7 @@ final class cmstypes
 	    
 	    for (i = 0; i < n; i++)
 	    {
-	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	        {
 //#ifdef CMS_RAW_C
 	            cmserr._cmsFree(self.ContextID, array_double);
@@ -1870,7 +1870,7 @@ final class cmstypes
 	    {
 	    	return rc;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Array(io, len_filler_alignment + 1, new short[len_filler_alignment + 1]))
+	    if (!cmsplugin._cmsWriteUInt16Array(io, len_filler_alignment + 1, new short[len_filler_alignment + 1], false)) //Don't want to do extra work for writing filler data
 	    {
 	    	return rc;
 	    }
@@ -2057,7 +2057,7 @@ final class cmstypes
 	    {
 	    	return null; // Reserved
 	    }
-
+	    
 	    if (Type[0] > 4)
 	    {
 	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_PARAM_CURVE_TYPE), new Object[]{new Short(Type[0])});
@@ -2069,7 +2069,7 @@ final class cmstypes
 	    double[] temp = new double[1];
 	    for (i = 0; i < n; i++)
 	    {
-	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	        {
 	        	return null;
 	        }
@@ -2218,7 +2218,7 @@ final class cmstypes
 	    }
 	    mc.Geometry = cmsplugin._cmsAdjustEndianess32(temp[0]);
 	    double[] temp2 = new double[1];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
 	    	return null;
 	    }
@@ -2768,7 +2768,7 @@ final class cmstypes
 	    
 	    // Read the Matrix
 	    double[] temp = new double[1];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2777,7 +2777,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[0] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2786,7 +2786,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[1] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2795,7 +2795,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[2] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2804,7 +2804,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[3] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2813,7 +2813,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[4] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2822,7 +2822,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[5] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2831,7 +2831,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[6] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -2840,7 +2840,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[7] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -3329,7 +3329,7 @@ final class cmstypes
 	    
 	    // Read the Matrix
 	    double[] temp = new double[1];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -3338,7 +3338,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[0] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -3347,7 +3347,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[1] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -3356,7 +3356,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[2] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -3365,7 +3365,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[3] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -3374,7 +3374,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[4] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -3383,7 +3383,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[5] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -3392,7 +3392,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[6] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -3401,7 +3401,7 @@ final class cmstypes
 		    return null;
 	    }
 	    Matrix[7] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -3570,78 +3570,78 @@ final class cmstypes
 	    
 	    if (MatMPE != null)
 	    {
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[0], false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[0]))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[1], false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[1]))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[2], false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[2]))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[3], false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[3]))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[4], false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[4]))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[5], false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[5]))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[6], false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[6]))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[7], false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[7]))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[8], false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, MatMPE.Double[8]))
 		    {
 		    	return false;
 		    }
 	    }
 	    else
 	    {
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 1, false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 1))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0, false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0, false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0, false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 1, false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 1))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0, false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0, false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0, false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 1, false))
+	        if (!cmsplugin._cmsWrite15Fixed16Number(io, 1))
 		    {
 		    	return false;
 		    }
@@ -3740,63 +3740,63 @@ final class cmstypes
 	    
 	    // Read the Matrix
 	    double[] temp = new double[1];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    dMat[0] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    dMat[1] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    dMat[2] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    dMat[3] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    dMat[4] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    dMat[5] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    dMat[6] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    dMat[7] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    dMat[8] = temp[0];
 	    
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    dOff[0] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	return null;
 	    }
 	    dOff[1] = temp[0];
-	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp, false))
+	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp))
 	    {
 	    	return null;
 	    }
@@ -5744,13 +5744,13 @@ final class cmstypes
 	    double[] temp2 = new double[1];
 	    for (i = 0; i < sc.nChannels; i++)
 	    {
-	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp2, false))
+	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 		    {
 		    	return null;
 		    }
 	        sc.Channels[i] = new lcms2_internal.cmsScreeningChannel();
 	        sc.Channels[i].Frequency = temp2[0];
-	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp2, false))
+	        if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 		    {
 		    	return null;
 		    }
@@ -6997,21 +6997,21 @@ final class cmstypes
 		    	// Populate tone curves
 		    	for (n = 0; n < 3; n++)
 		    	{
-		    		if (!cmsplugin._cmsRead15Fixed16Number(io, Params, false))
+		    		if (!cmsplugin._cmsRead15Fixed16Number(io, Params))
 			    	{
 			    		// Regret, free all resources
 			    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 			    	    return null;
 			    	}
 		    		Colorant[n].Gamma = Params[0];
-		    		if (!cmsplugin._cmsRead15Fixed16Number(io, Params, false))
+		    		if (!cmsplugin._cmsRead15Fixed16Number(io, Params))
 			    	{
 			    		// Regret, free all resources
 			    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 			    	    return null;
 			    	}
 		    		Colorant[n].Min = Params[0];
-		    		if (!cmsplugin._cmsRead15Fixed16Number(io, Params, false))
+		    		if (!cmsplugin._cmsRead15Fixed16Number(io, Params))
 			    	{
 			    		// Regret, free all resources
 			    		cmsgamma.cmsFreeToneCurveTriple(Curves);

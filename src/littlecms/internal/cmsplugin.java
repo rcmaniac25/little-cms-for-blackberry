@@ -163,11 +163,6 @@ final class cmsplugin
 	    return true;
 	}
 	
-	public static boolean _cmsReadUInt16Array(cmsIOHANDLER io, int n, short[] Array)
-	{
-		return _cmsReadUInt16Array(io, n, Array, false);
-	}
-	
 	public static boolean _cmsReadUInt16Array(cmsIOHANDLER io, int n, short[] Array, boolean reverseEndian)
 	{
 	    int i;
@@ -304,11 +299,6 @@ final class cmsplugin
 	
 	public static boolean _cmsRead15Fixed16Number(cmsIOHANDLER io, double[] n)
 	{
-		return _cmsRead15Fixed16Number(io, n, true);
-	}
-	
-	public static boolean _cmsRead15Fixed16Number(cmsIOHANDLER io, double[] n, boolean reverseEndian)
-	{
 		byte[] tmp = new byte[4];
 	    
 	    lcms2_internal._cmsAssert(io != null, "io != null");
@@ -320,12 +310,7 @@ final class cmsplugin
 	    
 	    if (n != null)
 	    {
-	    	int t = BitConverter.toInt32(tmp, 0);
-	    	if(reverseEndian)
-	    	{
-	    		t = _cmsAdjustEndianess32(t);
-	    	}
-	        n[0] = _cms15Fixed16toDouble(t);
+	        n[0] = _cms15Fixed16toDouble(BitConverter.toInt32(tmp, 0));
 	    }
 	    
 	    return true;
@@ -396,11 +381,6 @@ final class cmsplugin
 	    return true;
 	}
 	
-	public static boolean _cmsWriteUInt16Array(cmsIOHANDLER io, int n, final short[] Array)
-	{
-		return _cmsWriteUInt16Array(io, n, Array, false);
-	}
-	
 	public static boolean _cmsWriteUInt16Array(cmsIOHANDLER io, int n, final short[] Array, boolean reverseEndian)
 	{
 	    int i;
@@ -410,11 +390,7 @@ final class cmsplugin
 	    
 	    for (i = 0; i < n; i++)
 	    {
-	    	if(reverseEndian)
-	    	{
-	    		Array[i] = _cmsAdjustEndianess16(Array[i]);
-	    	}
-	        if (!_cmsWriteUInt16Number(io, Array[i]))
+	        if (!_cmsWriteUInt16Number(io, reverseEndian ? _cmsAdjustEndianess16(Array[i]) : Array[i]))
 	        {
 	        	return false;
 	        }
@@ -497,21 +473,11 @@ final class cmsplugin
 	
 	public static boolean _cmsWrite15Fixed16Number(cmsIOHANDLER io, double n)
 	{
-		return _cmsWrite15Fixed16Number(io, n, false);
-	}
-	
-	public static boolean _cmsWrite15Fixed16Number(cmsIOHANDLER io, double n, boolean reverseEndian)
-	{
 	    byte[] tmp;
 	    
 	    lcms2_internal._cmsAssert(io != null, "io != null");
 	    
-	    int t = _cmsDoubleTo15Fixed16(n);
-	    if(reverseEndian)
-	    {
-	    	t = _cmsAdjustEndianess32(t);
-	    }
-	    tmp = BitConverter.getBytes(t);
+	    tmp = BitConverter.getBytes(_cmsDoubleTo15Fixed16(n));
 	    if (!io.Write.run(io, /*sizeof(cmsUInt32Number)*/4, tmp))
 	    {
 	    	return false;   
