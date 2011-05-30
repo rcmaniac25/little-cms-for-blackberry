@@ -38,11 +38,6 @@ import littlecms.internal.LCMSResource;
 import net.rim.device.api.io.IOUtilities;
 import net.rim.device.api.util.Arrays;
 import net.rim.device.api.util.StringUtilities;
-/*
-//#ifndef BlackBerrySDK4.5.0
-import net.rim.device.api.util.MathUtilities;
-//#endif
- */
 
 //#ifdef CMS_INTERNAL_ACCESS & DEBUG
 public
@@ -51,10 +46,6 @@ final class PrintUtility
 {
 	/* 
 	 * This mostly follows the specification mentioned http://pubs.opengroup.org/onlinepubs/009695399/functions/printf.html and http://pubs.opengroup.org/onlinepubs/009695399/functions/scanf.html
-	 * 
-	 * Implementation specific components:
-	 * Precision:
-	 * 	If no precision is mentioned then the default precision is 6.
 	 * 
 	 * Formats:
 	 *	p: Bit of inside information, it prints out the position the pointer is currently at. A new VirtualPointer will be 0000:0000. Moving 16 bytes in will print
@@ -390,7 +381,7 @@ final class PrintUtility
 		for(int i = 1; i < len; i++) //First char is always %
 		{
 			char c = form.charAt(i);
-			if (matchesChar(c, FULL_FORMAT)) //Valid identifiers
+			if (FULL_FORMAT.indexOf(c) >= 0) //Valid identifiers
 			{
 				switch(section)
 				{
@@ -403,16 +394,16 @@ final class PrintUtility
 						section++;
 						break;
 					case 1:
-						if(matchesChar(c, SCANF_SPECIFIERS))
+						if(SCANF_SPECIFIERS.indexOf(c) >= 0)
 						{
 							//Found specifier, end
 							return (i + 1) == len;
 						}
-						else if(matchesChar(c, SCANF_WIDTH))
+						else if(SCANF_WIDTH.indexOf(c) >= 0)
 						{
 							//Continue execution, eventually it should get to the next component in the format.
 						}
-						else if(matchesChar(c, SCANF_LENGTH))
+						else if(SCANF_LENGTH.indexOf(c) >= 0)
 						{
 							//Go to next section for checking
 							section++;
@@ -423,12 +414,12 @@ final class PrintUtility
 						}
 						break;
 					case 2:
-						if(matchesChar(c, SCANF_SPECIFIERS))
+						if(SCANF_SPECIFIERS.indexOf(c) >= 0)
 						{
 							//Found specifier, end
 							return (i + 1) == len;
 						}
-						else if(matchesChar(c, SCANF_LENGTH))
+						else if(SCANF_LENGTH.indexOf(c) >= 0)
 						{
 							//Continue execution, eventually it should get to a specifier or an invalid number
 						}
@@ -453,6 +444,9 @@ final class PrintUtility
 	
 	private static boolean isWhiteSpace(char c)
     {
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+		return net.rim.device.api.util.CharacterUtilities.isWhitespace(c);
+//#else
         switch (c)
         {
             case ' ':
@@ -464,6 +458,7 @@ final class PrintUtility
             default:
                 return false;
         }
+//#endif
     }
 	
 	//Helper function so arguments can be converted to a Long
@@ -504,6 +499,8 @@ final class PrintUtility
 	private static final long SCANF_LENGTH_UID = 0x50EC7C6D6EC9B264L;
 	private static final long SCANF_FULL_FORMAT_UID = 0xAE2D09322C4157CFL;
 	
+	private static final char THOUS_SEP = '\'';
+	
 	private static String SPECIFIERS;
 	private static String FLAGS;
 	private static String WIDTH_PRECISION;
@@ -521,7 +518,7 @@ final class PrintUtility
 		if(temp == null)
 		{
 			SPECIFIERS = "cspdieEfFgGouxXn";
-			FLAGS = "-+ #0";
+			FLAGS = "-+ #" + THOUS_SEP + '0';
 			WIDTH_PRECISION = "123456789*0"; //Zero is added at end so that when FULL_FORMAT is generated there isn't two zeros in the format. It wouldn't cause an error but it would be one more char to check that isn't needed.
 			LENGTH = "hlLzjt";
 			FULL_FORMAT = FLAGS + WIDTH_PRECISION.substring(0, 9) + '.' + LENGTH + SPECIFIERS;
@@ -599,7 +596,7 @@ final class PrintUtility
                         continue;
                     }
                 }
-                if (matchesChar(c, FULL_FORMAT)) //Valid identifiers
+                if (FULL_FORMAT.indexOf(c) >= 0) //Valid identifiers
                 {
                     bu.append(c);
                     switch (section)
@@ -607,7 +604,7 @@ final class PrintUtility
                         case -1: //Bad format
                         	throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.BAD_STRING_FORMAT));
                         case 0: //General (everything is possible)
-                            if (matchesChar(c, SPECIFIERS))
+                            if (SPECIFIERS.indexOf(c) >= 0)
                             {
                                 //Found the end, exit
                                 section = -1;
@@ -628,7 +625,7 @@ final class PrintUtility
                                 bu.setLength(0);
                                 inFormat = false;
                             }
-                            else if (matchesChar(c, FLAGS))
+                            else if (FLAGS.indexOf(c) >= 0)
                             {
                                 if (argList != null)
                                 {
@@ -636,7 +633,7 @@ final class PrintUtility
                                 }
                                 section++; //Found flag section, now to check for next section
                             }
-                            else if (matchesChar(c, WIDTH_PRECISION))
+                            else if (WIDTH_PRECISION.indexOf(c) >= 0)
                             {
                                 if (argList != null)
                                 {
@@ -650,7 +647,7 @@ final class PrintUtility
                             	//Precision is prefixed with a decimal, make sure that there is more to the format then just a decimal at the end.
                                 if (i + 1 < len)
                                 {
-                                    if (matchesChar(format.charAt(i + 1), WIDTH_PRECISION))
+                                    if (WIDTH_PRECISION.indexOf(format.charAt(i + 1)) >= 0)
                                     {
                                         if (argList != null)
                                         {
@@ -662,7 +659,7 @@ final class PrintUtility
                                         }
                                         section += 3; //Found precision section, now to check for next section
                                     }
-                                    else if (!matchesChar(format.charAt(i + 1), SPECIFIERS))
+                                    else if (SPECIFIERS.indexOf(format.charAt(i + 1)) < 0)
                                     {
                                         throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.BAD_STRING_FORMAT));
                                     }
@@ -672,7 +669,7 @@ final class PrintUtility
                                     throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.BAD_STRING_FORMAT));
                                 }
                             }
-                            else if (matchesChar(c, LENGTH))
+                            else if (LENGTH.indexOf(c) >= 0)
                             {
                                 if (argList != null)
                                 {
@@ -690,7 +687,7 @@ final class PrintUtility
                             }
                             break;
                         case 1: //Flags
-                            if (matchesChar(c, SPECIFIERS))
+                            if (SPECIFIERS.indexOf(c) >= 0)
                             {
                                 //Found the end, exit
                                 section = -1;
@@ -711,7 +708,7 @@ final class PrintUtility
                                 bu.setLength(0);
                                 inFormat = false;
                             }
-                            else if (matchesChar(c, FLAGS))
+                            else if (FLAGS.indexOf(c) >= 0)
                             {
                                 if (argList != null)
                                 {
@@ -719,7 +716,7 @@ final class PrintUtility
                                 }
                                 continue; //Still looking at flag values
                             }
-                            else if (matchesChar(c, WIDTH_PRECISION))
+                            else if (WIDTH_PRECISION.indexOf(c) >= 0)
                             {
                                 if (argList != null)
                                 {
@@ -732,7 +729,7 @@ final class PrintUtility
                             	//Precision is prefixed with a decimal, make sure that there is more to the format then just a decimal at the end.
                                 if (i + 1 < len)
                                 {
-                                    if (matchesChar(format.charAt(i + 1), WIDTH_PRECISION))
+                                    if (WIDTH_PRECISION.indexOf(format.charAt(i + 1)) >= 0)
                                     {
                                         if (argList != null)
                                         {
@@ -741,7 +738,7 @@ final class PrintUtility
                                         }
                                         section += 2; //Found precision section, now to check for next section
                                     }
-                                    else if (!matchesChar(format.charAt(i + 1), SPECIFIERS))
+                                    else if (SPECIFIERS.indexOf(format.charAt(i + 1)) < 0)
                                     {
                                         throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.BAD_STRING_FORMAT));
                                     }
@@ -751,7 +748,7 @@ final class PrintUtility
                                     throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.BAD_STRING_FORMAT));
                                 }
                             }
-                            else if (matchesChar(c, LENGTH))
+                            else if (LENGTH.indexOf(c) >= 0)
                             {
                                 if (argList != null)
                                 {
@@ -769,7 +766,7 @@ final class PrintUtility
                             }
                             break;
                         case 2: //Width
-                            if (matchesChar(c, SPECIFIERS))
+                            if (SPECIFIERS.indexOf(c) >= 0)
                             {
                                 //Found the end, exit
                                 section = -1;
@@ -790,7 +787,7 @@ final class PrintUtility
                                 bu.setLength(0);
                                 inFormat = false;
                             }
-                            else if (matchesChar(c, WIDTH_PRECISION))
+                            else if (WIDTH_PRECISION.indexOf(c) >= 0)
                             {
                                 if (argList != null)
                                 {
@@ -803,7 +800,7 @@ final class PrintUtility
                             	//Precision is prefixed with a decimal, make sure that there is more to the format then just a decimal at the end.
                                 if (i + 1 < len)
                                 {
-                                    if (matchesChar(format.charAt(i + 1), WIDTH_PRECISION))
+                                    if (WIDTH_PRECISION.indexOf(format.charAt(i + 1)) >= 0)
                                     {
                                         if (argList != null)
                                         {
@@ -811,7 +808,7 @@ final class PrintUtility
                                         }
                                         section++; //Found precision section, now to check for next section
                                     }
-                                    else if (!matchesChar(c, SPECIFIERS))
+                                    else if (SPECIFIERS.indexOf(c) < 0)
                                     {
                                         throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.BAD_STRING_FORMAT));
                                     }
@@ -821,7 +818,7 @@ final class PrintUtility
                                     throw new IllegalArgumentException(Utility.LCMS_Resources.getString(LCMSResource.BAD_STRING_FORMAT));
                                 }
                             }
-                            else if (matchesChar(c, LENGTH))
+                            else if (LENGTH.indexOf(c) >= 0)
                             {
                                 if (argList != null)
                                 {
@@ -836,7 +833,7 @@ final class PrintUtility
                             }
                             break;
                         case 3: //Precision
-                            if (matchesChar(c, SPECIFIERS))
+                            if (SPECIFIERS.indexOf(c) >= 0)
                             {
                                 //Found the end, exit
                                 section = -1;
@@ -854,7 +851,7 @@ final class PrintUtility
                                 bu.setLength(0);
                                 inFormat = false;
                             }
-                            else if (matchesChar(c, WIDTH_PRECISION))
+                            else if (WIDTH_PRECISION.indexOf(c) >= 0)
                             {
                                 if (argList != null)
                                 {
@@ -862,7 +859,7 @@ final class PrintUtility
                                 }
                                 continue; //Still looking at precision values
                             }
-                            else if (matchesChar(c, LENGTH))
+                            else if (LENGTH.indexOf(c) >= 0)
                             {
                                 if (argList != null)
                                 {
@@ -876,7 +873,7 @@ final class PrintUtility
                             }
                             break;
                         case 4: //Length
-                            if (matchesChar(c, SPECIFIERS))
+                            if (SPECIFIERS.indexOf(c) >= 0)
                             {
                                 //Found the end, exit
                                 section = -1;
@@ -960,20 +957,6 @@ final class PrintUtility
         parts.copyInto(partsAr);
         return partsAr;
 	}
-	
-	//Simple helper function to see if char exists in a set of chars, do this because chars can repeat and we want to check only a certain set
-	private static boolean matchesChar(char c, String chars2match)
-    {
-        int len = chars2match.length();
-        for (int i = 0; i < len; i++)
-        {
-            if (chars2match.charAt(i) == c)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
 	
 	public static abstract class FormatElement
 	{
@@ -1162,24 +1145,35 @@ final class PrintUtility
                     }
                     */
                     //Left align
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+                	str = StringUtilities.pad(str, ' ', width, false);
+//#else
                     if (str.length() < width)
                     {
                     	char[] chars = new char[width - str.length()];
                     	Arrays.fill(chars, ' ');
                         str += new String(chars);
                     }
+//#endif
                 }
                 else if (this.precision == -1 && flags.indexOf('0') >= 0 && SPECIFIERS.indexOf(this.type) > 2)
                 {
                 	//Pad with zeros (for everything but char, string, and pointer) when precision not specified
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+                	str = StringUtilities.pad(str, '0', width, true);
+//#else
                     if (str.length() < width)
                     {
                     	char[] chars = new char[width - str.length()];
                     	Arrays.fill(chars, '0');
                         str = new String(chars) + str;
                     }
+//#endif
                 }
             }
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+            str = StringUtilities.pad(str, ' ', width, true);
+//#else
             if (str.length() < width)
             {
             	//Right align
@@ -1187,6 +1181,7 @@ final class PrintUtility
             	Arrays.fill(chars, ' ');
                 str = new String(chars) + str;
             }
+//#endif
             return str;
         }
         
@@ -1675,7 +1670,10 @@ final class PrintUtility
             {
                 if (basicType)
                 {
-                    str = Long.toString(value);
+                	str = thousandsSep(flags, Long.toString(value));
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+                	bu.append(StringUtilities.pad(str, '0', this.length, true));
+//#else
                     if (str.length() < this.length)
                     {
                     	char[] chars = new char[this.length - str.length()];
@@ -1683,6 +1681,7 @@ final class PrintUtility
                         bu.append(chars);
                     }
                     bu.append(str);
+//#endif
                 }
                 else
                 {
@@ -1699,6 +1698,9 @@ final class PrintUtility
                     {
                         bu.append('0');
                     }
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+                    bu.append(StringUtilities.pad(str, '0', this.length - bu.length(), true));
+//#else
                     if (str.length() + bu.length() < this.length)
                     {
                     	char[] chars = new char[(this.length + bu.length()) - str.length()];
@@ -1706,6 +1708,7 @@ final class PrintUtility
                         bu.append(chars);
                     }
                     bu.append(str);
+//#endif
                 }
             }
             else
@@ -1720,7 +1723,11 @@ final class PrintUtility
                 	{
                 		str = Long.toString(value);
                 	}
+                	str = thousandsSep(flags, str);
                 	//str = ulongToString(value);
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+                	bu.append(StringUtilities.pad(str, '0', this.length, true));
+//#else
                 	if (str.length() < this.length)
                     {
                     	char[] chars = new char[this.length - str.length()];
@@ -1728,6 +1735,7 @@ final class PrintUtility
                         bu.append(chars);
                     }
                     bu.append(str);
+//#endif
                 }
                 else
                 {
@@ -1745,6 +1753,9 @@ final class PrintUtility
                         bu.append('0');
                         bu.append(this.type);
                     }
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+                    bu.append(StringUtilities.pad(str, '0', this.length - bu.length(), true));
+//#else
                     if (str.length() + bu.length() < this.length)
                     {
                     	char[] chars = new char[(this.length + bu.length()) - str.length()];
@@ -1752,9 +1763,33 @@ final class PrintUtility
                         bu.append(chars);
                     }
                     bu.append(str);
+//#endif
                 }
             }
             return bu.toString();
+        }
+        
+        private static String thousandsSep(String flags, String value)
+        {
+        	int start = Character.isDigit(value.charAt(0)) ? 0 : 1;
+        	int len = value.length() - start;
+        	if(flags != null && flags.indexOf(THOUS_SEP) >= 0 && len > 3)
+        	{
+        		StringBuffer bu = new StringBuffer(value);
+        		int sep = len / 3;
+        		int front = len % 3;
+        		if(front == 0)
+        		{
+        			sep--;
+        			front = 3;
+        		}
+        		for(int i = front + start; sep > 0; sep--, i += 4)
+        		{
+        			bu.insert(i, ',');
+        		}
+        		value = bu.toString();
+        	}
+        	return value;
         }
         
         private static LargeNumber negNumberToUnsigned(int byteCount, long value)
@@ -2452,11 +2487,13 @@ final class PrintUtility
 	            		expBuf.append('0');
 	            	}
 	            	expBuf.append(exp);
+	            	thousandsSep(caps, flags, expBuf);
                 }
             }
-            /* Leave decimal digits
             if (fixedBuf != null && !Double.isInfinite(value) && !Double.isNaN(value))
             {
+            	thousandsSep(caps, flags, fixedBuf);
+            	/* Leave decimal digits
             	String temp = fixedBuf.toString();
             	int index = temp.indexOf(decimalPoint);
             	
@@ -2482,8 +2519,8 @@ final class PrintUtility
         				fixedBuf.delete(index, len);
         			}
         		}
+        		*/
             }
-            */
             
             //Return the correct type
             /*
@@ -2519,7 +2556,7 @@ final class PrintUtility
 	            		
 	            		if(index == -1)
 	            		{
-	            			expBuf.insert(temp.indexOf('e'), ".0");
+	            			expBuf.insert(temp.indexOf(caps ? 'e' : 'E'), ".0");
 	            		}
 	            	}
 	            	else
@@ -2588,6 +2625,38 @@ final class PrintUtility
                 result = result.toUpperCase();
             }
             return result;
+        }
+        
+        private static void thousandsSep(boolean caps, String flags, StringBuffer value)
+        {
+        	if(flags != null && flags.indexOf(THOUS_SEP) >= 0)
+        	{
+	        	int start = Character.isDigit(value.charAt(0)) ? 0 : 1;
+	        	int len = value.toString().indexOf('.');
+	        	if(len == -1)
+	        	{
+	        		len = value.toString().indexOf(caps ? 'e' : 'E'); //Decimal might not exist but exponent does
+	        		if(len == -1)
+	        		{
+	        			len = value.length(); //use the whole length
+	        		}
+	        	}
+	        	len -= start;
+	        	if(len > 3)
+	        	{
+	        		int sep = len / 3;
+	        		int front = len % 3;
+	        		if(front == 0)
+	        		{
+	        			sep--;
+	        			front = 3;
+	        		}
+	        		for(int i = front + start; sep > 0; sep--, i += 4)
+	        		{
+	        			value.insert(i, ',');
+	        		}
+	        	}
+        	}
         }
         
         private static void writeFloatingPoint(StringBuffer buf, double v, int p)
@@ -2765,13 +2834,6 @@ final class PrintUtility
                 else
                 {
                     //Built in
-                	/* Bit shifting more efficient
-//#ifndef BlackBerrySDK4.5.0
-                    long twoPower = (long)MathUtilities.pow(2, Math.abs(exp));
-//#else
-                    long twoPower = (long)Utility.pow(2, Math.abs(exp));
-//#endif
-                     */
                 	
                     //Ints only
                 	long twoPower = 1L << Math.abs(exp);

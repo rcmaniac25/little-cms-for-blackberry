@@ -480,8 +480,8 @@ public class lcms2_plugin extends lcms2
 	 */
 	public static boolean _cmsReadUInt16Array(cmsIOHANDLER io, int n, short[] Array)
 	{
-		//Use "true" since it isn't expected that a char will be read using this function. (All built in functions that use this use false for a char, true for everything else)
-		return cmsplugin._cmsReadUInt16Array(io, n, Array, true);
+		//Use "false" since it isn't expected that a char will be read using this function. (All built in functions that use this use true for a char, false for everything else)
+		return cmsplugin._cmsReadUInt16Array(io, n, Array, false);
 	}
 	
 	/**
@@ -570,8 +570,8 @@ public class lcms2_plugin extends lcms2
 	 */
 	public static boolean _cmsWriteUInt16Array(cmsIOHANDLER io, int n, final short[] Array)
 	{
-		//Use "true" since it isn't expected that a char will be written using this function. (All built in functions that use this use false for a char, true for everything else)
-		return cmsplugin._cmsWriteUInt16Array(io, n, Array, true);
+		//Use "false" since it isn't expected that a char will be written using this function. (All built in functions that use this use true for a char, false for everything else)
+		return cmsplugin._cmsWriteUInt16Array(io, n, Array, false);
 	}
 	
 	// ICC base tag

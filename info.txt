@@ -1,16 +1,7 @@
---Last update: 05/27/2011--
---Revision Used: ??/??/2010-- (the date on which the source code was pulled from GIT)
+--Last update: 05/30/2011--
+--Revision Used: ??/??/2011-- (the date on which the source code was pulled from GIT)
 
 TODO:
-Testing (LCMS 2.0):
--Do cleanup operation for endian (see notes)[do this by checking every call to a read/write function in cmsplugin that has a endian argument]
--Profile to check memory usage (function calls are less important since they are dynamically chosen and could vary greatly. No real consistency)
--Test on actual device
---Test 4.5 version
---Test 5.0 version
-Get full JavaDoc to be created for lcms
-Release Version 2.0
-
 Update LCMS 4 BB to LCMS 2.1
 Testing (LCMS 2.1)
 Get full JavaDoc to be created for lcms
@@ -24,7 +15,6 @@ Comment PrintUtility and LargeNumber
 Update PrintUtility FloatFormat so that it properly processes the values with exponent. Example: Double.MIN_VALUE is a subnormal number. The default manner of execution would consider the value to be zero since the number is so small. Make it so that it will scale the value for exponent.
 Update printf and scanf to follow: http://pubs.opengroup.org/onlinepubs/009695399/functions/printf.html, and http://pubs.opengroup.org/onlinepubs/009695399/functions/scanf.html (dedicated functions for printing 'e' and 'a', etc.)
 -printf
---add flag support: '
 --add formatter: a, A
 --add formatter: C
 --add formatter: S
@@ -56,7 +46,6 @@ Strings follow the guidelines listed in "http://docs.blackberry.com/en/developer
 See if performance can be improved in cmsintrp, every delegate including and after Eval4InputsFloat recreates cmsInterpParams, the LutTable, and the input params. Sometimes twice, this is a HUGE waste of memory.
 Also, on a similar topic as above, nearly every class is a <need word bigger then HUGE> waste of memory. In C/C++ memory needed to be pre-allocated but in Java it does not, thus having the first operation in a function being create 4096 doubles (pretty sure I saw that somewhere) is just unacceptable.
 Finally, again based off the above note, something must be done about Strings. The whole "C-string" thing is just not needed and is a waste, since the dev isn't expected to pass in a null-terminated String in the first place it is unneeded to use a null-terminated String. Allocating StringBuffer's with a full-length null String is an even bigger waste. See if it is possible to work around this once everything is working.
-When reading/writing tags the endian on a bunch of elements are not correct and have been reversed. Clean this up because there are cases of "make data, reverse endian, put in variable, reverse endian for writing, (in write function) reverse endian for writing, write). They all create small arrays and take up precious time. It may be a IO operation but you don't want it to take forever.
 
 Defines:
 CMS_USE_BIG_ENDIAN //Not supported because BlackBerry is little endian, just here so it is explicitly known that it isn't supported [well it is used but it shouldn't be changed, it would screw up pretty much everything]
@@ -72,6 +61,26 @@ CMS_USE_NATIVE_BIGINT //Use a native big int for big number math. This requires 
 CMS_J2ME //J2ME only version of LCMS. No BlackBerry needed.
 
 Implementation Notes:
+Nearly everything is handled in standard C fashion so if an error occurs it knows the error ahead of time, specifies an error occured, cleans up, etc. This is the same here but there are a few places where exceptions can still occur (see notes below). It should be noted that they are not expected in any way and that it is hoped that the only exceptions that occur will gracefully be passed to the developer in the cmsSignalError function.
+-MLU: If a 3+ char country/language code is passed and the 3rd char is not a null char.
+-Helper functions:
+--BitConverter: When converting bytes to a primitive; the array is null, startIndex is greater then the length of the array, or the array (at the specified startIndex) is not large enough.
+--LargeNumber:
+---A non-parseable number is passed in to the parse function to get parsed. LargeNumber is an unsigned integer, negative or decimal numbers will throw exceptions.
+---When creating a new LargeNumber with an exponent, the exponent is greater then 1075 (technically any exponent can be used but if the number wrapped it would cause problems)
+---When the CMS_USE_NATIVE_BIGINT define is not used, and a subtraction operation occurs that could cause the resulting number to be less then zero.
+---When the CMS_USE_NATIVE_BIGINT define is not used, and a division operation occurs where the denominator is less then the numerator (so the result would have to be a decimal [yes a zero can be returned, and mod would just return the original number]).
+--PrintUtility:
+---Any bad format passed into the output or fscanf functions will throw a bad format exception.
+---Though it should never happen, if a unsupported format is parsed, then the fscanf function is used.
+---If a number with too many digits is passed into fscanf to get converted to an integer of some sort.
+---If a really big (yet parseable) number is passed into fscanf and then expected to fit in a long data type (LargeNumber is not supported as of right now as a return data type).
+---If a pointer is passed into fscanf.
+--Utility: If a singleton is passed that already exists under the specified UID in the RuntimeStore.
+--VirtualPointer:
+---Should never happen, but if the built in Serializers fail to initialize.
+---A null object is passed in to get serialized in the VirtualPointer constructor.
+---Also in the VirtualPointer constructor, if a serializer for the type doesn't exist.
 cmsSigChromaticAdaptationTag returns a double[], not a cmsMAT3 as what might be expected.
 Some extra functions to handle any functions that take/return Strings so they handle Java Strings (no null terminator though it is supported). These functions have "Cleaned" appended to the end of the function.
 RRT Signing is required.

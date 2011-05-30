@@ -153,12 +153,12 @@ final class cmsplugin
 	    
 	    if (io.Read.run(io, tmp, /*sizeof(cmsUInt16Number)*/2, 1) != 1)
 	    {
-	    	return false;   
+	    	return false;
 	    }
 	    
 	    if (n != null)
 	    {
-	    	n[0] = _cmsAdjustEndianess16(BitConverter.toInt16(tmp, 0));
+	    	n[0] = BitConverter.toInt16(tmp, 0);
 	    }
 	    return true;
 	}
@@ -251,12 +251,12 @@ final class cmsplugin
 	    
 	    if (io.Read.run(io, tmp, /*sizeof(cmsUInt32Number)*/4, 1) != 1)
 	    {
-	    	return false;   
+	    	return false;
 	    }
 	    
 	    if (n != null)
 	    {
-	    	n[0] = _cmsAdjustEndianess32(BitConverter.toInt32(tmp, 0));
+	    	n[0] = BitConverter.toInt32(tmp, 0);
 	    }
 	    return true;
 	}
@@ -292,7 +292,7 @@ final class cmsplugin
 	    
 	    if (n != null)
 	    {
-	    	_cmsAdjustEndianess64(n, BitConverter.toInt64(tmp, 0));
+	    	n[0] = BitConverter.toInt64(tmp, 0);
 	    }
 	    return true;
 	}
@@ -372,7 +372,7 @@ final class cmsplugin
 	    
 	    lcms2_internal._cmsAssert(io != null, "io != null");
 	    
-	    tmp = BitConverter.getBytes(_cmsAdjustEndianess16(n));
+	    tmp = BitConverter.getBytes(n);
 	    if (!io.Write.run(io, /*sizeof(cmsUInt16Number)*/2, tmp))
 	    {
 	    	return false;   
@@ -426,12 +426,9 @@ final class cmsplugin
 	
 	public static boolean _cmsWriteUInt32Number(cmsIOHANDLER io, int n)
 	{
-	    byte[] tmp;
-	    
 	    lcms2_internal._cmsAssert(io != null, "io != null");
 	    
-	    tmp = BitConverter.getBytes(_cmsAdjustEndianess32(n));
-	    if (!io.Write.run(io, /*sizeof(cmsUInt32Number)*/4, tmp))
+	    if (!io.Write.run(io, /*sizeof(cmsUInt32Number)*/4, BitConverter.getBytes(n)))
 	    {
 	    	return false;
 	    }
@@ -456,16 +453,11 @@ final class cmsplugin
 	
 	public static boolean _cmsWriteUInt64Number(cmsIOHANDLER io, long n)
 	{
-	    byte[] tmp;
-	    
 	    lcms2_internal._cmsAssert(io != null, "io != null");
-	    long[] endianTemp = new long[1];
 	    
-	    _cmsAdjustEndianess64(endianTemp, n);
-	    tmp = BitConverter.getBytes(endianTemp[0]);
-	    if (!io.Write.run(io, /*sizeof(cmsUInt64Number)*/8, tmp))
+	    if (!io.Write.run(io, /*sizeof(cmsUInt64Number)*/8, BitConverter.getBytes(n)))
 	    {
-	    	return false;   
+	    	return false;
 	    }
 	    
 	    return true;

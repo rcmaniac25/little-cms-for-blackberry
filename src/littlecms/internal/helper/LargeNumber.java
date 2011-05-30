@@ -630,7 +630,7 @@ public final class LargeNumber
     	}
     	catch(ArithmeticException e)
     	{
-    		//Throws an exception on a divide-by-zero exception. It will never get here bcause of checks done in other functions
+    		//Throws an exception on a divide-by-zero exception. It will never get here because of checks done in other functions
     	}
     }
     

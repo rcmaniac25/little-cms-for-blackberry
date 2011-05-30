@@ -199,7 +199,7 @@ final class cmstypes
 	    
 	    for (int i = 0; i < n; i++)
 	    {
-	        if (!cmsplugin._cmsWriteUInt16Number(io, (short)Array[i]))
+	        if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)Array[i])))
 	        {
 	        	return false;
 	        }
@@ -289,9 +289,9 @@ final class cmstypes
 	    	    return false;
 	        }
 //#ifdef CMS_RAW_C
-	        offProc.write(cmsplugin._cmsAdjustEndianess32(temp[0]) + BaseOffset, true);
+	        offProc.write(temp[0] + BaseOffset, true);
 //#else
-	        ElementOffsets[i] = cmsplugin._cmsAdjustEndianess32(temp[0]) + BaseOffset;
+	        ElementOffsets[i] = temp[0] + BaseOffset;
 //#endif
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	        {
@@ -308,9 +308,9 @@ final class cmstypes
 	    	    return false;
 	        }
 //#ifdef CMS_RAW_C
-	        sizeProc.write(cmsplugin._cmsAdjustEndianess32(temp[0]), true);
+	        sizeProc.write(temp[0], true);
 //#else
-	        ElementSizes[i] = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	        ElementSizes[i] = temp[0];
 //#endif
 	    }
 //#ifdef CMS_RAW_C
@@ -525,10 +525,10 @@ final class cmstypes
         for (i = 0; i < Count; i++)
         {
 //#ifndef CMS_RAW_C
-            if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(ElementOffsets[i])))
+            if (!cmsplugin._cmsWriteUInt32Number(io, ElementOffsets[i]))
             {
 //#else
-        	if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(offProc.readInt32(true))))
+        	if (!cmsplugin._cmsWriteUInt32Number(io, offProc.readInt32(true)))
             {
             	if (ElementOffsets != null)
                 {
@@ -542,10 +542,10 @@ final class cmstypes
                 return false;
             }
 //#ifndef CMS_RAW_C
-            if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(ElementSizes[i])))
+            if (!cmsplugin._cmsWriteUInt32Number(io, ElementSizes[i]))
             {
 //#else
-        	if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(sizeProc.readInt32(true))))
+        	if (!cmsplugin._cmsWriteUInt32Number(io, sizeProc.readInt32(true)))
             {
             	if (ElementOffsets != null)
                 {
@@ -704,7 +704,7 @@ final class cmstypes
 //#endif
 		    return null;
 	    }
-	    nChans = (short)((temp[0] & 0xFFFF) >> 8);
+	    nChans = temp[0];
 	    
 	    // Let's recover from a bug introduced in early versions of lcms1
 	    if (nChans == 0 && SizeOfTag == 32)
@@ -807,11 +807,11 @@ final class cmstypes
 	
 	private static boolean SaveOneChromaticity(double x, double y, cmsIOHANDLER io)
 	{
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(cmsplugin._cmsDoubleTo15Fixed16(x))))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsDoubleTo15Fixed16(x)))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(cmsplugin._cmsDoubleTo15Fixed16(y))))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsDoubleTo15Fixed16(y)))
 	    {
 	    	return false;
 	    }
@@ -823,7 +823,7 @@ final class cmstypes
 	{
 	    cmsCIExyYTRIPLE chrm = (cmsCIExyYTRIPLE)Ptr;
 	    
-	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)(3 << 8))) // nChannels
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)3)) // nChannels
 	    {
 	    	return false;
 	    }
@@ -903,7 +903,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    Count = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    Count = temp[0];
 	    if (Count > lcms2.cmsMAXCHANNELS)
 	    {
 	    	return null;
@@ -968,7 +968,7 @@ final class cmstypes
 //-	    ColorantOrder.setPosition(pos);
 //-endif
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(Count)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, Count))
 	    {
 	    	return false;
 	    }
@@ -1147,8 +1147,6 @@ final class cmstypes
 	            return null;
 	        }
 	        
-	        v[0] = cmsplugin._cmsAdjustEndianess32(v[0]);
-	        
 	        // Convert to double
 //#ifdef CMS_RAW_C
 	        proc.write((double)((v[0] & 0xFFFFFFFFL) / 65536.0), true);
@@ -1182,7 +1180,7 @@ final class cmstypes
             int v = (int)Math.floor(Value[i]*65536.0 + 0.5);
 //#endif
             
-            if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(v)))
+            if (!cmsplugin._cmsWriteUInt32Number(io, v))
             {
             	return false;    
             }
@@ -1240,9 +1238,9 @@ final class cmstypes
 	    	return null;
 	    }
 //-ifdef CMS_RAW_C
-//-	    SigPtr.getProcessor().write(cmsplugin._cmsAdjustEndianess32(temp[0]));
+//-	    SigPtr.getProcessor().write(temp[0]);
 //-else
-	    SigPtr = new Integer(cmsplugin._cmsAdjustEndianess32(temp[0]));
+	    SigPtr = new Integer(temp[0]);
 //-endif
 	    nItems[0] = 1;
 	    
@@ -1258,7 +1256,7 @@ final class cmstypes
 //-else
 	    Integer SigPtr = (Integer)Ptr; 
 	    
-	    return cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(SigPtr.intValue()));
+	    return cmsplugin._cmsWriteUInt32Number(io, SigPtr.intValue());
 //-endif
 	}
 	
@@ -1476,9 +1474,9 @@ final class cmstypes
 	    	return null;
 	    }
 //#ifdef CMS_RAW_C
-	    BinData.getProcessor().write(cmsplugin._cmsAdjustEndianess32(temp[0]), true);
+	    BinData.getProcessor().write(temp[0], true);
 //#else
-	    BinData.flag = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    BinData.flag = temp[0];
 //#endif
 	    
 	    VirtualPointer data = cmserr._cmsMalloc(self.ContextID, LenOfData);
@@ -1520,9 +1518,9 @@ final class cmstypes
 //#endif
 	    
 //#ifdef CMS_RAW_C
-		if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(BinData.getProcessor().readInt32(true))))
+		if (!cmsplugin._cmsWriteUInt32Number(io, BinData.getProcessor().readInt32(true)))
 //#else
-		if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(BinData.flag)))
+		if (!cmsplugin._cmsWriteUInt32Number(io, BinData.flag))
 //#endif
 		{
 			return false;
@@ -1608,7 +1606,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    AsciiCount = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    AsciiCount = temp[0];
 	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	    
 	    // Check for size
@@ -1709,13 +1707,13 @@ final class cmstypes
 	    	nItems[0] = 1;
 		    return mlu;
 	    }
-	    UnicodeCode = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    UnicodeCode = temp[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	    {
 	    	nItems[0] = 1;
 		    return mlu;
 	    }
-	    UnicodeCount = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    UnicodeCount = temp[0];
 	    SizeOfTag -= 2 * /*sizeof(cmsUInt32Number)*/4;
 	    
 	    if (SizeOfTag < UnicodeCount * /*sizeof(cmsUInt16Number)*/2)
@@ -1747,7 +1745,7 @@ final class cmstypes
 	        	nItems[0] = 1;
 	    	    return mlu;
 	        }
-	        ScriptCodeCode = cmsplugin._cmsAdjustEndianess16(temp3[0]);
+	        ScriptCodeCode = temp3[0];
 	        if (!cmsplugin._cmsReadUInt8Number(io,  temp2))
 	        {
 	        	nItems[0] = 1;
@@ -1830,7 +1828,7 @@ final class cmstypes
 	    // * cmsUInt8Number        scCount;        * ScriptCode count
 	    // * cmsInt8Number         scDesc[67];     * ScriptCode Description
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(len_aligned)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, len_aligned))
 	    {
 	    	return rc;
 	    }
@@ -1856,7 +1854,7 @@ final class cmstypes
 	    // This part is tricky: we need an aligned tag size, and the ScriptCode part
 	    // takes 70 bytes, so we need 2 extra bytes to do the alignment
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(len_aligned + 1)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, len_aligned + 1))
 	    {
 	    	return rc;
 	    }
@@ -1870,7 +1868,7 @@ final class cmstypes
 	    {
 	    	return rc;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Array(io, len_filler_alignment + 1, new short[len_filler_alignment + 1], false)) //Don't want to do extra work for writing filler data
+	    if (!cmsplugin._cmsWriteUInt16Array(io, len_filler_alignment + 1, new short[len_filler_alignment + 1], true)) //Don't want to do extra work for writing filler data
 	    {
 	    	return rc;
 	    }
@@ -1933,7 +1931,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    Count = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    Count = temp[0];
 
 	    switch (Count)
 	    {
@@ -1954,7 +1952,7 @@ final class cmstypes
                 {
                 	return null;
                 }
-                SingleGamma = new double[]{cmsplugin._cms8Fixed8toDouble(cmsplugin._cmsAdjustEndianess16(SingleGammaFixed[0]))};
+                SingleGamma = new double[]{cmsplugin._cms8Fixed8toDouble(SingleGammaFixed[0])};
                 
                 nItems[0] = 1;
                 return cmsgamma.cmsBuildParametricToneCurve(self.ContextID, 1, SingleGamma);
@@ -1966,7 +1964,7 @@ final class cmstypes
 		    		return null;
 		    	}
 		    	
-		    	if (!cmsplugin._cmsReadUInt16Array(io, Count, NewGamma.Table16, true))
+		    	if (!cmsplugin._cmsReadUInt16Array(io, Count, NewGamma.Table16, false))
 		    	{
 		    		return null;
 		    	}
@@ -1985,22 +1983,22 @@ final class cmstypes
 	    	// Single gamma, preserve number
 	    	short SingleGammaFixed = cmsplugin._cmsDoubleTo8Fixed8(Curve.Segments[0].Params[0]);
 	    	
-	    	if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(1)))
+	    	if (!cmsplugin._cmsWriteUInt32Number(io, 1))
 	    	{
 	    		return false;
 	    	}
-	    	if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16(SingleGammaFixed)))
+	    	if (!cmsplugin._cmsWriteUInt16Number(io, SingleGammaFixed))
 	    	{
 	    		return false;
 	    	}
 	    	return true;
 	    }
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(Curve.nEntries)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, Curve.nEntries))
 	    {
 	    	return false;
 	    }
-	    return cmsplugin._cmsWriteUInt16Array(io, Curve.nEntries, Curve.Table16, true);
+	    return cmsplugin._cmsWriteUInt16Array(io, Curve.nEntries, Curve.Table16, false);
 	}
 	
 	private static Object Type_Curve_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
@@ -2052,7 +2050,6 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    Type[0] = cmsplugin._cmsAdjustEndianess16(Type[0]);
 	    if (!cmsplugin._cmsReadUInt16Number(io, null))
 	    {
 	    	return null; // Reserved
@@ -2096,7 +2093,7 @@ final class cmstypes
 	    
 	    nParams = ParamsByType[Curve.Segments[0].Type];
 	    
-	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)(Curve.Segments[0].Type - 1))))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)(Curve.Segments[0].Type - 1)))
 	    {
 	    	return false;
 	    }
@@ -2207,7 +2204,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    mc.Observer = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    mc.Observer = temp[0];
 	    if (!cmsplugin._cmsReadXYZNumber(io, mc.Backing))
 	    {
 	    	return null;
@@ -2216,7 +2213,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    mc.Geometry = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    mc.Geometry = temp[0];
 	    double[] temp2 = new double[1];
 	    if (!cmsplugin._cmsRead15Fixed16Number(io, temp2))
 	    {
@@ -2227,7 +2224,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    mc.IlluminantType = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    mc.IlluminantType = temp[0];
 	    
 	    nItems[0] = 1;
 	    return mc;
@@ -2237,7 +2234,7 @@ final class cmstypes
 	{
 		cmsICCMeasurementConditions mc =(cmsICCMeasurementConditions)Ptr;
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(mc.Observer)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, mc.Observer))
 	    {
 	    	return false;
 	    }
@@ -2245,7 +2242,7 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(mc.Geometry)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, mc.Geometry))
 	    {
 	    	return false;
 	    }
@@ -2253,7 +2250,7 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(mc.IlluminantType)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, mc.IlluminantType))
 	    {
 	    	return false;
 	    }
@@ -2313,12 +2310,12 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    Count = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    Count = temp[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    RecLen = temp[0] >> 24;
+	    RecLen = temp[0];
 	    
 	    if (RecLen != 12)
 	    {
@@ -2349,7 +2346,7 @@ final class cmstypes
 	    	    return null;
 	        }
 	        mlu.Entries[i] = new lcms2_internal._cmsMLUentry();
-	        mlu.Entries[i].Language = cmsplugin._cmsAdjustEndianess16(temp2[0]);
+	        mlu.Entries[i].Language = temp2[0];
 	        if (!cmsplugin._cmsReadUInt16Number(io, temp2))
 	        {
 	        	if (mlu != null)
@@ -2358,7 +2355,7 @@ final class cmstypes
 	    	    }
 	    	    return null;
 	        }
-	        mlu.Entries[i].Country = cmsplugin._cmsAdjustEndianess16(temp2[0]);
+	        mlu.Entries[i].Country = temp2[0];
 	        
 	        // Now deal with Len and offset.
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
@@ -2369,7 +2366,7 @@ final class cmstypes
 	    	    }
 	    	    return null;
 	        }
-	        Len = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	        Len = temp[0];
 	        mlu.Entries[i].Len = Len;
 	        
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
@@ -2380,7 +2377,7 @@ final class cmstypes
 	    	    }
 	    	    return null;
 	        }
-	        Offset = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	        Offset = temp[0];
 	        
 	        BeginOfThisString = Offset - SizeOfHeader - 8;
 	        mlu.Entries[i].StrW = BeginOfThisString;
@@ -2408,7 +2405,7 @@ final class cmstypes
 	    
 	    NumOfWchar = SizeOfTag / /*sizeof(cmsUInt16Number)*/2;
 	    
-	    if (!cmsplugin._cmsReadUInt16Array(io, NumOfWchar, Block, false))
+	    if (!cmsplugin._cmsReadUInt16Array(io, NumOfWchar, Block, true))
 	    {
 	    	if (mlu != null)
 		    {
@@ -2430,11 +2427,11 @@ final class cmstypes
 	    int HeaderSize, Offset;
 	    int i;
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(mlu.UsedEntries)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, mlu.UsedEntries))
 	    {
 	    	return false;           
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, 12 << 24))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, 12))
 	    {
 	    	return false;
 	    }
@@ -2443,28 +2440,28 @@ final class cmstypes
 	    
 	    for (i = 0; i < mlu.UsedEntries; i++)
 	    {
-	        if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16(mlu.Entries[i].Language)))
+	        if (!cmsplugin._cmsWriteUInt16Number(io, mlu.Entries[i].Language))
 	        {
 	        	return false;
 	        }
-	        if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16(mlu.Entries[i].Country)))
+	        if (!cmsplugin._cmsWriteUInt16Number(io, mlu.Entries[i].Country))
 	        {
 	        	return false;
 	        }
-	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(mlu.Entries[i].Len)))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, mlu.Entries[i].Len))
 	        {
 	        	return false;
 	        }
 	        
 	        Offset =  mlu.Entries[i].StrW + HeaderSize + 8;
 	        
-	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(Offset)))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, Offset))
 	        {
 	        	return false;
 	        }
 	    }
 	    
-	    if (!cmsplugin._cmsWriteUInt16Array(io, mlu.PoolUsed / /*sizeof(cmsUInt16Number)*/2, mlu.MemPool, false))
+	    if (!cmsplugin._cmsWriteUInt16Array(io, mlu.PoolUsed / /*sizeof(cmsUInt16Number)*/2, mlu.MemPool, true))
 	    {
 	    	return false;
 	    }
@@ -3174,7 +3171,7 @@ final class cmstypes
 	    	    return false;
 	        }
 	        
-	        if (!cmsplugin._cmsReadUInt16Array(io, nEntries, Tables[i].Table16, true))
+	        if (!cmsplugin._cmsReadUInt16Array(io, nEntries, Tables[i].Table16, false))
 	        {
 	        	for (i = 0; i < nChannels; i++)
 	    	    {
@@ -3235,7 +3232,7 @@ final class cmstypes
 	            	val = cmslut._cmsQuantizeVal(j, nEntries);
 	            }
 	            
-	            if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16(val)))
+	            if (!cmsplugin._cmsWriteUInt16Number(io, val))
 	            {
 	            	return false;
 	            }
@@ -3433,12 +3430,10 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    InputEntries[0] = cmsplugin._cmsAdjustEndianess16(InputEntries[0]);
 	    if (!cmsplugin._cmsReadUInt16Number(io, OutputEntries))
 	    {
 	    	return null;
 	    }
-	    OutputEntries[0] = cmsplugin._cmsAdjustEndianess16(OutputEntries[0]);
 	    
 	    // Get input tables
 	    if (!Read16bitTables(self.ContextID, io,  NewLUT, InputChannels[0], InputEntries[0]))
@@ -3458,7 +3453,7 @@ final class cmstypes
 	    	
 	        T  = new short[nTabSize];
 	        
-	        if (!cmsplugin._cmsReadUInt16Array(io, nTabSize, T, true))
+	        if (!cmsplugin._cmsReadUInt16Array(io, nTabSize, T, false))
 	        {
 	        	if (NewLUT != null)
 			    {
@@ -3649,7 +3644,7 @@ final class cmstypes
 	    
 	    if (PreMPE != null)
 	    {
-	        if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)PreMPE.TheCurves[0].nEntries)))
+	        if (!cmsplugin._cmsWriteUInt16Number(io, (short)PreMPE.TheCurves[0].nEntries))
 	        {
 	        	return false;
 	        }
@@ -3664,7 +3659,7 @@ final class cmstypes
 	    
 	    if (PostMPE != null)
 	    {
-	        if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)PostMPE.TheCurves[0].nEntries)))
+	        if (!cmsplugin._cmsWriteUInt16Number(io, (short)PostMPE.TheCurves[0].nEntries))
 	        {
 	        	return false;
 	        }
@@ -3692,7 +3687,7 @@ final class cmstypes
 	    // The 3D CLUT.
 	    if (clut != null)
 	    {
-	        if (!cmsplugin._cmsWriteUInt16Array(io, nTabSize, clut.Tab, true))
+	        if (!cmsplugin._cmsWriteUInt16Array(io, nTabSize, clut.Tab, false))
 	        {
 	        	return false;
 	        }
@@ -3875,7 +3870,7 @@ final class cmstypes
 	    {
 	        if (Precision[0] == 2)
 	        {
-	            if (!cmsplugin._cmsReadUInt16Array(io, Data.nEntries, Data.Tab, true))
+	            if (!cmsplugin._cmsReadUInt16Array(io, Data.nEntries, Data.Tab, false))
 	            {
 	            	return null;
 	            }
@@ -4011,27 +4006,27 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    offsetB = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	    offsetB = temp2[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	    {
 	    	return null;
 	    }
-	    offsetMat = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	    offsetMat = temp2[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	    {
 	    	return null;
 	    }
-	    offsetM = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	    offsetM = temp2[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	    {
 	    	return null;
 	    }
-	    offsetC = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	    offsetC = temp2[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	    {
 	    	return null;
 	    }
-	    offsetA = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	    offsetA = temp2[0];
 	    
 	    // Allocates an empty LUT
 	    NewLUT = cmslut.cmsPipelineAlloc(self.ContextID, inputChan, outputChan);
@@ -4250,7 +4245,7 @@ final class cmstypes
 	    {
 	        if (Precision == 2)
 	        {
-	            if (!cmsplugin._cmsWriteUInt16Array(io, CLUT.nEntries, CLUT.Tab, true))
+	            if (!cmsplugin._cmsWriteUInt16Array(io, CLUT.nEntries, CLUT.Tab, false))
 	            {
 	            	return false;
 	            }
@@ -4433,23 +4428,23 @@ final class cmstypes
 	    	return false;
 	    }
 
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(offsetB)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetB))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(offsetMat)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetMat))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(offsetM)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetM))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(offsetC)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetC))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(offsetA)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetA))
 	    {
 	    	return false;
 	    }
@@ -4512,27 +4507,27 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    offsetB = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	    offsetB = temp2[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	    {
 	    	return null;
 	    }
-	    offsetMat = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	    offsetMat = temp2[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	    {
 	    	return null;
 	    }
-	    offsetM = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	    offsetM = temp2[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	    {
 	    	return null;
 	    }
-	    offsetC = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	    offsetC = temp2[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	    {
 	    	return null;
 	    }
-	    offsetA = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	    offsetA = temp2[0];
 	    
 	    // Allocates an empty LUT
 	    NewLUT = cmslut.cmsPipelineAlloc(self.ContextID, inputChan, outputChan);
@@ -4742,23 +4737,23 @@ final class cmstypes
 	    	return false;
 	    }
 
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(offsetB)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetB))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(offsetMat)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetMat))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(offsetM)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetM))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(offsetC)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetC))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(offsetA)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, offsetA))
 	    {
 	    	return false;
 	    }
@@ -4804,7 +4799,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    Count = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    Count = temp[0];
 	    
 	    if (Count > lcms2.cmsMAXCHANNELS)
 	    {
@@ -4822,7 +4817,7 @@ final class cmstypes
 	    	    return null;
 	        }
 	        
-	        if (!cmsplugin._cmsReadUInt16Array(io, 3, PCS, true))
+	        if (!cmsplugin._cmsReadUInt16Array(io, 3, PCS, false))
 	        {
 	        	nItems[0] = 0;
 	    	    cmsnamed.cmsFreeNamedColorList(List);
@@ -4849,7 +4844,7 @@ final class cmstypes
 	    
 	    nColors = cmsnamed.cmsNamedColorCount(NamedColorList);
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(nColors)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, nColors))
 	    {
 	    	return false;
 	    }
@@ -4871,7 +4866,7 @@ final class cmstypes
 	        {
 	        	return false;
 	        }
-	        if (!cmsplugin._cmsWriteUInt16Array(io, 3, PCS, true))
+	        if (!cmsplugin._cmsWriteUInt16Array(io, 3, PCS, false))
 	        {
 	        	return false;
 	        }
@@ -4922,17 +4917,17 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    vendorFlag = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    vendorFlag = temp[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    count = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    count = temp[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    nDeviceCoords = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    nDeviceCoords = temp[0];
 	    
 	    if (io.vpRead(io, prefix, 32, 1) != 1)
 	    {
@@ -4967,12 +4962,12 @@ final class cmstypes
 		    {
 		    	return null;
 		    }
-	        if (!cmsplugin._cmsReadUInt16Array(io, 3, PCS, true))
+	        if (!cmsplugin._cmsReadUInt16Array(io, 3, PCS, false))
 	        {
 	        	cmsnamed.cmsFreeNamedColorList(v);
 	    	    return null;
 	        }
-	        if (!cmsplugin._cmsReadUInt16Array(io, nDeviceCoords, Colorant, true))
+	        if (!cmsplugin._cmsReadUInt16Array(io, nDeviceCoords, Colorant, false))
 	        {
 	        	cmsnamed.cmsFreeNamedColorList(v);
 	    	    return null;
@@ -5003,11 +4998,11 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(nColors)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, nColors))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(NamedColorList.ColorantCount)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, NamedColorList.ColorantCount))
 	    {
 	    	return false;
 	    }
@@ -5042,11 +5037,11 @@ final class cmstypes
 		    {
 		    	return false;
 		    }
-	    	if (!cmsplugin._cmsWriteUInt16Array(io, 3, PCS, true))
+	    	if (!cmsplugin._cmsWriteUInt16Array(io, 3, PCS, false))
 		    {
 		    	return false;
 		    }
-	    	if (!cmsplugin._cmsWriteUInt16Array(io, NamedColorList.ColorantCount, Colorant, true))
+	    	if (!cmsplugin._cmsWriteUInt16Array(io, NamedColorList.ColorantCount, Colorant, false))
 		    {
 		    	return false;
 		    }
@@ -5122,7 +5117,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    Count = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    Count = temp[0];
 	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	    
 	    OutSeq = cmsnamed.cmsAllocProfileSequenceDescription(self.ContextID, Count);
@@ -5145,21 +5140,20 @@ final class cmstypes
 		    {
 		    	return null;
 		    }
-	        sec.deviceMfg = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	        sec.deviceMfg = temp[0];
 	        SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	        
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
 		    {
 		    	return null;
 		    }
-	        sec.deviceModel = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	        sec.deviceModel = temp[0];
 	        SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	        
 	        if (!cmsplugin._cmsReadUInt64Number(io, temp3))
 		    {
 		    	return null;
 		    }
-	        cmsplugin._cmsAdjustEndianess64(temp3, temp3[0]);
 	        sec.attributes = temp3[0];
 	        SizeOfTag -= /*sizeof(cmsUInt64Number)*/8;
 	        
@@ -5167,7 +5161,7 @@ final class cmstypes
 		    {
 		    	return null;
 		    }
-	        sec.technology = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	        sec.technology = temp[0];
 	        SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	        
 	        if (!ReadEmbeddedText(self, io, temp2, SizeOfTag))
@@ -5224,30 +5218,28 @@ final class cmstypes
 		cmsSEQ Seq = (cmsSEQ)Ptr;
 	    int i;
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(Seq.n)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, Seq.n))
 	    {
 	    	return false;
 	    }
 	    
-	    long[] temp = new long[1];
 	    for (i = 0; i < Seq.n; i++)
 	    {
 	        cmsPSEQDESC sec = Seq.seq[i];
 	        
-	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(sec.deviceMfg)))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, sec.deviceMfg))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(sec.deviceModel)))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, sec.deviceModel))
 		    {
 		    	return false;
 		    }
-	        cmsplugin._cmsAdjustEndianess64(temp, sec.attributes);
-	        if (!cmsplugin._cmsWriteUInt64Number(io, temp[0]))
+	        if (!cmsplugin._cmsWriteUInt64Number(io, sec.attributes))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(sec.technology)))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, sec.technology))
 		    {
 		    	return false;
 		    }
@@ -5324,7 +5316,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    Count = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    Count = temp[0];
 	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	    
 	    // Allocate an empty structure
@@ -5376,7 +5368,7 @@ final class cmstypes
 	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
 	    
 	    // This is the table count
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(Seq.n)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, Seq.n))
 	    {
 	    	return false;
 	    }
@@ -5423,7 +5415,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    CountUcr = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    CountUcr = temp[0];
 	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	    
 	    n.Ucr = cmsgamma.cmsBuildTabulatedToneCurve16(self.ContextID, CountUcr, null);
@@ -5432,7 +5424,7 @@ final class cmstypes
 	    	return null;
 	    }
 	    
-	    if (!cmsplugin._cmsReadUInt16Array(io, CountUcr, n.Ucr.Table16, true))
+	    if (!cmsplugin._cmsReadUInt16Array(io, CountUcr, n.Ucr.Table16, false))
 	    {
 	    	return null;
 	    }
@@ -5443,7 +5435,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    CountBg = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    CountBg = temp[0];
 	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	    
 	    n.Bg = cmsgamma.cmsBuildTabulatedToneCurve16(self.ContextID, CountBg, null);
@@ -5451,7 +5443,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    if (!cmsplugin._cmsReadUInt16Array(io, CountBg, n.Bg.Table16, true))
+	    if (!cmsplugin._cmsReadUInt16Array(io, CountBg, n.Bg.Table16, false))
 	    {
 	    	return null;
 	    }
@@ -5479,21 +5471,21 @@ final class cmstypes
 	    StringBuffer Text;
 	    
 	    // First curve is Under color removal
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(Value.Ucr.nEntries)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, Value.Ucr.nEntries))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Array(io, Value.Ucr.nEntries, Value.Ucr.Table16, true))
+	    if (!cmsplugin._cmsWriteUInt16Array(io, Value.Ucr.nEntries, Value.Ucr.Table16, false))
 	    {
 	    	return false;
 	    }
 	    
 	    // Then black generation
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(Value.Bg.nEntries)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, Value.Bg.nEntries))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Array(io, Value.Bg.nEntries, Value.Bg.Table16, true))
+	    if (!cmsplugin._cmsWriteUInt16Array(io, Value.Bg.nEntries, Value.Bg.Table16, false))
 	    {
 	    	return false;
 	    }
@@ -5581,7 +5573,7 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
-	    Count = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    Count = temp[0];
 	    
 	    if (SizeOfTag[0] < Count + /*sizeof(cmsUInt32Number)*/4)
 	    {
@@ -5617,7 +5609,7 @@ final class cmstypes
 	    TextSize = cmsnamed.cmsMLUgetASCII(mlu, "PS", Section, null, 0);
 	    Text = new StringBuffer(TextSize);
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(TextSize)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, TextSize))
 	    {
 	    	return false;
 	    }
@@ -5734,12 +5726,12 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    sc.Flag = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    sc.Flag = temp[0];
 	    if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    sc.nChannels = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    sc.nChannels = temp[0];
 	    
 	    double[] temp2 = new double[1];
 	    for (i = 0; i < sc.nChannels; i++)
@@ -5759,7 +5751,7 @@ final class cmstypes
 		    {
 		    	return null;
 		    }
-	        sc.Channels[i].SpotShape = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	        sc.Channels[i].SpotShape = temp[0];
 	    }
 	    
 	    nItems[0] = 1;
@@ -5772,11 +5764,11 @@ final class cmstypes
 		cmsScreening sc = (cmsScreening)Ptr; 
 	    int i;
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(sc.Flag)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, sc.Flag))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(sc.nChannels)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, sc.nChannels))
 	    {
 	    	return false;
 	    }
@@ -5803,7 +5795,7 @@ final class cmstypes
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(shape)))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, shape))
 		    {
 		    	return false;
 		    }
@@ -5871,7 +5863,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    vc.IlluminantType = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    vc.IlluminantType = temp[0];
 	    
 	    nItems[0] = 1;
 	    
@@ -5890,7 +5882,7 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(sc.IlluminantType)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, sc.IlluminantType))
 	    {
 	    	return false;
 	    }
@@ -5958,7 +5950,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    ElementSig = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    ElementSig = temp[0];
 	    
 	    // That should be a segmented curve
 	    if (ElementSig != lcms2.cmsSigSegmentedCurve)
@@ -5975,7 +5967,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    nSegments = cmsplugin._cmsAdjustEndianess16(temp2[0]);
+	    nSegments = temp2[0];
 	    if (!cmsplugin._cmsReadUInt16Number(io, null))
 	    {
 	    	return null;
@@ -6008,7 +6000,7 @@ final class cmstypes
 	    	{
 	    		return null;
 	    	}
-	    	ElementSig = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    	ElementSig = temp[0];
 	    	if (!cmsplugin._cmsReadUInt32Number(io, null))
 	    	{
 	    		return null;
@@ -6036,7 +6028,7 @@ final class cmstypes
 		                {
 		                	return null;
 		                }
-		    			Type = (short)cmsplugin._cmsAdjustEndianess32(temp[0]);
+		    			Type = (short)temp[0];
 		                
 		                Segments[i].Type = Type + 6;
 		                if (Type > 2)
@@ -6064,7 +6056,7 @@ final class cmstypes
 		                {
 		                	return null;
 		                }
-                		Count = cmsplugin._cmsAdjustEndianess32(temp[0]);
+                		Count = temp[0];
                 		
                 		Segments[i].nGridPoints = Count;
                 		Segments[i].SampledPoints = new float[Count];
@@ -6123,12 +6115,12 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    InputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
+	    InputChans = temp[0];
 	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    OutputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
+	    OutputChans = temp[0];
 	    
 	    if (InputChans != OutputChans)
 	    {
@@ -6165,7 +6157,7 @@ final class cmstypes
 	    cmsCurveSegment[] Segments = g.Segments;
 	    int nSegments = g.nSegments;
 	    
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(lcms2.cmsSigSegmentedCurve)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, lcms2.cmsSigSegmentedCurve))
 	    {
 	    	return false;
 	    }
@@ -6173,7 +6165,7 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)nSegments)))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)nSegments))
 	    {
 	    	return false;
 	    }
@@ -6199,7 +6191,7 @@ final class cmstypes
 	        if (ActualSeg.Type == 0)
 	        {
 	            // This is a sampled curve
-	            if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(lcms2.cmsSigSampledCurveSeg)))
+	            if (!cmsplugin._cmsWriteUInt32Number(io, lcms2.cmsSigSampledCurveSeg))
 	            {
 	            	return false;
 	            }
@@ -6207,7 +6199,7 @@ final class cmstypes
 	            {
 	            	return false;
 	            }
-	            if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(ActualSeg.nGridPoints)))
+	            if (!cmsplugin._cmsWriteUInt32Number(io, ActualSeg.nGridPoints))
 	            {
 	            	return false;
 	            }
@@ -6226,7 +6218,7 @@ final class cmstypes
 	            int[] ParamsByType = { 4, 5, 5 };
 	            
 	            // This is a formula-based
-	            if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(lcms2.cmsSigFormulaCurveSeg)))
+	            if (!cmsplugin._cmsWriteUInt32Number(io, lcms2.cmsSigFormulaCurveSeg))
 		        {
 		        	return false;
 		        }
@@ -6242,7 +6234,7 @@ final class cmstypes
 		        	return false;
 		        }
 	            
-	            if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)Type)))
+	            if (!cmsplugin._cmsWriteUInt16Number(io, (short)Type))
 		        {
 		        	return false;
 		        }
@@ -6292,11 +6284,11 @@ final class cmstypes
 	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
 	    
 	    // Write the header. Since those are curves, input and output channels are same
-	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)mpe.InputChannels)))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.InputChannels))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)mpe.InputChannels)))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.InputChannels))
 	    {
 	    	return false;
 	    }
@@ -6327,12 +6319,12 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    InputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
+	    InputChans = temp[0];
 	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    OutputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
+	    OutputChans = temp[0];
 	    
 	    nElems = InputChans * OutputChans;
 	    
@@ -6373,11 +6365,11 @@ final class cmstypes
 	    cmsStage mpe = (cmsStage)Ptr;
 	    _cmsStageMatrixData Matrix = (_cmsStageMatrixData)mpe.Data;
 	    
-	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)mpe.InputChannels)))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.InputChannels))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)mpe.OutputChannels)))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.OutputChannels))
 	    {
 	    	return false;
 	    }
@@ -6427,12 +6419,12 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    InputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
+	    InputChans = temp[0];
 	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    OutputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
+	    OutputChans = temp[0];
 	    
 	    if (io.Read.run(io, Dimensions8, /*sizeof(cmsUInt8Number)*/1, 16) != 16)
 	    {
@@ -6507,11 +6499,11 @@ final class cmstypes
 	    	return false;
 	    }
 	    
-	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)mpe.InputChannels)))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.InputChannels))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)mpe.OutputChannels)))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)mpe.OutputChannels))
 	    {
 	    	return false;
 	    }
@@ -6642,7 +6634,7 @@ final class cmstypes
 		    {
 		    	return false;
 		    }
-		    ElementSig = cmsplugin._cmsAdjustEndianess32(temp[0]);
+		    ElementSig = temp[0];
 		    
 		    // The reserved placeholder
 		    if (!cmsplugin._cmsReadUInt32Number(io, null))
@@ -6700,12 +6692,12 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    InputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
+	    InputChans = temp[0];
 	    if (!cmsplugin._cmsReadUInt16Number(io, temp))
 	    {
 	    	return null;
 	    }
-	    OutputChans = cmsplugin._cmsAdjustEndianess16(temp[0]);
+	    OutputChans = temp[0];
 	    
 	    // Allocates an empty LUT
 	    NewLUT = cmslut.cmsPipelineAlloc(self.ContextID, InputChans, OutputChans);
@@ -6719,7 +6711,7 @@ final class cmstypes
 	    	return null;
 	    }
 	    
-	    if (!ReadPositionTable(self, io, cmsplugin._cmsAdjustEndianess32(ElementCount[0]), BaseOffset, NewLUT, ReadMPEElem))
+	    if (!ReadPositionTable(self, io, ElementCount[0], BaseOffset, NewLUT, ReadMPEElem))
 	    {
 	        if (NewLUT != null)
 	        {
@@ -6757,15 +6749,15 @@ final class cmstypes
 	    ElementSizes = new int[ElemCount];
 	    
 	    // Write the head
-	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)inputChan)))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)inputChan))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)outputChan)))
+	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)outputChan))
 	    {
 	    	return false;
 	    }
-	    if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(ElemCount)))
+	    if (!cmsplugin._cmsWriteUInt32Number(io, ElemCount))
 	    {
 	    	return false;
 	    }
@@ -6804,7 +6796,7 @@ final class cmstypes
                 return false;
 	        }
 	        
-	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(ElementSig)))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, ElementSig))
 		    {
 		    	return false;
 		    }
@@ -6837,11 +6829,11 @@ final class cmstypes
 	    
 	    for (i = 0; i < ElemCount; i++)
 	    {
-	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(ElementOffsets[i])))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, ElementOffsets[i]))
 		    {
 		    	return false;
 		    }
-	        if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(ElementSizes[i])))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, ElementSizes[i]))
 		    {
 		    	return false;
 		    }
@@ -6893,7 +6885,7 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
-	    TagType = cmsplugin._cmsAdjustEndianess32(temp[0]);
+	    TagType = temp[0];
 	    
 	    // Allocate space for the array
 	    Curves = new cmsToneCurve[3];
@@ -6914,7 +6906,7 @@ final class cmstypes
 		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 		    	    return null;
 		    	}
-		    	nChannels = cmsplugin._cmsAdjustEndianess16(temp2[0]);
+		    	nChannels = temp2[0];
 		    	
 		    	if (nChannels != 3)
 		    	{
@@ -6931,14 +6923,14 @@ final class cmstypes
 		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 		    	    return null;
 		    	}
-		    	nElems = cmsplugin._cmsAdjustEndianess16(temp2[0]);
+		    	nElems = temp2[0];
 		    	if (!cmsplugin._cmsReadUInt16Number(io, temp2))
 		    	{
 		    		// Regret, free all resources
 		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
 		    	    return null;
 		    	}
-		    	nBytes = cmsplugin._cmsAdjustEndianess16(temp2[0]);
+		    	nBytes = temp2[0];
 		    	
 		    	// Populate tone curves
 		    	for (n = 0; n < 3; n++)
@@ -6970,7 +6962,7 @@ final class cmstypes
 			    			break;
 		    			// One word 0..65535
 		    			case 2:
-		    				if (!cmsplugin._cmsReadUInt16Array(io, nElems, Curves[n].Table16, true))
+		    				if (!cmsplugin._cmsReadUInt16Array(io, nElems, Curves[n].Table16, false))
 		    		    	{
 		    		    		// Regret, free all resources
 		    		    		cmsgamma.cmsFreeToneCurveTriple(Curves);
@@ -7076,7 +7068,7 @@ final class cmstypes
 			cmsgamma.cmsGetToneCurveParametricType(Curves[1]) == 5 &&
 			cmsgamma.cmsGetToneCurveParametricType(Curves[2]) == 5)
 		{
-			if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(cmsVideoCardGammaFormulaType)))
+			if (!cmsplugin._cmsWriteUInt32Number(io, cmsVideoCardGammaFormulaType))
 			{
 				return false;
 			}
@@ -7110,19 +7102,19 @@ final class cmstypes
 		else
 		{
 			// Always store as a table of 256 words
-			if (!cmsplugin._cmsWriteUInt32Number(io, cmsplugin._cmsAdjustEndianess32(cmsVideoCardGammaTableType)))
+			if (!cmsplugin._cmsWriteUInt32Number(io, cmsVideoCardGammaTableType))
 			{
 				return false;
 			}
-			if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)3)))
+			if (!cmsplugin._cmsWriteUInt16Number(io, (short)3))
 			{
 				return false;
 			}
-			if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)256)))
+			if (!cmsplugin._cmsWriteUInt16Number(io, (short)256))
 			{
 				return false;
 			}
-			if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16((short)2)))
+			if (!cmsplugin._cmsWriteUInt16Number(io, (short)2))
 			{
 				return false;
 			}
@@ -7134,7 +7126,7 @@ final class cmstypes
 					float v = cmsgamma.cmsEvalToneCurveFloat(Curves[i], (float)(j / 255.0));
 					short n = lcms2_internal._cmsQuickSaturateWord(v * 65535.0);
 					
-					if (!cmsplugin._cmsWriteUInt16Number(io, cmsplugin._cmsAdjustEndianess16(n)))
+					if (!cmsplugin._cmsWriteUInt16Number(io, n))
 					{
 						return false;
 					}

@@ -209,7 +209,7 @@ final class cmsxform
 		}
 		else
 		{
-			//XXX This might not work for read only value types, if that's the case then VirtualPointer should throw the exeception
+			//XXX This might not work for read only value types, if that's the case then VirtualPointer should throw the exception
 			VirtualPointer.TypeProcessor proc = vp.getProcessor();
 			if(btype.isArray())
 			{

@@ -810,7 +810,7 @@ final class cmsio0
 	    {
 	    	return false;
 	    }
-	    TagCount = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	    TagCount = temp2[0];
 	    if (TagCount > lcms2_internal.MAX_TABLE_TAG)
 	    {
 	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_TO_MANY_TAGS), new Object[]{new Integer(TagCount)});
@@ -826,17 +826,17 @@ final class cmsio0
 	        {
 	        	return false;
 	        }
-	        Tag.sig = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	        Tag.sig = temp2[0];
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	        {
 	        	return false;
 	        }
-	        Tag.offset = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	        Tag.offset = temp2[0];
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp2))
 	        {
 	        	return false;
 	        }
-	        Tag.size = cmsplugin._cmsAdjustEndianess32(temp2[0]);
+	        Tag.size = temp2[0];
 	        
 	        // Perform some sanity check. Offset + size should fall inside file.
 	        if (Tag.offset + Tag.size > HeaderSize)
@@ -928,7 +928,7 @@ final class cmsio0
 	    }
 	    
 	    // Store number of tags
-	    if (!cmsplugin._cmsWriteUInt32Number(Icc.IOhandler, cmsplugin._cmsAdjustEndianess32(Count)))
+	    if (!cmsplugin._cmsWriteUInt32Number(Icc.IOhandler, Count))
 	    {
 	    	vp.free();
 	    	return false;

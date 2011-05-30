@@ -581,7 +581,7 @@ final class cmsvirt
 		    Out[1] = lcms2_internal._cmsQuickSaturateWord((In[1] & 0xFFFF) * Ratio);	// M
 		    Out[2] = lcms2_internal._cmsQuickSaturateWord((In[2] & 0xFFFF) * Ratio);	// Y
 		    
-		    Out[3] = In[3];													// K (untouched)
+		    Out[3] = In[3];																// K (untouched)
 		    
 		    return 1;
 		}

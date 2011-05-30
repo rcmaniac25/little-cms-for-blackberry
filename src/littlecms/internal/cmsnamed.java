@@ -235,10 +235,6 @@ final class cmsnamed
 		{
 			values[i] = (byte)code.charAt(i);
 		}
-		//Reverse first two bytes
-		byte b = values[0];
-		values[0] = values[1];
-		values[1] = b;
 		//Just make sure that the last byte is a zero. This is not really needed but is for safety
 		if(values[2] != 0)
 		{
@@ -254,8 +250,8 @@ final class cmsnamed
 	    int nLen = Math.min(len, ASCIIString.length());
 	    char[] WStr;
 	    boolean rc;
-	    short Lang  = cmsplugin._cmsAdjustEndianess16(codeAsShort(LanguageCode));
-	    short Cntry = cmsplugin._cmsAdjustEndianess16(codeAsShort(CountryCode));
+	    short Lang  = codeAsShort(LanguageCode);
+	    short Cntry = codeAsShort(CountryCode);
 	    
 	    if (mlu == null)
 	    {
@@ -293,8 +289,8 @@ final class cmsnamed
 	// Add a wide entry
 	public static boolean cmsMLUsetWide(cmsMLU mlu, final String LanguageCode, final String CountryCode, final String WideString)
 	{
-		short Lang  = cmsplugin._cmsAdjustEndianess16(codeAsShort(LanguageCode));
-	    short Cntry = cmsplugin._cmsAdjustEndianess16(codeAsShort(CountryCode));
+		short Lang  = codeAsShort(LanguageCode);
+	    short Cntry = codeAsShort(CountryCode);
 	    int len;
 	    
 	    if (mlu == null)
@@ -504,8 +500,8 @@ final class cmsnamed
 	    int StrLen[] = new int[1];
 	    int ASCIIlen, i;
 	    
-	    short Lang  = cmsplugin._cmsAdjustEndianess16(codeAsShort(LanguageCode));
-	    short Cntry = cmsplugin._cmsAdjustEndianess16(codeAsShort(CountryCode));
+	    short Lang  = codeAsShort(LanguageCode);
+	    short Cntry = codeAsShort(CountryCode);
 	    
 		// Sanitize
 	    if (mlu == null)
@@ -581,8 +577,8 @@ final class cmsnamed
 	    final String Wide;
 	    int[] StrLen = new int[1];
 	    
-	    short Lang  = cmsplugin._cmsAdjustEndianess16(codeAsShort(LanguageCode));
-	    short Cntry = cmsplugin._cmsAdjustEndianess16(codeAsShort(CountryCode));
+	    short Lang  = codeAsShort(LanguageCode);
+	    short Cntry = codeAsShort(CountryCode);
 	    
 		// Sanitize
 	    if (mlu == null)
@@ -629,7 +625,7 @@ final class cmsnamed
 	
 	private static void shortToCode(final short code, StringBuffer buf)
 	{
-		byte[] values = BitConverter.getBytes(code);
+		byte[] values = BitConverter.getBytes(cmsplugin._cmsAdjustEndianess16(code));
 		int appendPos = buf.length();
 		for(int i = 0; i < 2; i++)
 		{
@@ -653,8 +649,8 @@ final class cmsnamed
 	{
 		final String Wide;
 		
-		short Lang  = cmsplugin._cmsAdjustEndianess16(codeAsShort(LanguageCode));
-	    short Cntry = cmsplugin._cmsAdjustEndianess16(codeAsShort(CountryCode));
+		short Lang  = codeAsShort(LanguageCode);
+	    short Cntry = codeAsShort(CountryCode);
 	    short[] ObtLang = new short[1], ObtCode = new short[1];
 	    
 		// Sanitize
@@ -670,8 +666,8 @@ final class cmsnamed
 	    }
 	    
 		// Get used language and code
-		shortToCode(cmsplugin._cmsAdjustEndianess16(ObtLang[0]), ObtainedLanguage);
-		shortToCode(cmsplugin._cmsAdjustEndianess16(ObtCode[0]), ObtainedCountry);
+		shortToCode(ObtLang[0], ObtainedLanguage);
+		shortToCode(ObtCode[0], ObtainedCountry);
 		return true;
 	}
 	
