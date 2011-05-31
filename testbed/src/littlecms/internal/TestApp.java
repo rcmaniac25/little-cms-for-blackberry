@@ -5064,6 +5064,9 @@ public final class TestApp extends UiApplication
 			CheckSingleFormatter16(lcms2.TYPE_GRAY_FLT, "TYPE_GRAY_FLT");
 			CheckSingleFormatter16(lcms2.TYPE_RGB_FLT, "TYPE_RGB_FLT");
 			CheckSingleFormatter16(lcms2.TYPE_CMYK_FLT, "TYPE_CMYK_FLT");
+			CheckSingleFormatter16(lcms2.TYPE_XYZA_FLT, "TYPE_XYZA_FLT");
+			CheckSingleFormatter16(lcms2.TYPE_LabA_FLT, "TYPE_LabA_FLT");
+			CheckSingleFormatter16(lcms2.TYPE_RGBA_FLT, "TYPE_RGBA_FLT");
 			
 			CheckSingleFormatter16(lcms2.TYPE_XYZ_DBL, "TYPE_XYZ_DBL");
 			CheckSingleFormatter16(lcms2.TYPE_Lab_DBL, "TYPE_Lab_DBL");
@@ -5162,6 +5165,11 @@ public final class TestApp extends UiApplication
 			CheckSingleFormatterFloat(lcms2.TYPE_RGB_FLT, "TYPE_RGB_FLT");
 			CheckSingleFormatterFloat(lcms2.TYPE_CMYK_FLT, "TYPE_CMYK_FLT");
 			
+			// User
+			CheckSingleFormatterFloat(lcms2.TYPE_XYZA_FLT, "TYPE_XYZA_FLT");
+			CheckSingleFormatterFloat(lcms2.TYPE_LabA_FLT, "TYPE_LabA_FLT");
+			CheckSingleFormatterFloat(lcms2.TYPE_RGBA_FLT, "TYPE_RGBA_FLT");
+			
 			CheckSingleFormatterFloat(lcms2.TYPE_XYZ_DBL, "TYPE_XYZ_DBL");
 			CheckSingleFormatterFloat(lcms2.TYPE_Lab_DBL, "TYPE_Lab_DBL");
 			CheckSingleFormatterFloat(lcms2.TYPE_GRAY_DBL, "TYPE_GRAY_DBL");
@@ -5169,6 +5177,102 @@ public final class TestApp extends UiApplication
 			CheckSingleFormatterFloat(lcms2.TYPE_CMYK_DBL, "TYPE_CMYK_DBL");
 			
 			return !FormatterFailed ? 1 : 0;
+		}
+	};
+	
+	private static int CheckOneRGB(cmsHTRANSFORM xform, int R, int G, int B, int Ro, int Go, int Bo)
+	{
+		short[] RGB = new short[3];
+		short[] Out = new short[3];
+		
+	    RGB[0] = (short)R;
+	    RGB[1] = (short)G;
+	    RGB[2] = (short)B;
+	    
+	    lcms2.cmsDoTransform(xform, RGB, Out, 1);
+	    
+	    return (IsGoodWord("R", (short)Ro , Out[0]) &&
+	           IsGoodWord("G", (short)Go , Out[1]) &&
+	           IsGoodWord("B", (short)Bo , Out[2])) ? 1 : 0;
+	}
+	
+	// Check known values going from sRGB to XYZ
+	private static int CheckOneRGB_double(cmsHTRANSFORM xform, double R, double G, double B, double Ro, double Go, double Bo)
+	{
+		double[] RGB = new double[3];
+		double[] Out = new double[3];
+		
+	    RGB[0] = R;
+	    RGB[1] = G;
+	    RGB[2] = B;
+	    
+	    lcms2.cmsDoTransform(xform, RGB, Out, 1);
+	    
+	    return (IsGoodVal("R", Ro , Out[0], 0.01) &&
+	           IsGoodVal("G", Go , Out[1], 0.01) &&
+	           IsGoodVal("B", Bo , Out[2], 0.01)) ? 1 : 0;
+	}
+	
+	private static final TestFn CheckChangeBufferFormat = new TestFn()
+	{
+		public int run()
+		{
+			cmsHPROFILE hsRGB = lcms2.cmsCreate_sRGBProfile();
+		    cmsHTRANSFORM xform;
+		    
+		    
+		    xform = lcms2.cmsCreateTransform(hsRGB, lcms2.TYPE_RGB_16, hsRGB, lcms2.TYPE_RGB_16, lcms2.INTENT_PERCEPTUAL, 0);
+		    lcms2.cmsCloseProfile(hsRGB);
+		    if (xform == null)
+		    {
+		    	return 0;
+		    }
+		    
+		    
+		    if (CheckOneRGB(xform, 0, 0, 0, 0, 0, 0) == 0)
+		    {
+		    	return 0;
+		    }
+		    if (CheckOneRGB(xform, 120, 0, 0, 120, 0, 0) == 0)
+		    {
+		    	return 0;
+		    }
+		    if (CheckOneRGB(xform, 0, 222, 255, 0, 222, 255) == 0)
+		    {
+		    	return 0;
+		    }
+		    
+		    if (!lcms2.cmsChangeBuffersFormat(xform, lcms2.TYPE_BGR_16, lcms2.TYPE_RGB_16))
+		    {
+		    	return 0;
+		    }
+		    
+		    if (CheckOneRGB(xform, 0, 0, 123, 123, 0, 0) == 0)
+		    {
+		    	return 0;
+		    }
+		    if (CheckOneRGB(xform, 154, 234, 0, 0, 234, 154) == 0)
+		    {
+		    	return 0;
+		    }
+		    
+		    if (!lcms2.cmsChangeBuffersFormat(xform, lcms2.TYPE_RGB_DBL, lcms2.TYPE_RGB_DBL))
+		    {
+		    	return 0;
+		    }
+		    
+		    if (CheckOneRGB_double(xform, 0.20, 0, 0, 0.20, 0, 0) == 0)
+		    {
+		    	return 0;
+		    }
+		    if (CheckOneRGB_double(xform, 0, 0.9, 1, 0, 0.9, 1) == 0)
+		    {
+		    	return 0;
+		    }
+		    
+		    lcms2.cmsDeleteTransform(xform);
+		    
+		    return 1;
 		}
 	};
 	
@@ -6196,6 +6300,7 @@ public final class TestApp extends UiApplication
 		    	return 0;
 		    }
 		    
+		    lcms2.cmsSetProfileVersion(h, 4.2);
 		    if (lcms2.cmsGetTagCount(h) != 0)
 		    {
 		    	Fail("Empty profile with nonzero number of tags", null);
@@ -6676,13 +6781,6 @@ public final class TestApp extends UiApplication
 				lcms2.cmsDeleteTransform(x1);
 				return 0;
 			}
-			
-			x1 = lcms2.cmsCreateTransform(h1, 0, h1, 0, 0, 0);
-		    if (x1 != null)
-		    {
-		    	lcms2.cmsDeleteTransform(x1);
-				return 0;
-			}
 		    
 			x1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_RGB_8, h1, lcms2.TYPE_RGB_8, 12345, 0);
 			if (x1 != null)
@@ -6714,6 +6812,19 @@ public final class TestApp extends UiApplication
 			}
 			
 			lcms2.cmsCloseProfile(h1);
+			
+		    h1 = lcms2.cmsOpenProfileFromFile("USWebCoatedSWOP.icc", "r");
+		    cmsHPROFILE h2 = lcms2.cmsCreate_sRGBProfile();
+		    
+		    x1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_BGR_8, h2, lcms2.TYPE_BGR_8, lcms2.INTENT_PERCEPTUAL, 0);
+		    
+		    lcms2.cmsCloseProfile(h1); lcms2.cmsCloseProfile(h2);
+		    if (x1 != null)
+		    {
+		    	lcms2.cmsDeleteTransform(x1);
+		        return 0;
+		    }
+			
 			return 1;
 		}
 	};
@@ -9189,21 +9300,6 @@ public final class TestApp extends UiApplication
 		lcms2.cmsSetLogErrorHandler(FatalErrorQuit);
 	}
 	
-	private static int CheckProfile(final String FileName)
-	{
-	    cmsHPROFILE h = lcms2.cmsOpenProfileFromFile(FileName, "r");
-	    if (h == null)
-	    {
-	    	return 0;
-	    }
-	    
-	    // Do some teste....
-	    
-	    lcms2.cmsCloseProfile(h);
-	    
-	    return 1;
-	}
-	
 	// ---------------------------------------------------------------------------------------
 	
 	static
@@ -9347,8 +9443,6 @@ public final class TestApp extends UiApplication
 //#endif
 		    
 		    PrintSupportedIntents();
-		    
-		    CheckRGBPrimaries.run();
 			
 		    // Create utility profiles
 		    Check("Creation of test profiles", CreateTestProfiles);
@@ -9459,6 +9553,9 @@ public final class TestApp extends UiApplication
 		    Check("Named Color LUT", CheckNamedColorLUT);
 		    Check("Usual formatters", CheckFormatters16);
 		    Check("Floating point formatters", CheckFormattersFloat);
+		    
+		    // ChangeBuffersFormat
+		    Check("ChangeBuffersFormat", CheckChangeBufferFormat);
 		    
 		    // MLU
 		    Check("Multilocalized Unicode", CheckMLU);

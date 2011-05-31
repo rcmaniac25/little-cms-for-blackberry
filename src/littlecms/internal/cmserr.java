@@ -79,14 +79,16 @@ final class cmserr
 	// long int because C99 specifies ftell in such way (7.19.9.2)
 	public static long cmsfilelength(Stream f)
 	{
-	    long n;
+	    long p, n;
+	    
+	    p = f.getPosition(); // register current file position
 	    
 		if (f.seek(0, Stream.SEEK_END) != 0)
 		{		
 			return -1;
 		}
 	    n = f.getPosition();
-	    f.seek(0, Stream.SEEK_SET);
+	    f.seek(p, Stream.SEEK_SET); // file position restored
 	    
 	    return n;    
 	}
@@ -174,6 +176,18 @@ final class cmserr
 		public VirtualPointer run(cmsContext ContextID, int num, int size)
 		{
 			int Total = num * size;
+			
+			// Preserve calloc behaviour
+		    if (Total == 0)
+		    {
+		    	return null;
+		    }
+		    
+		    // Safe check for overflow.
+		    if (num >= 0xffffffffL / size)
+		    {
+		    	return null;
+		    }
 		    
 		    // Check for overflow
 		    if (Total < num || Total < size)

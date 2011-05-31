@@ -3,6 +3,14 @@
 
 TODO:
 Update LCMS 4 BB to LCMS 2.1
+-cmsintrp
+-cmsio0
+-cmsio1
+-cmslut
+-cmspack
+-cmstypes
+-cmsvirt
+-cmsxform
 Testing (LCMS 2.1)
 Get full JavaDoc to be created for lcms
 Release version 2.1

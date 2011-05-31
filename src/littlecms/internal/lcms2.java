@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.0
+// Version 2.1
 //
 package littlecms.internal;
 
@@ -39,7 +39,7 @@ import net.rim.device.api.util.Arrays;
 public class lcms2
 {
 	/** Version/release*/
-	public static final int LCMS_VERSION = 2000;
+	public static final int LCMS_VERSION = 2010;
 	
 	// Some common definitions
 	public static final int cmsMAX_PATH = 256;
@@ -776,9 +776,12 @@ public class lcms2
 	
 	// Float formatters.
 	public static final int TYPE_XYZ_FLT        = ((1 << FLOAT_SHIFT_VALUE) | (PT_XYZ << COLORSPACE_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (4 << BYTES_SHIFT_VALUE));
+	public static final int TYPE_XYZA_FLT       = ((1 << FLOAT_SHIFT_VALUE) | (PT_XYZ << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (4 << BYTES_SHIFT_VALUE));
 	public static final int TYPE_Lab_FLT        = ((1 << FLOAT_SHIFT_VALUE) | (PT_Lab << COLORSPACE_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (4 << BYTES_SHIFT_VALUE));
+	public static final int TYPE_LabA_FLT       = ((1 << FLOAT_SHIFT_VALUE) | (PT_Lab << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (4 << BYTES_SHIFT_VALUE));
 	public static final int TYPE_GRAY_FLT       = ((1 << FLOAT_SHIFT_VALUE) | (PT_GRAY << COLORSPACE_SHIFT_VALUE) | (1 << CHANNELS_SHIFT_VALUE) | (4 << BYTES_SHIFT_VALUE));
 	public static final int TYPE_RGB_FLT        = ((1 << FLOAT_SHIFT_VALUE) | (PT_RGB << COLORSPACE_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (4 << BYTES_SHIFT_VALUE));
+	public static final int TYPE_RGBA_FLT       = ((1 << FLOAT_SHIFT_VALUE) | (PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (4 << BYTES_SHIFT_VALUE));
 	public static final int TYPE_CMYK_FLT       = ((1 << FLOAT_SHIFT_VALUE) | (PT_CMYK << COLORSPACE_SHIFT_VALUE) | (4 << CHANNELS_SHIFT_VALUE) | (4 << BYTES_SHIFT_VALUE));
 	
 	// Floating point formatters.  
@@ -2496,6 +2499,17 @@ public class lcms2
 		return cmsio0.cmsLinkTag(hProfile, sig, dest);
 	}
 	
+	/**
+	 * Returns the tag linked to sig, in the case two tags are sharing same resource, or NULL if the tag is not linked to any other tag.
+	 * @param hProfile Handle to a profile object.
+	 * @param sig Signature of linking tag.
+	 * @return Signature of linked tag, or zero if no tag is linked.
+	 */
+	public static int cmsTagLinkedTo(cmsHPROFILE hProfile, int sig)
+	{
+		return cmsio0.cmsTagLinkedTo(hProfile, sig);
+	}
+	
 	// Read and write raw data
 	/**
 	 * Similar to cmsReadTag, but different in two important aspects. 1st, ther memory is not owned by the profile, but for you, so you have to allocate the neccesary 
@@ -2530,6 +2544,11 @@ public class lcms2
 	}
 	
 	// Access header data
+	public static final int cmsEmbeddedProfileFalse		= 0x00000000;
+	public static final int cmsEmbeddedProfileTrue		= 0x00000001;
+	public static final int cmsUseAnywhere				= 0x00000000;
+	public static final int cmsUseWithEmbeddedDataOnly	= 0x00000002;
+	
 	/**
 	 * Get header flags of given ICC profile object. The profile flags field does contain flags to indicate various hints for the CMM such as distributed processing 
 	 * and caching options. The least-significant 16 bits are reserved for the ICC. Flags in bit positions 0 and 1 shall be used as indicated:
@@ -3725,6 +3744,7 @@ public class lcms2
 		return cmsxform.cmsSetAdaptationState(d);
 	}
 	
+	// Grab the ContextID from an open transform. Returns NULL if a NULL transform is passed
 	/**
 	 * Returns the ContextID associated with a given transform.
 	 * @param hTransform Handle to a color transform object.
@@ -3733,6 +3753,19 @@ public class lcms2
 	public static cmsContext cmsGetTransformContextID(cmsHTRANSFORM hTransform)
 	{
 		return cmsxform.cmsGetTransformContextID(hTransform);
+	}
+	
+	// For backwards compatibility
+	/**
+	 * This function does change the encoding of buffers in a yet-existing transform. Not all transforms can be changed, cmsChangeBuffersFormat only works on transforms created originally with at least 16 bits of precision. This function is provided for backwards compatibility and should be avoided whenever possible, as it prevents transform optimization.
+	 * @param hTransform Handle to a color transform object.
+	 * @param InputFormat A bit-field format specifier as described in Formatters section.
+	 * @param OutputFormat A bit-field format specifier as described in Formatters section.
+	 * @return TRUE on success FALSE on error.
+	 */
+	public static boolean cmsChangeBuffersFormat(cmsHTRANSFORM hTransform, int InputFormat, int OutputFormat)
+	{
+		return cmsxform.cmsChangeBuffersFormat(hTransform, InputFormat, OutputFormat);
 	}
 	
 	// PostScript ColorRenderingDictionary and ColorSpaceArray ----------------------------------------------------

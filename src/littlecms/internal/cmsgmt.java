@@ -225,7 +225,7 @@ final class cmsgmt
 			GAMUTCHAIN t = (GAMUTCHAIN)Cargo;
 		    cmsCIELab LabIn1 = new cmsCIELab(), LabOut1 = new cmsCIELab();  
 		    cmsCIELab LabIn2 = new cmsCIELab(), LabOut2 = new cmsCIELab();      
-		    float[] Proof = new float[lcms2.cmsMAXCHANNELS], Proof2 = new float[lcms2.cmsMAXCHANNELS];
+		    short[] Proof = new short[lcms2.cmsMAXCHANNELS], Proof2 = new short[lcms2.cmsMAXCHANNELS];
 		    double dE1, dE2, ErrorRatio;
 		    
 		    // Assume in-gamut by default.
@@ -391,8 +391,8 @@ final class cmsgmt
 			dwFormat, lcms2.TYPE_Lab_DBL, 
 			lcms2.cmsFLAGS_NOCACHE);
 		
-		// Does create the forward step. Lab double to cmsFloat32Number
-		dwFormat    = ((1 << lcms2.FLOAT_SHIFT_VALUE)|lcms2.CHANNELS_SH(nChannels)|(4 << lcms2.BYTES_SHIFT_VALUE));
+		// Does create the forward step. Lab double to device
+		dwFormat    = (lcms2.CHANNELS_SH(nChannels)|(2 << lcms2.BYTES_SHIFT_VALUE));
 		Chain.hForward = cmsxform.cmsCreateTransformTHR(ContextID,
 			hLab, lcms2.TYPE_Lab_DBL, 
 			hGamut, dwFormat, 

@@ -456,6 +456,11 @@ final class lcms2_internal extends lcms2_plugin
 		cmsintrp._cmsFreeInterpParams(p);
 	}
 	
+	public static boolean _cmsSetInterpolationRoutine(cmsInterpParams p)
+	{
+		return cmsintrp._cmsSetInterpolationRoutine(p);
+	}
+	
 	// Curves ----------------------------------------------------------------------------------------------------------------
 
 	// This struct holds information about a segment, plus a pointer to the function that implements the evaluation.
@@ -716,6 +721,8 @@ final class lcms2_internal extends lcms2_plugin
 	}
 	
 	// Formatters ------------------------------------------------------------------------------------------------------------
+	
+	public static final int cmsFLAGS_CAN_CHANGE_FORMATTER = 0x02000000; // Allow change buffer format
 	
 	public static boolean _cmsFormatterIsFloat(int Type)
 	{

@@ -775,7 +775,7 @@ final class cmsps2
 		
 		for( i=0; i < 3; i++ )
 		{
-			cmsplugin._cmsIOPrintf(m, "%.6f %.6f %.6f ", new Object[]{new Double(Matrix[0 + 3*i]), new Double(Matrix[1 + 3*i]), new Double(Matrix[2 + 3*i])});
+			cmsplugin._cmsIOPrintf(m, "%.6f %.6f %.6f ", new Object[]{new Double(Matrix[i + 3*0]), new Double(Matrix[i + 3*1]), new Double(Matrix[i + 3*2])});
 		}
 		
 		cmsplugin._cmsIOPrintf(m, "]\n", null);
@@ -979,7 +979,17 @@ final class cmsps2
 	    {
 	        if (ColorSpace == lcms2.cmsSigRgbData)
 	        {
-	            rc = EmitCIEBasedABC(m, GetPtrToMatrix(Matrix), 
+	        	double[] Mat = new double[3 * 3];
+	            int i;
+	            
+	            System.arraycopy(GetPtrToMatrix(Matrix), 0, Mat, 0, 3 * 3);
+	            
+	            for (i=0; i < 3 * 3; i++)
+	            {
+	            	Mat[i] *= lcms2_internal.MAX_ENCODEABLE_XYZ;
+	            }
+	            
+	            rc = EmitCIEBasedABC(m, Mat, 
 				                        cmslut._cmsStageGetPtrToCurveSet(Shaper), 
 										BlackPointAdaptedToD50);
 	        }

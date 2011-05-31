@@ -1062,7 +1062,7 @@ final class cmsgamma
 	public static cmsToneCurve cmsReverseToneCurveEx(int nResultSamples, final cmsToneCurve InCurve)
 	{
 	    cmsToneCurve out;
-	    double a = 1, b = 0, y, x1, y1, x2, y2;
+	    double a = 0, b = 0, y, x1, y1, x2, y2;
 	    int i, j;
 	    boolean Ascending;
 	    
@@ -1127,7 +1127,7 @@ final class cmsgamma
 	{
 	    lcms2_internal._cmsAssert(InGamma != null, "InGamma != null");
 	    
-	    return cmsReverseToneCurveEx(InGamma.nEntries, InGamma);
+	    return cmsReverseToneCurveEx(4096, InGamma);
 	}
 	
 	// From: Eilers, P.H.C. (1994) Smoothing and interpolation with finite

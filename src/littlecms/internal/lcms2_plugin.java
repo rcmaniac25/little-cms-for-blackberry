@@ -311,6 +311,7 @@ public class lcms2_plugin extends lcms2
 		
 		public cmsContext ContextID;
 		public int UsedSpace;
+		public int ReportedSize;
 		public StringBuffer PhysicalFile;
 	    
 	    public _ioRead Read;
@@ -1046,8 +1047,9 @@ public class lcms2_plugin extends lcms2
         public tagHandlerDupPtr DupPtr;
         public tagHandlerFreePtr FreePtr;
         
-        // The calling thread
+        // Additional parameters used by the calling thread
         public cmsContext ContextID;
+        public int ICCVersion;
         
         public cmsTagTypeHandler(int sig, tagHandlerReadPtr read, tagHandlerWritePtr write, tagHandlerDupPtr dup, tagHandlerFreePtr free)
         {

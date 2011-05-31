@@ -132,7 +132,7 @@ final class cmsnamed
 	    AllocatedEntries = mlu.AllocatedEntries * 2;
 	    
 		// Check for overflow
-		if (AllocatedEntries < mlu.AllocatedEntries)
+	    if (AllocatedEntries / 2 != mlu.AllocatedEntries)
 		{
 			return false;
 		}
@@ -691,6 +691,12 @@ final class cmsnamed
 	    else
 	    {
 	    	size = v.Allocated * 2;
+	    }
+	    
+	    // Keep a maximum color lists can grow, 100K entries seems reasonable
+	    if (size > 1024*100)
+	    {
+	    	return false;
 	    }
 	    
 	    NewPtr = new _cmsNAMEDCOLOR[size];
