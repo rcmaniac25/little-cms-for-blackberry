@@ -110,6 +110,7 @@ final class cmsio0
 	    iohandler.ContextID = ContextID;
 	    iohandler.stream  = fm;
 	    iohandler.UsedSpace = 0;
+	    iohandler.ReportedSize = 0;
 	    iohandler.PhysicalFile.setLength(0);
 	    
 	    //NULLRead
@@ -273,6 +274,7 @@ final class cmsio0
 		        fm.FreeBlockOnClose = true;
 		        fm.Size    = size;
 		        fm.Pointer = 0;
+		        iohandler.ReportedSize = size;
 		        break;
 		    case 'w':
 //#ifdef CMS_RAW_C
@@ -297,6 +299,7 @@ final class cmsio0
 		        fm.FreeBlockOnClose = false;
 		        fm.Size    = size;
 		        fm.Pointer = 0;
+		        iohandler.ReportedSize = 0;
 		        break;
 		    default:
 		    	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNK_ACCESS_MODE), new Object[]{new Character(AccessMode)});
@@ -538,6 +541,7 @@ final class cmsio0
 		        	cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.FILE_NOT_FOUND), new Object[]{FileName});
 		            return null;
 		        }
+		        iohandler.ReportedSize = (int)cmserr.cmsfilelength(fm);
 		        break;
 		    case 'w':
 		        fm = Stream.fopen(FileName, "w");
@@ -549,6 +553,7 @@ final class cmsio0
 		            cmserr.cmsSignalError(ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_COULDNT_CREATE_FILE), new Object[]{FileName});
 		            return null;
 		        }
+		        iohandler.ReportedSize = 0;
 		        break;
 		    default:
 //#ifdef CMS_RAW_C
@@ -587,6 +592,7 @@ final class cmsio0
 	    
 	    setupFileIOHandler(iohandler, ContextID, Stream);
 	    
+	    iohandler.ReportedSize = (int)cmserr.cmsfilelength(Stream);
 	    iohandler.PhysicalFile.setLength(0);
 	    
 	    return iohandler;
@@ -797,6 +803,12 @@ final class cmsio0
 	    // Get size as reported in header
 	    HeaderSize = cmsplugin._cmsAdjustEndianess32(Header.size);
 	    
+	    // Make sure HeaderSize is lower than profile size
+	    if (HeaderSize >= Icc.IOhandler.ReportedSize)
+	    {
+	    	HeaderSize = Icc.IOhandler.ReportedSize;
+	    }
+	    
 	    // Get creation date/time
 	    cmsplugin._cmsDecodeDateTimeNumber(Header.date, Icc.Created);
 	    
@@ -839,7 +851,7 @@ final class cmsio0
 	        Tag.size = temp2[0];
 	        
 	        // Perform some sanity check. Offset + size should fall inside file.
-	        if (Tag.offset + Tag.size > HeaderSize)
+	        if (Tag.offset + Tag.size > HeaderSize || Tag.offset + Tag.size < Tag.offset)
 	        {
 	        	continue;
 	        }
@@ -1371,6 +1383,8 @@ final class cmsio0
 	            	return false;
 	            }
 	            
+	            TypeHandler.ContextID  = Icc.ContextID;
+	            TypeHandler.ICCVersion = Icc.Version;
 	            if (!TypeHandler.WritePtr.run(TypeHandler, io, Data, TagDescriptor.ElemCount))
 	            {
 	            	StringBuffer String = new StringBuffer(4);
@@ -1609,6 +1623,8 @@ final class cmsio0
 	            
 	            if (TypeHandler != null)
 	            {
+	            	TypeHandler.ContextID = Icc.ContextID;					// As an additional parameters
+	                TypeHandler.ICCVersion = Icc.Version;
 	            	TypeHandler.FreePtr.run(TypeHandler, Icc.TagPtrs[i]);       
 	            }
 	            else
@@ -1719,6 +1735,9 @@ final class cmsio0
 	    
 	    // Read the tag
 	    Icc.TagTypeHandlers[n] = TypeHandler;
+	    
+	    TypeHandler.ContextID = Icc.ContextID;
+	    TypeHandler.ICCVersion = Icc.Version;
 	    Icc.TagPtrs[n] = TypeHandler.ReadPtr.run(TypeHandler, io, ElemCount, TagSize);
 	    
 	    // The tag type is supported, but something wrong happend and we cannot read the tag.
@@ -1776,6 +1795,7 @@ final class cmsio0
 	    int Type;
 	    int i;
 	    double Version;
+	    StringBuffer TypeString = new StringBuffer(5), SigString = new StringBuffer(5);
 	    
 	    if (data == null)
 	    {
@@ -1796,9 +1816,14 @@ final class cmsio0
 	            else
 	            {
 	                TypeHandler = Icc.TagTypeHandlers[i];
-	                TypeHandler.FreePtr.run(TypeHandler, Icc.TagPtrs[i]);       
-	            }
-	        }
+	                if (TypeHandler != null)
+	                {
+	                    TypeHandler.ContextID = Icc.ContextID;					// As an additional parameter
+	                    TypeHandler.ICCVersion = Icc.Version;
+		                TypeHandler.FreePtr.run(TypeHandler, Icc.TagPtrs[i]);       
+		            }
+		        }
+		    }
 	    }
 	    else
 	    {
@@ -1849,8 +1874,11 @@ final class cmsio0
 	    // Does the tag support this type?
 	    if (!IsTypeSupported(TagDescriptor, Type))
 	    {
+	    	cmserr._cmsTagSignature2String(TypeString, Type);
+	    	cmserr._cmsTagSignature2String(SigString,  sig);
+	    	
 	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNSUPPORTED_TYPE_FOR_TAG), 
-	        		new Object[]{new Integer(Type), new Integer(sig)});
+	        		new Object[]{TypeString, SigString});
 	        return false;
 	    }
 	    
@@ -1858,8 +1886,11 @@ final class cmsio0
 	    TypeHandler = cmstypes._cmsGetTagTypeHandler(Type);
 	    if (TypeHandler == null)
 	    {
+	    	cmserr._cmsTagSignature2String(TypeString, Type);
+	    	cmserr._cmsTagSignature2String(SigString,  sig);
+	    	
 	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNSUPPORTED_TYPE_FOR_TAG), 
-	        		new Object[]{new Integer(Type), new Integer(sig)});
+	        		new Object[]{TypeString, SigString});
 	        return false; // Should never happen
 	    }
 	    
@@ -1868,13 +1899,17 @@ final class cmsio0
 	    Icc.TagNames[i]         = sig;
 	    Icc.TagSizes[i]         = 0;
 	    Icc.TagOffsets[i]       = 0;
+	    
+	    TypeHandler.ContextID   = Icc.ContextID;
+	    TypeHandler.ICCVersion  = Icc.Version;
 	    Icc.TagPtrs[i]          = TypeHandler.DupPtr.run(TypeHandler, data, TagDescriptor.ElemCount); 
 	    
 	    if (Icc.TagPtrs[i] == null)
 	    {
-	        TypeHandler.DupPtr.run(TypeHandler, data, TagDescriptor.ElemCount);
+	    	cmserr._cmsTagSignature2String(TypeString, Type);
+	    	cmserr._cmsTagSignature2String(SigString,  sig);
 	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_CORRUPTION_DETECTED, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_MALFORMED_TYPE_FOR_TAG), 
-	        		new Object[]{new Integer(Type), new Integer(sig)});
+	        		new Object[]{TypeString, SigString});
 	        
 	        return false;
 	    }
@@ -1980,6 +2015,8 @@ final class cmsio0
 	    TagDescriptor = cmstypes._cmsGetTagDescriptor(sig);
 	    
 	    // Serialize
+	    TypeHandler.ContextID  = Icc.ContextID;
+	    TypeHandler.ICCVersion = Icc.Version;
 	    if (!TypeHandler.WritePtr.run(TypeHandler, MemIO, Object, TagDescriptor.ElemCount))
 	    {
 	    	return 0;
@@ -2043,5 +2080,21 @@ final class cmsio0
 	    Icc.TagOffsets[i] = 0;
 	    
 	    return true;
+	}
+	
+	// Returns the tag linked to sig, in the case two tags are sharing same resource
+	public static int cmsTagLinkedTo(cmsHPROFILE hProfile, int sig)
+	{
+	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;  
+	    int i;
+	    
+	    // Search for given tag in ICC profile directory
+		i = _cmsSearchTag(Icc, sig, false);
+		if (i < 0)
+		{
+			return 0; // Not found, return 0
+		}
+		
+	    return Icc.TagLinked[i];
 	}
 }

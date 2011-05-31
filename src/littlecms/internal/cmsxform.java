@@ -550,6 +550,7 @@ final class cmsxform
 	        // Get formatter function always return a valid union, but the contents of this union may be NULL.
 	        p.FromInputFloat = cmspack._cmsGetFormatter(InputFormat,  lcms2_plugin.cmsFormatterInput, lcms2_plugin.CMS_PACK_FLAGS_FLOAT).getFloat();
 	        p.ToOutputFloat  = cmspack._cmsGetFormatter(OutputFormat, lcms2_plugin.cmsFormatterOutput, lcms2_plugin.CMS_PACK_FLAGS_FLOAT).getFloat();
+	        dwFlags |= lcms2_internal.cmsFLAGS_CAN_CHANGE_FORMATTER;
 	        
 	        if (p.FromInputFloat == null || p.ToOutputFloat == null)
 	        {
@@ -562,13 +563,28 @@ final class cmsxform
 	    }
 	    else
 	    {
-	        p.FromInput = cmspack._cmsGetFormatter(InputFormat,  lcms2_plugin.cmsFormatterInput, lcms2_plugin.CMS_PACK_FLAGS_16BITS).get16();
-	        p.ToOutput  = cmspack._cmsGetFormatter(OutputFormat, lcms2_plugin.cmsFormatterOutput, lcms2_plugin.CMS_PACK_FLAGS_16BITS).get16();
-
-	        if (p.FromInput == null || p.ToOutput == null)
+	    	if (InputFormat == 0 && OutputFormat == 0)
+	    	{
+	            p.FromInput = p.ToOutput = null;
+	        }
+	        else
 	        {
-	            cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_UNSUPPORTED_RASTER_FORMAT), null);
-	            return null;
+	            int BytesPerPixelInput;
+	            
+		        p.FromInput = cmspack._cmsGetFormatter(InputFormat,  lcms2_plugin.cmsFormatterInput, lcms2_plugin.CMS_PACK_FLAGS_16BITS).get16();
+		        p.ToOutput  = cmspack._cmsGetFormatter(OutputFormat, lcms2_plugin.cmsFormatterOutput, lcms2_plugin.CMS_PACK_FLAGS_16BITS).get16();
+		        
+		        if (p.FromInput == null || p.ToOutput == null)
+		        {
+		            cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_UNSUPPORTED_RASTER_FORMAT), null);
+		            return null;
+		        }
+		        
+		        BytesPerPixelInput = lcms2.T_BYTES(p.InputFormat);
+	            if (BytesPerPixelInput == 0 || BytesPerPixelInput >= 2)
+	            {
+	            	dwFlags |= lcms2_internal.cmsFLAGS_CAN_CHANGE_FORMATTER;
+	            }
 	        }
 	        
 	        if ((dwFlags & lcms2.cmsFLAGS_NULLTRANSFORM) != 0)
@@ -923,5 +939,36 @@ final class cmsxform
 	    	return null;
 	    }
 	    return xform.ContextID;
+	}
+	
+	// For backwards compatibility
+	public static boolean cmsChangeBuffersFormat(cmsHTRANSFORM hTransform, int InputFormat, int OutputFormat)
+	{
+		_cmsTRANSFORM xform = (_cmsTRANSFORM)hTransform;
+	    lcms2_plugin.cmsFormatter16 FromInput, ToOutput;
+	    int BytesPerPixelInput;
+	    
+	    // We only can afford to change formatters if previous transform is at least 16 bits
+	    BytesPerPixelInput = lcms2.T_BYTES(xform.InputFormat);
+	    if ((xform.dwOriginalFlags & lcms2_internal.cmsFLAGS_CAN_CHANGE_FORMATTER) == 0)
+	    {
+	    	cmserr.cmsSignalError(xform.ContextID, lcms2.cmsERROR_NOT_SUITABLE, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_CANT_CHANGE_BUFFER_FORMAT), null);
+	        return false;
+	    }
+	    
+	    FromInput = cmspack._cmsGetFormatter(InputFormat,  lcms2_plugin.cmsFormatterInput, lcms2_plugin.CMS_PACK_FLAGS_16BITS).get16();
+	    ToOutput  = cmspack._cmsGetFormatter(OutputFormat, lcms2_plugin.cmsFormatterOutput, lcms2_plugin.CMS_PACK_FLAGS_16BITS).get16();
+	    
+	    if (FromInput == null || ToOutput == null)
+	    {
+	    	cmserr.cmsSignalError(xform.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_UNSUPPORTED_RASTER_FORMAT), null);
+	        return false;
+	    }
+	    
+	    xform.InputFormat  = InputFormat;
+	    xform.OutputFormat = OutputFormat;
+	    xform.FromInput = FromInput;
+	    xform.ToOutput  = ToOutput;
+	    return true;
 	}
 }

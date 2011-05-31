@@ -67,7 +67,7 @@ final class cmsintrp
 	}
 	
 	// Set the interpolation method
-	private static boolean _cmsSetInterpolationRoutine(cmsInterpParams p)
+	public static boolean _cmsSetInterpolationRoutine(cmsInterpParams p)
 	{
 	    // Invoke factory, possibly in the Plug-in
 	    p.Interpolation = Interpolators.run(p.nInputs, p.nOutputs, p.dwFlags);

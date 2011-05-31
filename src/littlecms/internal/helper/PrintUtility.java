@@ -339,7 +339,7 @@ final class PrintUtility
                 		if(formatCache != null && formatCache.length > 0)
                 		{
                 			//If there is a cache, remove it since the formatting is not valid
-                			formatCache[0] = null;
+                			formatCache[cacheIndex] = null;
                 		}
                 		break;
                 	}
@@ -501,6 +501,8 @@ final class PrintUtility
 	
 	private static final char THOUS_SEP = '\'';
 	
+	private static char DECIMAL;
+	
 	private static String SPECIFIERS;
 	private static String FLAGS;
 	private static String WIDTH_PRECISION;
@@ -515,6 +517,7 @@ final class PrintUtility
 	static
 	{
 		String temp = (String)Utility.singletonStorageGet(SPECIFIERS_UID);
+		DECIMAL = Double.toString(1.1).charAt(1);
 		if(temp == null)
 		{
 			SPECIFIERS = "cspdieEfFgGouxXn";
@@ -2262,13 +2265,6 @@ final class PrintUtility
     {
 		private static final int DEFAULT_PRECISION = 6; //Nearly every reference says 6 except www.cplusplus.com
 		
-		private static char decimalPoint;
-		
-		static
-		{
-			decimalPoint = Double.toString(1.1).charAt(1);
-		}
-		
         public FloatFormatElement(String format)
         {
         	super(format);
@@ -2369,7 +2365,7 @@ final class PrintUtility
                 {
 	                String temp = expBuf.toString();
 	                int tlen = temp.length();
-	            	int index = temp.indexOf(decimalPoint);
+	            	int index = temp.indexOf(DECIMAL);
 	            	
 	            	//Get the exponent
 	            	int exp = 0;
@@ -2428,7 +2424,7 @@ final class PrintUtility
 	            		char c = temp.charAt(i);
 	        			if(c != '0')
 	        			{
-	        				if(c != decimalPoint)
+	        				if(c != DECIMAL)
 	        				{
 	        					break;
 	        				}
@@ -2457,7 +2453,7 @@ final class PrintUtility
 	        			if(alt)
 	        			{
 	        				//Adjust
-	        				expBuf.delete(off + 2, expBuf.length()).insert(off + 1, decimalPoint); //Insert the decimal point
+	        				expBuf.delete(off + 2, expBuf.length()).insert(off + 1, DECIMAL); //Insert the decimal point
 	        			}
 	        			else
 	        			{
@@ -2466,7 +2462,7 @@ final class PrintUtility
 	        		}
 	        		else
 	        		{
-	        			expBuf.insert(off + 1, decimalPoint); //Insert the decimal point
+	        			expBuf.insert(off + 1, DECIMAL); //Insert the decimal point
 	        			//If not enough digits exist to match precision
 	        			int l = expBuf.length() - 2;
 	        			int p = this.precision == -1 ? DEFAULT_PRECISION : this.precision;
@@ -2542,7 +2538,7 @@ final class PrintUtility
 	            		
 	            		//First fixed-point
 	            		temp = fixedBuf.toString();
-	            		index = temp.indexOf(decimalPoint);
+	            		index = temp.indexOf(DECIMAL);
 	            		
 	            		if(index == -1)
 	            		{
@@ -2552,7 +2548,7 @@ final class PrintUtility
 	            		
 	            		//Now process the exponent
 	            		temp = expBuf.toString();
-	            		index = temp.indexOf(decimalPoint);
+	            		index = temp.indexOf(DECIMAL);
 	            		
 	            		if(index == -1)
 	            		{
@@ -2565,7 +2561,7 @@ final class PrintUtility
 	            		
 		            	//First process the fixed point
 	            		temp = fixedBuf.toString();
-	            		index = temp.indexOf(decimalPoint);
+	            		index = temp.indexOf(DECIMAL);
 	            		if(index != -1)
 	            		{
 	            			//Remove excess zeros
@@ -2575,7 +2571,7 @@ final class PrintUtility
 		            			if(c != '0')
 		            			{
 		            				int start = i;
-		            				if(c != decimalPoint)
+		            				if(c != DECIMAL)
 		            				{
 		            					start++;
 		            				}
@@ -2587,7 +2583,7 @@ final class PrintUtility
 		            	
 		            	//Now process the exponent
 	            		temp = expBuf.toString();
-	            		index = temp.indexOf(decimalPoint);
+	            		index = temp.indexOf(DECIMAL);
 	            		if(index != -1)
 	            		{
 		            		for(int i = temp.indexOf('e') - 1; i >= 0; i--)
@@ -2596,7 +2592,7 @@ final class PrintUtility
 		            			if(c != '0')
 		            			{
 		            				int start = i;
-		            				if(c != decimalPoint)
+		            				if(c != DECIMAL)
 		            				{
 		            					start++;
 		            				}
@@ -2632,7 +2628,7 @@ final class PrintUtility
         	if(flags != null && flags.indexOf(THOUS_SEP) >= 0)
         	{
 	        	int start = Character.isDigit(value.charAt(0)) ? 0 : 1;
-	        	int len = value.toString().indexOf('.');
+	        	int len = value.toString().indexOf(DECIMAL);
 	        	if(len == -1)
 	        	{
 	        		len = value.toString().indexOf(caps ? 'e' : 'E'); //Decimal might not exist but exponent does
@@ -2697,7 +2693,7 @@ final class PrintUtility
                 //To maintain decimal
                 if(p > 0)
                 {
-                	buf.append(decimalPoint);
+                	buf.append(DECIMAL);
                 	char[] chars = new char[p];
                     Arrays.fill(chars, '0');
                     buf.append(chars);
@@ -2712,7 +2708,7 @@ final class PrintUtility
                         //Create the floating point value by multiplication (mantissa * 2^exp), using really big numbers
                         //-Precision is not needed since it only covers decimal point
                         new LargeNumber(mantissa).multiply(new LargeNumber(exp)).toString(buf, true);
-                        buf.append(decimalPoint);
+                        buf.append(DECIMAL);
                         char[] chars = new char[p];
                         Arrays.fill(chars, '0');
                         buf.append(chars);
@@ -2752,7 +2748,7 @@ final class PrintUtility
                         //Decimal point
                         if (!rem.zero() && p >= 0)
                         {
-                            buf.append(decimalPoint);
+                            buf.append(DECIMAL);
                             while (p-- >= 0)
                             {
                                 if (rem.greaterThenOrEqual(exponent))
@@ -2779,7 +2775,7 @@ final class PrintUtility
                         }
                         else
                         {
-                        	buf.append(decimalPoint);
+                        	buf.append(DECIMAL);
                         	char[] chars = new char[p];
                             Arrays.fill(chars, '0');
                             buf.append(chars);
@@ -2799,7 +2795,7 @@ final class PrintUtility
 		                        		break;
 		                        	}
 		                        	char c = temps.charAt(i);
-		                        	if(c == decimalPoint)
+		                        	if(c == DECIMAL)
 		                        	{
 		                        		continue;
 		                        	}
@@ -2849,7 +2845,7 @@ final class PrintUtility
                         {
                             buf.append(result);
                         }
-                        buf.append(decimalPoint);
+                        buf.append(DECIMAL);
                         char[] chars = new char[p];
                         Arrays.fill(chars, '0');
                         buf.append(chars);
@@ -2863,7 +2859,7 @@ final class PrintUtility
                         //Now calculate the decimal portion if necessary
                         if (rem != 0 && p >= 0)
                         {
-                            buf.append(decimalPoint);
+                            buf.append(DECIMAL);
                             while (p-- >= 0) //Precision only affects the decimal portion so calculate until the number precision digits is met
                             {
                                 buf.append(rem / twoPower);
@@ -2875,7 +2871,7 @@ final class PrintUtility
                         }
                         else
                         {
-                        	buf.append(decimalPoint);
+                        	buf.append(DECIMAL);
                         	char[] chars = new char[p];
                             Arrays.fill(chars, '0');
                             buf.append(chars);
@@ -2895,7 +2891,7 @@ final class PrintUtility
 		                        		break;
 		                        	}
 		                        	char c = temps.charAt(i);
-		                        	if(c == decimalPoint)
+		                        	if(c == DECIMAL)
 		                        	{
 		                        		continue;
 		                        	}
@@ -2922,7 +2918,7 @@ final class PrintUtility
             }
             
             //Trim precision if necessary (any of the division operations add an extra digit). Only handle greater lengths.
-            int index = buf.toString().indexOf(decimalPoint);
+            int index = buf.toString().indexOf(DECIMAL);
             if(buf.length() - 1 - index > tp)
             {
             	//Not rounding
@@ -2975,7 +2971,7 @@ final class PrintUtility
                 }
                 else
                 {
-                    if (c == '.' && (w < len && Character.isDigit(value.charAt(org + w + 1))))
+                    if (c == DECIMAL && (w < len && Character.isDigit(value.charAt(org + w + 1))))
                     {
                         //Decimal and correct format
                         w++;

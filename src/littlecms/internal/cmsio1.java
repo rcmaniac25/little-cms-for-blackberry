@@ -444,6 +444,25 @@ final class cmsio1
 	    return Lut;
 	}
 	
+	// Change CLUT interpolation to trilinear
+	private static void ChangeInterpolationToTrilinear(cmsPipeline Lut)
+	{
+	    lcms2.cmsStage Stage;
+	    
+	    for (Stage = cmslut.cmsPipelineGetPtrToFirstStage(Lut);
+	        Stage != null;
+	        Stage = cmslut.cmsStageNext(Stage))
+	    {
+	    	if (cmslut.cmsStageType(Stage) == lcms2.cmsSigCLutElemType)
+	    	{
+	    		lcms2_internal._cmsStageCLutData CLUT = (lcms2_internal._cmsStageCLutData)Stage.Data;
+	    		
+	    		CLUT.Params.dwFlags |= lcms2_plugin.CMS_LERP_FLAGS_TRILINEAR;
+	    		cmsintrp._cmsSetInterpolationRoutine(CLUT.Params);
+	    	}
+	    }
+	}
+	
 	// Create an output MPE LUT from agiven profile. Version mismatches are handled here
 	public static cmsPipeline _cmsReadOutputLUT(cmsHPROFILE hProfile, int Intent)
 	{
@@ -480,6 +499,17 @@ final class cmsio1
 	        
 	        // The profile owns the Lut, so we need to copy it
 	        Lut = cmslut.cmsPipelineDup(Lut);
+	        if (Lut == null)
+	        {
+	        	return null;
+	        }
+	        
+	        // Now it is time for a controversial stuff. I found that for 3D LUTS using
+	        // Lab used as indexer space,  trilinear interpolation should be used
+	        if (cmsio0.cmsGetPCS(hProfile) == lcms2.cmsSigLabData)
+	        {
+	        	ChangeInterpolationToTrilinear(Lut);
+	        }
 	        
 	        // We need to adjust data only for Lab and Lut16 type
 	        if (OriginalType != lcms2.cmsSigLut16Type || cmsio0.cmsGetPCS(hProfile) != lcms2.cmsSigLabData)
@@ -550,6 +580,17 @@ final class cmsio1
 	    
 	    // The profile owns the Lut, so we need to copy it
 	    Lut = cmslut.cmsPipelineDup(Lut);
+	    if (Lut == null)
+	    {
+	    	return null;
+	    }
+	    
+	    // Now it is time for a controversial stuff. I found that for 3D LUTS using
+	    // Lab used as indexer space,  trilinear interpolation should be used
+	    if (cmsio0.cmsGetColorSpace(hProfile) == lcms2.cmsSigLabData)
+	    {
+	    	ChangeInterpolationToTrilinear(Lut);
+	    }
 	    
 	    // After reading it, we have info about the original type
 	    OriginalType =  cmsio0._cmsGetTagTrueType(hProfile, tag16);

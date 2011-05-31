@@ -4,13 +4,10 @@
 TODO:
 Update LCMS 4 BB to LCMS 2.1
 -cmsintrp
--cmsio0
--cmsio1
 -cmslut
 -cmspack
 -cmstypes
 -cmsvirt
--cmsxform
 Testing (LCMS 2.1)
 Get full JavaDoc to be created for lcms
 Release version 2.1
@@ -27,13 +24,28 @@ Update printf and scanf to follow: http://pubs.opengroup.org/onlinepubs/00969539
 --add formatter: C
 --add formatter: S
 --add error returns
+--make sure format support is limited as specified in 6th paragraph in specification
 --make sure that "alt" format works properly
 --make sure that "length" components are used properly (they are relatively pointless but increase performance a little since the guess work is removed from data type)
 --make sure that "d, i, o, u, x, X" print out properly
 --make sure that "f, F, e, E, a, A" print out properly (in conjunction with the rest of next "todo").
 --make sure floating point print, prints exponent notation properly (AKA non-zero digits are brought to the front. Might require separate exponent print function [probably desirable])
 -scanf
---TODO
+--add unformatter: a, A
+--add unformatter: [
+--add unformatter: p
+--add unformatter: C
+--add unformatter: S
+--add error returns
+--add support for explicit arguments (the %arg_index$format)
+--make sure format support is limited as specified in 3rd paragraph in specification
+--make sure that proper processing of input and format occur (last 2 paraghraphs before length information)
+--make sure that "length" components are used properly (they are relatively pointless but increase performance a little since the guess work is removed from data type)
+--make sure that formatter 'i' handles data correctly based on specification of strtol with base 0
+--make sure that "d, i, o, u, x, X" read properly
+--make sure that "a, A, e, E, f, F, g, G" read properly
+--make sure that "s, c" read properly
+
 Try to figure out at least the two todo in VirtualPointer
 -Also, partial rewrite. Data, type, and length should be stored in own type. This can then be passed around between different virtual pointer instances (which can have different positions and be doing different things). This removes the "parent/child" pointers and replaces it with "server/client" and allows GC to get rid of everything when nothing is referencing the "internal pointer".
 
