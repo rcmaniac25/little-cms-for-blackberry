@@ -151,7 +151,7 @@ final class cmspack
 		InputFormatters16 = new cmsFormatters16[]{
 			//			    Type                             Mask                              Function
 		    //  ----------------------------   ------------------------------------  ----------------------------
-			new cmsFormatters16(lcms2.TYPE_Lab_DBL, ANYPLANAR, new cmsFormatter16()
+			new cmsFormatters16(lcms2.TYPE_Lab_DBL, ANYPLANAR|ANYEXTRA, new cmsFormatter16()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -182,11 +182,12 @@ final class cmspack
 				    else
 				    {
 				    	cmspcs.cmsFloat2LabEncoded(Values, (cmsCIELab)proc.readObject(cmsCIELab.class, true));
+				    	proc.movePosition(lcms2.T_EXTRA(CMMcargo.InputFormat) * /*sizeof(cmsFloat64Number)*/8);
 				    }
 					return Buffer;
 				}
 			}),
-			new cmsFormatters16(lcms2.TYPE_XYZ_DBL, ANYPLANAR, new cmsFormatter16()
+			new cmsFormatters16(lcms2.TYPE_XYZ_DBL, ANYPLANAR|ANYEXTRA, new cmsFormatter16()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -217,6 +218,7 @@ final class cmspack
 				    else
 				    {
 				    	cmspcs.cmsFloat2XYZEncoded(Values, (cmsCIEXYZ)proc.readObject(cmsCIEXYZ.class, true));
+				    	proc.movePosition(lcms2.T_EXTRA(CMMcargo.InputFormat) * /*sizeof(cmsFloat64Number)*/8);
 				    }
 					return Buffer;
 				}
@@ -348,6 +350,21 @@ final class cmspack
 				    return Buffer;
 				}
 			}),
+			new cmsFormatters16((1 << lcms2.CHANNELS_SHIFT_VALUE)|(1 << lcms2.BYTES_SHIFT_VALUE)|(1 << lcms2.EXTRA_SHIFT_VALUE), ANYSPACE, new cmsFormatter16()
+			{
+				public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride)
+				{
+					//Unroll1ByteSkip1
+					
+//#ifdef CMS_REALLOC_PTR
+					Buffer = new VirtualPointer(Buffer);
+//#endif
+					
+					Values[0] = Values[1] = Values[2] = lcms2_internal.FROM_8_TO_16(Buffer.getProcessor().readInt8(true));	// L
+					Buffer.movePosition(1);
+				    return Buffer;
+				}
+			}),
 			new cmsFormatters16((1 << lcms2.CHANNELS_SHIFT_VALUE)|(1 << lcms2.BYTES_SHIFT_VALUE)|(2 << lcms2.EXTRA_SHIFT_VALUE), ANYSPACE, new cmsFormatter16()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride)
@@ -377,12 +394,11 @@ final class cmspack
 				    return Buffer;
 				}
 			}),
-			
-			new cmsFormatters16((2 << lcms2.CHANNELS_SHIFT_VALUE)|(1 << lcms2.BYTES_SHIFT_VALUE), ANYSPACE, new cmsFormatter16()
+			new cmsFormatters16((lcms2.PT_MCH2 << lcms2.COLORSPACE_SHIFT_VALUE)|(2 << lcms2.CHANNELS_SHIFT_VALUE)|(1 << lcms2.BYTES_SHIFT_VALUE), 0, new cmsFormatter16()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride)
 				{
-					// Monochrome + alpha. Alpha is lost
+					// for duplex
 					
 					//Unroll2Bytes
 					
@@ -391,24 +407,8 @@ final class cmspack
 //#endif
 					
 					VirtualPointer.TypeProcessor proc = Buffer.getProcessor();
-					Values[0] = Values[1] = Values[2] = lcms2_internal.FROM_8_TO_16(proc.readInt8(true));	// L
-					Values[3] = lcms2_internal.FROM_8_TO_16(proc.readInt8(true));							// alpha
-				    return Buffer;
-				}
-			}),
-			new cmsFormatters16((2 << lcms2.CHANNELS_SHIFT_VALUE)|(1 << lcms2.BYTES_SHIFT_VALUE)|(1 << lcms2.SWAPFIRST_SHIFT_VALUE), ANYSPACE, new cmsFormatter16()
-			{
-				public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride)
-				{
-					//Unroll2ByteSwapFirst
-					
-//#ifdef CMS_REALLOC_PTR
-					Buffer = new VirtualPointer(Buffer);
-//#endif
-					
-					VirtualPointer.TypeProcessor proc = Buffer.getProcessor();
-					Values[3] = lcms2_internal.FROM_8_TO_16(proc.readInt8(true));							// alpha
-					Values[0] = Values[1] = Values[2] = lcms2_internal.FROM_8_TO_16(proc.readInt8(true));	// L
+					Values[0] = lcms2_internal.FROM_8_TO_16(proc.readInt8(true));	// ch1
+					Values[1] = lcms2_internal.FROM_8_TO_16(proc.readInt8(true));	// ch2
 				    return Buffer;
 				}
 			}),
@@ -792,30 +792,12 @@ final class cmspack
 //#endif
 					
 					VirtualPointer.TypeProcessor proc = Buffer.getProcessor();
-					Values[0] = Values[1] = Values[2] = proc.readInt16(true);	// L
-					Values[3] = proc.readInt16(true);							// alpha
+					Values[0] = proc.readInt16(true);	// ch1
+					Values[1] = proc.readInt16(true);	// ch2
 					
 				    return Buffer;
 				}
 			}),
-			new cmsFormatters16((2 << lcms2.CHANNELS_SHIFT_VALUE)|(2 << lcms2.BYTES_SHIFT_VALUE)|(1 << lcms2.SWAPFIRST_SHIFT_VALUE), ANYSPACE, new cmsFormatter16()
-			{
-				public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride)
-				{
-					//Unroll2WordSwapFirst
-					
-//#ifdef CMS_REALLOC_PTR
-					Buffer = new VirtualPointer(Buffer);
-//#endif
-					
-					VirtualPointer.TypeProcessor proc = Buffer.getProcessor();
-					Values[3] = proc.readInt16(true);							// alpha
-					Values[0] = Values[1] = Values[2] = proc.readInt16(true);	// L
-					
-				    return Buffer;
-				}
-			}),
-			
 			new cmsFormatters16((3 << lcms2.CHANNELS_SHIFT_VALUE)|(2 << lcms2.BYTES_SHIFT_VALUE), ANYSPACE, new cmsFormatter16()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride)
@@ -1087,7 +1069,7 @@ final class cmspack
 		};
 	}
 	
-	private static final int DEFAULT_FORM_IN_16_COUNT = 40;
+	private static final int DEFAULT_FORM_IN_16_COUNT = 39;
 	
 	// Bit fields set to one in the mask are not compared
 	private static cmsFormatter _cmsGetStockInputFormatter(int dwInput, int dwFlags)
@@ -1136,7 +1118,7 @@ final class cmspack
 			//			    Type                                          Mask                  Function
 			//  ----------------------------   ------------------------------------  ----------------------------
 				
-			new cmsFormatters16(lcms2.TYPE_Lab_DBL, ANYPLANAR, new cmsFormatter16()
+			new cmsFormatters16(lcms2.TYPE_Lab_DBL, ANYPLANAR|ANYEXTRA, new cmsFormatter16()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -1171,7 +1153,7 @@ final class cmspack
 					return Buffer;
 				}
 			}),
-			new cmsFormatters16(lcms2.TYPE_XYZ_DBL, ANYPLANAR, new cmsFormatter16()
+			new cmsFormatters16(lcms2.TYPE_XYZ_DBL, ANYPLANAR|ANYEXTRA, new cmsFormatter16()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -2318,7 +2300,7 @@ final class cmspack
 	
 	//-------------------------------------------------------------------------------------------------------------------
 	
-	// True cmsFloat32Number transformation.
+	// True float transformation.
 	
 	private static cmsFormattersFloat[] InputFormattersFloat;
 	
@@ -2327,7 +2309,7 @@ final class cmspack
 		InputFormattersFloat = new cmsFormattersFloat[]{
 		    //    Type                                          Mask                  Function
 		    //  ----------------------------   ------------------------------------  ----------------------------
-			new cmsFormattersFloat(lcms2.TYPE_Lab_DBL, ANYPLANAR, new cmsFormatterFloat()
+			new cmsFormattersFloat(lcms2.TYPE_Lab_DBL, ANYPLANAR|ANYEXTRA, new cmsFormatterFloat()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, float[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -2356,12 +2338,13 @@ final class cmspack
 				    	Values[0] = (float)(proc.readDouble(true) / 100.0);			// from 0..100 to 0..1
 				    	Values[1] = (float)((proc.readDouble(true) + 128) / 255.0);	// form -128..+127 to 0..1
 				    	Values[2] = (float)((proc.readDouble(true) + 128) / 255.0);
+				    	proc.movePosition(8 * lcms2.T_EXTRA(CMMcargo.InputFormat));
 				    }
 				    
 				    return Buffer;
 				}
 			}),
-			new cmsFormattersFloat(lcms2.TYPE_Lab_FLT, ANYPLANAR, new cmsFormatterFloat()
+			new cmsFormattersFloat(lcms2.TYPE_Lab_FLT, ANYPLANAR|ANYEXTRA, new cmsFormatterFloat()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, float[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -2390,12 +2373,13 @@ final class cmspack
 				    	Values[0] = (float)(proc.readFloat(true) / 100.0);			// from 0..100 to 0..1
 				    	Values[1] = (float)((proc.readFloat(true) + 128) / 255.0);	// form -128..+127 to 0..1
 				    	Values[2] = (float)((proc.readFloat(true) + 128) / 255.0);
+				    	proc.movePosition(4 * lcms2.T_EXTRA(CMMcargo.InputFormat));
 				    }
 				    
 				    return Buffer;
 				}
 			}),
-			new cmsFormattersFloat(lcms2.TYPE_XYZ_DBL, ANYPLANAR, new cmsFormatterFloat()
+			new cmsFormattersFloat(lcms2.TYPE_XYZ_DBL, ANYPLANAR|ANYEXTRA, new cmsFormatterFloat()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, float[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -2424,12 +2408,13 @@ final class cmspack
 				    	Values[0] = (float)(proc.readDouble(true) / lcms2_internal.MAX_ENCODEABLE_XYZ);
 				    	Values[1] = (float)(proc.readDouble(true) / lcms2_internal.MAX_ENCODEABLE_XYZ);
 				    	Values[2] = (float)(proc.readDouble(true) / lcms2_internal.MAX_ENCODEABLE_XYZ);
+				    	proc.movePosition(8 * lcms2.T_EXTRA(CMMcargo.InputFormat));
 				    }
 				    
 				    return Buffer;
 				}
 			}),
-			new cmsFormattersFloat(lcms2.TYPE_XYZ_FLT, ANYPLANAR, new cmsFormatterFloat()
+			new cmsFormattersFloat(lcms2.TYPE_XYZ_FLT, ANYPLANAR|ANYEXTRA, new cmsFormatterFloat()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, float[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -2456,6 +2441,7 @@ final class cmspack
 				    	Values[0] = (float)(proc.readFloat(true) / lcms2_internal.MAX_ENCODEABLE_XYZ);
 				    	Values[1] = (float)(proc.readFloat(true) / lcms2_internal.MAX_ENCODEABLE_XYZ);
 				    	Values[2] = (float)(proc.readFloat(true) / lcms2_internal.MAX_ENCODEABLE_XYZ);
+				    	proc.movePosition(4 * lcms2.T_EXTRA(CMMcargo.InputFormat));
 				    }
 				    
 				    return Buffer;
@@ -2562,7 +2548,7 @@ final class cmspack
 	private static void setupOutputFormatterFloat()
 	{
 		OutputFormattersFloat = new cmsFormattersFloat[]{
-			new cmsFormattersFloat(lcms2.TYPE_Lab_FLT, ANYPLANAR, new cmsFormatterFloat()
+			new cmsFormattersFloat(lcms2.TYPE_Lab_FLT, ANYPLANAR|ANYEXTRA, new cmsFormatterFloat()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, float[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -2596,7 +2582,7 @@ final class cmspack
 				    return Buffer;
 				}
 			}),
-			new cmsFormattersFloat(lcms2.TYPE_XYZ_FLT, ANYPLANAR, new cmsFormatterFloat()
+			new cmsFormattersFloat(lcms2.TYPE_XYZ_FLT, ANYPLANAR|ANYEXTRA, new cmsFormatterFloat()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, float[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -2632,7 +2618,7 @@ final class cmspack
 				    return Buffer;
 				}
 			}),
-			new cmsFormattersFloat(lcms2.TYPE_Lab_DBL, ANYPLANAR, new cmsFormatterFloat()
+			new cmsFormattersFloat(lcms2.TYPE_Lab_DBL, ANYPLANAR|ANYEXTRA, new cmsFormatterFloat()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, float[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -2666,7 +2652,7 @@ final class cmspack
 				    return Buffer;
 				}
 			}),
-			new cmsFormattersFloat(lcms2.TYPE_XYZ_DBL, ANYPLANAR, new cmsFormatterFloat()
+			new cmsFormattersFloat(lcms2.TYPE_XYZ_DBL, ANYPLANAR|ANYEXTRA, new cmsFormatterFloat()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, float[] Values, VirtualPointer Buffer, int Stride)
 				{

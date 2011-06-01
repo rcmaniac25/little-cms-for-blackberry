@@ -1,21 +1,12 @@
---Last update: 05/30/2011--
+--Last update: 06/01/2011--
 --Revision Used: ??/??/2011-- (the date on which the source code was pulled from GIT)
 
 TODO:
-Update LCMS 4 BB to LCMS 2.1
--cmsintrp
--cmslut
--cmspack
--cmstypes
--cmsvirt
-Testing (LCMS 2.1)
-Get full JavaDoc to be created for lcms
-Release version 2.1
-
 Update LCMS 4 BB to the same level as the GIT build
 If Test system has been updated then do testing
 Get full JavaDoc to be created for lcms
 
+Go through cmstypes and adjust "SizeOfTag" so it acts like an unsigned int (for types that could be larger then an int, such as those that handle Strings)
 Comment PrintUtility and LargeNumber
 Update PrintUtility FloatFormat so that it properly processes the values with exponent. Example: Double.MIN_VALUE is a subnormal number. The default manner of execution would consider the value to be zero since the number is so small. Make it so that it will scale the value for exponent.
 Update printf and scanf to follow: http://pubs.opengroup.org/onlinepubs/009695399/functions/printf.html, and http://pubs.opengroup.org/onlinepubs/009695399/functions/scanf.html (dedicated functions for printing 'e' and 'a', etc.)

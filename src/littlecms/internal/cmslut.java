@@ -172,8 +172,16 @@ final class cmslut
 	{
 		public void run(final float[] In, float[] Out, final cmsStage mpe)
 		{
-			_cmsStageToneCurvesData Data = (_cmsStageToneCurvesData)mpe.Data;
+			_cmsStageToneCurvesData Data;
 		    int i;
+			
+			lcms2_internal._cmsAssert(mpe != null, "mpe != null");
+			
+			Data = (_cmsStageToneCurvesData)mpe.Data;
+		    if (Data == null)
+		    {
+		    	return;
+		    }
 		    
 		    if (Data.TheCurves == null)
 		    {
@@ -191,8 +199,16 @@ final class cmslut
 	{
 		public void run(cmsStage mpe)
 		{
-			_cmsStageToneCurvesData Data = (_cmsStageToneCurvesData)mpe.Data;
+			_cmsStageToneCurvesData Data;
 		    int i;
+		    
+		    lcms2_internal._cmsAssert(mpe != null, "mpe != null");
+		    
+		    Data = (_cmsStageToneCurvesData)mpe.Data;
+		    if (Data == null)
+		    {
+		    	return;
+		    }
 		    
 		    if (Data.TheCurves != null)
 		    {
@@ -266,6 +282,8 @@ final class cmslut
 	    
 	    NewElem = new _cmsStageToneCurvesData();
 	    
+	    NewMPE.Data = NewElem;
+	    
 	    NewElem.nCurves   = nChannels;
 	    NewElem.TheCurves = new cmsToneCurve[nChannels];
 	    
@@ -286,8 +304,6 @@ final class cmslut
 	            return null;
 	        }
 	    }
-	    
-	    NewMPE.Data = NewElem;
 	    
 	    return NewMPE;
 	}
@@ -395,6 +411,18 @@ final class cmslut
 		n = Rows * Cols;
 		
 		// Check for overflow
+		if (n == 0)
+		{
+			return null;
+		}
+	    if (n >= 0xffffffffL / Cols)
+	    {
+	    	return null;
+	    }
+	    if (n >= 0xffffffffL / Rows)
+	    {
+	    	return null;
+	    }
 		if (n < Rows || n < Cols)
 		{
 			return null;
@@ -465,11 +493,25 @@ final class cmslut
 	// Given an hypercube of b dimensions, with Dims[] number of nodes by dimension, calculate the total amount of nodes
 	private static int CubeSize(final int[] Dims, int b)
 	{
-	    int rv;
+	    int rv, dim;
+	    
+	    lcms2_internal._cmsAssert(Dims != null, "Dims != null");
 	    
 	    for (rv = 1; b > 0; b--)
 	    {
-	    	rv *= (Dims[b-1] & 0xFFFFFFFFL);
+	        dim = Dims[b-1];
+	        if (dim == 0)
+	        {
+	        	return 0; // Error
+	        }
+	        
+	        rv *= dim;
+	        
+	        // Check for overflow
+	        if (rv > 0xffffffffL / dim)
+	        {
+	        	return 0;
+	        }
 	    }
 	    
 	    return rv;
@@ -552,8 +594,16 @@ final class cmslut
 		
 		NewElem = new _cmsStageCLutData();
 		
+		NewMPE.Data = NewElem;
+		
 		NewElem.nEntries = n = outputChan * CubeSize(clutPoints, inputChan);
 		NewElem.HasFloatValues = false;
+		
+		if (n == 0)
+		{
+	        cmsStageFree(NewMPE);
+	        return null;
+	    }
 		
 		NewElem.Tab  = cmserr._cmsCalloc(ContextID, n, /*sizeof(cmsUInt16Number)*/2);
 		if (NewElem.Tab == null)
@@ -577,8 +627,6 @@ final class cmslut
 		{
 			return null;
 		}
-		
-		NewMPE.Data = NewElem;
 		
 		return NewMPE;
 	}
@@ -618,6 +666,8 @@ final class cmslut
 		_cmsStageCLutData NewElem;
 		cmsStage NewMPE;
 		
+		lcms2_internal._cmsAssert(clutPoints != null, "clutPoints != null");
+		
 		NewMPE = _cmsStageAllocPlaceholder(ContextID, lcms2.cmsSigCLutElemType, inputChan, outputChan,
 		        EvaluateCLUTfloat, CLUTElemDup, CLutElemTypeFree, null );
 		
@@ -628,8 +678,17 @@ final class cmslut
 		
 		NewElem = new _cmsStageCLutData();
 		
+		NewMPE.Data = NewElem;
+
+	    // There is a potential integer overflow on conputing n and nEntries.
 		NewElem.nEntries = n = outputChan * CubeSize(clutPoints, inputChan);
 		NewElem.HasFloatValues = true;
+		
+		if (n == 0)
+		{
+	        cmsStageFree(NewMPE);
+	        return null;
+	    }
 		
 		NewElem.Tab  = cmserr._cmsCalloc(ContextID, n, /*sizeof(cmsFloat32Number)*/4);
 		if (NewElem.Tab == null)
@@ -653,8 +712,6 @@ final class cmslut
 		{
 			return null;
 		}
-		
-		NewMPE.Data = NewElem;
 		
 		return NewMPE;
 	}
@@ -736,6 +793,10 @@ final class cmslut
 	    }
 	    
 	    nTotalPoints = CubeSize(nSamples, nInputs);
+	    if (nTotalPoints == 0)
+	    {
+	    	return false;
+	    }
 	    
 	    index = 0;
 	    
@@ -812,6 +873,10 @@ final class cmslut
 	    }
 	    
 	    nTotalPoints = CubeSize(nSamples, nInputs);
+	    if (nTotalPoints == 0)
+	    {
+	    	return false;
+	    }
 	    
 	    index = 0;
 	    for (i = 0; i < nTotalPoints; i++)
@@ -877,6 +942,10 @@ final class cmslut
 	    }
 	    
 	    nTotalPoints = CubeSize(clutPoints, nInputs);
+	    if (nTotalPoints == 0)
+	    {
+	    	return false;
+	    }
 	    
 	    for (i = 0; i < nTotalPoints; i++)
 	    {
@@ -909,6 +978,10 @@ final class cmslut
 	    }
 	    
 	    nTotalPoints = CubeSize(clutPoints, nInputs);
+	    if (nTotalPoints == 0)
+	    {
+	    	return false;
+	    }
 	    
 	    for (i = 0; i < nTotalPoints; i++)
 	    {
@@ -1358,6 +1431,9 @@ final class cmslut
 	public static void cmsPipelineInsertStage(cmsPipeline lut, int loc, cmsStage mpe)
 	{
 	    cmsStage Anterior = null, pt;
+	    
+	    lcms2_internal._cmsAssert(lut != null, "lut != null");
+	    lcms2_internal._cmsAssert(mpe != null, "mpe != null");
 	    
 	    switch (loc)
 	    {

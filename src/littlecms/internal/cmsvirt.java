@@ -1344,14 +1344,16 @@ final class cmsvirt
 	
 	private static class cmsAllowedLUT
 	{
-		public boolean IsV4;   // Is a V4 tag?
-	    public int LutType;    // The LUT type
-	    public int nTypes;     // Number of types (up to 5)
-	    public int[] MpeTypes; // 5 is the maximum number
+		public boolean IsV4;	// Is a V4 tag?
+		public int RequiredTag;	// Set to 0 for both types
+	    public int LutType;		// The LUT type
+	    public int nTypes;		// Number of types (up to 5)
+	    public int[] MpeTypes;	// 5 is the maximum number
 	    
-	    public cmsAllowedLUT(boolean IsV4, int LutType, int nTypes, int[] MpeTypes)
+	    public cmsAllowedLUT(boolean IsV4, int RequiredTag, int LutType, int nTypes, int[] MpeTypes)
 	    {
 	    	this.IsV4 = IsV4;
+	    	this.RequiredTag = RequiredTag;
 	    	this.LutType = LutType;
 	    	this.nTypes = nTypes;
 	    	this.MpeTypes = new int[5];
@@ -1364,16 +1366,16 @@ final class cmsvirt
 	static
 	{
 		AllowedLUTTypes = new cmsAllowedLUT[]{
-			new cmsAllowedLUT(false, lcms2.cmsSigLut16Type, 4, new int[]{lcms2.cmsSigMatrixElemType, lcms2.cmsSigCurveSetElemType, lcms2.cmsSigCLutElemType, lcms2.cmsSigCurveSetElemType}),
-			new cmsAllowedLUT(false, lcms2.cmsSigLut16Type, 3, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigCLutElemType, lcms2.cmsSigCurveSetElemType}),
-			new cmsAllowedLUT(true, lcms2.cmsSigLutAtoBType, 1, new int[]{lcms2.cmsSigCurveSetElemType}),
-			new cmsAllowedLUT(true, lcms2.cmsSigLutAtoBType, 3, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigMatrixElemType, lcms2.cmsSigCurveSetElemType}),
-			new cmsAllowedLUT(true, lcms2.cmsSigLutAtoBType, 3, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigCLutElemType, lcms2.cmsSigCurveSetElemType}),
-			new cmsAllowedLUT(true, lcms2.cmsSigLutAtoBType, 5, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigCLutElemType, lcms2.cmsSigCurveSetElemType, lcms2.cmsSigMatrixElemType, lcms2.cmsSigCurveSetElemType}),
-			new cmsAllowedLUT(true, lcms2.cmsSigLutBtoAType, 1, new int[]{lcms2.cmsSigCurveSetElemType}),
-			new cmsAllowedLUT(true, lcms2.cmsSigLutBtoAType, 3, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigMatrixElemType, lcms2.cmsSigCurveSetElemType}),
-			new cmsAllowedLUT(true, lcms2.cmsSigLutBtoAType, 3, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigCLutElemType, lcms2.cmsSigCurveSetElemType}),
-			new cmsAllowedLUT(true, lcms2.cmsSigLutBtoAType, 5, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigMatrixElemType, lcms2.cmsSigCurveSetElemType, lcms2.cmsSigCLutElemType, lcms2.cmsSigCurveSetElemType})
+			new cmsAllowedLUT(false, 0, lcms2.cmsSigLut16Type, 4, new int[]{lcms2.cmsSigMatrixElemType, lcms2.cmsSigCurveSetElemType, lcms2.cmsSigCLutElemType, lcms2.cmsSigCurveSetElemType}),
+			new cmsAllowedLUT(false, 0, lcms2.cmsSigLut16Type, 3, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigCLutElemType, lcms2.cmsSigCurveSetElemType}),
+			new cmsAllowedLUT(true, 0, lcms2.cmsSigLutAtoBType, 1, new int[]{lcms2.cmsSigCurveSetElemType}),
+			new cmsAllowedLUT(true, lcms2.cmsSigAToB0Tag, lcms2.cmsSigLutAtoBType, 3, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigMatrixElemType, lcms2.cmsSigCurveSetElemType}),
+			new cmsAllowedLUT(true, lcms2.cmsSigAToB0Tag, lcms2.cmsSigLutAtoBType, 3, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigCLutElemType, lcms2.cmsSigCurveSetElemType}),
+			new cmsAllowedLUT(true, lcms2.cmsSigAToB0Tag, lcms2.cmsSigLutAtoBType, 5, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigCLutElemType, lcms2.cmsSigCurveSetElemType, lcms2.cmsSigMatrixElemType, lcms2.cmsSigCurveSetElemType}),
+			new cmsAllowedLUT(true, lcms2.cmsSigBToA0Tag, lcms2.cmsSigLutBtoAType, 1, new int[]{lcms2.cmsSigCurveSetElemType}),
+			new cmsAllowedLUT(true, lcms2.cmsSigBToA0Tag, lcms2.cmsSigLutBtoAType, 3, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigMatrixElemType, lcms2.cmsSigCurveSetElemType}),
+			new cmsAllowedLUT(true, lcms2.cmsSigBToA0Tag, lcms2.cmsSigLutBtoAType, 3, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigCLutElemType, lcms2.cmsSigCurveSetElemType}),
+			new cmsAllowedLUT(true, lcms2.cmsSigBToA0Tag, lcms2.cmsSigLutBtoAType, 5, new int[]{lcms2.cmsSigCurveSetElemType, lcms2.cmsSigMatrixElemType, lcms2.cmsSigCurveSetElemType, lcms2.cmsSigCLutElemType, lcms2.cmsSigCurveSetElemType})
 		};
 	}
 
@@ -1400,7 +1402,7 @@ final class cmsvirt
 	    return (n == Tab.nTypes);
 	}
 	
-	private static cmsAllowedLUT FindCombination(final cmsPipeline Lut, boolean IsV4)
+	private static cmsAllowedLUT FindCombination(final cmsPipeline Lut, boolean IsV4, int DestinationTag)
 	{
 	    int n;
 	    
@@ -1412,6 +1414,11 @@ final class cmsvirt
 	        {
 	        	continue;
 	        }
+	        if ((Tab.RequiredTag != 0) && (Tab.RequiredTag != DestinationTag))
+	        {
+	        	continue;
+	        }
+	        
 	        if (CheckOne(Tab, Lut))
 	        {
 	        	return Tab;
@@ -1432,6 +1439,7 @@ final class cmsvirt
 	    cmsStage mpe;
 	    cmsContext ContextID = cmsxform.cmsGetTransformContextID(hTransform);
 	    cmsAllowedLUT AllowedLUT;
+	    int DestinationTag;
 	    
 	    lcms2_internal._cmsAssert(hTransform != null, "hTransform != null");
 	    
@@ -1461,10 +1469,26 @@ final class cmsvirt
 	    }
 	    
 	    // On the output side too
-	    if ((xform.ExitColorSpace) == lcms2.cmsSigLabData && (Version < 4.0)) {
-
+	    if ((xform.ExitColorSpace) == lcms2.cmsSigLabData && (Version < 4.0))
+	    {
 	    	cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_END, cmslut._cmsStageAllocLabV4ToV2(ContextID));        
 	    }
+	    
+	    hProfile = cmsio0.cmsCreateProfilePlaceholder(ContextID);
+	    if (hProfile == null)
+	    {
+	    	// can't allocate
+	    	if (LUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(LUT);
+		    }
+		    cmsio0.cmsCloseProfile(hProfile);
+		    return null;
+	    }
+	    
+	    cmsio0.cmsSetProfileVersion(hProfile, Version);
+	    
+	    FixColorSpaces(hProfile, xform.EntryColorSpace, xform.ExitColorSpace, dwFlags);
 	    
 	    // Optimize the LUT and precalculate a devicelink
 	    
@@ -1477,6 +1501,15 @@ final class cmsvirt
 	    FrmIn  = lcms2.COLORSPACE_SH(ColorSpaceBitsIn) | lcms2.CHANNELS_SH(ChansIn)|(2 << lcms2.BYTES_SHIFT_VALUE);
 	    FrmOut = lcms2.COLORSPACE_SH(ColorSpaceBitsOut) | lcms2.CHANNELS_SH(ChansOut)|(2 << lcms2.BYTES_SHIFT_VALUE);
 	    
+	    if (cmsio0.cmsGetDeviceClass(hProfile) == lcms2.cmsSigOutputClass)
+	    {
+	    	DestinationTag = lcms2.cmsSigBToA0Tag;
+	    }
+	    else
+	    {
+	    	DestinationTag = lcms2.cmsSigAToB0Tag;
+	    }
+	    
 	    // Check if the profile/version can store the result
 	    if ((dwFlags & lcms2.cmsFLAGS_FORCE_CLUT) != 0)
 	    {
@@ -1484,7 +1517,7 @@ final class cmsvirt
 	    }
 	    else
 	    {
-	    	AllowedLUT = FindCombination(LUT, Version >= 4.0);
+	    	AllowedLUT = FindCombination(LUT, Version >= 4.0, DestinationTag);
 	    }
 	    
 	    if (AllowedLUT == null)
@@ -1499,7 +1532,7 @@ final class cmsvirt
 	        FrmOut = temp2[0];
 	        dwFlags = temp3[0];
 	        LUT = temp4[0];
-	        AllowedLUT = FindCombination(LUT, Version >= 4.0);
+	        AllowedLUT = FindCombination(LUT, Version >= 4.0, DestinationTag);
 	    }
 	    
 	    // If no way, then force CLUT that for sure can be written
@@ -1523,7 +1556,7 @@ final class cmsvirt
 	        	cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_END,   cmslut._cmsStageAllocIdentityCurves(ContextID, ChansOut));   
 	        }
 	        
-	        AllowedLUT = FindCombination(LUT, Version >= 4.0);
+	        AllowedLUT = FindCombination(LUT, Version >= 4.0, DestinationTag);
 	    }
 	    
 	    // Somethings is wrong...
@@ -1531,26 +1564,11 @@ final class cmsvirt
 	    {
 	    	if (LUT != null)
 		    {
-		    	cmslut.cmsPipelineFree(LUT);       
+		    	cmslut.cmsPipelineFree(LUT);
 		    }
 		    cmsio0.cmsCloseProfile(hProfile);
 		    return null;
 	    }
-	    
-	    hProfile = cmsio0.cmsCreateProfilePlaceholder(ContextID);
-	    if (hProfile == null) // can't allocate
-	    {
-	    	if (LUT != null)
-		    {
-		    	cmslut.cmsPipelineFree(LUT);       
-		    }
-		    cmsio0.cmsCloseProfile(hProfile);
-		    return null;
-	    }
-	    
-	    cmsio0.cmsSetProfileVersion(hProfile, Version);
-	    
-	    FixColorSpaces(hProfile, xform.EntryColorSpace, xform.ExitColorSpace, dwFlags);   
 	    
 	    if ((dwFlags & lcms2.cmsFLAGS_8BITS_DEVICELINK) != 0)
 	    {
@@ -1562,35 +1580,21 @@ final class cmsvirt
 	    {
 	    	if (LUT != null)
 		    {
-		    	cmslut.cmsPipelineFree(LUT);       
+		    	cmslut.cmsPipelineFree(LUT);
 		    }
 		    cmsio0.cmsCloseProfile(hProfile);
 		    return null;
 	    }
 	    
-	    if (cmsio0.cmsGetDeviceClass(hProfile) == lcms2.cmsSigOutputClass)
+	    // Store result
+	    if (!cmsio0.cmsWriteTag(hProfile, DestinationTag, LUT))
 	    {
-	        if (!cmsio0.cmsWriteTag(hProfile, lcms2.cmsSigBToA0Tag, LUT))
-	        {
-	        	if (LUT != null)
-	    	    {
-	    	    	cmslut.cmsPipelineFree(LUT);       
-	    	    }
-	    	    cmsio0.cmsCloseProfile(hProfile);
-	    	    return null;
-	        }
-	    }
-	    else
-	    {
-	        if (!cmsio0.cmsWriteTag(hProfile, lcms2.cmsSigAToB0Tag, LUT))
-	        {
-	        	if (LUT != null)
-	    	    {
-	    	    	cmslut.cmsPipelineFree(LUT);       
-	    	    }
-	    	    cmsio0.cmsCloseProfile(hProfile);
-	    	    return null;
-	        }
+	    	if (LUT != null)
+		    {
+		    	cmslut.cmsPipelineFree(LUT);
+		    }
+		    cmsio0.cmsCloseProfile(hProfile);
+		    return null;
 	    }
 	    
 	    if (xform.InputColorant != null)
@@ -1599,7 +1603,7 @@ final class cmsvirt
 	    	{
 	    		if (LUT != null)
 	    	    {
-	    	    	cmslut.cmsPipelineFree(LUT);       
+	    	    	cmslut.cmsPipelineFree(LUT);
 	    	    }
 	    	    cmsio0.cmsCloseProfile(hProfile);
 	    	    return null;
@@ -1612,7 +1616,7 @@ final class cmsvirt
 	    	{
 	    		if (LUT != null)
 	    	    {
-	    	    	cmslut.cmsPipelineFree(LUT);       
+	    	    	cmslut.cmsPipelineFree(LUT);
 	    	    }
 	    	    cmsio0.cmsCloseProfile(hProfile);
 	    	    return null;
@@ -1625,7 +1629,7 @@ final class cmsvirt
 	        {
 	        	if (LUT != null)
 	    	    {
-	    	    	cmslut.cmsPipelineFree(LUT);       
+	    	    	cmslut.cmsPipelineFree(LUT);
 	    	    }
 	    	    cmsio0.cmsCloseProfile(hProfile);
 	    	    return null;

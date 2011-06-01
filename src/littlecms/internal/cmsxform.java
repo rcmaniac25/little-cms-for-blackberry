@@ -468,7 +468,7 @@ final class cmsxform
 				    System.arraycopy(wOut, 0, CacheOut, 0, lcms2.cmsMAXCHANNELS);
 		        }
 		        
-		        output = p.ToOutput.run(p, wOut, output, Size);            
+		        output = p.ToOutput.run(p, wOut, output, Size);
 		    }
 		    
 //#ifndef CMS_DONT_USE_PTHREADS

@@ -1463,7 +1463,7 @@ public final class Serializers
 		return Utility.singletonStorageGet(SERIALIZER_INITIALIZED_UID) != null; //This is simply to cause the static constructor to get invoked if not already invoked
 	}
 	
-	private static abstract class EvenSimplierSerializer extends SerializerWrapper
+	public static abstract class EvenSimplierSerializer extends SerializerWrapper
 	{
 		protected EvenSimplierSerializer(boolean canWrap, Class class2match)
 		{

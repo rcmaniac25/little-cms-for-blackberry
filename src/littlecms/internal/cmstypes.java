@@ -208,6 +208,35 @@ final class cmstypes
 	    return true;
 	}
 	
+	private static boolean _cmsReadWCharArray(cmsIOHANDLER io, int n, char[] Array)
+	{
+	    int i;
+	    short[] tmp = new short[1];
+	    
+	    lcms2_internal._cmsAssert(io != null, "io != null");
+	    
+	    for (i=0; i < n; i++)
+	    {
+	        if (Array != null)
+	        {
+	            if (!cmsplugin._cmsReadUInt16Number(io, tmp))
+	            {
+	            	return false;
+	            }
+	            Array[i] = (char)cmsplugin._cmsAdjustEndianess16(tmp[0]);
+	        }
+	        else
+	        {
+	            if (!cmsplugin._cmsReadUInt16Number(io, null))
+	            {
+	            	return false;
+	            }
+	        }
+	    }
+	    return true;
+	}
+
+	
 	// To deal with position tables
 	public static interface PositionTableEntryFn
 	{
@@ -1304,6 +1333,22 @@ final class cmstypes
 	    nItems[0] = 0;
 	    
 	    // We need to store the "\0" at the end, so +1
+	    if ((SizeOfTag & 0xFFFFFFFFL) == 0xffffffffL)
+	    {
+	    	if (mlu != null)
+		    {
+	    		cmsnamed.cmsMLUfree(mlu);
+		    }
+//#ifdef CMS_RAW_C
+		    if (Text != null)
+		    {
+		    	cmserr._cmsFree(self.ContextID, Text);
+		    }
+//#endif
+		    
+		    return null;
+	    }
+	    
 //#ifdef CMS_RAW_C
 	    Text = cmserr._cmsMalloc(self.ContextID, SizeOfTag + 1);
 	    if (Text == null)
@@ -1447,7 +1492,16 @@ final class cmstypes
 	    int LenOfData;
 	    
 	    nItems[0] = 0;
+	    if (SizeOfTag < /*sizeof(cmsUInt32Number)*/4)
+	    {
+	    	return null;
+	    }
+	    
 	    LenOfData = SizeOfTag - /*sizeof(cmsUInt32Number)*/4;
+	    if ((LenOfData & 0xFFFFFFFFL) > Integer.MAX_VALUE)
+	    {
+	    	return null;
+	    }
 	    
 //#ifdef CMS_RAW_C
 	    BinData = cmserr._cmsMalloc(self.ContextID, /*sizeof(cmsICCData)*/cmsICCData.SIZE); //cmsICCData usually has at least 1 byte of data and the rest is just "tacked on" so this would read "sizeof(cmsICCData) + LenOfData - 1", this is a little different
@@ -2292,7 +2346,6 @@ final class cmstypes
 	//   Max Derhak and Rohit Patil about this: basically the size of the string table should be guessed and cannot be
 	//   taken from the size of tag if this tag is embedded as part of bigger structures (profileSequenceDescTag, for instance)
 	//
-	// FIXME: this doesn't work if sizeof(wchat_t) != 2  !!!
 	
 	private static Object Type_MLU_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
 	{
@@ -2367,8 +2420,6 @@ final class cmstypes
 	    	    return null;
 	        }
 	        Len = temp[0];
-	        mlu.Entries[i].Len = Len;
-	        
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
 	        {
 	        	if (mlu != null)
@@ -2379,8 +2430,22 @@ final class cmstypes
 	        }
 	        Offset = temp[0];
 	        
+	        // Check for overflow
+	        if (Offset < (SizeOfHeader + 8))
+	        {
+	        	if (mlu != null)
+			    {
+			    	cmsnamed.cmsMLUfree(mlu);
+			    }
+			    return null;
+	        }
+	        
+	        // True begin of the string
 	        BeginOfThisString = Offset - SizeOfHeader - 8;
-	        mlu.Entries[i].StrW = BeginOfThisString;
+	        
+	        // Ajust to wchar_t elements
+	        mlu.Entries[i].Len = (Len * /*sizeof(wchar_t)*/2) / /*sizeof(cmsUInt16Number)*/2;        
+	        mlu.Entries[i].StrW = (BeginOfThisString * /*sizeof(wchar_t)*/2) / /*sizeof(cmsUInt16Number)*/2;
 	        
 	        // To guess maximum size, add offset + len
 	        EndOfThisString = BeginOfThisString + Len;
@@ -2391,7 +2456,7 @@ final class cmstypes
 	    }
 	    
 	    // Now read the remaining of tag and fill all strings. Substract the directory
-	    SizeOfTag = LargestPosition;
+	    SizeOfTag   = (LargestPosition * /*sizeof(wchar_t)*/2) / /*sizeof(cmsUInt16Number)*/2;
 	    
 	    Block = cmserr._cmsMalloc(self.ContextID, SizeOfTag);
 	    if (Block == null)
@@ -2403,9 +2468,9 @@ final class cmstypes
 		    return null;
 	    }
 	    
-	    NumOfWchar = SizeOfTag / /*sizeof(cmsUInt16Number)*/2;
+	    NumOfWchar = SizeOfTag / /*sizeof(wchar_t)*/2;
 	    
-	    if (!cmsplugin._cmsReadUInt16Array(io, NumOfWchar, Block, true))
+	    if (!cmsplugin._cmsReadUInt16Array(io, NumOfWchar, Block, true)) //In 2.1 >, _cmsReadWCharArray is used (because Block is wchar_t*), but it is not necessery here
 	    {
 	    	if (mlu != null)
 		    {
@@ -2413,6 +2478,7 @@ final class cmstypes
 		    }
 		    return null;
 	    }
+	    
 	    mlu.MemPool = Block;
 	    mlu.PoolSize = SizeOfTag;
 	    mlu.PoolUsed = SizeOfTag;
@@ -2424,8 +2490,23 @@ final class cmstypes
 	private static boolean Type_MLU_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
 		cmsMLU mlu =(cmsMLU)Ptr;
-	    int HeaderSize, Offset;
+	    int HeaderSize;
+	    int Len, Offset;
 	    int i;
+	    
+	    if (Ptr == null)
+	    {
+	    	// Empty placeholder
+	    	if (!cmsplugin._cmsWriteUInt32Number(io, 0))
+	    	{
+	    		return false;
+	    	}
+	    	if (!cmsplugin._cmsWriteUInt32Number(io, 12))
+	    	{
+	    		return false;
+	    	}
+	    	return true;
+	    }
 	    
 	    if (!cmsplugin._cmsWriteUInt32Number(io, mlu.UsedEntries))
 	    {
@@ -2440,6 +2521,12 @@ final class cmstypes
 	    
 	    for (i = 0; i < mlu.UsedEntries; i++)
 	    {
+	    	Len    =  mlu.Entries[i].Len;
+	        Offset =  mlu.Entries[i].StrW;
+	        
+	        Len    = (Len * /*sizeof(cmsUInt16Number)*/2) / /*sizeof(wchar_t)*/2;
+	        Offset = (Offset * /*sizeof(cmsUInt16Number)*/2) / /*sizeof(wchar_t)*/2 + HeaderSize + 8;
+	        
 	        if (!cmsplugin._cmsWriteUInt16Number(io, mlu.Entries[i].Language))
 	        {
 	        	return false;
@@ -2448,20 +2535,17 @@ final class cmstypes
 	        {
 	        	return false;
 	        }
-	        if (!cmsplugin._cmsWriteUInt32Number(io, mlu.Entries[i].Len))
+	        if (!cmsplugin._cmsWriteUInt32Number(io, Len))
 	        {
 	        	return false;
 	        }
-	        
-	        Offset =  mlu.Entries[i].StrW + HeaderSize + 8;
-	        
 	        if (!cmsplugin._cmsWriteUInt32Number(io, Offset))
 	        {
 	        	return false;
 	        }
 	    }
 	    
-	    if (!cmsplugin._cmsWriteUInt16Array(io, mlu.PoolUsed / /*sizeof(cmsUInt16Number)*/2, mlu.MemPool, true))
+	    if (!cmsplugin._cmsWriteUInt16Array(io, mlu.PoolUsed / /*sizeof(wchar_t)*/2, mlu.MemPool, true)) //In 2.1 >, _cmsWriteWCharArray is used, but it is not necessery here
 	    {
 	    	return false;
 	    }
@@ -2672,15 +2756,38 @@ final class cmstypes
 	    return true;
 	}
 	
-	private static int uipow(int a, int b)
+	// Check overflow
+	private static int uipow(int n, int a, int b)
 	{
-	    long rv = 1;
-	    long aL = a & 0xFFFFFFFFL;
+		long rv = 1, rc;
+		
+	    if (a == 0)
+	    {
+	    	return 0;
+	    }
+	    if (n == 0)
+	    {
+	    	return 0;
+	    }
+	    
 	    for (; b > 0; b--)
 	    {
-	    	rv *= aL;
+	    	rv *= a;
+	    	
+	        // Check for overflow
+	        if (rv > 0xffffffffL / a)
+	        {
+	        	return 0;
+	        }
 	    }
-	    return (int)rv;
+	    
+	    rc = rv * n;
+	    
+	    if (rv != rc / n)
+	    {
+	    	return 0;
+	    }
+	    return (int)rc;
 	}
 	
 	// That will create a MPE LUT with Matrix, pre tables, CLUT and post tables. 
@@ -2874,8 +2981,8 @@ final class cmstypes
 		    return null;
 	    }
 	    
-	    // Get 3D CLUT
-	    nTabSize = (OutputChannels[0] * uipow(CLUTpoints[0], InputChannels[0]));
+	    // Get 3D CLUT. Check the overflow....
+	    nTabSize = uipow(OutputChannels[0], CLUTpoints[0], InputChannels[0]);
 	    if (nTabSize > 0)
 	    {
 	    	int PtrW = 0;
@@ -3094,24 +3201,27 @@ final class cmstypes
 	    	return false;
 	    }
 	    
-	    nTabSize = (NewLUT.OutputChannels * uipow(clutPoints, NewLUT.InputChannels));
+	    nTabSize = uipow(NewLUT.OutputChannels, clutPoints, NewLUT.InputChannels);
 	    
-	    // The 3D CLUT.
-	    if (clut != null)
+	    if (nTabSize > 0)
 	    {
-	    	VirtualPointer.TypeProcessor proc = clut.Tab.getProcessor();
-	    	int pos = clut.Tab.getPosition();
-	        for (j = 0; j < nTabSize; j++)
-	        {
-	            val = lcms2_internal.FROM_16_TO_8(proc.readInt16(true));
-	            if (!cmsplugin._cmsWriteUInt8Number(io, val))
-	    	    {
-	            	clut.Tab.setPosition(pos);
-	    	    	return false;
-	    	    }
-	        }
-	        clut.Tab.setPosition(pos);
-	    }
+		    // The 3D CLUT.
+		    if (clut != null)
+		    {
+		    	VirtualPointer.TypeProcessor proc = clut.Tab.getProcessor();
+		    	int pos = clut.Tab.getPosition();
+		        for (j = 0; j < nTabSize; j++)
+		        {
+		            val = lcms2_internal.FROM_16_TO_8(proc.readInt16(true));
+		            if (!cmsplugin._cmsWriteUInt8Number(io, val))
+		    	    {
+		            	clut.Tab.setPosition(pos);
+		    	    	return false;
+		    	    }
+		        }
+		        clut.Tab.setPosition(pos);
+		    }
+		}
 	    
 	    // The postlinearization table
 	    if (!Write8bitTables(self.ContextID, io, NewLUT.OutputChannels, PostMPE))
@@ -3268,7 +3378,7 @@ final class cmstypes
 		    }
 		    return null;
 	    }
-	    if (!cmsplugin._cmsReadUInt8Number(io, CLUTpoints))
+	    if (!cmsplugin._cmsReadUInt8Number(io, CLUTpoints)) // 255 maximum
 	    {
 	    	if (NewLUT != null)
 		    {
@@ -3288,14 +3398,6 @@ final class cmstypes
 	    }
 	    
 	    // Do some checking
-	    if (CLUTpoints[0] > 100)
-	    {
-	    	if (NewLUT != null)
-		    {
-		    	cmslut.cmsPipelineFree(NewLUT);
-		    }
-		    return null;
-	    }
 	    if (InputChannels[0] > lcms2.cmsMAXCHANNELS)
 	    {
 	    	if (NewLUT != null)
@@ -3446,7 +3548,7 @@ final class cmstypes
 	    }
 	    
 	    // Get 3D CLUT
-	    nTabSize = (OutputChannels[0] * uipow(CLUTpoints[0], InputChannels[0]));
+	    nTabSize = uipow(OutputChannels[0], CLUTpoints[0], InputChannels[0]);
 	    if (nTabSize > 0)
 	    {
 	    	short[] T;
@@ -3682,16 +3784,19 @@ final class cmstypes
 	        }
 	    }
 	    
-	    nTabSize = (OutputChannels * uipow(clutPoints, InputChannels));
+	    nTabSize = uipow(OutputChannels, clutPoints, InputChannels);
 	    
-	    // The 3D CLUT.
-	    if (clut != null)
+	    if (nTabSize > 0)
 	    {
-	        if (!cmsplugin._cmsWriteUInt16Array(io, nTabSize, clut.Tab, false))
-	        {
-	        	return false;
-	        }
-	    }
+		    // The 3D CLUT.
+		    if (clut != null)
+		    {
+		        if (!cmsplugin._cmsWriteUInt16Array(io, nTabSize, clut.Tab, false))
+		        {
+		        	return false;
+		        }
+		    }
+		}
 	    
 	    // The postlinearization table
 	    if (PostMPE != null)
@@ -3846,6 +3951,11 @@ final class cmstypes
 	    }
 	    
 	    CLUT = cmslut.cmsStageAllocCLut16bitGranular(self.ContextID, GridPoints, InputChannels, OutputChannels, null);
+	    if (CLUT == null)
+	    {
+	    	return null;
+	    }
+	    
 	    Data = (_cmsStageCLutData)CLUT.Data;
 	    
 	    // Precision can be 1 or 2 bytes
@@ -3913,7 +4023,7 @@ final class cmstypes
 	{
 		cmsToneCurve[] Curves = new cmsToneCurve[lcms2.cmsMAXCHANNELS];
 		int i;
-	    cmsStage Lin;
+	    cmsStage Lin = null;
 	    
 	    if (nCurves > lcms2.cmsMAXCHANNELS)
 	    {
@@ -3925,16 +4035,31 @@ final class cmstypes
 	    	return null;
 	    }
 	    
+	    for (i=0; i < nCurves; i++)
+	    {
+	    	Curves[i] = null;
+	    }
+	    
 	    for (i = 0; i < nCurves; i++)
 	    {
 	        Curves[i] = ReadEmbeddedCurve(self, io);
 	        if (Curves[i] == null)
 		    {
-		    	return null;
+	        	for (i = 0; i < nCurves; i++)
+	    	    {
+	    	    	cmsgamma.cmsFreeToneCurve(Curves[i]);
+	    	    }
+	    	    
+	    	    return Lin;
 		    }
 	        if (!cmsplugin._cmsReadAlignment(io))
 		    {
-		    	return null;
+	        	for (i = 0; i < nCurves; i++)
+	    	    {
+	    	    	cmsgamma.cmsFreeToneCurve(Curves[i]);
+	    	    }
+	    	    
+	    	    return Lin;
 		    }
 	    }
 	    
@@ -4044,25 +4169,37 @@ final class cmstypes
 	    if (offsetC != 0)
 	    {
 	        mpe = ReadCLUT(self, io, BaseOffset + offsetC, inputChan, outputChan);
-	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        if (mpe != null)
+	        {
+	        	cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        }
 	    }
 	    
 	    if (offsetM != 0)
 	    {
 	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetM, outputChan);
-	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        if (mpe != null)
+	        {
+	        	cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        }
 	    }
 	    
 	    if (offsetMat != 0)
 	    {
 	        mpe = ReadMatrix(self, io, BaseOffset + offsetMat);
-	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        if (mpe != null)
+	        {
+	        	cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        }
 	    }
 	    
 	    if (offsetB != 0)
 	    {
 	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetB, outputChan);
-	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        if (mpe != null)
+	        {
+	        	cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        }
 	    }
 	    
 	    nItems[0] = 1;
@@ -4112,17 +4249,35 @@ final class cmstypes
 	    	return false;
 	    }
 	    
-	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Offset[0]))
+	    if (m.Offset != null)
 	    {
-	    	return false;
+		    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Offset[0]))
+		    {
+		    	return false;
+		    }
+		    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Offset[1]))
+		    {
+		    	return false;
+		    }
+		    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Offset[2]))
+		    {
+		    	return false;
+		    }
 	    }
-	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Offset[1]))
+	    else
 	    {
-	    	return false;
-	    }
-	    if (!cmsplugin._cmsWrite15Fixed16Number(io, m.Offset[2]))
-	    {
-	    	return false;
+	    	if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+		    if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
+		    if (!cmsplugin._cmsWrite15Fixed16Number(io, 0))
+		    {
+		    	return false;
+		    }
 	    }
 	    
 	    return true;
@@ -4198,6 +4353,12 @@ final class cmstypes
 		byte[] gridPoints = new byte[lcms2.cmsMAXCHANNELS]; // Number of grid points in each dimension.
 	    int i;    
 	    _cmsStageCLutData CLUT = ( _cmsStageCLutData)mpe.Data;
+	    
+	    if (CLUT.HasFloatValues)
+	    {
+	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_NOT_SUITABLE, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_CLUT_16BIT_ONLY), null);
+	    	return false;
+	    }
 	    
 	    for (i = 0; i < CLUT.Params.nInputs; i++)
 	    {
@@ -4539,31 +4700,46 @@ final class cmstypes
 	    if (offsetB != 0)
 	    {
 	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetB, inputChan);
-	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        if (mpe != null)
+	        {
+	        	cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        }
 	    }
 	    
 	    if (offsetMat != 0)
 	    {
 	        mpe = ReadMatrix(self, io, BaseOffset + offsetMat);
-	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        if (mpe != null)
+	        {
+	        	cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        }
 	    }
 	    
 	    if (offsetM != 0)
 	    {
 	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetM, inputChan);
-	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        if (mpe != null)
+	        {
+	        	cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        }
 	    }
 	    
 	    if (offsetC != 0)
 	    {
 	        mpe = ReadCLUT(self, io, BaseOffset + offsetC, inputChan, outputChan);
-	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        if (mpe != null)
+	        {
+	        	cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        }
 	    }
 	    
 	    if (offsetA!= 0)
 	    {
 	        mpe = ReadSetOfCurves(self, io, BaseOffset + offsetA, outputChan);
-	        cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        if (mpe != null)
+	        {
+	        	cmslut.cmsPipelineInsertStage(NewLUT, lcms2.cmsAT_END, mpe);
+	        }
 	    }
 	    
 	    nItems[0] = 1;
@@ -4944,6 +5120,7 @@ final class cmstypes
 	    v = cmsnamed.cmsAllocNamedColorList(self.ContextID, count, nDeviceCoords, prefix.getProcessor().readString(), suffix.getProcessor().readString());
 	    if (v == null)
 	    {
+	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_TOO_MANY_NAMED_COLORS), new Object[]{new Integer(count)});
 	    	return null;
 	    }
 	    
@@ -5066,6 +5243,13 @@ final class cmstypes
 	// Type cmsSigProfileSequenceDescType
 	// ********************************************************************************
 	
+	// This type is an array of structures, each of which contains information from the 
+	// header fields and tags from the original profiles which were combined to create 
+	// the final profile. The order of the structures is the order in which the profiles 
+	// were combined and includes a structure for the final profile. This provides a 
+	// description of the profile sequence from source to destination, 
+	// typically used with the DeviceLink profile.
+	
 	private static boolean ReadEmbeddedText(cmsTagTypeHandler self, cmsIOHANDLER io, cmsMLU[] mlu, int SizeOfTag)
 	{
 		int BaseType;
@@ -5118,6 +5302,11 @@ final class cmstypes
 	    	return null;
 	    }
 	    Count = temp[0];
+	    
+	    if (SizeOfTag < /*sizeof(cmsUInt32Number)*/4)
+	    {
+	    	return null;
+	    }
 	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	    
 	    OutSeq = cmsnamed.cmsAllocProfileSequenceDescription(self.ContextID, Count);
@@ -5141,6 +5330,10 @@ final class cmstypes
 		    	return null;
 		    }
 	        sec.deviceMfg = temp[0];
+	        if (SizeOfTag < /*sizeof(cmsUInt32Number)*/4)
+		    {
+		    	return null;
+		    }
 	        SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	        
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
@@ -5148,6 +5341,10 @@ final class cmstypes
 		    	return null;
 		    }
 	        sec.deviceModel = temp[0];
+	        if (SizeOfTag < /*sizeof(cmsUInt32Number)*/4)
+		    {
+		    	return null;
+		    }
 	        SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	        
 	        if (!cmsplugin._cmsReadUInt64Number(io, temp3))
@@ -5155,6 +5352,10 @@ final class cmstypes
 		    	return null;
 		    }
 	        sec.attributes = temp3[0];
+	        if (SizeOfTag < /*sizeof(cmsUInt32Number)*/4)
+		    {
+		    	return null;
+		    }
 	        SizeOfTag -= /*sizeof(cmsUInt64Number)*/8;
 	        
 	        if (!cmsplugin._cmsReadUInt32Number(io, temp))
@@ -5162,6 +5363,10 @@ final class cmstypes
 		    	return null;
 		    }
 	        sec.technology = temp[0];
+	        if (SizeOfTag < /*sizeof(cmsUInt32Number)*/4)
+		    {
+		    	return null;
+		    }
 	        SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	        
 	        if (!ReadEmbeddedText(self, io, temp2, SizeOfTag))
@@ -5183,19 +5388,10 @@ final class cmstypes
 	}
 	
 	// Aux--Embed a text description type. It can be of type text description or multilocalized unicode
+	// and it depends of the version number passed on cmsTagDescriptor structure instead of stack
 	private static boolean SaveDescription(cmsTagTypeHandler self, cmsIOHANDLER io, cmsMLU Text)
 	{
-	    if (Text == null)
-	    {
-	        // Placeholder for a null entry     
-	        if (!cmsplugin._cmsWriteTypeBase(io, lcms2.cmsSigTextDescriptionType))
-	        {
-	        	return false;
-	        }
-	        return Type_Text_Description_Write(self, io, null, 1);
-	    }
-	    
-	    if (Text.UsedEntries <= 1)
+		if (self.ICCVersion < 0x4000000)
 	    {
 	        if (!cmsplugin._cmsWriteTypeBase(io, lcms2.cmsSigTextDescriptionType))
 	        {
@@ -5416,6 +5612,10 @@ final class cmstypes
 	    	return null;
 	    }
 	    CountUcr = temp[0];
+	    if (SizeOfTag < /*sizeof(cmsUInt32Number)*/4)
+	    {
+	    	return null;
+	    }
 	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	    
 	    n.Ucr = cmsgamma.cmsBuildTabulatedToneCurve16(self.ContextID, CountUcr, null);
@@ -5428,6 +5628,10 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
+	    if (SizeOfTag < /*sizeof(cmsUInt32Number)*/4)
+	    {
+	    	return null;
+	    }
 	    SizeOfTag -= CountUcr * /*sizeof(cmsUInt16Number)*/2;
 	    
 	    // Second curve is Black generation
@@ -5436,6 +5640,10 @@ final class cmstypes
 	    	return null;
 	    }
 	    CountBg = temp[0];
+	    if (SizeOfTag < /*sizeof(cmsUInt32Number)*/4)
+	    {
+	    	return null;
+	    }
 	    SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
 	    
 	    n.Bg = cmsgamma.cmsBuildTabulatedToneCurve16(self.ContextID, CountBg, null);
@@ -5447,11 +5655,24 @@ final class cmstypes
 	    {
 	    	return null;
 	    }
+	    if (SizeOfTag < CountBg * /*sizeof(cmsUInt16Number)*/2)
+	    {
+	    	return null;
+	    }
 	    SizeOfTag -= CountBg * /*sizeof(cmsUInt16Number)*/2;
+	    if ((SizeOfTag & 0xFFFFFFFFL) == 0xffffffffL)
+	    {
+	    	return null;
+	    }
 	    
 	    // Now comes the text. The length is specified by the tag size
 	    n.Desc = cmsnamed.cmsMLUalloc(self.ContextID, 1);
-	    ASCIIString = cmserr._cmsMalloc(self.ContextID, /*sizeof(cmsUInt8Number)*/1*(SizeOfTag + 1));
+	    if (n.Desc == null)
+	    {
+	    	return null;
+	    }
+	    
+	    ASCIIString = cmserr._cmsMalloc(self.ContextID, SizeOfTag + 1);
 	    if (io.vpRead(io, ASCIIString, /*sizeof(char)*/1, SizeOfTag) != SizeOfTag)
 	    {
 	    	return null;
@@ -5575,6 +5796,10 @@ final class cmstypes
 	    }
 	    Count = temp[0];
 	    
+	    if ((Count & 0xFFFFFFFFL) > 0xffffffffL - /*sizeof(cmsUInt32Number)*/4)
+	    {
+	    	return false;
+	    }
 	    if (SizeOfTag[0] < Count + /*sizeof(cmsUInt32Number)*/4)
 	    {
 	    	return false;
@@ -5732,6 +5957,11 @@ final class cmstypes
 	    	return null;
 	    }
 	    sc.nChannels = temp[0];
+	    
+	    if (sc.nChannels > lcms2.cmsMAXCHANNELS - 1)
+	    {
+	    	sc.nChannels = lcms2.cmsMAXCHANNELS - 1;
+	    }
 	    
 	    double[] temp2 = new double[1];
 	    for (i = 0; i < sc.nChannels; i++)
@@ -5973,6 +6203,10 @@ final class cmstypes
 	    	return null;
 	    }
 	    
+	    if (nSegments < 1)
+	    {
+	    	return null;
+	    }
 	    Segments = new cmsCurveSegment[nSegments];
 	    
 	    // Read breakpoints
@@ -6440,7 +6674,7 @@ final class cmstypes
 	    nMaxGrids = InputChans > lcms2_plugin.MAX_INPUT_DIMENSIONS ? lcms2_plugin.MAX_INPUT_DIMENSIONS : InputChans;
 	    for (i = 0; i < nMaxGrids; i++)
 	    {
-	    	GridPoints[i] = Dimensions8[i];
+	    	GridPoints[i] = Dimensions8[i] & 0xFF;
 	    }
 	    
 	    // Allocate the true CLUT
@@ -6931,6 +7165,12 @@ final class cmstypes
 		    	    return null;
 		    	}
 		    	nBytes = temp2[0];
+		    	
+		    	// Adobe's quirk fixup. Fixing broken profiles...
+		    	if (nElems == 256 && nBytes == 1 && SizeOfTag == 1576)
+		    	{
+		    		nBytes = 2;
+		    	}
 		    	
 		    	// Populate tone curves
 		    	for (n = 0; n < 3; n++)

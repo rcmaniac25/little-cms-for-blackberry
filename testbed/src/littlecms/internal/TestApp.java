@@ -3,7 +3,7 @@
 /* 
  * TestApp.java
  * 
- * © Rebuild, 2004-2010
+ * © Rebuild, 2004-2011
  * Confidential and proprietary
  */
 package littlecms.internal;
@@ -60,7 +60,6 @@ import net.rim.device.api.ui.TouchEvent;
 //#endif
 import net.rim.device.api.util.Arrays;
 import net.rim.device.api.system.Characters;
-import net.rim.device.api.i18n.DateFormat;
 import net.rim.device.api.i18n.SimpleDateFormat;
 import net.rim.device.api.ui.Field;
 import net.rim.device.api.ui.FieldChangeListener;
@@ -8616,6 +8615,165 @@ public final class TestApp extends UiApplication
 	private static class Scanline_rgb8 {byte r, g, b;static final int SIZE = 3;}
 	private static class Scanline_rgb0 {short r, g, b;static final int SIZE = Scanline_rgb8.SIZE * 2;}
 	
+	private static void SpeedTestSerializerInit()
+	{
+		if(VirtualPointer.getSerializer(Scanline_rgb1.class) == null)
+		{
+			VirtualPointer.setSerializer(new littlecms.internal.Serializers.EvenSimplierSerializer(false, Scanline_rgb1.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					Scanline_rgb1 scan = (Scanline_rgb1)val;
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					proc.write(scan.r, true);
+					proc.write(scan.g, true);
+					proc.write(scan.b, true);
+					proc.write(scan.a, true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return new Scanline_rgb1();
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new Scanline_rgb1[size];
+				}
+				
+				public int getItemSize()
+				{
+					return Scanline_rgb1.SIZE;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					Scanline_rgb1 scan = (Scanline_rgb1)val[index];
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					scan.r = proc.readInt8(true);
+					scan.g = proc.readInt8(true);
+					scan.b = proc.readInt8(true);
+					scan.a = proc.readInt8(true);
+					return true;
+				}
+			}, Scanline_rgb1.class);
+			VirtualPointer.setSerializer(new littlecms.internal.Serializers.EvenSimplierSerializer(false, Scanline_rgb2.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					Scanline_rgb2 scan = (Scanline_rgb2)val;
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					proc.write(scan.r, true);
+					proc.write(scan.g, true);
+					proc.write(scan.b, true);
+					proc.write(scan.a, true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return new Scanline_rgb2();
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new Scanline_rgb2[size];
+				}
+				
+				public int getItemSize()
+				{
+					return Scanline_rgb2.SIZE;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					Scanline_rgb2 scan = (Scanline_rgb2)val[index];
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					scan.r = proc.readInt16(true);
+					scan.g = proc.readInt16(true);
+					scan.b = proc.readInt16(true);
+					scan.a = proc.readInt16(true);
+					return true;
+				}
+			}, Scanline_rgb2.class);
+			VirtualPointer.setSerializer(new littlecms.internal.Serializers.EvenSimplierSerializer(false, Scanline_rgb8.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					Scanline_rgb8 scan = (Scanline_rgb8)val;
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					proc.write(scan.r, true);
+					proc.write(scan.g, true);
+					proc.write(scan.b, true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return new Scanline_rgb8();
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new Scanline_rgb8[size];
+				}
+				
+				public int getItemSize()
+				{
+					return Scanline_rgb8.SIZE;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					Scanline_rgb8 scan = (Scanline_rgb8)val[index];
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					scan.r = proc.readInt8(true);
+					scan.g = proc.readInt8(true);
+					scan.b = proc.readInt8(true);
+					return true;
+				}
+			}, Scanline_rgb8.class);
+			VirtualPointer.setSerializer(new littlecms.internal.Serializers.EvenSimplierSerializer(false, Scanline_rgb0.class)
+			{
+				public boolean actualWrite(VirtualPointer vp, Object val)
+				{
+					Scanline_rgb0 scan = (Scanline_rgb0)val;
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					proc.write(scan.r, true);
+					proc.write(scan.g, true);
+					proc.write(scan.b, true);
+					return true;
+				}
+				
+				public Object createObject()
+				{
+					return new Scanline_rgb0();
+				}
+				
+				public Object[] createObjectArray(int size)
+				{
+					return new Scanline_rgb0[size];
+				}
+				
+				public int getItemSize()
+				{
+					return Scanline_rgb0.SIZE;
+				}
+				
+				public boolean readData(VirtualPointer vp, Object[] val, int index)
+				{
+					Scanline_rgb0 scan = (Scanline_rgb0)val[index];
+					VirtualPointer.TypeProcessor proc = vp.getProcessor();
+					scan.r = proc.readInt8(true);
+					scan.g = proc.readInt8(true);
+					scan.b = proc.readInt8(true);
+					return true;
+				}
+			}, Scanline_rgb0.class);
+		}
+	}
+	
 	private static void TitlePerformance(final String Txt)
 	{
 	    Utility.fprintf(print, "%-45s: ", new Object[]{Txt});
@@ -9613,6 +9771,8 @@ public final class TestApp extends UiApplication
 		    
 		    if (DoSpeedTests)
 		    {
+		    	//Setup serializers
+		    	SpeedTestSerializerInit();
 		    	SpeedTest();
 		    }
 		    

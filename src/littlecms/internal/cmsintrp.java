@@ -40,7 +40,7 @@ import littlecms.internal.lcms2_plugin.cmsPluginBase;
 import littlecms.internal.lcms2_plugin.cmsPluginInterpolation;
 
 /**
- * This module incorporates several interpolation routines, for 1, 3, 4, 5, 6, 7 and 8 channels on input and
+ * This module incorporates several interpolation routines, for 1 to 8 channels on input and
  * up to 65535 channels on output. The user may change those by using the interpolation plug-in
  */
 //#ifdef CMS_INTERNAL_ACCESS & DEBUG
@@ -421,17 +421,34 @@ final class cmsintrp
 	};
 	
 	//VirtualPointer
+	private static float DENSF(int i,int j,VirtualPointer.TypeProcessor LutTable,int pos,int OutChan)
+	{
+		return DENSF(i, j, 0, LutTable, pos, OutChan);
+	}
+	
 	private static float DENSF(int i,int j,int k,VirtualPointer.TypeProcessor LutTable,int pos,int OutChan)
 	{
 		LutTable.setPosition(pos + (((i)+(j)+(k)+OutChan) * 4));
 		return LutTable.readFloat();
 	}
+	
+	private static int DENSS(int i,int j,VirtualPointer.TypeProcessor LutTable,int pos,int OutChan)
+	{
+		return DENSS(i, j, 0, LutTable, pos, OutChan);
+	}
+	
 	private static int DENSS(int i,int j,int k,VirtualPointer.TypeProcessor LutTable,int pos,int OutChan)
 	{
 		LutTable.setPosition(pos + (((i)+(j)+(k)+OutChan) * 2));
 		return LutTable.readInt16() & 0xFFFF;
 	}
+	
 	//Short
+	private static int DENS(int i,int j,short[] LutTable,int OutChan)
+	{
+		return DENS(i,j,0,LutTable,0,OutChan);
+	}
+	
 	private static int DENS(int i,int j,int k,short[] LutTable,int OutChan)
 	{
 		return DENS(i,j,k,LutTable,0,OutChan);
@@ -442,10 +459,172 @@ final class cmsintrp
 		return (LutTable[(i)+(j)+(k)+OutChan+tableOffset]) & 0xFFFF; 
 	}
 	//Float
+	private static float DENS(int i,int j,float[] LutTable,int OutChan)
+	{
+		return DENS(i, j, 0, LutTable, OutChan);
+	}
+	
 	private static float DENS(int i,int j,int k,float[] LutTable,int OutChan)
 	{
 		return (LutTable[(i)+(j)+(k)+OutChan]); 
 	}
+	
+	// Bilinear interpolation (16 bits) - cmsFloat32Number version
+	private static final _cmsInterpFnFloat BilinearInterpFloat = new _cmsInterpFnFloat()
+	{
+		private float LERP(float a,float l,float h)
+		{
+			return ((l)+(((h)-(l))*(a)));
+		}
+		
+		public void run(float[] Input, float[] Output, cmsInterpParams p)
+		{
+		    float      px, py;
+		    int        x0, y0,
+		               X0, Y0, X1, Y1;
+		    int        TotalOut, OutChan;
+		    float      fx, fy,
+		        d00, d01, d10, d11,
+		        dx0, dx1,
+		        dxy;
+		    
+		    TotalOut   = p.nOutputs;
+		    px = Input[0] * p.Domain[0];
+		    py = Input[1] * p.Domain[1];
+		    
+		    x0 = (int)lcms2_internal._cmsQuickFloor(px); fx = px - (float) x0;
+		    y0 = (int)lcms2_internal._cmsQuickFloor(py); fy = py - (float) y0;
+		    
+		    X0 = p.opta[1] * x0;
+		    X1 = X0 + (Input[0] >= 1.0 ? 0 : p.opta[1]);
+		    
+		    Y0 = p.opta[0] * y0;
+		    Y1 = Y0 + (Input[1] >= 1.0 ? 0 : p.opta[0]);
+		    
+		    if(p.Table instanceof VirtualPointer)
+		    {
+		    	final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p.Table).getProcessor();
+			    final int pos = LutTable.getPosition();
+			    
+			    for (OutChan = 0; OutChan < TotalOut; OutChan++)
+			    {
+			        d00 = DENSF(X0, Y0, LutTable, pos, OutChan);
+			        d01 = DENSF(X0, Y1, LutTable, pos, OutChan);
+			        d10 = DENSF(X1, Y0, LutTable, pos, OutChan);
+			        d11 = DENSF(X1, Y1, LutTable, pos, OutChan);
+			        
+			        dx0 = LERP(fx, d00, d10);
+			        dx1 = LERP(fx, d01, d11);
+			        
+			        dxy = LERP(fy, dx0, dx1);
+			        
+			        Output[OutChan] = dxy;
+			    }
+			    
+			    LutTable.setPosition(pos);
+		    }
+		    else
+		    {
+			    final float[] LutTable = (float[])p.Table;
+			    
+			    for (OutChan = 0; OutChan < TotalOut; OutChan++)
+			    {
+			        d00 = DENS(X0, Y0, LutTable, OutChan);
+			        d01 = DENS(X0, Y1, LutTable, OutChan);
+			        d10 = DENS(X1, Y0, LutTable, OutChan);
+			        d11 = DENS(X1, Y1, LutTable, OutChan);
+			        
+			        dx0 = LERP(fx, d00, d10);
+			        dx1 = LERP(fx, d01, d11);
+			        
+			        dxy = LERP(fy, dx0, dx1);
+			        
+			        Output[OutChan] = dxy;
+			    }
+		    }
+		}
+	};
+	
+	// Bilinear interpolation (16 bits) - optimized version
+	private static final _cmsInterpFn16 BilinearInterp16 = new _cmsInterpFn16()
+	{
+		private int LERP(int a,int l,int h)
+		{
+			return (l + lcms2_internal.ROUND_FIXED_TO_INT(((h-l)*a))) & 0xFFFF;
+		}
+		
+		public void run(short[] Input, short[] Output, cmsInterpParams p)
+		{
+			int        OutChan, TotalOut;
+			int        fx, fy;
+			int        rx, ry;
+			int        x0, y0;
+			int        X0, X1, Y0, Y1;
+			int        d00, d01, d10, d11,
+		                      dx0, dx1,
+		                      dxy;
+			
+		    TotalOut   = p.nOutputs;
+		    
+		    fx = lcms2_internal._cmsToFixedDomain((Input[0] & 0xFFFF) * p.Domain[0]);
+		    x0  = lcms2_internal.FIXED_TO_INT(fx);
+		    rx  = lcms2_internal.FIXED_REST_TO_INT(fx);    // Rest in 0..1.0 domain
+		    
+		    
+		    fy = lcms2_internal._cmsToFixedDomain((Input[1] & 0xFFFF) * p.Domain[1]);
+		    y0  = lcms2_internal.FIXED_TO_INT(fy);
+		    ry  = lcms2_internal.FIXED_REST_TO_INT(fy);
+		    
+		    
+		    X0 = p.opta[1] * x0;
+		    X1 = X0 + (Input[0] == (short)0xFFFF ? 0 : p.opta[1]);
+		    
+		    Y0 = p.opta[0] * y0;
+		    Y1 = Y0 + (Input[1] == (short)0xFFFF ? 0 : p.opta[0]);
+		    
+		    if(p.Table instanceof VirtualPointer)
+		    {
+		    	final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p.Table).getProcessor();
+			    final int pos = LutTable.getPosition();
+			    
+			    for (OutChan = 0; OutChan < TotalOut; OutChan++)
+			    {
+			    	d00 = DENSS(X0, Y0, LutTable, pos, OutChan);
+			        d01 = DENSS(X0, Y1, LutTable, pos, OutChan);
+			        d10 = DENSS(X1, Y0, LutTable, pos, OutChan);
+			        d11 = DENSS(X1, Y1, LutTable, pos, OutChan);
+			        
+			        dx0 = LERP(rx, d00, d10);
+			        dx1 = LERP(rx, d01, d11);
+			        
+			        dxy = LERP(ry, dx0, dx1);
+			        
+			        Output[OutChan] = (short)dxy;
+			    }
+			    
+			    LutTable.setPosition(pos);
+		    }
+		    else
+		    {
+			    final short[] LutTable = (short[])p.Table;
+			    
+			    for (OutChan = 0; OutChan < TotalOut; OutChan++)
+			    {
+			    	d00 = DENS(X0, Y0, LutTable, OutChan);
+			        d01 = DENS(X0, Y1, LutTable, OutChan);
+			        d10 = DENS(X1, Y0, LutTable, OutChan);
+			        d11 = DENS(X1, Y1, LutTable, OutChan);
+			        
+			        dx0 = LERP(rx, d00, d10);
+			        dx1 = LERP(rx, d01, d11);
+			        
+			        dxy = LERP(ry, dx0, dx1);
+			        
+			        Output[OutChan] = (short)dxy;
+			    }
+		    }
+		}
+	};
 	
 	// Trilinear interpolation (16 bits) - float version
 	private static final _cmsInterpFnFloat TrilinearInterpFloat = new _cmsInterpFnFloat()
@@ -469,9 +648,39 @@ final class cmsintrp
 		    
 		    TotalOut = p.nOutputs;
 		    
-		    px = Input[0] * p.Domain[0];
-		    py = Input[1] * p.Domain[1];
-		    pz = Input[2] * p.Domain[2];
+		    // We need some clipping here
+		    px = Input[0];
+		    py = Input[1];
+		    pz = Input[2];
+
+		    if (px < 0)
+		    {
+		    	px = 0; 
+		    }
+		    if (px > 1)
+		    {
+		    	px = 1;
+		    }
+		    if (py < 0)
+		    {
+		    	py = 0; 
+		    }
+		    if (py > 1)
+		    {
+		    	py = 1;
+		    }
+		    if (pz < 0)
+		    {
+		    	pz = 0; 
+		    }
+		    if (pz > 1)
+		    {
+		    	pz = 1;
+		    }
+
+		    px *= p.Domain[0];
+		    py *= p.Domain[1];
+		    pz *= p.Domain[2];
 		    
 		    x0 = (int)lcms2_internal._cmsQuickFloor(px); fx = px - x0;
 		    y0 = (int)lcms2_internal._cmsQuickFloor(py); fy = py - y0;
@@ -669,9 +878,39 @@ final class cmsintrp
 		    
 		    TotalOut   = p.nOutputs;
 		    
-		    px = Input[0] * p.Domain[0];
-		    py = Input[1] * p.Domain[1];
-		    pz = Input[2] * p.Domain[2];
+		    // We need some clipping here
+		    px = Input[0];
+		    py = Input[1];
+		    pz = Input[2];
+
+		    if (px < 0)
+		    {
+		    	px = 0; 
+		    }
+		    if (px > 1)
+		    {
+		    	px = 1;
+		    }
+		    if (py < 0)
+		    {
+		    	py = 0; 
+		    }
+		    if (py > 1)
+		    {
+		    	py = 1;
+		    }
+		    if (pz < 0)
+		    {
+		    	pz = 0; 
+		    }
+		    if (pz > 1)
+		    {
+		    	pz = 1;
+		    }
+
+		    px *= p.Domain[0];
+		    py *= p.Domain[1];
+		    pz *= p.Domain[2];
 		    
 		    x0 = (int)lcms2_internal._cmsQuickFloor(px); rx = (px - x0);
 		    y0 = (int)lcms2_internal._cmsQuickFloor(py); ry = (py - y0);
@@ -1987,6 +2226,9 @@ final class cmsintrp
 		    		Interpolation.set(nOutputChannels == 1 ? 
 		    				(IsFloat ? (Object)LinLerp1Dfloat : LinLerp1D) :
 		    				(IsFloat ? (Object)Eval1InputFloat : Eval1Input));
+		    		break;
+		    	case 2: // Duotone
+		    		Interpolation.set(IsFloat ? (Object)BilinearInterpFloat : BilinearInterp16);
 		    		break;
 	    		case 3: // RGB et al
 	    			Interpolation.set(IsTrilinear ? 
