@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
+//  Copyright (c) 1998-2011 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -1018,7 +1018,7 @@ final class cmsio0
 	public static void cmsSetHeaderModel(cmsHPROFILE hProfile, int model)
 	{
 	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
-	    Icc.manufacturer = model;
+	    Icc.model = model;
 	}
 	
 	
@@ -1799,7 +1799,12 @@ final class cmsio0
 	    
 	    if (data == null)
 	    {
-	    	cmserr.cmsSignalError(cmsGetProfileContextID(hProfile), lcms2_plugin.cmsERROR_NULL, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_CANT_WRITE_NULL), null);
+	    	i = _cmsSearchTag(Icc, sig, false);
+	    	if (i >= 0)
+	    	{
+	    		Icc.TagNames[i] = 0;
+	    	}
+	    	// Unsupported by now, reserved for future ampliations (delete)
 	    	return false;
 	    }
 	    
@@ -1925,7 +1930,7 @@ final class cmsio0
 
 	public static int cmsReadRawTag(cmsHPROFILE hProfile, int sig, byte[] data, int BufferSize)
 	{
-		_cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;  
+		_cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
 	    Object Object; 
 	    int i;
 	    cmsIOHANDLER MemIO;
@@ -2013,12 +2018,25 @@ final class cmsio0
 	    // Obtain type handling for the tag
 	    TypeHandler = Icc.TagTypeHandlers[i];
 	    TagDescriptor = cmstypes._cmsGetTagDescriptor(sig);
+	    if (TagDescriptor == null)
+	    {
+	         cmsCloseIOhandler(MemIO);
+	         return 0;
+	    }
 	    
 	    // Serialize
 	    TypeHandler.ContextID  = Icc.ContextID;
 	    TypeHandler.ICCVersion = Icc.Version;
+	    
+	    if (!cmsplugin._cmsWriteTypeBase(MemIO, TypeHandler.Signature))
+	    {
+	        cmsCloseIOhandler(MemIO);
+	        return 0;
+	    }
+	    
 	    if (!TypeHandler.WritePtr.run(TypeHandler, MemIO, Object, TagDescriptor.ElemCount))
 	    {
+	    	cmsCloseIOhandler(MemIO);
 	    	return 0;
 	    }
 	    

@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
+//  Copyright (c) 1998-2011 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -1175,6 +1175,40 @@ final class cmsopt
 		}
 	};
 	
+	// Curves that contain wide empty areas are not optimizeable
+	private static boolean IsDegenerated(final cmsToneCurve g)
+	{
+	    int i, Zeros = 0, Poles = 0;
+	    int nEntries = g.nEntries;
+	    
+	    for (i=0; i < nEntries; i++)
+	    {
+	        if (g.Table16[i] == 0x0000)
+	        {
+	        	Zeros++;
+	        }
+	        if (g.Table16[i] == (short)0xffff)
+	        {
+	        	Poles++;
+	        }
+	    }
+	    
+	    if (Zeros == 1 && Poles == 1)
+	    {
+	    	return false; // For linear tables
+	    }
+	    if (Zeros > (nEntries / 4))
+	    {
+	    	return true; // Degenerated, mostly zeros
+	    }
+	    if (Poles > (nEntries / 4))
+	    {
+	    	return true; // Degenerated, mostly poles
+	    }
+	    
+	    return false;
+	}
+	
 	// --------------------------------------------------------------------------------------------------------------
 	// We need xput over here
 	
@@ -1298,6 +1332,11 @@ final class cmsopt
 		        if (!cmsgamma.cmsIsToneCurveMonotonic(Trans[t]))
 		        {
 		        	lIsSuitable = false;                             
+		        }
+		        
+		        if (IsDegenerated(Trans[t]))
+		        {
+		        	lIsSuitable = false;
 		        }
 		    }
 		    

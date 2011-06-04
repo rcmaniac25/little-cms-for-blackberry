@@ -1,8 +1,9 @@
---Last update: 06/01/2011--
---Revision Used: ??/??/2011-- (the date on which the source code was pulled from GIT)
+--Last update: 06/04/2011--
+--Revision Used: 06/03/2011-- (the date on which the source code was pulled from GIT)
 
 TODO:
 Update LCMS 4 BB to the same level as the GIT build
+-testbed
 If Test system has been updated then do testing
 Get full JavaDoc to be created for lcms
 
@@ -61,7 +62,6 @@ Finally, again based off the above note, something must be done about Strings. T
 Defines:
 CMS_USE_BIG_ENDIAN //Not supported because BlackBerry is little endian, just here so it is explicitly known that it isn't supported [well it is used but it shouldn't be changed, it would screw up pretty much everything]
 CMS_DONT_USE_FAST_FLOOR
-CMS_DONT_USE_PTHREADS
 CMS_USE_PROFILE_BLACK_POINT_TAG
 CMS_STRICT_CGATS
 CMS_USE_IO_BIT_CONVERTER //Use java.io to convert value types to bytes and back
@@ -86,7 +86,6 @@ Nearly everything is handled in standard C fashion so if an error occurs it know
 ---Though it should never happen, if a unsupported format is parsed, then the fscanf function is used.
 ---If a number with too many digits is passed into fscanf to get converted to an integer of some sort.
 ---If a really big (yet parseable) number is passed into fscanf and then expected to fit in a long data type (LargeNumber is not supported as of right now as a return data type).
----If a pointer is passed into fscanf.
 --Utility: If a singleton is passed that already exists under the specified UID in the RuntimeStore.
 --VirtualPointer:
 ---Should never happen, but if the built in Serializers fail to initialize.

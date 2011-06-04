@@ -33,7 +33,7 @@ import littlecms.internal.LCMSResource;
 import net.rim.device.api.util.Arrays;
 //#ifdef CMS_USE_NATIVE_BIGINT
 import net.rim.device.api.crypto.CryptoByteArrayArithmetic;
-import net.rim.device.api.crypto.CryptoInteger;;
+import net.rim.device.api.crypto.CryptoInteger;
 //#endif
 
 /**

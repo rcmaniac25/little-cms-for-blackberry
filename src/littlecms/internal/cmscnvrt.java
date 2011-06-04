@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
+//  Copyright (c) 1998-2011 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -200,7 +200,7 @@ final class cmscnvrt
 	    	cmsmtrx._cmsVEC3init(Scale.v[1], 0,  WhitePointIn.Y / WhitePointOut.Y, 0);
 	    	cmsmtrx._cmsVEC3init(Scale.v[2], 0, 0,  WhitePointIn.Z / WhitePointOut.Z);
 	        
-	        m1 = ChromaticAdaptationMatrixIn;
+	        m1 = ChromaticAdaptationMatrixOut;
 	        m2 = new cmsMAT3();
 	        if (!cmsmtrx._cmsMAT3inverse(m1, m2))
 	        {
@@ -209,19 +209,19 @@ final class cmscnvrt
 	        m3 = new cmsMAT3();
 	        cmsmtrx._cmsMAT3per(m3, m2, Scale);
 	        
-	        // m3 holds CHAD from input white to D50 times abs. col. scaling
+	        // m3 holds CHAD from output white to D50 times abs. col. scaling
 	        if (AdaptationState == 0.0)
 	        {
 	            // Observer is not adapted, undo the chromatic adaptation
-	        	cmsmtrx._cmsMAT3per(m, m3, ChromaticAdaptationMatrixOut);
+	        	cmsmtrx._cmsMAT3per(m, m3, ChromaticAdaptationMatrixIn);
 	        }
 	        else
 	        {
 	            cmsMAT3 MixedCHAD;
 	            double TempSrc, TempDest, Temp;
 	            
-	            TempSrc  = CHAD2Temp(ChromaticAdaptationMatrixIn);  // K for source white
-	            TempDest = CHAD2Temp(ChromaticAdaptationMatrixOut); // K for dest white
+	            TempSrc  = CHAD2Temp(ChromaticAdaptationMatrixIn);
+	            TempDest = CHAD2Temp(ChromaticAdaptationMatrixOut);
 	            
 	            if (TempSrc < 0.0 || TempDest < 0.0)
 	            {
@@ -234,7 +234,7 @@ final class cmscnvrt
 	                return true;
 	            }
 	            
-	            Temp = AdaptationState * TempSrc + (1.0 - AdaptationState) * TempDest;
+	            Temp = AdaptationState * TempDest + (1.0 - AdaptationState) * TempSrc;
 	            
 	            // Get a CHAD from D50 to whatever output temperature. This replaces output CHAD
 	            MixedCHAD = new cmsMAT3();
@@ -509,7 +509,7 @@ final class cmscnvrt
 		        
 		        // If devicelink is found, then no custom intent is allowed and we can 
 		        // read the LUT to be applied. Settings don't apply here.       
-		        if (lIsDeviceLink)
+		        if (lIsDeviceLink || ((ClassSig == lcms2.cmsSigNamedColorClass) && (nProfiles == 1)))
 		        {
 		            // Get the involved LUT from the profile
 		            Lut = cmsio1._cmsReadDevicelinkLUT(hProfile, Intent);
@@ -951,7 +951,8 @@ final class cmscnvrt
 		    }
 		    
 		    // Check for non-cmyk profiles
-		    if (cmsio0.cmsGetColorSpace(hProfiles[0]) != lcms2.cmsSigCmykData || cmsio0.cmsGetColorSpace(hProfiles[nProfiles-1]) != lcms2.cmsSigCmykData)
+		    if (cmsio0.cmsGetColorSpace(hProfiles[0]) != lcms2.cmsSigCmykData || cmsio0.cmsGetColorSpace(hProfiles[nProfiles-1]) != lcms2.cmsSigCmykData || 
+		    		cmsio0.cmsGetDeviceClass(hProfiles[nProfiles-1]) != lcms2.cmsSigOutputClass)
 		    {
 		    	return DefaultICCintents.run(ContextID, nProfiles, ICCIntents, hProfiles, BPC, AdaptationStates, dwFlags);
 		    }
@@ -993,6 +994,15 @@ final class cmscnvrt
 		    
 		    // Get total area coverage (in 0..1 domain)
 		    bp.MaxTAC = cmsgmt.cmsDetectTAC(hProfiles[nProfiles-1]) / 100.0;
+		    if (bp.MaxTAC <= 0)
+		    {
+			    if (bp.LabK2cmyk != null)
+			    {
+			    	cmslut.cmsPipelineFree(bp.LabK2cmyk);
+			    }
+			    
+			    return Result;
+		    }
 		    
 		    // Create a LUT holding normal ICC transform
 		    bp.cmyk2cmyk = DefaultICCintents.run(ContextID,
@@ -1002,6 +1012,15 @@ final class cmscnvrt
 		                                         BPC,
 		                                         AdaptationStates,
 		                                         dwFlags);
+		    if (bp.cmyk2cmyk == null)
+		    {
+			    if (bp.LabK2cmyk != null)
+			    {
+			    	cmslut.cmsPipelineFree(bp.LabK2cmyk);
+			    }
+			    
+			    return Result;
+		    }
 		    
 		    // Now the tone curve
 		    bp.KTone = cmsgmt._cmsBuildKToneCurve(ContextID, 4096, nProfiles,
@@ -1010,6 +1029,20 @@ final class cmscnvrt
 		                                   BPC, 
 		                                   AdaptationStates,
 		                                   dwFlags);
+		    if (bp.KTone == null)
+		    {
+		    	if (bp.cmyk2cmyk != null)
+			    {
+			    	cmslut.cmsPipelineFree(bp.cmyk2cmyk);
+			    }
+		    	
+			    if (bp.LabK2cmyk != null)
+			    {
+			    	cmslut.cmsPipelineFree(bp.LabK2cmyk);
+			    }
+			    
+			    return Result;
+		    }
 		    
 		    // To measure the output, Last profile to Lab
 		    hLab = cmsvirt.cmsCreateLab4ProfileTHR(ContextID, null);
@@ -1017,6 +1050,24 @@ final class cmscnvrt
 		                                         (4 << lcms2.CHANNELS_SHIFT_VALUE)|(2 << lcms2.BYTES_SHIFT_VALUE), hLab, lcms2.TYPE_Lab_DBL, 
 		                                         lcms2.INTENT_RELATIVE_COLORIMETRIC, 
 		                                         lcms2.cmsFLAGS_NOCACHE|lcms2.cmsFLAGS_NOOPTIMIZE);
+		    if (bp.hProofOutput == null)
+		    {
+		    	if (bp.cmyk2cmyk != null)
+			    {
+			    	cmslut.cmsPipelineFree(bp.cmyk2cmyk);
+			    }
+			    
+			    if (bp.KTone != null)
+			    {
+			    	cmsgamma.cmsFreeToneCurve(bp.KTone);   
+			    }
+			    if (bp.LabK2cmyk != null)
+			    {
+			    	cmslut.cmsPipelineFree(bp.LabK2cmyk);
+			    }
+			    
+			    return Result;
+		    }
 		    
 		    // Same as anterior, but lab in the 0..1 range
 		    bp.cmyk2Lab = cmsxform.cmsCreateTransformTHR(ContextID, hProfiles[nProfiles-1], 
@@ -1024,6 +1075,28 @@ final class cmscnvrt
 												 (1 << lcms2.FLOAT_SHIFT_VALUE)|(3 << lcms2.CHANNELS_SHIFT_VALUE)|(4 << lcms2.BYTES_SHIFT_VALUE), 
 												 lcms2.INTENT_RELATIVE_COLORIMETRIC, 
 		                                         lcms2.cmsFLAGS_NOCACHE|lcms2.cmsFLAGS_NOOPTIMIZE);
+		    if (bp.cmyk2Lab == null)
+		    {
+		    	if (bp.cmyk2cmyk != null)
+			    {
+			    	cmslut.cmsPipelineFree(bp.cmyk2cmyk);
+			    }
+			    if (bp.hProofOutput != null)
+			    {
+			    	cmsxform.cmsDeleteTransform(bp.hProofOutput);
+			    }
+			    
+			    if (bp.KTone != null)
+			    {
+			    	cmsgamma.cmsFreeToneCurve(bp.KTone);   
+			    }
+			    if (bp.LabK2cmyk != null)
+			    {
+			    	cmslut.cmsPipelineFree(bp.LabK2cmyk);
+			    }
+			    
+			    return Result;
+		    }
 		    cmsio0.cmsCloseProfile(hLab);
 		    
 		    // Error estimation (for debug only)

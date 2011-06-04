@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
+//  Copyright (c) 1998-2011 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -148,11 +148,9 @@ final class cmsxform
 	    {
 	    	cmsnamed.cmsFreeProfileSequenceDescription(p.Sequence);
 	    }
-	    
-	    lcms2_internal.LCMS_FREE_LOCK(p.rwlock);
 	}
 	
-	// Apply transform
+	// Apply transform.
 	public static void cmsDoTransform(cmsHTRANSFORM Transform, final Object InputBuffer, Object OutputBuffer, int Size)
 	{
 		_cmsTRANSFORM p = (_cmsTRANSFORM)Transform;
@@ -436,50 +434,33 @@ final class cmsxform
 			VirtualPointer output;
 		    short[] wIn = new short[lcms2.cmsMAXCHANNELS], wOut = new short[lcms2.cmsMAXCHANNELS];
 		    int i, n;
-		    short[] CacheIn = new short[lcms2.cmsMAXCHANNELS], CacheOut = new short[lcms2.cmsMAXCHANNELS];
+		    lcms2_internal._cmsCACHE Cache = new lcms2_internal._cmsCACHE();
 		    
 		    accum  = in;
 		    output = out;
 		    n = Size; // Buffer len
 		    
-//#ifndef CMS_DONT_USE_PTHREADS
-		    synchronized(p.rwlock.lock)
-		    {
-//#endif
-		    System.arraycopy(p.CacheIn, 0, CacheIn, 0, lcms2.cmsMAXCHANNELS);
-		    System.arraycopy(p.CacheOut, 0, CacheOut, 0, lcms2.cmsMAXCHANNELS);
-//#ifndef CMS_DONT_USE_PTHREADS
-		    }
-//#endif
+		    // Get copy of zero cache
+		    p.Cache.copyTo(Cache);
 		    
 		    for (i = 0; i < n; i++)
 		    {
 		        accum = p.FromInput.run(p, wIn, accum, Size);
 		        
-		        if (Arrays.equals(CacheIn, wIn))
+		        if (Arrays.equals(Cache.CacheIn, wIn))
 		        {
-		            System.arraycopy(CacheOut, 0, wOut, 0, lcms2.cmsMAXCHANNELS);
+		            System.arraycopy(Cache.CacheOut, 0, wOut, 0, lcms2.cmsMAXCHANNELS);
 		        }
 		        else
 		        {
 		            p.Lut.Eval16Fn.run(wIn, wOut, p.Lut.Data);
 		            
-		            System.arraycopy(wIn, 0, CacheIn, 0, lcms2.cmsMAXCHANNELS);
-				    System.arraycopy(wOut, 0, CacheOut, 0, lcms2.cmsMAXCHANNELS);
+		            System.arraycopy(wIn, 0, Cache.CacheIn, 0, lcms2.cmsMAXCHANNELS);
+				    System.arraycopy(wOut, 0, Cache.CacheOut, 0, lcms2.cmsMAXCHANNELS);
 		        }
 		        
 		        output = p.ToOutput.run(p, wOut, output, Size);
 		    }
-		    
-//#ifndef CMS_DONT_USE_PTHREADS
-		    synchronized(p.rwlock.lock)
-		    {
-//#endif
-		    System.arraycopy(CacheIn, 0, p.CacheIn, 0, lcms2.cmsMAXCHANNELS);
-		    System.arraycopy(CacheOut, 0, p.CacheOut, 0, lcms2.cmsMAXCHANNELS);
-//#ifndef CMS_DONT_USE_PTHREADS
-		    }
-//#endif
 		}
 	};
 	
@@ -492,49 +473,32 @@ final class cmsxform
 			VirtualPointer output;
 		    short[] wIn = new short[lcms2.cmsMAXCHANNELS], wOut = new short[lcms2.cmsMAXCHANNELS];
 		    int i, n;
-		    short[] CacheIn = new short[lcms2.cmsMAXCHANNELS], CacheOut = new short[lcms2.cmsMAXCHANNELS];
+		    lcms2_internal._cmsCACHE Cache = new lcms2_internal._cmsCACHE();
 		    
 		    accum  = in;
 		    output = out;
 		    n = Size; // Buffer len
 		    
-//#ifndef CMS_DONT_USE_PTHREADS
-		    synchronized(p.rwlock.lock)
-		    {
-//#endif
-		    System.arraycopy(p.CacheIn, 0, CacheIn, 0, lcms2.cmsMAXCHANNELS);
-		    System.arraycopy(p.CacheOut, 0, CacheOut, 0, lcms2.cmsMAXCHANNELS);
-//#ifndef CMS_DONT_USE_PTHREADS
-		    }
-//#endif
+		    // Get copy of zero cache
+		    p.Cache.copyTo(Cache);
 		    
 		    for (i = 0; i < n; i++)
 		    {
 		        accum = p.FromInput.run(p, wIn, accum, Size);
 		        
-		        if (Arrays.equals(CacheIn, wIn))
+		        if (Arrays.equals(Cache.CacheIn, wIn))
 		        {
-		            System.arraycopy(CacheOut, 0, wOut, 0, lcms2.cmsMAXCHANNELS);
+		            System.arraycopy(Cache.CacheOut, 0, wOut, 0, lcms2.cmsMAXCHANNELS);
 		        }
 		        else
 		        {
 		        	TransformOnePixelWithGamutCheck(p, wIn, wOut);
-		            System.arraycopy(wIn, 0, CacheIn, 0, lcms2.cmsMAXCHANNELS);
-				    System.arraycopy(wOut, 0, CacheOut, 0, lcms2.cmsMAXCHANNELS);
+		            System.arraycopy(wIn, 0, Cache.CacheIn, 0, lcms2.cmsMAXCHANNELS);
+				    System.arraycopy(wOut, 0, Cache.CacheOut, 0, lcms2.cmsMAXCHANNELS);
 		        }
 		        
 		        output = p.ToOutput.run(p, wOut, output, Size);            
 		    }
-		    
-//#ifndef CMS_DONT_USE_PTHREADS
-		    synchronized(p.rwlock.lock)
-		    {
-//#endif
-		    System.arraycopy(CacheIn, 0, p.CacheIn, 0, lcms2.cmsMAXCHANNELS);
-		    System.arraycopy(CacheOut, 0, p.CacheOut, 0, lcms2.cmsMAXCHANNELS);
-//#ifndef CMS_DONT_USE_PTHREADS
-		    }
-//#endif
 		}
 	};
 	
@@ -618,9 +582,6 @@ final class cmsxform
 	        }
 	    }
 	    
-	    // Create a mutex for shared memory
-	    lcms2_internal.LCMS_CREATE_LOCK(p.rwlock);
-	    
 	    p.InputFormat     = InputFormat;
 	    p.OutputFormat    = OutputFormat;
 	    p.dwOriginalFlags = dwFlags;
@@ -641,6 +602,14 @@ final class cmsxform
 		
 	    Input[0] = PostColorSpace = cmsio0.cmsGetColorSpace(hProfiles[0]);
 	    
+	    // Special handling for named color profiles as devicelinks
+	    if (nProfiles == 1 && cmsio0.cmsGetDeviceClass(hProfiles[0]) == lcms2.cmsSigNamedColorClass)
+	    {
+	    	Input[0]  = lcms2.cmsSig1colorData;
+	    	Output[0] = PostColorSpace;
+	    	return true;
+	    }
+	    
 	    for (i = 0; i < nProfiles; i++)
 	    {
 	        cmsHPROFILE hProfile = hProfiles[i];
@@ -648,12 +617,16 @@ final class cmsxform
 	        boolean lIsInput = (PostColorSpace != lcms2.cmsSigXYZData) &&
 	                       (PostColorSpace != lcms2.cmsSigLabData);
 	        
+	        boolean lIsDeviceLink;
+	        
 			if (hProfile == null)
 			{
 				return false;
 			}
 			
-	        if (lIsInput)
+			lIsDeviceLink = (cmsio0.cmsGetDeviceClass(hProfile) == lcms2.cmsSigLinkClass);
+			
+	        if (lIsInput || lIsDeviceLink)
 	        {
 	            ColorSpaceIn    = cmsio0.cmsGetColorSpace(hProfile);
 	            ColorSpaceOut   = cmsio0.cmsGetPCS(hProfile);
@@ -779,6 +752,7 @@ final class cmsxform
 	    // Keep values
 	    xform.EntryColorSpace = EntryColorSpace[0];
 	    xform.ExitColorSpace  = ExitColorSpace[0];
+	    xform.RenderingIntent = Intents[nProfiles-1];
 	    xform.Lut             = Lut;
 	    
 	    
@@ -830,15 +804,15 @@ final class cmsxform
 	    // If this is a cached transform, init first value, which is zero (16 bits only)
 	    if ((dwFlags & lcms2.cmsFLAGS_NOCACHE) == 0)
 	    {
-	    	Arrays.zero(xform.CacheIn); //Just as a precaution though it is probably a new array and thus it is zeroed on creation
+	    	Arrays.zero(xform.Cache.CacheIn); //Just as a precaution though it is probably a new array and thus it is zeroed on creation
 	        
 	        if (xform.GamutCheck != null)
 	        {
-	            TransformOnePixelWithGamutCheck(xform, xform.CacheIn, xform.CacheOut);
+	            TransformOnePixelWithGamutCheck(xform, xform.Cache.CacheIn, xform.Cache.CacheOut);
 	        }
 	        else
 	        {
-	            xform.Lut.Eval16Fn.run(xform.CacheIn, xform.CacheOut, xform.Lut.Data);  
+	            xform.Lut.Eval16Fn.run(xform.Cache.CacheIn, xform.Cache.CacheOut, xform.Lut.Data);  
 	        }
 	    }
 	    
@@ -939,6 +913,29 @@ final class cmsxform
 	    	return null;
 	    }
 	    return xform.ContextID;
+	}
+	
+	// Grab the input/output formats
+	public static int cmsGetTransformInputFormat(cmsHTRANSFORM hTransform)
+	{
+	    _cmsTRANSFORM xform = (_cmsTRANSFORM)hTransform;
+	    
+	    if (xform == null)
+	    {
+	    	return 0;
+	    }
+	    return xform.InputFormat;
+	}
+	
+	public static int cmsGetTransformOutputFormat(cmsHTRANSFORM hTransform)
+	{
+	    _cmsTRANSFORM xform = (_cmsTRANSFORM)hTransform;
+	    
+	    if (xform == null)
+	    {
+	    	return 0;
+	    }
+	    return xform.OutputFormat;
 	}
 	
 	// For backwards compatibility

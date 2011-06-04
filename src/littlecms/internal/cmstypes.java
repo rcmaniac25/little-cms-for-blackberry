@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
+//  Copyright (c) 1998-2011 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -244,7 +244,7 @@ final class cmstypes
 	}
 	
 	// Helper function to deal with position tables as decribed in several addendums to ICC spec 4.2
-	// A table of n elements is written, where first comes n records containing offsets and sizes and
+	// A table of n elements is readed, where first comes n records containing offsets and sizes and
 	// then a block containing the data itself. This allows to reuse same data in more than one entry
 	private static boolean ReadPositionTable(cmsTagTypeHandler self, cmsIOHANDLER io, int Count, int BaseOffset, Object Cargo, 
 			PositionTableEntryFn ElementFn)
@@ -2633,6 +2633,10 @@ final class cmstypes
 	    {
 	    	return false;
 	    }
+	    if (nChannels <= 0)
+	    {
+	    	return false;
+	    }
 	    
 	    Temp = cmserr._cmsMalloc(ContextID, 256);
 	    if (Temp == null)
@@ -2690,6 +2694,7 @@ final class cmstypes
 	    }
 	    
 	    cmserr._cmsFree(ContextID, Temp);
+	    Temp = null;
 	    
 	    mpe = cmslut.cmsStageAllocToneCurves(ContextID, nChannels, Tables);
 	    if (mpe == null)
@@ -7397,6 +7402,600 @@ final class cmstypes
 	}
 	
 	// ********************************************************************************
+	// Type cmsSigDictType
+	// ********************************************************************************
+	
+	// Single column of the table can point to wchar or MLUC elements. Holds arrays of data
+	private static class _cmsDICelem
+	{
+		public cmsContext ContextID;
+		public int[] Offsets;
+		public int[] Sizes;
+	}
+	
+	private static class _cmsDICarray
+	{
+		public _cmsDICelem Name, Value, DisplayName, DisplayValue;
+		
+		public _cmsDICarray()
+		{
+			Name = new _cmsDICelem();
+			Value = new _cmsDICelem();
+			DisplayName = new _cmsDICelem();
+			DisplayValue = new _cmsDICelem();
+		}
+	}
+	
+	// Allocate an empty array element
+	private static boolean AllocElem(cmsContext ContextID, _cmsDICelem e, int Count)
+	{
+		e.Offsets = new int[Count];
+		
+		e.Sizes = new int[Count];
+	    
+	    e.ContextID = ContextID;
+	    return true;
+	}
+	
+	// Free an array element
+	private static void FreeElem(_cmsDICelem e)
+	{
+	    e.Offsets = e.Sizes = null;
+	}
+	
+	// Get rid of whole array
+	private static void FreeArray(_cmsDICarray a)
+	{
+	    if (a.Name.Offsets != null)
+	    {
+	    	FreeElem(a.Name);
+	    }
+	    if (a.Value.Offsets != null)
+	    {
+	    	FreeElem(a.Value);
+	    }
+	    if (a.DisplayName.Offsets != null)
+	    {
+	    	FreeElem(a.DisplayName);
+	    }
+	    if (a.DisplayValue.Offsets != null)
+	    {
+	    	FreeElem(a.DisplayValue);
+	    }
+	}
+	
+	// Allocate whole array
+	private  static boolean AllocArray(cmsContext ContextID, _cmsDICarray a, int Count, int Length)
+	{
+	    // Empty values
+		FreeElem(a.Name);
+		FreeElem(a.Value);
+		FreeElem(a.DisplayName);
+		FreeElem(a.DisplayValue);
+	    
+	    // On depending on record size, create column arrays
+	    if (!AllocElem(ContextID, a.Name, Count))
+        {
+        	FreeArray(a);
+    	    return false;
+        }
+	    if (!AllocElem(ContextID, a.Value, Count))
+        {
+        	FreeArray(a);
+    	    return false;
+        }
+	    
+	    if (Length > 16)
+	    {
+	        if (!AllocElem(ContextID, a.DisplayName, Count))
+	        {
+	        	FreeArray(a);
+	    	    return false;
+	        }
+	    }
+	    if (Length > 24)
+	    {
+	        if (!AllocElem(ContextID, a.DisplayValue, Count))
+	        {
+	        	FreeArray(a);
+	    	    return false;
+	        }
+	    }
+	    return true;
+	}
+	
+	// Read one element
+	private static boolean ReadOneElem(cmsIOHANDLER io, _cmsDICelem e, int i, int BaseOffset)
+	{
+		int[] tmp = new int[1];
+	    if (!cmsplugin._cmsReadUInt32Number(io, tmp))
+	    {
+	    	return false;
+	    }
+	    e.Offsets[i] = tmp[0];
+	    if (!cmsplugin._cmsReadUInt32Number(io, tmp))
+	    {
+	    	return false;
+	    }
+	    e.Sizes[i] = tmp[0];
+	    
+	    // An offset of zero has special meaning and shal be preserved
+	    if (e.Offsets[i] > 0)
+	    {
+	    	e.Offsets[i] += BaseOffset;
+	    }
+	    return true;
+	}
+	
+	private static boolean ReadOffsetArray(cmsIOHANDLER io, _cmsDICarray a, int Count, int Length, int BaseOffset)
+	{
+	    int i;
+	    
+	    // Read column arrays
+	    for (i=0; i < Count; i++)
+	    {
+	        if (!ReadOneElem(io, a.Name, i, BaseOffset))
+	        {
+	        	return false;
+	        }
+	        if (!ReadOneElem(io, a.Value, i, BaseOffset))
+	        {
+	        	return false;
+	        }
+	        
+	        if (Length > 16)
+	        {
+	            if (!ReadOneElem(io, a.DisplayName, i, BaseOffset))
+		        {
+		        	return false;
+		        }
+	        }
+	        
+	        if (Length > 24)
+	        {
+	            if (!ReadOneElem(io, a.DisplayValue, i, BaseOffset))
+		        {
+		        	return false;
+		        }
+	        }
+	    }
+	    return true;
+	}
+	
+	// Write one element
+	private static boolean WriteOneElem(cmsIOHANDLER io, _cmsDICelem e, int i)
+	{
+	    if (!cmsplugin._cmsWriteUInt32Number(io, e.Offsets[i]))
+        {
+        	return false;
+        }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, e.Sizes[i]))
+        {
+        	return false;
+        }
+	    
+	    return true;
+	}
+	
+	private static boolean WriteOffsetArray(cmsIOHANDLER io, _cmsDICarray a, int Count, int Length)
+	{
+	    int i;
+	    
+	    for (i=0; i < Count; i++)
+	    {
+	        if (!WriteOneElem(io, a.Name, i))
+	        {
+	        	return false;
+	        }
+	        if (!WriteOneElem(io, a.Value, i))
+	        {
+	        	return false;
+	        }
+	        
+	        if (Length > 16)
+	        {
+	        	if (!WriteOneElem(io, a.DisplayName, i))
+	            {
+	            	return false;
+	            }
+	        }
+	        
+	        if (Length > 24)
+	        {
+	            if (!WriteOneElem(io, a.DisplayValue, i))
+	            {
+	            	return false;
+	            }
+	        }
+	    }
+	    
+	    return true;
+	}
+	
+	private static boolean ReadOneWChar(cmsIOHANDLER io, _cmsDICelem e, int i, char[][] wcstr)
+	{
+		int nChars;
+		
+		// Special case for undefined strings (see ICC Votable 
+		// Proposal Submission, Dictionary Type and Metadata TAG Definition)
+		if (e.Offsets[i] == 0)
+		{
+			wcstr[0] = null;
+			return true;
+		}
+		
+		if (!io.Seek.run(io, e.Offsets[i]))
+		{
+			return false;
+		}
+		
+		nChars = e.Sizes[i] / /*sizeof(cmsUInt16Number)*/2;
+		
+		wcstr[0] = new char[nChars + 1];
+		
+		if (!_cmsReadWCharArray(io, nChars, wcstr[0]))
+		{
+			wcstr[0] = null;
+			return false;
+		}
+		
+		// End of string marker
+		wcstr[0][nChars] = 0;
+		return true;
+	}
+	
+	private static int mywcslen(final String s)
+	{
+	    int p;
+	    
+	    p = 0;
+	    while (s.charAt(p) != '\0')
+	    {
+	    	p++;
+	    }
+	    
+	    return p;
+	}
+	
+	private static boolean WriteOneWChar(cmsIOHANDLER io, _cmsDICelem e, int i, String wcstr, int BaseOffset)
+	{
+	    int Before = io.Tell.run(io);
+	    int n;
+	    
+	    e.Offsets[i] = Before - BaseOffset;   
+	    
+	    if (wcstr == null)
+	    {
+	        e.Sizes[i] = 0;
+	        e.Offsets[i] = 0;
+	        return true;
+	    }
+	    
+	    if(!wcstr.endsWith("\0"))
+	    {
+	    	wcstr += '\0';
+	    }
+	    n = mywcslen(wcstr);
+	    if (!_cmsWriteWCharArray(io, n, wcstr.toCharArray()))
+	    {
+	    	return false;
+	    }
+	    
+	    e.Sizes[i] = io.Tell.run(io) - Before;       
+	    return true;
+	}
+	
+	private static boolean ReadOneMLUC(cmsTagTypeHandler self, cmsIOHANDLER io, _cmsDICelem e, int i, cmsMLU[] mlu)
+	{
+	    int[] nItems = new int[1];
+	    
+	    // A way to get null MLUCs
+	    if (e.Offsets[i] == 0 || e.Sizes[i] == 0)
+	    {
+	        mlu[0] = null;
+	        return true;
+	    }
+	    
+	    if (!io.Seek.run(io, e.Offsets[i]))
+	    {
+	    	return false;
+	    }
+	    
+	    mlu[0] = (cmsMLU)Type_MLU_Read(self, io, nItems, e.Sizes[i]);
+	    return mlu[0] != null;
+	}
+	
+	private static boolean WriteOneMLUC(cmsTagTypeHandler self, cmsIOHANDLER io, _cmsDICelem e, int i, final cmsMLU mlu, int BaseOffset)
+	{
+		int Before;
+		
+		// Special case for undefined strings (see ICC Votable 
+		// Proposal Submission, Dictionary Type and Metadata TAG Definition)
+		if (mlu == null)
+		{
+			e.Sizes[i] = 0;
+			e.Offsets[i] = 0;
+	        return true;
+	    }
+		
+	    Before = io.Tell.run(io);
+	    e.Offsets[i] = Before - BaseOffset;
+	    
+	    if (!Type_MLU_Write(self, io, mlu, 1))
+	    {
+	    	return false;
+	    }
+	    
+	    e.Sizes[i] = io.Tell.run(io) - Before;       
+	    return true;
+	}
+	
+	private static Object Type_Dictionary_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+	{
+		lcms2.cmsHANDLE hDict;
+		int[] tmp = new int[1];
+		int i, Count, Length;
+		int BaseOffset;
+		_cmsDICarray a = new _cmsDICarray();
+		char[][] NameWCS = new char[1][], ValueWCS = new char[1][];
+		cmsMLU[] DisplayNameMLU = new cmsMLU[1], DisplayValueMLU=new cmsMLU[1];
+		boolean rc;
+		
+		nItems[0] = 0;
+		
+		// Get actual position as a basis for element offsets
+		BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+		
+		// Get name-value record count
+		if (!cmsplugin._cmsReadUInt32Number(io, tmp))
+		{
+			return null;
+		}
+		Count = tmp[0];
+		SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
+		
+		// Get rec lenghth
+		if (!cmsplugin._cmsReadUInt32Number(io, tmp))
+		{
+			return null;
+		}
+		Length = tmp[0];
+		SizeOfTag -= /*sizeof(cmsUInt32Number)*/4;
+		
+		// Check for valid lengths
+		if (Length != 16 && Length != 24 && Length != 32)
+		{
+			cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_DICT_LEN), new Object[]{new Integer(Length)});
+			return null;
+		}
+		
+		// Creates an empty dictionary
+		hDict = cmsnamed.cmsDictAlloc(self.ContextID);
+		if (hDict == null)
+		{
+			return null;
+		}
+		
+		// On depending on record size, create column arrays
+		if (!AllocArray(self.ContextID, a, Count, Length))
+		{
+			FreeArray(a);
+			cmsnamed.cmsDictFree(hDict);
+			return null;
+		}
+		
+		// Read column arrays
+		if (!ReadOffsetArray(io, a, Count, Length, BaseOffset))
+		{
+			FreeArray(a);
+			cmsnamed.cmsDictFree(hDict);
+			return null;
+		}
+		
+		// Seek to each element and read it
+		for (i=0; i < Count; i++)
+		{
+			if (!ReadOneWChar(io, a.Name, i, NameWCS))
+			{
+				FreeArray(a);
+				cmsnamed.cmsDictFree(hDict);
+				return null;
+			}
+			if (!ReadOneWChar(io, a.Value, i, ValueWCS))
+			{
+				FreeArray(a);
+				cmsnamed.cmsDictFree(hDict);
+				return null;
+			}
+			
+			if (Length > 16)
+			{
+				if (!ReadOneMLUC(self, io, a.DisplayName, i, DisplayNameMLU))
+				{
+					FreeArray(a);
+					cmsnamed.cmsDictFree(hDict);
+					return null;
+				}
+			}
+			
+			if (Length > 24)
+			{
+				if (!ReadOneMLUC(self, io, a.DisplayValue, i, DisplayValueMLU))
+				{
+					FreeArray(a);
+					cmsnamed.cmsDictFree(hDict);
+					return null;
+				}
+			}
+			
+			rc = cmsnamed.cmsDictAddEntry(hDict, Utility.cstringCreation(NameWCS[0]), Utility.cstringCreation(ValueWCS[0]), DisplayNameMLU[0], DisplayValueMLU[0]);
+			
+			if (NameWCS != null)
+			{
+				NameWCS[0] = null;
+			}
+			if (ValueWCS != null)
+			{
+				ValueWCS[0] = null;
+			}
+			if (DisplayNameMLU != null)
+			{
+				cmsnamed.cmsMLUfree(DisplayNameMLU[0]);
+			}
+			if (DisplayValueMLU != null)
+			{
+				cmsnamed.cmsMLUfree(DisplayValueMLU[0]);
+			}
+			
+			if (!rc)
+			{
+				return null;
+			}
+		}
+		
+		FreeArray(a);
+		nItems[0] = 1;
+		return hDict;
+	}
+	
+	private static boolean Type_Dictionary_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+	{
+		lcms2.cmsHANDLE hDict = (lcms2.cmsHANDLE)Ptr;
+		lcms2.cmsDICTentry p;
+	    boolean AnyName, AnyValue;
+	    int i, Count, Length;
+	    int DirectoryPos, CurrentPos, BaseOffset;
+	    _cmsDICarray a = new _cmsDICarray();
+	    
+	    if (hDict == null)
+	    {
+	    	return false;
+	    }
+	    
+	    BaseOffset = io.Tell.run(io) - /*sizeof(_cmsTagBase)*/_cmsTagBase.SIZE;
+	    
+	    // Let's inspect the dictionary
+	    Count = 0; AnyName = false; AnyValue = false;
+	    for (p = cmsnamed.cmsDictGetEntryList(hDict); p != null; p = cmsnamed.cmsDictNextEntry(p))
+	    {
+	        if (p.DisplayName != null)
+	        {
+	        	AnyName = true;
+	        }
+	        if (p.DisplayValue != null)
+	        {
+	        	AnyValue = true;
+	        }
+	        Count++;
+	    }
+	    
+	    Length = 16;
+	    if (AnyName)
+	    {
+	    	Length += 8;
+	    }
+	    if (AnyValue)
+	    {
+	    	Length += 8;
+	    }
+	    
+	    if (!cmsplugin._cmsWriteUInt32Number(io, Count))
+	    {
+	    	return false;
+	    }
+	    if (!cmsplugin._cmsWriteUInt32Number(io, Length))
+	    {
+	    	return false;
+	    }
+	    
+	    // Keep starting position of offsets table
+	    DirectoryPos = io.Tell.run(io);
+	    
+	    // Allocate offsets array
+	    if (!AllocArray(self.ContextID, a, Count, Length))
+	    {
+	    	FreeArray(a);
+		    return false;
+	    }
+	    
+	    // Write a fake directory to be filled latter on
+	    if (!WriteOffsetArray(io, a, Count, Length))
+	    {
+	    	FreeArray(a);
+		    return false;
+	    }
+	    
+	    // Write each element. Keep track of the size as well.
+	    p = cmsnamed.cmsDictGetEntryList(hDict);
+	    for (i=0; i < Count; i++)
+	    {
+	    	if (!WriteOneWChar(io, a.Name, i,  p.Name, BaseOffset))
+		    {
+		    	FreeArray(a);
+			    return false;
+		    }
+	        if (!WriteOneWChar(io, a.Value, i, p.Value, BaseOffset))
+		    {
+		    	FreeArray(a);
+			    return false;
+		    }
+	        
+	        if (p.DisplayName != null)
+	        {
+	            if (!WriteOneMLUC(self, io, a.DisplayName, i, p.DisplayName, BaseOffset))
+	    	    {
+	    	    	FreeArray(a);
+	    		    return false;
+	    	    }
+	        }
+	        
+	        if (p.DisplayValue != null)
+	        {
+	            if (!WriteOneMLUC(self, io, a.DisplayValue, i, p.DisplayValue, BaseOffset))
+	    	    {
+	    	    	FreeArray(a);
+	    		    return false;
+	    	    }
+	        }
+	        
+	        p = cmsnamed.cmsDictNextEntry(p);
+	    }
+	    
+	    // Write the directory
+	    CurrentPos = io.Tell.run(io);
+	    if (!io.Seek.run(io, DirectoryPos))
+	    {
+	    	FreeArray(a);
+		    return false;
+	    }
+	    
+	    if (!WriteOffsetArray(io, a, Count, Length))
+	    {
+	    	FreeArray(a);
+		    return false;
+	    }
+	    
+	    if (!io.Seek.run(io, CurrentPos))
+	    {
+	    	FreeArray(a);
+		    return false;
+	    }
+	    
+	    FreeArray(a);
+	    return true;
+	}
+	
+	private static Object Type_Dictionary_Dup(cmsTagTypeHandler self, final Object Ptr, int n)
+	{
+		return cmsnamed.cmsDictDup((lcms2.cmsHANDLE)Ptr);
+	}
+	
+	private static void Type_Dictionary_Free(cmsTagTypeHandler self, Object Ptr)
+	{
+		cmsnamed.cmsDictFree((lcms2.cmsHANDLE)Ptr);
+	}
+	
+	// ********************************************************************************
 	// Type support main routines
 	// ********************************************************************************
 	
@@ -7430,6 +8029,31 @@ final class cmstypes
 				Type_vcgt_Free(self, Ptr);
 			}
 		}), null);
+		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigDictType, new cmsTagTypeHandler.tagHandlerReadPtr()
+		{
+			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
+			{
+				return Type_Dictionary_Read(self, io, nItems, SizeOfTag);
+			}
+		}, new cmsTagTypeHandler.tagHandlerWritePtr()
+		{
+			public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
+			{
+				return Type_Dictionary_Write(self, io, Ptr, nItems);
+			}
+		}, new cmsTagTypeHandler.tagHandlerDupPtr()
+		{
+			public Object run(cmsTagTypeHandler self, final Object Ptr, int n)
+			{
+				return Type_Dictionary_Dup(self, Ptr, n);
+			}
+		}, new cmsTagTypeHandler.tagHandlerFreePtr()
+		{
+			public void run(cmsTagTypeHandler self, Object Ptr)
+			{
+				Type_Dictionary_Free(self, Ptr);
+			}
+		}), tempTypes);
 		tempTypes = new _cmsTagTypeLinkedList(new cmsTagTypeHandler(lcms2.cmsSigProfileSequenceIdType, new cmsTagTypeHandler.tagHandlerReadPtr()
 		{
 			public Object run(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
@@ -8157,7 +8781,7 @@ final class cmstypes
 		}), tempTypes);
 	}
 	
-	private static final int DEFAULT_TAG_TYPE_COUNT = 30;
+	private static final int DEFAULT_TAG_TYPE_COUNT = 31;
 	
 	// Both kind of plug-ins share same structure
 	public static boolean _cmsRegisterTagTypePlugin(cmsPluginBase Data)
@@ -8205,6 +8829,7 @@ final class cmstypes
 	private static void setupTags()
 	{
 		_cmsTagLinkedList tempTag = new _cmsTagLinkedList(lcms2.cmsSigProfileSequenceIdTag, new cmsTagDescriptor(1, 1, new int[]{lcms2.cmsSigProfileSequenceIdType}, null), null);
+		tempTag = new _cmsTagLinkedList(lcms2.cmsSigMetaTag, new cmsTagDescriptor(1, 1, new int[]{lcms2.cmsSigDictType}, null), tempTag);
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigVcgtTag, new cmsTagDescriptor(1, 1, new int[]{lcms2.cmsSigVcgtType}, null), tempTag);
 		tempTag = new _cmsTagLinkedList(lcms2.cmsSigScreeningTag, new cmsTagDescriptor(1, 1, new int[]{lcms2.cmsSigScreeningType}, null), tempTag);
 		
@@ -8429,7 +9054,7 @@ final class cmstypes
     cmsSigDeviceSettingsTag   ==> Deprecated, useless     
 	 */
 	
-	private static final int DEFAULT_TAG_COUNT = 61;
+	private static final int DEFAULT_TAG_COUNT = 62;
 	
 	private static _cmsTagLinkedList findLinkedListAtIndex(_cmsTagLinkedList list, int index)
 	{

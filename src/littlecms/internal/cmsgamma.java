@@ -1283,23 +1283,52 @@ final class cmsgamma
 	{
 	    int n;
 	    int i, last;
+	    boolean lDescending;
 	    
 	    lcms2_internal._cmsAssert(t != null, "t != null");
 	    
+	    // Degenerated curves are monotonic? Ok, let's pass them
 	    n    = t.nEntries;
-	    last = t.Table16[n-1] & 0xFFFF;
-	    
-	    for (i = n-2; i >= 0; --i)
+	    if (n < 2)
 	    {
-	        if ((t.Table16[i] & 0xFFFF) > last)
+	    	return true;
+	    }
+	    
+	    // Curve direction
+	    lDescending = cmsIsToneCurveDescending(t);
+	    
+	    if (lDescending)
+	    {
+	        last = t.Table16[0] & 0xFFFF;
+	        
+	        for (i = 1; i < n; i++)
 	        {
-	        	return false;
-	        }
-	        else
-	        {
-	        	last = t.Table16[i] & 0xFFFF;
+	            if ((t.Table16[i] & 0xFFFF) - last > 2) // We allow some ripple
+	            {
+	            	return false;
+	            }
+	            else
+	            {
+	            	last = t.Table16[i];
+	            }
 	        }
 	    }
+	    else
+	    {
+		    last = t.Table16[n-1] & 0xFFFF;
+		    
+		    for (i = n-2; i >= 0; --i)
+		    {
+		        if ((t.Table16[i] & 0xFFFF) - last > 2)
+		        {
+		        	return false;
+		        }
+		        else
+		        {
+		        	last = t.Table16[i] & 0xFFFF;
+		        }
+		    }
+		}
 	    
 	    return true;
 	}

@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
+//  Copyright (c) 1998-2011 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -56,31 +56,6 @@ final class lcms2_internal extends lcms2_plugin
 	
 	// Maximum of channels for internal pipeline evaluation
 	public static final int MAX_STAGE_CHANNELS = 128;
-	
-	public static class LCMS_RWLOCK_T
-	{
-		public 
-//#ifdef CMS_DONT_USE_PTHREADS
-			int 
-//#else
-			Object 
-//#endif
-			lock;
-	}
-	
-	public static void LCMS_CREATE_LOCK(LCMS_RWLOCK_T lock)
-	{
-//#ifndef CMS_DONT_USE_PTHREADS
-		lock.lock = new Object();
-//#endif
-	}
-	public static void LCMS_FREE_LOCK(LCMS_RWLOCK_T lock)
-	{
-//#ifndef CMS_DONT_USE_PTHREADS
-		lock.lock = null;
-//#endif
-	}
-	//LCMS_READ_LOCK, LCMS_WRITE_LOCK, and LCMS_UNLOCK can't be dedicated functions
 	
 	// A fast way to convert from/to 16 <-> 8 bits
 	public static short FROM_8_TO_16(int rgb)
@@ -586,9 +561,9 @@ final class lcms2_internal extends lcms2_plugin
 		return cmslut._cmsStageAllocLabV4ToV2(ContextID);
 	}
 	
-	public static cmsStage _cmsStageAllocNamedColor(cmsNAMEDCOLORLIST NamedColorList)
+	public static cmsStage _cmsStageAllocNamedColor(cmsNAMEDCOLORLIST NamedColorList, boolean UsePCS)
 	{
-		return cmsnamed._cmsStageAllocNamedColor(NamedColorList);
+		return cmsnamed._cmsStageAllocNamedColor(NamedColorList, UsePCS);
 	}
 	
 	public static cmsStage _cmsStageAllocIdentityCurves(cmsContext ContextID, int nChannels)
@@ -630,7 +605,7 @@ final class lcms2_internal extends lcms2_plugin
 	    /** Environment*/
 	    cmsContext ContextID;
 	    
-	    /** Implemntation-specific: save as 8 bits if possible*/
+	    /** Implementation-specific: save as 8 bits if possible*/
 	    boolean SaveAs8Bits;
 	}
 	
@@ -744,6 +719,25 @@ final class lcms2_internal extends lcms2_plugin
 	
 	// Transform logic ------------------------------------------------------------------------------------------------------
 	
+	public static class _cmsCACHE
+	{
+		// 1-pixel cache (16 bits only)
+		public short[] CacheIn;
+		public short[] CacheOut;
+	    
+	    public _cmsCACHE()
+	    {
+	    	CacheIn = new short[cmsMAXCHANNELS];
+	    	CacheOut = new short[cmsMAXCHANNELS];
+	    }
+	    
+	    public void copyTo(_cmsCACHE cache)
+	    {
+	    	System.arraycopy(CacheIn, 0, cache.CacheIn, 0, cmsMAXCHANNELS);
+	    	System.arraycopy(CacheOut, 0, cache.CacheOut, 0, cmsMAXCHANNELS);
+	    }
+	}
+	
 	// Full xform
 	public static interface _cmsTransformFn
 	{
@@ -771,12 +765,8 @@ final class lcms2_internal extends lcms2_plugin
 		public cmsFormatterFloat FromInputFloat;
 		public cmsFormatterFloat ToOutputFloat;
 	    
-	    // 1-pixel cache (16 bits only)
-	    public short[] CacheIn;
-	    public short[] CacheOut;
-	    
-	    // Semaphor for cache
-	    public LCMS_RWLOCK_T rwlock;
+		// 1-pixel cache seed for zero as input (16 bits, read only)
+	    public _cmsCACHE Cache;
 	    
 	    // A MPE LUT holding the full (optimized) transform
 	    public cmsPipeline Lut;
@@ -803,13 +793,6 @@ final class lcms2_internal extends lcms2_plugin
 	    
 	    // An id that uniquely identifies the running context. May be null.
 	    public cmsContext ContextID;
-	    
-	    public _cmsTRANSFORM()
-	    {
-	    	CacheIn = new short[cmsMAXCHANNELS];
-	    	CacheOut = new short[cmsMAXCHANNELS];
-	    	rwlock = new LCMS_RWLOCK_T();
-	    }
 	}
 	
 	// --------------------------------------------------------------------------------------------------

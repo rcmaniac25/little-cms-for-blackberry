@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
+//  Copyright (c) 1998-2011 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.1
+// Version 2.2
 //
 package littlecms.internal;
 
@@ -39,7 +39,7 @@ import net.rim.device.api.util.Arrays;
 public class lcms2
 {
 	/** Version/release*/
-	public static final int LCMS_VERSION = 2010;
+	public static final int LCMS_VERSION = 2020;
 	
 	// Some common definitions
 	public static final int cmsMAX_PATH = 256;
@@ -67,6 +67,7 @@ public class lcms2
     public static final int cmsSigCrdInfoType                       = 0x63726469; // 'crdi'
     public static final int cmsSigCurveType                         = 0x63757276; // 'curv'
     public static final int cmsSigDataType                          = 0x64617461; // 'data'
+    public static final int cmsSigDictType                          = 0x64696374; // 'dict'
     public static final int cmsSigDateTimeType                      = 0x6474696D; // 'dtim'
     public static final int cmsSigDeviceSettingsType                = 0x64657673; // 'devs'
     public static final int cmsSigLut16Type                         = 0x6d667432; // 'mft2'
@@ -93,9 +94,9 @@ public class lcms2
     public static final int cmsSigUInt32ArrayType                   = 0x75693332; // 'ui32'
     public static final int cmsSigUInt64ArrayType                   = 0x75693634; // 'ui64'
     public static final int cmsSigUInt8ArrayType                    = 0x75693038; // 'ui08'
+    public static final int cmsSigVcgtType                          = 0x76636774; // 'vcgt'
     public static final int cmsSigViewingConditionsType             = 0x76696577; // 'view'
     public static final int cmsSigXYZType                           = 0x58595A20; // 'XYZ '
-    public static final int cmsSigVcgtType                          = 0x76636774; // 'vcgt'
     
     // Base ICC tag definitions
     public static final int cmsSigAToB0Tag                          = 0x41324230; // 'A2B0'
@@ -166,6 +167,7 @@ public class lcms2
     public static final int cmsSigViewingCondDescTag                = 0x76756564; // 'vued'
     public static final int cmsSigViewingConditionsTag              = 0x76696577; // 'view'
     public static final int cmsSigVcgtTag                           = 0x76636774; // 'vcgt'
+    public static final int cmsSigMetaTag                           = 0x6D657461; // 'meta'
     
     // ICC Technology tag
     public static final int cmsSigDigitalCamera                     = 0x6463616D; // 'dcam'
@@ -216,12 +218,12 @@ public class lcms2
     public static final int cmsSigMCH7Data                          = 0x4D434837; // 'MCH7'
     public static final int cmsSigMCH8Data                          = 0x4D434838; // 'MCH8'
     public static final int cmsSigMCH9Data                          = 0x4D434839; // 'MCH9'
-    public static final int cmsSigMCHAData                          = 0x4D43483A; // 'MCHA'
-    public static final int cmsSigMCHBData                          = 0x4D43483B; // 'MCHB'
-    public static final int cmsSigMCHCData                          = 0x4D43483C; // 'MCHC'
-    public static final int cmsSigMCHDData                          = 0x4D43483D; // 'MCHD'
-    public static final int cmsSigMCHEData                          = 0x4D43483E; // 'MCHE'
-    public static final int cmsSigMCHFData                          = 0x4D43483F; // 'MCHF'
+    public static final int cmsSigMCHAData                          = 0x4D434841; // 'MCHA'
+    public static final int cmsSigMCHBData                          = 0x4D434842; // 'MCHB'
+    public static final int cmsSigMCHCData                          = 0x4D434843; // 'MCHC'
+    public static final int cmsSigMCHDData                          = 0x4D434844; // 'MCHD'
+    public static final int cmsSigMCHEData                          = 0x4D434845; // 'MCHE'
+    public static final int cmsSigMCHFData                          = 0x4D434846; // 'MCHF'
     public static final int cmsSigNamedData                         = 0x6e6d636c; // 'nmcl'
     public static final int cmsSig1colorData                        = 0x31434C52; // '1CLR'
     public static final int cmsSig2colorData                        = 0x32434C52; // '2CLR'
@@ -2399,6 +2401,81 @@ public class lcms2
 		cmsnamed.cmsFreeProfileSequenceDescription(pseq);
 	}
 	
+	// Dictionaries --------------------------------------------------------------------------------------------------------
+	
+	public static class cmsDICTentry
+	{
+		public cmsDICTentry Next;
+		
+		public cmsMLU DisplayName;
+		public cmsMLU DisplayValue;
+		public String Name;
+		public String Value;
+	}
+	
+	/**
+	 * Allocates an empty dictionary linked list object.
+	 * @param ContextID Pointer to a user-defined context cargo.
+	 * @return On success, a handle to a newly created dictionary linked list. NULL on error.
+	 */
+	public static cmsHANDLE cmsDictAlloc(cmsContext ContextID)
+	{
+		return cmsnamed.cmsDictAlloc(ContextID);
+	}
+	
+	/**
+	 * Destroys a dictionary linked list object, freeing any associated resource.
+	 * @param hDict Handle to a dictionary linked list object.
+	 */
+	public static void cmsDictFree(cmsHANDLE hDict)
+	{
+		cmsnamed.cmsDictFree(hDict);
+	}
+	
+	/**
+	 * Duplicates a dictionary linked list object.
+	 * @param hDict Handle to a dictionary linked list object.
+	 * @return On success, a handle to a newly created dictionary linked list object. On error, NULL.
+	 */
+	public static cmsHANDLE cmsDictDup(cmsHANDLE hDict)
+	{
+		return cmsnamed.cmsDictDup(hDict);
+	}
+	
+	/**
+	 * Adds data to a dictionary linked list object. No check for duplicity is made. Dictionary and Name parameters a required, rest is optional an NULL may be used.
+	 * @param hDict Handle to a dictionary linked list object.
+	 * @param Name Wide char strings. Value may be NULL
+	 * @param Value Wide char strings. Value may be NULL
+	 * @param DisplayName Multilocalized Unicode objects. May be NULL.
+	 * @param DisplayValue Multilocalized Unicode objects. May be NULL.
+	 * @return Operation result
+	 */
+	public static boolean cmsDictAddEntry(cmsHANDLE hDict, final String Name, final String Value, final cmsMLU DisplayName, final cmsMLU DisplayValue)
+	{
+		return cmsnamed.cmsDictAddEntry(hDict, Name, Value, DisplayName, DisplayValue);
+	}
+	
+	/**
+	 * Returns a pointer to first element in linked list.
+	 * @param hDict Handle to a dictionary linked list object.
+	 * @return Pointer to element on success, NULL on error or end of list.
+	 */
+	public static cmsDICTentry cmsDictGetEntryList(cmsHANDLE hDict)
+	{
+		return cmsnamed.cmsDictGetEntryList(hDict);
+	}
+	
+	/**
+	 * Returns a pointer to the next element in linked list.
+	 * @param e Pointer to element
+	 * @return Pointer to element on success, NULL on error or end of list.
+	 */
+	public static cmsDICTentry cmsDictNextEntry(final cmsDICTentry e)
+	{
+		return cmsnamed.cmsDictNextEntry(e);
+	}
+	
 	// Access to Profile data ----------------------------------------------------------------------------------------------
 	/**
 	 * Creates an empty profile object, to be populated by the programmer.
@@ -3753,6 +3830,27 @@ public class lcms2
 	public static cmsContext cmsGetTransformContextID(cmsHTRANSFORM hTransform)
 	{
 		return cmsxform.cmsGetTransformContextID(hTransform);
+	}
+	
+	// Grab the input/output formats
+	/**
+	 * Returns the input format associated with a given transform.
+	 * @param hTransform Handle to a color transform object.
+	 * @return The input format associated with the given transform or 0 if NULL parameter
+	 */
+	public static int cmsGetTransformInputFormat(cmsHTRANSFORM hTransform)
+	{
+		return cmsxform.cmsGetTransformInputFormat(hTransform);
+	}
+	
+	/**
+	 * Returns the output format associated with a given transform.
+	 * @param hTransform Handle to a color transform object.
+	 * @return The output format associated with the given transform or 0 if NULL parameter
+	 */
+	public static int cmsGetTransformOutputFormat(cmsHTRANSFORM hTransform)
+	{
+		return cmsxform.cmsGetTransformOutputFormat(hTransform);
 	}
 	
 	// For backwards compatibility

@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
+//  Copyright (c) 1998-2011 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -247,7 +247,7 @@ final class cmsvirt
 	        WhitePointXYZ = new cmsCIEXYZ();
 	        cmspcs.cmsxyY2XYZ(WhitePointXYZ, WhitePoint);
 	        CHAD = new cmsMAT3();
-	        cmswtpnt._cmsAdaptationMatrix(CHAD, null, WhitePointXYZ, lcms2.cmsD50_XYZ);
+	        cmswtpnt._cmsAdaptationMatrix(CHAD, null, lcms2.cmsD50_XYZ, WhitePointXYZ);
 	        
 	        // This is a V4 tag, but many CMM does read and understand it no matter which version
 //#ifdef CMS_RAW_C

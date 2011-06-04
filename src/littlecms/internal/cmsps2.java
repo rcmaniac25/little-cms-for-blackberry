@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
+//  Copyright (c) 1998-2011 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -493,6 +493,11 @@ final class cmsps2
 	    int i;
 	    double gamma;
 	    
+	    if (Table == null)
+	    {
+	    	return; // Error
+	    }
+	    
 	    if (Table.nEntries <= 0)
 	    {
 	    	return; // Empty table
@@ -586,6 +591,11 @@ final class cmsps2
 	    
 	    for(i=0; i < n; i++)
 	    {
+	    	if (g[i] == null)
+	    	{
+	    		return; // Error
+	    	}
+	    	
 			if (i > 0 && GammaTableEquals(g[i-1].Table16, g[i].Table16, g[i].nEntries))
 			{
 	            cmsplugin._cmsIOPrintf(m, "dup ", null);
@@ -856,14 +866,17 @@ final class cmsps2
 	    cmsHTRANSFORM xform = cmsxform.cmsCreateTransformTHR(ContextID, hProfile, lcms2.TYPE_GRAY_8, hXYZ, lcms2.TYPE_XYZ_DBL, Intent, lcms2.cmsFLAGS_NOOPTIMIZE);
 	    int i;
 	    
-	    for (i=0; i < 256; i++)
+	    if (Out != null)
 	    {
-	    	byte Gray = (byte)i;
-	    	cmsCIEXYZ XYZ = new cmsCIEXYZ();
-	    	
-	        cmsxform.cmsDoTransform(xform, new Byte(Gray), XYZ, 1);
-	        
-			Out.Table16[i] = lcms2_internal._cmsQuickSaturateWord(XYZ.Y * 65535.0);
+		    for (i=0; i < 256; i++)
+		    {
+		    	byte Gray = (byte)i;
+		    	cmsCIEXYZ XYZ = new cmsCIEXYZ();
+		    	
+		        cmsxform.cmsDoTransform(xform, new Byte(Gray), XYZ, 1);
+		        
+				Out.Table16[i] = lcms2_internal._cmsQuickSaturateWord(XYZ.Y * 65535.0);
+		    }
 	    }
 	    
 	    cmsxform.cmsDeleteTransform(xform);

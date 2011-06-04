@@ -31,6 +31,7 @@ import littlecms.internal.helper.BitConverter;
 import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
 import littlecms.internal.lcms2.cmsContext;
+import littlecms.internal.lcms2.cmsHANDLE;
 import littlecms.internal.lcms2.cmsHTRANSFORM;
 import littlecms.internal.lcms2.cmsMLU;
 import littlecms.internal.lcms2.cmsNAMEDCOLORLIST;
@@ -928,6 +929,27 @@ final class cmsnamed
 		}
 	};
 	
+	private static final _cmsStageEvalFn EvalNamedColorPCS = new _cmsStageEvalFn()
+	{
+		public void run(float[] In, float[] Out, cmsStage mpe)
+		{
+			cmsNAMEDCOLORLIST NamedColorList = (cmsNAMEDCOLORLIST)mpe.Data;
+		    int index = lcms2_internal._cmsQuickSaturateWord(In[0] * 65535.0) & 0xFFFF;
+		    
+		    if (index >= NamedColorList.nColors)
+		    {
+		    	cmserr.cmsSignalError(NamedColorList.ContextID, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSNAMED_COLOR_OUTOFRANGE), new Object[]{new Integer(index)});
+		    }
+		    else
+		    {
+		    	// Named color always uses Lab
+		    	Out[0] = (float)(NamedColorList.List[index].PCS[0] / 65535.0);
+		    	Out[1] = (float)(NamedColorList.List[index].PCS[1] / 65535.0);
+		    	Out[2] = (float)(NamedColorList.List[index].PCS[2] / 65535.0);
+		    }
+		}
+	};
+	
 	private static final _cmsStageEvalFn EvalNamedColor = new _cmsStageEvalFn()
 	{
 		public void run(float[] In, float[] Out, cmsStage mpe)
@@ -951,12 +973,12 @@ final class cmsnamed
 	};
 	
 	// Named color lookup element
-	public static cmsStage _cmsStageAllocNamedColor(cmsNAMEDCOLORLIST NamedColorList)
+	public static cmsStage _cmsStageAllocNamedColor(cmsNAMEDCOLORLIST NamedColorList, boolean UsePCS)
 	{
 	    return cmslut._cmsStageAllocPlaceholder(NamedColorList.ContextID, 
 			                           lcms2.cmsSigNamedColorElemType, 
-									   1, 3,
-									   EvalNamedColor,
+			                           1, UsePCS ? 3 : NamedColorList.ColorantCount,
+					                   UsePCS ? EvalNamedColorPCS : EvalNamedColor,
 									   DupNamedColorList,
 									   FreeNamedColorList,
 									   cmsDupNamedColorList(NamedColorList));
@@ -1073,5 +1095,140 @@ final class cmsnamed
 	    }
 	    
 	    return NewSeq;
+	}
+	
+	// Dictionaries --------------------------------------------------------------------------------------------------------
+	
+	// Dictionaries are just very simple linked lists
+	
+	private static class _cmsDICT implements cmsHANDLE
+	{
+		public lcms2.cmsDICTentry head;
+		public cmsContext ContextID;
+	}
+	
+	// Allocate an empty dictionary
+	public static cmsHANDLE cmsDictAlloc(cmsContext ContextID)
+	{
+	    _cmsDICT dict = new _cmsDICT();
+	    
+	    dict.ContextID = ContextID;
+	    return dict;
+	}
+	
+	// Dispose resources
+	public static void cmsDictFree(cmsHANDLE hDict)
+	{
+	    _cmsDICT dict = (_cmsDICT)hDict;
+	    lcms2.cmsDICTentry entry, next;
+	    
+	    lcms2_internal._cmsAssert(dict != null, "dict != null");
+	    
+	    // Walk the list freeing all nodes
+	    entry = dict.head;
+	    while (entry != null)
+	    {
+	    	if (entry.DisplayName  != null)
+	    	{
+	    		cmsMLUfree(entry.DisplayName);
+	    	}
+	    	if (entry.DisplayValue != null)
+	    	{
+	    		cmsMLUfree(entry.DisplayValue);
+	    	}
+	    	if (entry.Name != null)
+	    	{
+	    		entry.Name = null;
+	    	}
+	    	if (entry.Value != null)
+	    	{
+	    		entry.Value = null;
+	    	}
+	    	
+	    	// Don't fall in the habitual trap...
+	    	next = entry.Next;
+	    	//_cmsFree(dict.ContextID, entry);
+	    	
+	    	entry = next;
+	    }
+	    dict.head = null;
+	}
+	
+	// Add a new entry to the linked list
+	public static boolean cmsDictAddEntry(cmsHANDLE hDict, final String Name, final String Value, final cmsMLU DisplayName, final cmsMLU DisplayValue)
+	{
+	    _cmsDICT dict = (_cmsDICT)hDict;
+	    lcms2.cmsDICTentry entry;
+	    
+	    lcms2_internal._cmsAssert(dict != null, "dict != null");
+	    lcms2_internal._cmsAssert(Name != null, "Name != null");
+	    
+	    entry = new lcms2.cmsDICTentry();
+	    
+	    entry.DisplayName  = cmsMLUdup(DisplayName);
+	    entry.DisplayValue = cmsMLUdup(DisplayValue);
+	    entry.Name         = Name;
+	    entry.Value        = Value;
+	    
+	    entry.Next = dict.head;
+	    dict.head = entry;
+	    
+	    return true;
+	}
+	
+	// Duplicates an existing dictionary
+	public static cmsHANDLE cmsDictDup(cmsHANDLE hDict)
+	{
+	    _cmsDICT old_dict = (_cmsDICT)hDict;
+	    cmsHANDLE hNew;
+	    _cmsDICT new_dict;
+	    lcms2.cmsDICTentry entry;
+	    
+	    lcms2_internal._cmsAssert(old_dict != null, "old_dict != null");
+	    
+	    hNew  = cmsDictAlloc(old_dict.ContextID);
+	    if (hNew == null)
+	    {
+	    	return null;
+	    }
+	    
+	    new_dict = (_cmsDICT)hNew;
+	    
+	    // Walk the list freeing all nodes
+	    entry = old_dict.head;
+	    while (entry != null)
+	    {
+	    	if (!cmsDictAddEntry(hNew, entry.Name, entry.Value, entry.DisplayName, entry.DisplayValue))
+	    	{
+	    		cmsDictFree(hNew);
+	            return null;
+	        }
+	    	
+	        entry = entry.Next;
+	    }
+	    
+	    return hNew;
+	}
+	
+	// Get a pointer to the linked list
+	public static lcms2.cmsDICTentry cmsDictGetEntryList(cmsHANDLE hDict)
+	{
+	    _cmsDICT dict = (_cmsDICT)hDict;
+	    
+	    if (dict == null)
+	    {
+	    	return null;
+	    }
+	    return dict.head;
+	}
+	
+	// Helper For external languages
+	public static lcms2.cmsDICTentry cmsDictNextEntry(final lcms2.cmsDICTentry e)
+	{
+		if (e == null)
+	    {
+			return null;
+	    }
+		return e.Next;
 	}
 }

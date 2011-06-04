@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
+//  Copyright (c) 1998-2011 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -777,7 +777,19 @@ final class cmslut
 	    int nInputs, nOutputs;  
 	    int[] nSamples;
 	    short[] In = new short[lcms2.cmsMAXCHANNELS], Out = new short[lcms2_internal.MAX_STAGE_CHANNELS];
-	    _cmsStageCLutData clut = (_cmsStageCLutData)mpe.Data;
+	    _cmsStageCLutData clut;
+	    
+	    if (mpe == null)
+	    {
+	    	return false;
+	    }
+	    
+	    clut = (_cmsStageCLutData)mpe.Data;
+	    
+	    if (clut == null)
+	    {
+	    	return false;
+	    }
 	    
 	    nSamples = clut.Params.nSamples;
 	    nInputs  = clut.Params.nInputs;

@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
+//  Copyright (c) 1998-2011 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -282,6 +282,29 @@ final class cmsio1
 	    int tagFloat = Device2PCSFloat[Intent];
 	    cmsContext ContextID = cmsio0.cmsGetProfileContextID(hProfile);
 	    
+	    // On named color, take the appropiate tag
+	    if (cmsio0.cmsGetDeviceClass(hProfile) == lcms2.cmsSigNamedColorClass)
+	    {
+	    	cmsPipeline Lut; 
+	    	lcms2.cmsNAMEDCOLORLIST nc = (lcms2.cmsNAMEDCOLORLIST)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigNamedColor2Tag);
+	    	
+	        if (nc == null)
+	        {
+	        	return null;
+	        }
+	        
+	        Lut = cmslut.cmsPipelineAlloc(ContextID, 0, 0);
+	        if (Lut == null)
+	        {
+	            cmsnamed.cmsFreeNamedColorList(nc);
+	            return null;
+	        }
+	        
+	        cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_BEGIN, cmsnamed._cmsStageAllocNamedColor(nc, true));
+	        cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_END, cmslut._cmsStageAllocLabV2ToV4(ContextID));
+	        return Lut;
+	    }
+	    
 	    if (cmsio0.cmsIsTag(hProfile, tagFloat)) // Float tag takes precedence
 	    {
 	        // Floating point LUT are always V4, so no adjustment is required
@@ -315,6 +338,12 @@ final class cmsio1
 	        if (OriginalType != lcms2.cmsSigLut16Type || cmsio0.cmsGetPCS(hProfile) != lcms2.cmsSigLabData)
 	        {
 	        	return Lut;
+	        }
+	        
+	        // If the input is Lab, add also a conversion at the begin
+	        if (cmsio0.cmsGetColorSpace(hProfile) == lcms2.cmsSigLabData)
+	        {
+	        	cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_BEGIN, cmslut._cmsStageAllocLabV4ToV2(ContextID));
 	        }
 	        
 	        // Add a matrix for conversion V2 to V4 Lab PCS
@@ -519,6 +548,13 @@ final class cmsio1
 	        
 	        // Add a matrix for conversion V4 to V2 Lab PCS
 	        cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_BEGIN, cmslut._cmsStageAllocLabV4ToV2(ContextID));
+	        
+	        // If the output is Lab, add also a conversion at the end
+	        if (cmsio0.cmsGetColorSpace(hProfile) == lcms2.cmsSigLabData)
+	        {
+	        	cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_END, cmslut._cmsStageAllocLabV2ToV4(ContextID));
+	        }
+	        
 	        return Lut;
 	    }   
 	    
@@ -547,6 +583,31 @@ final class cmsio1
 	    int tag16    = Device2PCS16[Intent];
 	    int tagFloat = Device2PCSFloat[Intent];
 	    cmsContext ContextID = cmsio0.cmsGetProfileContextID(hProfile);
+	    
+	    // On named color, take the appropiate tag
+	    if (cmsio0.cmsGetDeviceClass(hProfile) == lcms2.cmsSigNamedColorClass)
+	    {
+	    	lcms2.cmsNAMEDCOLORLIST nc = (lcms2.cmsNAMEDCOLORLIST)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigNamedColor2Tag);
+	        
+	        if (nc == null)
+	        {
+	        	return null;
+	        }
+	        
+	        Lut = cmslut.cmsPipelineAlloc(ContextID, 0, 0);
+	        if (Lut == null)
+	        {
+	            cmsnamed.cmsFreeNamedColorList(nc);
+	            return null;
+	        }
+	        
+	        cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_BEGIN, cmsnamed._cmsStageAllocNamedColor(nc, false));
+	        if (cmsio0.cmsGetColorSpace(hProfile) == lcms2.cmsSigLabData)
+	        {
+	        	cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_END, cmslut._cmsStageAllocLabV2ToV4(ContextID));
+	        }
+	        return Lut;
+	    }
 	    
 	    if (cmsio0.cmsIsTag(hProfile, tagFloat)) // Float tag takes precedence
 	    {
@@ -725,10 +786,13 @@ final class cmsio1
 	    NewSeq = cmsnamed.cmsDupProfileSequenceDescription(ProfileSeq);
 	    
 	    // Ok, proceed to the mixing
-	    for (i=0; i < ProfileSeq.n; i++)
+	    if (NewSeq != null)
 	    {
-	    	System.arraycopy(ProfileId.seq[i].ProfileID.data, 0, NewSeq.seq[i].ProfileID.data, 0, cmsProfileID.SIZE);
-	        NewSeq.seq[i].Description = cmsnamed.cmsMLUdup(ProfileId.seq[i].Description);
+		    for (i=0; i < ProfileSeq.n; i++)
+		    {
+		    	System.arraycopy(ProfileId.seq[i].ProfileID.data, 0, NewSeq.seq[i].ProfileID.data, 0, cmsProfileID.SIZE);
+		        NewSeq.seq[i].Description = cmsnamed.cmsMLUdup(ProfileId.seq[i].Description);
+		    }
 	    }
 	    
 	    return NewSeq;

@@ -1199,7 +1199,7 @@ final class cmspack
 					int Inks = Buffer.getPosition();
 				    int nChan = lcms2.T_CHANNELS(CMMcargo.OutputFormat);
 				    int i;
-				    double maximum = IsInkSpace(CMMcargo.InputFormat) ? 655.35 : 65535.0;
+				    double maximum = IsInkSpace(CMMcargo.OutputFormat) ? 655.35 : 65535.0;
 				    
 				    VirtualPointer.TypeProcessor proc = Buffer.getProcessor();
 				    if (lcms2.T_PLANAR(CMMcargo.OutputFormat))
