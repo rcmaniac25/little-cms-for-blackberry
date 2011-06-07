@@ -763,13 +763,16 @@ public class VirtualPointer
         private void writePrimitiveArray(Object value, boolean inc, int size)
         {
         	int pos = vp.dataPos;
+        	int blen = 0;
         	if(value instanceof byte[])
         	{
+        		blen = 1;
         		byte[] val = (byte[])value;
         		this.write(val, true);
         	}
         	else if(value instanceof short[])
         	{
+        		blen = 2;
         		short[] val = (short[])value;
         		int len = val.length;
         		for(int i = 0; i < len; i++)
@@ -779,6 +782,7 @@ public class VirtualPointer
         	}
         	else if(value instanceof char[])
         	{
+        		blen = 2;
         		char[] val = (char[])value;
         		int len = val.length;
         		for(int i = 0; i < len; i++)
@@ -788,6 +792,7 @@ public class VirtualPointer
         	}
         	else if(value instanceof int[])
         	{
+        		blen = 4;
         		int[] val = (int[])value;
         		int len = val.length;
         		for(int i = 0; i < len; i++)
@@ -797,6 +802,7 @@ public class VirtualPointer
         	}
         	else if(value instanceof long[])
         	{
+        		blen = 8;
         		long[] val = (long[])value;
         		int len = val.length;
         		for(int i = 0; i < len; i++)
@@ -806,6 +812,7 @@ public class VirtualPointer
         	}
         	else if(value instanceof float[])
         	{
+        		blen = 4;
         		float[] val = (float[])value;
         		int len = val.length;
         		for(int i = 0; i < len; i++)
@@ -815,6 +822,7 @@ public class VirtualPointer
         	}
         	else if(value instanceof double[])
         	{
+        		blen = 8;
         		double[] val = (double[])value;
         		int len = val.length;
         		for(int i = 0; i < len; i++)
@@ -824,6 +832,7 @@ public class VirtualPointer
         	}
         	else if(value instanceof boolean[])
         	{
+        		blen = 1;
         		boolean[] val = (boolean[])value;
         		int len = val.length;
         		for(int i = 0; i < len; i++)
@@ -833,15 +842,24 @@ public class VirtualPointer
         	}
         	else if(value instanceof String[])
         	{
+        		blen = 1; //Interpret size as byte count
         		String[] val = (String[])value;
         		int len = val.length;
-        		for(int i = 0; i < len; i++)
+        		int tlen = 0; //Keep a count on how many bytes are written (but only for the number of Strings that are expected to be written), this will be used as a limit
+        		for(int i = 0, tcount = 0; i < len; i++, tcount++)
         		{
+        			int tpos = this.vp.dataPos;
         			this.write(val[i], true);
+        			if(tcount < size)
+        			{
+        				tlen += this.vp.dataPos - tpos;
+        			}
         		}
+        		size = tlen; //Slight defeat of the purpose of "number of bytes written" since size in interpreted as item count instead of byte count
         	}
         	else if(value instanceof VirtualPointer[])
         	{
+        		blen = VirtualPointer.SIZE;
         		VirtualPointer[] val = (VirtualPointer[])value;
         		int len = val.length;
         		for(int i = 0; i < len; i++)
@@ -859,10 +877,10 @@ public class VirtualPointer
             {
                 vp.dataPos = pos;
             }
-            else if(size >= 0 && vp.dataPos - pos != size)
+            else if(size >= 0 && blen != -1 && vp.dataPos - pos != (size * blen))
             {
             	//Too many/Not enough bytes written, make sure size matches
-            	vp.dataPos = pos + size;
+            	vp.dataPos = pos + (size * blen);
             }
         }
         

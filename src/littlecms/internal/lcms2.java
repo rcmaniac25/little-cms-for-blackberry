@@ -378,7 +378,7 @@ public class lcms2
     		short[] id = new short[8];
     		for(int i = 0, k = 0; i < 8; i++, k += 2)
     		{
-    			id[i] = BitConverter.toInt16(this.data, k);
+    			id[i] = cmsplugin._cmsAdjustEndianess16(BitConverter.toInt16(this.data, k));
     		}
     		return id;
     	}
@@ -387,8 +387,7 @@ public class lcms2
     	{
     		for(int i = 0, k = 0; i < 8; i++, k += 2)
     		{
-    			byte[] temp = BitConverter.getBytes(data[i]);
-    			System.arraycopy(temp, 0, this.data, k, 2);
+    			System.arraycopy(BitConverter.getBytes(cmsplugin._cmsAdjustEndianess16(data[i])), 0, this.data, k, 2);
     		}
     	}
     	
@@ -397,7 +396,7 @@ public class lcms2
     		int[] id = new int[4];
     		for(int i = 0, k = 0; i < 4; i++, k += 4)
     		{
-    			id[i] = BitConverter.toInt32(this.data, k);
+    			id[i] = cmsplugin._cmsAdjustEndianess32(BitConverter.toInt32(this.data, k));
     		}
     		return id;
     	}
@@ -406,8 +405,7 @@ public class lcms2
     	{
     		for(int i = 0, k = 0; i < 4; i++, k += 4)
     		{
-    			byte[] temp = BitConverter.getBytes(data[i]);
-    			System.arraycopy(temp, 0, this.data, k, 4);
+    			System.arraycopy(BitConverter.getBytes(cmsplugin._cmsAdjustEndianess32(data[i])), 0, this.data, k, 4);
     		}
     	}
     }

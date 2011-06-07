@@ -1037,13 +1037,13 @@ final class cmsio0
 	public static void cmsGetHeaderProfileID(cmsHPROFILE hProfile, cmsProfileID ProfileID)
 	{
 	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
-	    ProfileID.setID8(Icc.ProfileID.getID8());
+	    System.arraycopy(Icc.ProfileID.data, 0, ProfileID.data, 0, cmsProfileID.SIZE);
 	}
 	
 	public static void cmsSetHeaderProfileID(cmsHPROFILE hProfile, cmsProfileID ProfileID)
 	{
 	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
-	    Icc.ProfileID.setID8(ProfileID.getID8());
+	    System.arraycopy(ProfileID.data, 0, Icc.ProfileID.data, 0, cmsProfileID.SIZE);
 	}
 	
 	public static boolean cmsGetHeaderCreationDateTime(cmsHPROFILE hProfile, Calendar Dest)

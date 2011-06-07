@@ -28,6 +28,7 @@ import littlecms.internal.lcms2.cmsCIEXYZTRIPLE;
 import littlecms.internal.lcms2.cmsCIExyY;
 import littlecms.internal.lcms2.cmsCIExyYTRIPLE;
 import littlecms.internal.lcms2.cmsContext;
+import littlecms.internal.lcms2.cmsDICTentry;
 import littlecms.internal.lcms2.cmsHANDLE;
 import littlecms.internal.lcms2.cmsHPROFILE;
 import littlecms.internal.lcms2.cmsHTRANSFORM;
@@ -38,6 +39,7 @@ import littlecms.internal.lcms2.cmsLogErrorHandlerFunction;
 import littlecms.internal.lcms2.cmsMLU;
 import littlecms.internal.lcms2.cmsNAMEDCOLORLIST;
 import littlecms.internal.lcms2.cmsPipeline;
+import littlecms.internal.lcms2.cmsProfileID;
 import littlecms.internal.lcms2.cmsSAMPLER16;
 import littlecms.internal.lcms2.cmsSEQ;
 import littlecms.internal.lcms2.cmsScreening;
@@ -1013,15 +1015,15 @@ public final class TestApp extends UiApplication
 		    {
 		    	return 0;
 		    }
-		    if(fileOperation("sRGB_Color_Space_Profile.icm", createTemp) != 0)
+		    if(fileOperation("test1.icc", createTemp) != 0)
 		    {
 		    	return 0;
 		    }
-		    if(fileOperation("sRGB_v4_ICC_preference.icc", createTemp) != 0)
+		    if(fileOperation("test2.icc", createTemp) != 0)
 		    {
 		    	return 0;
 		    }
-		    if(fileOperation("sRGBSpac.icm", createTemp) != 0)
+		    if(fileOperation("test3.icc", createTemp) != 0)
 		    {
 		    	return 0;
 		    }
@@ -1029,11 +1031,11 @@ public final class TestApp extends UiApplication
 		    {
 		    	return 0;
 		    }
-		    if(fileOperation("UncoatedFOGRA29.icc", createTemp) != 0)
+		    if(fileOperation("test4.icc", createTemp) != 0)
 		    {
 		    	return 0;
 		    }
-		    if(fileOperation("USWebCoatedSWOP.icc", createTemp) != 0)
+		    if(fileOperation("test5.icc", createTemp) != 0)
 		    {
 		    	return 0;
 		    }
@@ -1130,12 +1132,12 @@ public final class TestApp extends UiApplication
 	    
 	    //Also remove the temporary, built-in profiles
 	    fileOperation("bad.icc", remove);
-	    fileOperation("sRGB_Color_Space_Profile.icm", remove);
-	    fileOperation("sRGB_v4_ICC_preference.icc", remove);
-	    fileOperation("sRGBSpac.icm", remove);
+	    fileOperation("test1.icc", remove);
+	    fileOperation("test2.icc", remove);
+	    fileOperation("test3.icc", remove);
 	    fileOperation("toosmall.icc", remove);
-	    fileOperation("UncoatedFOGRA29.icc", remove);
-	    fileOperation("USWebCoatedSWOP.icc", remove);
+	    fileOperation("test4.icc", remove);
+	    fileOperation("test5.icc", remove);
 	}
 	
 	// -------------------------------------------------------------------------------------------------
@@ -2872,6 +2874,62 @@ public final class TestApp extends UiApplication
 		    return 1;
 		}
 	};
+	
+	private static final TestFn Check8DinterpGranular = new TestFn()
+	{
+		public int run()
+		{
+			cmsPipeline lut;
+		    cmsStage mpe;
+		    int[] Dimensions = new int[]{ 4, 3, 3, 2, 2, 2, 2, 2 };
+		    
+		    lut = lcms2.cmsPipelineAlloc(DbgThread(), 8, 3);
+		    mpe = lcms2.cmsStageAllocCLut16bitGranular(DbgThread(), Dimensions, 8, 3, null);
+		    lcms2.cmsStageSampleCLut16bit(mpe, Sampler8D, null, 0);
+		    lcms2.cmsPipelineInsertStage(lut, lcms2.cmsAT_BEGIN, mpe);
+		    
+		    // Check accuracy
+		    
+		    if (!CheckOne8D(lut, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0))
+		    {
+		    	return 0;
+		    }
+		    if (!CheckOne8D(lut, (short)0xffff, (short)0xffff, (short)0xffff, (short)0xffff, (short)0xffff, (short)0xffff, (short)0xffff, (short)0xffff))
+		    {
+		    	return 0;
+		    }
+		    
+		    if (!CheckOne8D(lut, (short)0x8080, (short)0x8080, (short)0x8080, (short)0x8080, (short)0x1234, (short)0x1122, (short)0x0056, (short)0x0011))
+		    {
+		    	return 0;
+		    }
+		    if (!CheckOne8D(lut, (short)0x0000, (short)0xFE00, (short)0x80FF, (short)0x8888, (short)0x8078, (short)0x2233, (short)0x0088, (short)0x2020))
+		    {
+		    	return 0;
+		    }
+		    if (!CheckOne8D(lut, (short)0x1111, (short)0x2222, (short)0x3333, (short)0x4444, (short)0x1455, (short)0x3344, (short)0x1987, (short)0x4532))
+		    {
+		    	return 0;
+		    }
+		    if (!CheckOne8D(lut, (short)0x0000, (short)0x0012, (short)0x0013, (short)0x0014, (short)0x2333, (short)0x4455, (short)0x9988, (short)0x1200))
+		    {
+		    	return 0;
+		    }
+		    if (!CheckOne8D(lut, (short)0x3141, (short)0x1415, (short)0x1592, (short)0x9261, (short)0x4567, (short)0x5566, (short)0xfe56, (short)0x6666))
+		    {
+		    	return 0;
+		    }
+		    if (!CheckOne8D(lut, (short)0xFF00, (short)0xFF01, (short)0xFF12, (short)0xFF13, (short)0xF344, (short)0x6677, (short)0xbabe, (short)0xface))
+		    {
+		    	return 0;
+		    }
+		    
+		    lcms2.cmsPipelineFree(lut);
+		    
+		    return 1;
+		}
+	};
+	
 	// Colorimetric conversions -------------------------------------------------------------------------------------------------
 	
 	// Lab to LCh and back should be performed at 1E-12 accuracy at least
@@ -4423,7 +4481,7 @@ public final class TestApp extends UiApplication
 		        }
 		    }
 		    
-		    lcms2.cmsPipelineInsertStage(lut, lcms2.cmsAT_END, lcms2_internal._cmsStageAllocNamedColor(nc));
+		    lcms2.cmsPipelineInsertStage(lut, lcms2.cmsAT_END, lcms2_internal._cmsStageAllocNamedColor(nc, false));
 		    
 		    lcms2.cmsFreeNamedColorList(nc);
 		    if (rc == 0)
@@ -6259,6 +6317,175 @@ public final class TestApp extends UiApplication
 	    return 0;
 	}
 	
+	// Only one of the two following may be used, as they share the same tag
+	private static int CheckDictionary16(int Pass, cmsHPROFILE hProfile)
+	{
+		cmsHANDLE hDict;
+		cmsDICTentry e;
+		switch (Pass)
+		{
+			case 1:
+				hDict = lcms2.cmsDictAlloc(DbgThread());
+				lcms2.cmsDictAddEntry(hDict, "Name0", null, null, null);
+				lcms2.cmsDictAddEntry(hDict, "Name1", "", null, null);
+				lcms2.cmsDictAddEntry(hDict, "Name", "String", null, null);
+				lcms2.cmsDictAddEntry(hDict, "Name2", "12", null, null);
+				if (!lcms2.cmsWriteTag(hProfile, lcms2.cmsSigMetaTag, hDict))
+				{
+					return 0;    
+				}
+				lcms2.cmsDictFree(hDict);
+				return 1;
+				
+			case 2:
+				hDict = (cmsHANDLE)lcms2.cmsReadTag(hProfile, lcms2.cmsSigMetaTag);
+				if (hDict == null)
+				{
+					return 0;
+				}
+				e = lcms2.cmsDictGetEntryList(hDict);
+				if (!e.Name.equals("Name2"))
+				{
+					return 0;
+				}
+				if (!e.Value.equals("12"))
+				{
+					return 0;
+				}
+				e = lcms2.cmsDictNextEntry(e);
+				if (!e.Name.equals("Name"))
+				{
+					return 0;
+				}
+				if (!e.Value.equals("String"))
+				{
+					return 0;
+				}
+				e = lcms2.cmsDictNextEntry(e);
+				if (!e.Name.equals("Name1"))
+				{
+					return 0;
+				}
+				if (e.Value == null)
+				{
+					return 0;
+				}
+				if (e.Value.charAt(0) != 0)
+				{
+					return 0;
+				}
+				e = lcms2.cmsDictNextEntry(e);
+				if (!e.Name.equals("Name0"))
+				{
+					return 0;
+				}
+				if (e.Value != null)
+				{
+					return 0;
+				}
+				return 1;
+			default:;
+		}
+		
+		return 0;
+	}
+	
+	private static int CheckDictionary24(int Pass, cmsHPROFILE hProfile)
+	{
+		cmsHANDLE hDict;
+	    cmsDICTentry e;
+	    cmsMLU DisplayName;
+	    StringBuffer Buffer = new StringBuffer(256);
+	    int rc = 1;
+	    
+	    switch (Pass)
+	    {
+	    	case 1:     
+		        hDict = lcms2.cmsDictAlloc(DbgThread());
+		        
+		        DisplayName = lcms2.cmsMLUalloc(DbgThread(), 0);    
+		        
+		        lcms2.cmsMLUsetWide(DisplayName, "en", "US", "Hello, world");
+		        lcms2.cmsMLUsetWide(DisplayName, "es", "ES", "Hola, mundo");
+		        lcms2.cmsMLUsetWide(DisplayName, "fr", "FR", "Bonjour, le monde");
+		        lcms2.cmsMLUsetWide(DisplayName, "ca", "CA", "Hola, mon");
+		        
+		        lcms2.cmsDictAddEntry(hDict, "Name",  "String", DisplayName, null);
+		        lcms2.cmsMLUfree(DisplayName);
+		        
+		        lcms2.cmsDictAddEntry(hDict, "Name2", "12", null, null);
+		        if (!lcms2.cmsWriteTag(hProfile, lcms2.cmsSigMetaTag, hDict))
+		        {
+		        	return 0;    
+		        }
+		        lcms2.cmsDictFree(hDict);
+		        
+		        return 1;
+		        
+	    	case 2:
+		        hDict = (cmsHANDLE)lcms2.cmsReadTag(hProfile, lcms2.cmsSigMetaTag);
+		        if (hDict == null)
+		        {
+		        	return 0;
+		        }
+		        
+		        e = lcms2.cmsDictGetEntryList(hDict);
+		        if (!e.Name.equals("Name2"))
+		        {
+		        	return 0;  
+		        }
+		        if (!e.Value.equals("12"))
+		        {
+		        	return 0;  
+		        }
+		        e = lcms2.cmsDictNextEntry(e);         
+		        if (!e.Name.equals("Name"))
+		        {
+		        	return 0;  
+		        }
+		        if (!e.Value.equals("String"))
+		        {
+		        	return 0;  
+		        }
+		        
+		        lcms2.cmsMLUgetASCII(e.DisplayName, "en", "US", Buffer, 256);
+		        if (strcmp(Buffer, "Hello, world") != 0)
+		        {
+		        	rc = 0;
+		        }
+		        
+		        
+		        lcms2.cmsMLUgetASCII(e.DisplayName, "es", "ES", Buffer, 256);
+		        if (strcmp(Buffer, "Hola, mundo") != 0)
+		        {
+		        	rc = 0;
+		        }
+		        
+		        
+		        lcms2.cmsMLUgetASCII(e.DisplayName, "fr", "FR", Buffer, 256);
+		        if (strcmp(Buffer, "Bonjour, le monde") != 0)
+		        {
+		        	rc = 0;
+		        }
+		        
+		        
+		        lcms2.cmsMLUgetASCII(e.DisplayName, "ca", "CA", Buffer, 256);
+		        if (strcmp(Buffer, "Hola, mon") != 0)
+		        {
+		        	rc = 0;
+		        }
+		        
+		        if (rc == 0)
+		        {
+		        	Fail("Unexpected string '%s'", new Object[]{Buffer});
+		        }
+		        return 1;
+		    default:;
+	    }
+	    
+	    return 0;
+	}
+	
 	public static int CheckRAWtags(int Pass, cmsHPROFILE hProfile)
 	{
 	    byte[] Buffer = new byte[7];
@@ -6637,6 +6864,18 @@ public final class TestApp extends UiApplication
 		        	return 0;
 		        }
 		        
+		        SubTest("Dictionary meta tags", null);
+		        /*
+		        if (CheckDictionary16(Pass, h) == 0)
+		        {
+		        	return 0;
+		        }
+		        */
+		        if (CheckDictionary24(Pass, h) == 0)
+		        {
+		        	return 0;
+		        }
+		        
 		        if (Pass == 1)
 		        {
 		        	lcms2.cmsSaveProfileToFile(h, FILE_PREFIX + "alltags.icc");
@@ -6812,7 +7051,7 @@ public final class TestApp extends UiApplication
 			
 			lcms2.cmsCloseProfile(h1);
 			
-		    h1 = lcms2.cmsOpenProfileFromFile("USWebCoatedSWOP.icc", "r");
+		    h1 = lcms2.cmsOpenProfileFromFile("test1.icc", "r");
 		    cmsHPROFILE h2 = lcms2.cmsCreate_sRGBProfile();
 		    
 		    x1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_BGR_8, h2, lcms2.TYPE_BGR_8, lcms2.INTENT_PERCEPTUAL, 0);
@@ -7681,7 +7920,7 @@ public final class TestApp extends UiApplication
 	{
 		public int run()
 		{
-			return CheckCMYK(lcms2.INTENT_RELATIVE_COLORIMETRIC, FILE_PREFIX + "USWebCoatedSWOP.icc", FILE_PREFIX + "USWebCoatedSWOP.icc");
+			return CheckCMYK(lcms2.INTENT_RELATIVE_COLORIMETRIC, FILE_PREFIX + "test1.icc", FILE_PREFIX + "test1.icc");
 		}
 	};
 	
@@ -7689,7 +7928,7 @@ public final class TestApp extends UiApplication
 	{
 		public int run()
 		{
-			return CheckCMYK(lcms2.INTENT_PERCEPTUAL, FILE_PREFIX + "USWebCoatedSWOP.icc", FILE_PREFIX + "UncoatedFOGRA29.icc");
+			return CheckCMYK(lcms2.INTENT_PERCEPTUAL, FILE_PREFIX + "test1.icc", FILE_PREFIX + "test2.icc");
 		}
 	};
 	
@@ -7697,7 +7936,7 @@ public final class TestApp extends UiApplication
 	{
 		public int run()
 		{
-			return CheckCMYK(lcms2.INTENT_RELATIVE_COLORIMETRIC, FILE_PREFIX + "USWebCoatedSWOP.icc", FILE_PREFIX + "UncoatedFOGRA29.icc");
+			return CheckCMYK(lcms2.INTENT_RELATIVE_COLORIMETRIC, FILE_PREFIX + "test1.icc", FILE_PREFIX + "test2.icc");
 		}
 	};
 	
@@ -7705,8 +7944,8 @@ public final class TestApp extends UiApplication
 	{
 		public int run()
 		{
-			cmsHPROFILE hSWOP  = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "USWebCoatedSWOP.icc", "r");
-		    cmsHPROFILE hFOGRA = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "UncoatedFOGRA29.icc", "r");
+			cmsHPROFILE hSWOP  = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test1.icc", "r");
+		    cmsHPROFILE hFOGRA = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test2.icc", "r");
 		    cmsHTRANSFORM xform, swop_lab, fogra_lab;
 		    float[] CMYK1 = new float[4], CMYK2 = new float[4];
 		    cmsCIELab Lab1 = new cmsCIELab(), Lab2 = new cmsCIELab();
@@ -7796,8 +8035,8 @@ public final class TestApp extends UiApplication
 	{
 		public int run()
 		{
-			cmsHPROFILE hSWOP  = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "USWebCoatedSWOP.icc", "r");
-		    cmsHPROFILE hFOGRA = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "UncoatedFOGRA29.icc", "r");
+			cmsHPROFILE hSWOP  = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test1.icc", "r");
+		    cmsHPROFILE hFOGRA = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test2.icc", "r");
 		    cmsHTRANSFORM xform, swop_lab, fogra_lab;
 		    float[] CMYK1 = new float[4], CMYK2 = new float[4];
 		    cmsCIELab Lab1 = new cmsCIELab(), Lab2 = new cmsCIELab();
@@ -7971,11 +8210,11 @@ public final class TestApp extends UiApplication
 		    cmsCIEXYZ Black = new cmsCIEXYZ();
 		    cmsCIELab Lab = new cmsCIELab();
 		    
-		    hProfile  = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "sRGB_Color_Space_Profile.icm", "r");  
+		    hProfile  = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test5.icc", "r");  
 		    lcms2.cmsDetectBlackPoint(Black, hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
 		    lcms2.cmsCloseProfile(hProfile);
 		    
-		    hProfile = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "USWebCoatedSWOP.icc", "r");
+		    hProfile = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test1.icc", "r");
 		    lcms2.cmsDetectBlackPoint(Black, hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
 		    lcms2.cmsXYZ2Lab(null, Lab, Black);
 		    lcms2.cmsCloseProfile(hProfile);
@@ -7985,12 +8224,12 @@ public final class TestApp extends UiApplication
 		    lcms2.cmsXYZ2Lab(null, Lab, Black);
 		    lcms2.cmsCloseProfile(hProfile);
 		    
-		    hProfile = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "UncoatedFOGRA29.icc", "r");
+		    hProfile = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test2.icc", "r");
 		    lcms2.cmsDetectBlackPoint(Black, hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
 		    lcms2.cmsXYZ2Lab(null, Lab, Black);
 		    lcms2.cmsCloseProfile(hProfile);
 		    
-		    hProfile = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "USWebCoatedSWOP.icc", "r");
+		    hProfile = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test1.icc", "r");
 		    lcms2.cmsDetectBlackPoint(Black, hProfile, lcms2.INTENT_PERCEPTUAL, 0);
 		    lcms2.cmsXYZ2Lab(null, Lab, Black);
 		    lcms2.cmsCloseProfile(hProfile);
@@ -8213,18 +8452,18 @@ public final class TestApp extends UiApplication
 	{
 		public int run()
 		{
-			GenerateCSA(FILE_PREFIX + "sRGB_Color_Space_Profile.icm", "sRGB_CSA.ps");
+			GenerateCSA(FILE_PREFIX + "test5.icc", "sRGB_CSA.ps");
 		    GenerateCSA(FILE_PREFIX + "aRGBlcms2.icc", "aRGB_CSA.ps");
-		    GenerateCSA(FILE_PREFIX + "sRGB_v4_ICC_preference.icc", "sRGBV4_CSA.ps");
-		    GenerateCSA(FILE_PREFIX + "USWebCoatedSWOP.icc", "SWOP_CSA.ps");
+		    GenerateCSA(FILE_PREFIX + "test4.icc", "sRGBV4_CSA.ps");
+		    GenerateCSA(FILE_PREFIX + "test1.icc", "SWOP_CSA.ps");
 		    GenerateCSA(null, "Lab_CSA.ps");
 		    GenerateCSA(FILE_PREFIX + "graylcms2.icc", "gray_CSA.ps");
 		    
-		    GenerateCRD(FILE_PREFIX + "sRGB_Color_Space_Profile.icm", "sRGB_CRD.ps");
+		    GenerateCRD(FILE_PREFIX + "test5.icc", "sRGB_CRD.ps");
 		    GenerateCRD(FILE_PREFIX + "aRGBlcms2.icc", "aRGB_CRD.ps");
 		    GenerateCRD(null, "Lab_CRD.ps");
-		    GenerateCRD(FILE_PREFIX + "USWebCoatedSWOP.icc", "SWOP_CRD.ps");
-		    GenerateCRD(FILE_PREFIX + "sRGB_v4_ICC_preference.icc", "sRGBV4_CRD.ps");
+		    GenerateCRD(FILE_PREFIX + "test1.icc", "SWOP_CRD.ps");
+		    GenerateCRD(FILE_PREFIX + "test4.icc", "sRGBV4_CRD.ps");
 		    GenerateCRD(FILE_PREFIX + "graylcms2.icc", "gray_CRD.ps");
 		    
 		    return 1;
@@ -8603,6 +8842,44 @@ public final class TestApp extends UiApplication
 		    lcms2.cmsGBDFree(h);
 		    
 		    return 1;
+		}
+	};
+	
+	private static final TestFn CheckMD5 = new TestFn()
+	{
+		public int run()
+		{
+			lcms2_internal._cmsICCPROFILE h;
+		    cmsHPROFILE pProfile = lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGBlcms2.icc", "r"); 
+		    cmsProfileID ProfileID1 = new cmsProfileID(), ProfileID2 = new cmsProfileID(), ProfileID3 = new cmsProfileID(), ProfileID4 = new cmsProfileID();
+		    
+		    h =(lcms2_internal._cmsICCPROFILE)pProfile;
+		    if (lcms2.cmsMD5computeID(pProfile))
+		    {
+		    	lcms2.cmsGetHeaderProfileID(pProfile, ProfileID1); 
+		    }
+		    if (lcms2.cmsMD5computeID(pProfile))
+		    {
+		    	lcms2.cmsGetHeaderProfileID(pProfile,ProfileID2); 
+		    }
+		    
+		    lcms2.cmsCloseProfile(pProfile);
+		    
+		    
+		    pProfile = lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGBlcms2.icc", "r");
+		    h =(lcms2_internal._cmsICCPROFILE)pProfile;
+		    if (lcms2.cmsMD5computeID(pProfile))
+		    {
+		    	lcms2.cmsGetHeaderProfileID(pProfile, ProfileID3); 
+		    }
+		    if (lcms2.cmsMD5computeID(pProfile))
+		    {
+		    	lcms2.cmsGetHeaderProfileID(pProfile,ProfileID4); 
+		    }
+		    
+		    lcms2.cmsCloseProfile(pProfile);
+		    
+		    return Arrays.equals(ProfileID1.data, ProfileID3.data) && Arrays.equals(ProfileID2.data, ProfileID4.data) ? 1 : 0;
 		}
 	};
 	
@@ -9066,31 +9343,31 @@ public final class TestApp extends UiApplication
 		print.flush();
 	    
 	    SpeedTest16bits("16 bits on CLUT profiles", 
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGB_Color_Space_Profile.icm", "r"),
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGBSpac.icm", "r"), lcms2.INTENT_PERCEPTUAL);
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test3.icc", "r"), lcms2.INTENT_PERCEPTUAL);
 	    
 	    SpeedTest8bits("8 bits on CLUT profiles", 
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGB_Color_Space_Profile.icm", "r"),
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGBSpac.icm", "r"),
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test3.icc", "r"),
 	    		lcms2.INTENT_PERCEPTUAL);
 	    
 	    SpeedTest8bits("8 bits on Matrix-Shaper profiles", 
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGB_Color_Space_Profile.icm", "r"), 
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"), 
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "aRGBlcms2.icc", "r"),
 	    		lcms2.INTENT_PERCEPTUAL);
 	    
 	    SpeedTest8bits("8 bits on SAME Matrix-Shaper profiles",
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGB_Color_Space_Profile.icm", "r"),
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGB_Color_Space_Profile.icm", "r"),
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
 	    		lcms2.INTENT_PERCEPTUAL);
 	    
 	    SpeedTest8bits("8 bits on Matrix-Shaper profiles (AbsCol)", 
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGB_Color_Space_Profile.icm", "r"),
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "aRGBlcms2.icc", "r"),
 	    		lcms2.INTENT_ABSOLUTE_COLORIMETRIC);  
 	    
 	    SpeedTest16bits("16 bits on Matrix-Shaper profiles", 
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGB_Color_Space_Profile.icm", "r"),
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "aRGBlcms2.icc", "r"),
 	    		lcms2.INTENT_PERCEPTUAL);
 	    
@@ -9100,7 +9377,7 @@ public final class TestApp extends UiApplication
 	    		lcms2.INTENT_PERCEPTUAL);
 	    
 	    SpeedTest16bits("16 bits on Matrix-Shaper profiles (AbsCol)", 
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGB_Color_Space_Profile.icm", "r"),
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "aRGBlcms2.icc", "r"),
 	    		lcms2.INTENT_ABSOLUTE_COLORIMETRIC);
 	    
@@ -9115,12 +9392,12 @@ public final class TestApp extends UiApplication
 	    		lcms2.INTENT_PERCEPTUAL);
 	    
 	    SpeedTest8bitsCMYK("8 bits on CMYK profiles", 
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "USWebCoatedSWOP.icc", "r"),
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "UncoatedFOGRA29.icc", "r"));
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test1.icc", "r"),
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test2.icc", "r"));
 	    
 	    SpeedTest16bitsCMYK("16 bits on CMYK profiles", 
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "USWebCoatedSWOP.icc", "r"),
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "UncoatedFOGRA29.icc", "r"));
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test1.icc", "r"),
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test2.icc", "r"));
 	    
 	    SpeedTest8bitsGray("8 bits on gray-to-gray",
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "graylcms2.icc", "r"), 
@@ -9458,6 +9735,71 @@ public final class TestApp extends UiApplication
 		lcms2.cmsSetLogErrorHandler(FatalErrorQuit);
 	}
 	
+//#ifdef TYPE_709
+	private static final lcms2_plugin.cmsParametricCurveEvaluator Rec709Math = new lcms2_plugin.cmsParametricCurveEvaluator()
+	{
+		public double run(int Type, final double[] Params, double R)
+		{
+			double Fun;
+			
+			switch (Type)
+			{
+				case 709:
+					if (R <= (Params[3]*Params[4]))
+					{
+						Fun = R / Params[3];
+					}
+					else
+					{
+//#endif
+//#ifdef TYPE_709 & BlackBerrySDK4.5.0
+						Fun = Utility.pow(((R - Params[2])/Params[1]), Params[0]);
+//#elif TYPE_709
+						Fun = MathUtilities.pow(((R - Params[2])/Params[1]), Params[0]);
+//#endif
+//#ifdef TYPE_709
+					}
+					break;
+				
+				case -709:
+					if (R <= Params[4])
+					{
+						Fun = R * Params[3];
+					}
+					else
+					{
+//#endif
+//#ifdef TYPE_709 & BlackBerrySDK4.5.0
+						Fun = Params[1] * Utility.pow(R, (1/Params[0])) + Params[2];
+//#elif TYPE_709
+						Fun = Params[1] * MathUtilities.pow(R, (1/Params[0])) + Params[2];
+//#endif
+//#ifdef TYPE_709
+					}
+					break;
+			}
+			return Fun;
+		}
+	};
+	
+	// Add nonstandard TRC curves -> Rec709
+	private static class NewCurvePlugin extends lcms2_plugin.cmsPluginParametricCurves
+	{
+		public NewCurvePlugin()
+		{
+			super.Magic = lcms2_plugin.cmsPluginMagicNumber;
+			super.ExpectedVersion = 2000;
+			super.Type = lcms2_plugin.cmsPluginParametricCurveSig;
+			super.Next = null;
+			
+			super.nFunctions = 1;
+			super.FunctionTypes[0] = 709; //The define "TYPE_709" has to have the value of 709
+			super.ParameterCount[0] = 5;
+			super.Evaluator = Rec709Math;
+		}
+	}
+//#endif
+	
 	// ---------------------------------------------------------------------------------------
 	
 	static
@@ -9654,6 +9996,7 @@ public final class TestApp extends UiApplication
 		    Check("5D interpolation with granularity", Check5DinterpGranular);
 		    Check("6D interpolation with granularity", Check6DinterpGranular);
 		    Check("7D interpolation with granularity", Check7DinterpGranular);
+		    Check("8D interpolation with granularity", Check8DinterpGranular);
 		    
 		    // Encoding of colorspaces
 		    Check("Lab to LCh and back (float only) ", CheckLab2LCh);
@@ -9768,6 +10111,7 @@ public final class TestApp extends UiApplication
 		    Check("CGATS parser", CheckCGATS);
 		    Check("PostScript generator", CheckPostScript);
 		    Check("Segment maxima GBD", CheckGBD);
+		    Check("MD5 digest", CheckMD5);
 		    
 		    if (DoSpeedTests)
 		    {
@@ -9781,7 +10125,7 @@ public final class TestApp extends UiApplication
 		    lcms2.cmsUnregisterPlugins();
 		    
 		    // Cleanup
-		    RemoveTestProfiles();
+		    //RemoveTestProfiles(); TODO Remove
 		    
 		    Utility.fprintf(print, "Total number of failures: %d\n", new Object[]{new Integer(TotalFail)});
 		}

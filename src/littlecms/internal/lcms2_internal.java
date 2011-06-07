@@ -793,6 +793,11 @@ final class lcms2_internal extends lcms2_plugin
 	    
 	    // An id that uniquely identifies the running context. May be null.
 	    public cmsContext ContextID;
+	    
+	    public _cmsTRANSFORM()
+	    {
+	    	Cache = new _cmsCACHE();
+	    }
 	}
 	
 	// --------------------------------------------------------------------------------------------------
