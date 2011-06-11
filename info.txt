@@ -1,11 +1,12 @@
---Last update: 06/07/2011--
---Revision Used: 06/03/2011--
+--Last update: 06/11/2011--
+--Revision Used: 06/07/2011--
 
 TODO:
 Update LCMS 4 BB to the same level as the GIT build
 If Test system has been updated then do testing
 Get full JavaDoc to be created for lcms
 
+Update Stream so that it doesn't constantly open and close Streams if possible.
 Go through cmstypes and adjust "SizeOfTag" so it acts like an unsigned int (for types that could be larger then an int, such as those that handle Strings)
 Comment PrintUtility and LargeNumber
 Update PrintUtility FloatFormat so that it properly processes the values with exponent. Example: Double.MIN_VALUE is a subnormal number. The default manner of execution would consider the value to be zero since the number is so small. Make it so that it will scale the value for exponent.
