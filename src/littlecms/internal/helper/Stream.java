@@ -194,10 +194,11 @@ public abstract class Stream
 				{
 					in = file.openInputStream();
 //#ifdef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
-					if(pos != 0)
+					if(in.markSupported())
 					{
-						in.read(new byte[(int)pos], 0, (int)pos);
+						in.mark(Integer.MAX_VALUE); //Set mark so reading doesn't need to occur
 					}
+					in.skip(pos);
 //#endif
 				}
 				if((iMode & Connector.WRITE) != 0)
@@ -243,8 +244,12 @@ public abstract class Stream
 						try
 						{
 							in = file.openInputStream();
-							inSeek = (Seekable)in;
-							in.read(new byte[(int)pos], 0, (int)pos);
+							inSeek = null;
+							if(in.markSupported())
+							{
+								in.mark(Integer.MAX_VALUE); //Set mark so reading doesn't need to occur
+							}
+							in.skip(pos);
 						}
 						catch (IOException e2)
 						{
@@ -298,10 +303,13 @@ public abstract class Stream
 				if(in != null)
 				{
 //#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
-					inSeek.setPosition(inSeek.getPosition() + count);
-//#else
-					in.read(new byte[count], 0, count);
+					if(inSeek != null)
+					{
+						inSeek.setPosition(inSeek.getPosition() + count);
+					}
+					else
 //#endif
+					in.skip(count);
 				}
 				written = count;
 			}
@@ -341,29 +349,11 @@ public abstract class Stream
 			try
 			{
 //#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
-				if(in != null)
-				{
-					inSeek.setPosition(absPos);
-				}
 				if(out != null)
 				{
 					outSeek.setPosition(absPos);
 				}
 //#else
-				if(in != null)
-				{
-					long cpos = getPosition();
-					if(cpos < absPos)
-					{
-						in.read(new byte[(int)(absPos - cpos)], 0, (int)(absPos - cpos));
-					}
-					else
-					{
-						in.close();
-						in = file.openInputStream();
-						in.read(new byte[(int)absPos], 0, (int)absPos);
-					}
-				}
 				if(out != null)
 				{
 					out.flush();
@@ -372,6 +362,39 @@ public abstract class Stream
 				}
 				pos = absPos;
 //#endif
+				if(in != null)
+				{
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+					if(inSeek != null)
+					{
+						inSeek.setPosition(absPos);
+					}
+					else
+					{
+//#endif
+					long cpos = getPosition();
+					if(cpos < absPos)
+					{
+						in.skip(absPos - cpos);
+					}
+					else
+					{
+						if(in.markSupported())
+						{
+							in.reset();
+							in.mark(Integer.MAX_VALUE); //Precaution
+						}
+						else
+						{
+							in.close();
+							in = file.openInputStream();
+						}
+						in.skip(absPos);
+					}
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+					}
+//#endif
+				}
 			}
 			catch(IOException ioe)
 			{
