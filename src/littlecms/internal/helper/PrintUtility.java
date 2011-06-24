@@ -129,7 +129,7 @@ final class PrintUtility
                 else
                 {
                 	//Ok, time to process..
-                    if (argPos >= argLen)
+                    if (argPos >= argLen && !form.hasArgLocation())
                     {
                     	//..Or not. Not enough args, return the format
                         str = form.getFormat();
@@ -444,7 +444,7 @@ final class PrintUtility
 	
 	private static boolean isWhiteSpace(char c)
     {
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
 		return net.rim.device.api.util.CharacterUtilities.isWhitespace(c);
 //#else
         switch (c)
@@ -1148,7 +1148,7 @@ final class PrintUtility
                     }
                     */
                     //Left align
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
                 	str = StringUtilities.pad(str, ' ', width, false);
 //#else
                     if (str.length() < width)
@@ -1162,7 +1162,7 @@ final class PrintUtility
                 else if (this.precision == -1 && flags.indexOf('0') >= 0 && SPECIFIERS.indexOf(this.type) > 2)
                 {
                 	//Pad with zeros (for everything but char, string, and pointer) when precision not specified
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
                 	str = StringUtilities.pad(str, '0', width, true);
 //#else
                     if (str.length() < width)
@@ -1174,7 +1174,7 @@ final class PrintUtility
 //#endif
                 }
             }
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
             str = StringUtilities.pad(str, ' ', width, true);
 //#else
             if (str.length() < width)
@@ -1674,7 +1674,7 @@ final class PrintUtility
                 if (basicType)
                 {
                 	str = thousandsSep(flags, Long.toString(value));
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
                 	bu.append(StringUtilities.pad(str, '0', this.length, true));
 //#else
                     if (str.length() < this.length)
@@ -1701,7 +1701,7 @@ final class PrintUtility
                     {
                         bu.append('0');
                     }
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
                     bu.append(StringUtilities.pad(str, '0', this.length - bu.length(), true));
 //#else
                     if (str.length() + bu.length() < this.length)
@@ -1728,7 +1728,7 @@ final class PrintUtility
                 	}
                 	str = thousandsSep(flags, str);
                 	//str = ulongToString(value);
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
                 	bu.append(StringUtilities.pad(str, '0', this.length, true));
 //#else
                 	if (str.length() < this.length)
@@ -1756,7 +1756,7 @@ final class PrintUtility
                         bu.append('0');
                         bu.append(this.type);
                     }
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1 | BlackBerrySDK5.0.0 | BlackBerrySDK6.0.0
                     bu.append(StringUtilities.pad(str, '0', this.length - bu.length(), true));
 //#else
                     if (str.length() + bu.length() < this.length)

@@ -43,7 +43,7 @@ import net.rim.device.api.io.Seekable;
  * Generic data stream for files and the likes. Functions based off Standard C functions.
  */
 public abstract class Stream
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1
 	implements Seekable
 //#endif
 {
@@ -140,7 +140,7 @@ public abstract class Stream
 		private FileConnection file;
 		private InputStream in;
 		private OutputStream out;
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1
 		private Seekable inSeek;
 		private Seekable outSeek;
 //#else
@@ -193,7 +193,7 @@ public abstract class Stream
 				if((iMode & Connector.READ) != 0)
 				{
 					in = file.openInputStream();
-//#ifdef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+//#ifdef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1
 					if(in.markSupported())
 					{
 						in.mark(Integer.MAX_VALUE); //Set mark so reading doesn't need to occur
@@ -223,7 +223,7 @@ public abstract class Stream
 			catch (IllegalArgumentException e) //Bad file name
 			{
 			}
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1
 			if(!valid)
 			{
 				//No need to crash
@@ -297,12 +297,12 @@ public abstract class Stream
 			{
 				out.write(buffer, offset, count);
 				out.flush();
-//#ifdef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+//#ifdef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1
 				pos += count;
 //#endif
 				if(in != null)
 				{
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1
 					if(inSeek != null)
 					{
 						inSeek.setPosition(inSeek.getPosition() + count);
@@ -348,7 +348,7 @@ public abstract class Stream
 			}
 			try
 			{
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1
 				if(out != null)
 				{
 					outSeek.setPosition(absPos);
@@ -364,7 +364,7 @@ public abstract class Stream
 //#endif
 				if(in != null)
 				{
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1
 					if(inSeek != null)
 					{
 						inSeek.setPosition(absPos);
@@ -391,7 +391,7 @@ public abstract class Stream
 						}
 						in.skip(absPos);
 					}
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1
 					}
 //#endif
 				}
@@ -415,12 +415,12 @@ public abstract class Stream
 				read = in.read(buffer, offset, count);
 				if(read > -1)
 				{
-//#ifdef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+//#ifdef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1
 					pos += read;
 //#endif
 					if(out != null)
 					{
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1
 						outSeek.setPosition(outSeek.getPosition() + read);
 //#else
 						out.flush();
@@ -443,7 +443,7 @@ public abstract class Stream
 		
 		public long getPosition()
 		{
-//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0
+//#ifndef BlackBerrySDK4.5.0 | BlackBerrySDK4.6.0 | BlackBerrySDK4.6.1 | BlackBerrySDK4.7.0 | BlackBerrySDK4.7.1
 			try
 			{
 				if(in != null)
