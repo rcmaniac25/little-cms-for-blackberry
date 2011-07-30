@@ -317,12 +317,13 @@ public final class TestApp extends UiApplication
 	// malloc are built in a way similar to that, but I do on my own to be portable.
 	private static class _cmsMemoryBlock
 	{
-		public static int SIZE_OF_MEM_HEADER = (4 * 2) + 4;
+		public static int SIZE_OF_MEM_HEADER = (4 * 3) + 4;
 		
 		//Not really used but here anyway
 		public int KeepSize;
-		public int Align8;
-		public cmsContext WhoAllocated; // Some systems do need pointers aligned to 8-byte boundaries.
+		public cmsContext WhoAllocated;
+		public int Align8_1; // Some systems do need pointers aligned to 8-byte boundaries.
+		public int Align8_2;
 	}
 	
 	// This is a fake thread descriptor used to check thread integrity. 

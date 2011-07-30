@@ -615,7 +615,6 @@ final class cmssm
 	    lcms2_internal._cmsAssert(hGBD != null, "hGBD != null");
 	    
 	    // Interpolate black
-	    //XXX All three "alpha" loops use <= which causes index out of bounds issues. Based on testing with the C LCMS, the "extra" element is skipped anyway since the memory at that index is rarely zero (the value that defines "process this element").
 	    for (alpha = 0; alpha < SECTORS; alpha++)
 	    {
 	    	if (!InterpolateMissingSector(gbd, alpha, 0))
