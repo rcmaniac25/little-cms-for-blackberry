@@ -4303,7 +4303,7 @@ final class cmstypes
 	        // If this is a table-based curve, use curve type even on V4
 	        CurrentType = Type;
 	        
-	        if (Curves[i].nSegments == 0)
+	        if ((Curves[i].nSegments == 0) || (Curves[i].nSegments == 2) && (Curves[i].Segments[1].Type == 0))
 	        {
 	        	CurrentType = lcms2.cmsSigCurveType;
 	        }

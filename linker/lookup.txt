@@ -155,6 +155,8 @@ $OP STYP
 		$AT NAME FreePtr
 		$AT TYPE tagHandlerFreePtr
 	$OP EFIE
+
+	##There is actually a two more fields, but they are never set during construction so they don't have parameters in the constructor.
 $OP ETYP
 
 ##cmsTagDescriptor

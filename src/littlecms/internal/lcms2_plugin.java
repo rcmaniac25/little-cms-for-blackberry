@@ -1058,6 +1058,8 @@ public class lcms2_plugin extends lcms2
         	this.WritePtr = write;
         	this.DupPtr = dup;
         	this.FreePtr = free;
+        	this.ContextID = null;
+        	this.ICCVersion = 0;
         }
 	}
 	

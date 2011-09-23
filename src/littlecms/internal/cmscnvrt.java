@@ -137,17 +137,25 @@ final class cmscnvrt
 	// Approximate a blackbody illuminant based on CHAD information
 	private static double CHAD2Temp(final cmsMAT3 Chad)
 	{
-	    // Convert D50 across CHAD to get the absolute white point
+		// Convert D50 across inverse CHAD to get the absolute white point
 		cmsVEC3 d = new cmsVEC3(), s = new cmsVEC3();
 		cmsCIEXYZ Dest = new cmsCIEXYZ();
 		cmsCIExyY DestChromaticity = new cmsCIExyY();
 		double[] TempK = new double[1];
+		cmsMAT3 m1, m2;
+		
+		m1 = Chad;
+		m2 = new cmsMAT3();
+		if (!cmsmtrx._cmsMAT3inverse(m1, m2))
+		{
+			return 0; //Same as FALSE
+		}
 		
 		s.n[lcms2_plugin.VX] = lcms2.cmsD50_XYZ.X;
 	    s.n[lcms2_plugin.VY] = lcms2.cmsD50_XYZ.Y;
 	    s.n[lcms2_plugin.VZ] = lcms2.cmsD50_XYZ.Z;
 	    
-	    cmsmtrx._cmsMAT3eval(d, Chad, s);
+	    cmsmtrx._cmsMAT3eval(d, m2, s);
 	    
 	    Dest.X = d.n[lcms2_plugin.VX];
 	    Dest.Y = d.n[lcms2_plugin.VY];
@@ -171,7 +179,7 @@ final class cmscnvrt
 	    
 	    cmswtpnt.cmsWhitePointFromTemp(ChromaticityOfWhite, Temp);  
 	    cmspcs.cmsxyY2XYZ(White, ChromaticityOfWhite);
-	    cmswtpnt._cmsAdaptationMatrix(Chad, null, lcms2.cmsD50_XYZ, White);
+	    cmswtpnt._cmsAdaptationMatrix(Chad, null, White, lcms2.cmsD50_XYZ);
 
 	}
 	
@@ -180,7 +188,7 @@ final class cmscnvrt
 	private static boolean ComputeAbsoluteIntent(double AdaptationState, final cmsCIEXYZ WhitePointIn, final cmsMAT3 ChromaticAdaptationMatrixIn, 
 			final cmsCIEXYZ WhitePointOut, final cmsMAT3 ChromaticAdaptationMatrixOut, cmsMAT3 m)
 	{
-	    cmsMAT3 Scale, m1, m2, m3;
+	    cmsMAT3 Scale, m1, m2, m3, m4;
 	    
 	    // Adaptation state
 	    if (AdaptationState == 1.0)
@@ -194,31 +202,43 @@ final class cmscnvrt
 	    else
 	    {
 	    	Scale = new cmsMAT3();
+	    	m2 = new cmsMAT3();
+            m3 = new cmsMAT3();
 	    	
 	        // Incomplete adaptation. This is an advanced feature.
 	    	cmsmtrx._cmsVEC3init(Scale.v[0], WhitePointIn.X / WhitePointOut.X, 0, 0);
 	    	cmsmtrx._cmsVEC3init(Scale.v[1], 0,  WhitePointIn.Y / WhitePointOut.Y, 0);
 	    	cmsmtrx._cmsVEC3init(Scale.v[2], 0, 0,  WhitePointIn.Z / WhitePointOut.Z);
-	        
-	        m1 = ChromaticAdaptationMatrixOut;
-	        m2 = new cmsMAT3();
-	        if (!cmsmtrx._cmsMAT3inverse(m1, m2))
-	        {
-	        	return false; 
-	        }
-	        m3 = new cmsMAT3();
-	        cmsmtrx._cmsMAT3per(m3, m2, Scale);
-	        
-	        // m3 holds CHAD from output white to D50 times abs. col. scaling
+	    	
 	        if (AdaptationState == 0.0)
 	        {
+	        	m1 = ChromaticAdaptationMatrixOut;
+	            cmsmtrx._cmsMAT3per(m2, m1, Scale);
+	            // m2 holds CHAD from output white to D50 times abs. col. scaling
+	        	
 	            // Observer is not adapted, undo the chromatic adaptation
-	        	cmsmtrx._cmsMAT3per(m, m3, ChromaticAdaptationMatrixIn);
+	        	cmsmtrx._cmsMAT3per(m, m3, ChromaticAdaptationMatrixOut);
+	        	
+	        	m3 = ChromaticAdaptationMatrixIn;
+	        	m4 = new cmsMAT3();
+	            if (!cmsmtrx._cmsMAT3inverse(m3, m4))
+	            {
+	            	return false;
+	            }
+	            cmsmtrx._cmsMAT3per(m, m2, m4);
 	        }
 	        else
 	        {
 	            cmsMAT3 MixedCHAD;
 	            double TempSrc, TempDest, Temp;
+	            
+	            m1 = ChromaticAdaptationMatrixIn;
+	            if (!cmsmtrx._cmsMAT3inverse(m1, m2))
+	            {
+	            	return false;
+	            }
+	            cmsmtrx._cmsMAT3per(m3, m2, Scale);
+	            // m3 holds CHAD from input white to D50 times abs. col. scaling
 	            
 	            TempSrc  = CHAD2Temp(ChromaticAdaptationMatrixIn);
 	            TempDest = CHAD2Temp(ChromaticAdaptationMatrixOut);
@@ -234,9 +254,9 @@ final class cmscnvrt
 	                return true;
 	            }
 	            
-	            Temp = AdaptationState * TempDest + (1.0 - AdaptationState) * TempSrc;
+	            Temp = (1.0 - AdaptationState) * TempDest + AdaptationState * TempSrc;
 	            
-	            // Get a CHAD from D50 to whatever output temperature. This replaces output CHAD
+	            // Get a CHAD from whatever output temperature to D50. This replaces output CHAD
 	            MixedCHAD = new cmsMAT3();
 	            Temp2CHAD(MixedCHAD, Temp);
 	            

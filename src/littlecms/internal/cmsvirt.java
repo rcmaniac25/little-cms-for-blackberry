@@ -247,7 +247,7 @@ final class cmsvirt
 	        WhitePointXYZ = new cmsCIEXYZ();
 	        cmspcs.cmsxyY2XYZ(WhitePointXYZ, WhitePoint);
 	        CHAD = new cmsMAT3();
-	        cmswtpnt._cmsAdaptationMatrix(CHAD, null, lcms2.cmsD50_XYZ, WhitePointXYZ);
+	        cmswtpnt._cmsAdaptationMatrix(CHAD, null, WhitePointXYZ, lcms2.cmsD50_XYZ);
 	        
 	        // This is a V4 tag, but many CMM does read and understand it no matter which version
 //#ifdef CMS_RAW_C
@@ -1404,7 +1404,7 @@ final class cmsvirt
 	
 	private static cmsAllowedLUT FindCombination(final cmsPipeline Lut, boolean IsV4, int DestinationTag)
 	{
-	    int n;
+	    int n; //Could be an unsigned int liek the original, but values are less then 10
 	    
 	    for (n=0; n < SIZE_OF_ALLOWED_LUT; n++)
 	    {

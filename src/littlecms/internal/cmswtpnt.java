@@ -177,7 +177,7 @@ final class cmswtpnt
 	// Robertson's method
 	public static boolean cmsTempFromWhitePoint(double[] TempK, final cmsCIExyY WhitePoint)
 	{
-		int j;
+		int j; //Could be an unsigned int like the original, but values are less then 31
 		double us,vs;
 		double uj,vj,tj,di,dj,mi,mj;
 		double xs, ys;

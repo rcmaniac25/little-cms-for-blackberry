@@ -65,7 +65,8 @@ final class cmsxform
 		else
 		{
 			Alarm = new short[lcms2.cmsMAXCHANNELS];
-			GlobalAdaptationState = new double[1];
+			Arrays.fill(Alarm, (short)0x7F00, 0, 3);
+			GlobalAdaptationState = new double[]{1};
 			Utility.singletonStorageSet(ALARM_UID, Alarm);
 			Utility.singletonStorageSet(GAS_UID, GlobalAdaptationState);
 		}

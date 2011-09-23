@@ -1258,7 +1258,7 @@ final class cmscgats
     public static cmsHANDLE cmsIT8Alloc(cmsContext ContextID)
     {
         cmsIT8 it8;
-        int i;
+        int i; //Could possible be a unsigned int (as is the original) but it's used for values that are less then 41
         
         it8 = new cmsIT8();
         

@@ -144,7 +144,7 @@ final class cmsio1
 	                return true;
 	            }
 	            
-	            return cmswtpnt._cmsAdaptationMatrix(Dest, null, lcms2.cmsD50_XYZ, White);
+	            return cmswtpnt._cmsAdaptationMatrix(Dest, null, White, lcms2.cmsD50_XYZ);
 	        }
 	    }
 	    

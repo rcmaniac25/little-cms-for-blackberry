@@ -595,13 +595,17 @@ final class cmsopt
         return true;
 	}
 	
-	// Auxiliar, to see if two values are equal.
+	// Auxiliar, to see if two values are equal or very different
 	private static boolean WhitesAreEqual(int n, short[] White1, short[] White2) 
 	{
 	    int i;
 	    
 	    for (i = 0; i < n; i++)
 	    {
+	    	if (Math.abs((White1[i] & 0xFFFF) - (White2[i] & 0xFFFF)) > 0xf000)
+	    	{
+	    		return true; // Values are so extremely different that the fixup should be avoided
+	    	}
 	        if (White1[i] != White2[i])
 	        {
 	        	return false;

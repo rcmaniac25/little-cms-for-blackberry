@@ -494,7 +494,8 @@ final class cmssm
 	private static int FindNearSectors(cmsGDB gbd, int alpha, int theta, cmsGDBPoint[] Close)
 	{
 	    int nSectors = 0;
-	    int i, a, t;
+	    int a, t;
+	    int i; //Could be an unsigned int like original, but values are less then 24
 	    cmsGDBPoint pt;
 	    
 	    for (i=0; i < NSTEPS; i++)

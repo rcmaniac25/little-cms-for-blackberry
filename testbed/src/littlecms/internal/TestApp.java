@@ -322,8 +322,7 @@ public final class TestApp extends UiApplication
 		//Not really used but here anyway
 		public int KeepSize;
 		public cmsContext WhoAllocated;
-		public int Align8_1; // Some systems do need pointers aligned to 8-byte boundaries.
-		public int Align8_2;
+		public long HiSparc;
 	}
 	
 	// This is a fake thread descriptor used to check thread integrity. 
@@ -7798,6 +7797,7 @@ public final class TestApp extends UiApplication
 		    cmsCIExyYTRIPLE tripxyY = new cmsCIExyYTRIPLE();
 		    boolean result;
 		    
+		    lcms2.cmsSetAdaptationState(0);
 		    hsRGB = lcms2.cmsCreate_sRGBProfileTHR(DbgThread());
 		    if (hsRGB == null)
 		    {
