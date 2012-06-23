@@ -28,15 +28,16 @@
 package littlecms.internal;
 
 import net.rim.device.api.util.Arrays;
-import littlecms.internal.helper.Utility;
-import littlecms.internal.helper.VirtualPointer;
+
 import littlecms.internal.lcms2.cmsContext;
 import littlecms.internal.lcms2.cmsHPROFILE;
 import littlecms.internal.lcms2.cmsHTRANSFORM;
 import littlecms.internal.lcms2.cmsNAMEDCOLORLIST;
 import littlecms.internal.lcms2.cmsPipeline;
 import littlecms.internal.lcms2_internal._cmsTRANSFORM;
-import littlecms.internal.lcms2_internal._cmsTransformFn;
+import littlecms.internal.lcms2_plugin._cmsTransformFn;
+import littlecms.internal.helper.Utility;
+import littlecms.internal.helper.VirtualPointer;
 
 /**
  * Transformations stuff

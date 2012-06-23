@@ -31,7 +31,6 @@ import java.util.Calendar;
 
 import net.rim.device.api.util.Arrays;
 
-import littlecms.internal.helper.Utility;
 import littlecms.internal.lcms2.cmsCIELab;
 import littlecms.internal.lcms2.cmsCIEXYZ;
 import littlecms.internal.lcms2.cmsContext;
@@ -44,9 +43,10 @@ import littlecms.internal.lcms2.cmsPipeline;
 import littlecms.internal.lcms2.cmsSAMPLER16;
 import littlecms.internal.lcms2.cmsStage;
 import littlecms.internal.lcms2.cmsToneCurve;
-import littlecms.internal.lcms2_internal._cmsStageCLutData;
-import littlecms.internal.lcms2_internal._cmsStageMatrixData;
 import littlecms.internal.lcms2_internal._cmsTRANSFORM;
+import littlecms.internal.lcms2_plugin._cmsStageCLutData;
+import littlecms.internal.lcms2_plugin._cmsStageMatrixData;
+import littlecms.internal.helper.Utility;
 
 //#ifdef CMS_INTERNAL_ACCESS & DEBUG
 public

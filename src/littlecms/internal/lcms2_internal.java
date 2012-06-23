@@ -217,6 +217,12 @@ final class lcms2_internal extends lcms2_plugin
 		return cmsopt._cmsRegisterOptimizationPlugin(Plugin);
 	}
 	
+	// Transform
+	public static boolean _cmsRegisterTransformPlugin(cmsPluginBase Plugin)
+	{
+		//TODO
+	}
+	
 	// ---------------------------------------------------------------------------------------------------------
 	
 	// Suballocators. Those are blocks of memory that is freed at the end on whole block.
@@ -500,41 +506,6 @@ final class lcms2_internal extends lcms2_plugin
 	    _cmsStage_struct Next;
 	}
 	
-	// Data kept in "Element" member of cmsStage
-	
-	// Curves
-	public static class _cmsStageToneCurvesData
-	{
-		public int nCurves;
-		public cmsToneCurve[] TheCurves;
-	}
-	
-	// Matrix
-	public static class _cmsStageMatrixData
-	{
-		/** floating point for the matrix*/
-		public double[] Double;
-		/** The offset*/
-		public double[] Offset;
-	}
-	
-	// CLUT
-	public static class _cmsStageCLutData
-	{
-		/**
-		 * Can have only one of both representations at same time
-		 * <p>
-		 * Points to the table 16 bits table
-		 * <p>
-		 * Points to the float table
-		 */
-		public VirtualPointer Tab;
-	    
-	    public cmsInterpParams Params;
-	    public int nEntries;
-	    public boolean HasFloatValues;
-	}
-	
 	// Special Stages (cannot be saved)
 	public static cmsStage _cmsStageAllocLab2XYZ(cmsContext ContextID)
 	{
@@ -763,17 +734,13 @@ final class lcms2_internal extends lcms2_plugin
 	    }
 	}
 	
-	// Full xform
-	public static interface _cmsTransformFn
-	{
-		public void run(_cmsTRANSFORM Transform, final VirtualPointer InputBuffer, VirtualPointer OutputBuffer, int Size);
-	}
-	
+	/*//XXX Find where this should go
 	public static class cmsFormatterInfo
 	{
 		public int InputFormat, OutputFormat; // Keep formats for further reference
 		public int StrideIn, StrideOut;       // Planar support
 	}
+	*/
 	
 	// Transformation
 	public static class _cmsTRANSFORM implements cmsHTRANSFORM
@@ -793,10 +760,10 @@ final class lcms2_internal extends lcms2_plugin
 		// 1-pixel cache seed for zero as input (16 bits, read only)
 	    public _cmsCACHE Cache;
 	    
-	    // A MPE LUT holding the full (optimized) transform
+	    // A Pipeline holding the full (optimized) transform
 	    public cmsPipeline Lut;
 	    
-	    // A MPE LUT holding the gamut check. It goes from the input space to bilevel
+	    // A Pipeline holding the gamut check. It goes from the input space to bilevel
 	    public cmsPipeline GamutCheck;
 	    
 	    // Colorant tables
@@ -818,6 +785,10 @@ final class lcms2_internal extends lcms2_plugin
 	    
 	    // An id that uniquely identifies the running context. May be null.
 	    public cmsContext ContextID;
+	    
+	    // A user-defined pointer that can be used to store data for transform plug-ins
+	    public Object UserData;
+	    public _cmsOPTfreeDataFn FreeUserData;
 	    
 	    public _cmsTRANSFORM()
 	    {

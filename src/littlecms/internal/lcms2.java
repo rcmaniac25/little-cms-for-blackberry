@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.3
+// Version 2.4
 //
 package littlecms.internal;
 
@@ -39,7 +39,7 @@ import net.rim.device.api.util.Arrays;
 public class lcms2
 {
 	/** Version/release*/
-	public static final int LCMS_VERSION = 2030;
+	public static final int LCMS_VERSION = 2040;
 	
 	// Some common definitions
 	public static final int cmsMAX_PATH = 256;
@@ -648,14 +648,17 @@ public class lcms2
 	public static final int TYPE_RGBA_16_SE      = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (2 << BYTES_SHIFT_VALUE) | (1 << ENDIAN16_SHIFT_VALUE));
 	
 	public static final int TYPE_ARGB_8          = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (1 << BYTES_SHIFT_VALUE) | (1 << SWAPFIRST_SHIFT_VALUE));
+	public static final int TYPE_ARGB_8_PLANAR   = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (1 << BYTES_SHIFT_VALUE) | (1 << SWAPFIRST_SHIFT_VALUE) | (1 << PLANAR_SHIFT_VALUE));
 	public static final int TYPE_ARGB_16         = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (2 << BYTES_SHIFT_VALUE) | (1 << SWAPFIRST_SHIFT_VALUE));
 	
 	public static final int TYPE_ABGR_8          = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (1 << BYTES_SHIFT_VALUE) | (1 << DOSWAP_SHIFT_VALUE));
+	public static final int TYPE_ABGR_8_PLANAR   = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (1 << BYTES_SHIFT_VALUE) | (1 << DOSWAP_SHIFT_VALUE) | (1 << PLANAR_SHIFT_VALUE));
 	public static final int TYPE_ABGR_16         = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (2 << BYTES_SHIFT_VALUE) | (1 << DOSWAP_SHIFT_VALUE));
 	public static final int TYPE_ABGR_16_PLANAR  = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (2 << BYTES_SHIFT_VALUE) | (1 << DOSWAP_SHIFT_VALUE) | (1 << PLANAR_SHIFT_VALUE));
 	public static final int TYPE_ABGR_16_SE      = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (2 << BYTES_SHIFT_VALUE) | (1 << DOSWAP_SHIFT_VALUE) | (1 << ENDIAN16_SHIFT_VALUE));
 	
 	public static final int TYPE_BGRA_8          = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (1 << BYTES_SHIFT_VALUE) | (1 << DOSWAP_SHIFT_VALUE) | (1 << SWAPFIRST_SHIFT_VALUE));
+	public static final int TYPE_BGRA_8_PLANAR   = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (1 << BYTES_SHIFT_VALUE) | (1 << DOSWAP_SHIFT_VALUE) | (1 << SWAPFIRST_SHIFT_VALUE) | (1 << PLANAR_SHIFT_VALUE));
 	public static final int TYPE_BGRA_16         = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (2 << BYTES_SHIFT_VALUE) | (1 << DOSWAP_SHIFT_VALUE) | (1 << SWAPFIRST_SHIFT_VALUE));
 	public static final int TYPE_BGRA_16_SE      = ((PT_RGB << COLORSPACE_SHIFT_VALUE) | (1 << EXTRA_SHIFT_VALUE) | (3 << CHANNELS_SHIFT_VALUE) | (2 << BYTES_SHIFT_VALUE) | (1 << ENDIAN16_SHIFT_VALUE) | (1 << SWAPFIRST_SHIFT_VALUE));
 	
@@ -1578,6 +1581,19 @@ public class lcms2
 		return cmsgamma.cmsEstimateGamma(t, Precision);
 	}
 	
+	// Tone curve tabular estimation
+	//TODO: Docs
+	public static int cmsGetToneCurveEstimatedTableEntries(final cmsToneCurve t)
+	{
+		//TODO
+	}
+	
+	//TODO: Docs
+	public static short[] cmsGetToneCurveEstimatedTable(final cmsToneCurve t)
+	{
+		//TODO
+	}
+	
 	// Implements pipelines of multi-processing elements -------------------------------------------------------------
 	
 	// Nothing to see here, move along
@@ -1614,6 +1630,12 @@ public class lcms2
 	public static cmsPipeline cmsPipelineDup(final cmsPipeline Orig)
 	{
 		return cmslut.cmsPipelineDup(Orig);
+	}
+	
+	//TODO: Docs
+	public static cmsContext cmsGetPipelineContextID(final cmsPipeline lut)
+	{
+		//TODO
 	}
 	
 	/**
@@ -3790,6 +3812,12 @@ public class lcms2
 		cmsxform.cmsDoTransform(Transform, InputBuffer, OutputBuffer, Size);
 	}
 	
+	//TODO: Docs
+	public static void cmsDoTransformStride(cmsHTRANSFORM Transform, final Object InputBuffer, Object OutputBuffer, int Size, int Stride)
+	{
+		//TODO
+	}
+	
 	/**
 	 * Sets the global codes used to mark out-out-gamut on Proofing transforms. Values are meant to be encoded in 16 bits.
 	 * @param NewAlarm AlarmCodes: Array [16] of codes. ALL 16 VALUES MUST BE SPECIFIED, set to zero unused channels.
@@ -4088,6 +4116,12 @@ public class lcms2
 		return cmscgats.cmsIT8SetPropertyHex(hIT8, cProp, Val);
 	}
 	
+	//TODO: Docs
+	public static boolean cmsIT8SetPropertyMulti(cmsHANDLE hIT8, final String Key, final String SubKey, final String Buffer)
+	{
+		//TODO
+	}
+	
 	/**
 	 * Sets a property with no interpretation in current table. No quotes "" are added. No checking is performed, and it is up to the programmer to make sure the string 
 	 * is valid.
@@ -4127,6 +4161,12 @@ public class lcms2
 		return cmscgats.cmsIT8GetPropertyDbl(hIT8, cProp);
 	}
 	
+	//TODO: Docs
+	public static String cmsIT8GetPropertyMulti(cmsHANDLE hIT8, final String Key, final String SubKey)
+	{
+		//TODO
+	}
+	
 	/**
 	 * Enumerates all properties in current table.
 	 * @param hIT8 A handle to a CGATS.17 object.
@@ -4136,6 +4176,12 @@ public class lcms2
 	public static int cmsIT8EnumProperties(cmsHANDLE hIT8, String[][] PropertyNames)
 	{
 		return cmscgats.cmsIT8EnumProperties(hIT8, PropertyNames);
+	}
+	
+	//TODO: Docs
+	public static int cmsIT8EnumPropertyMulti(cmsHANDLE hIT8, final String cProp, String[][] SubpropertyNames)
+	{
+		//TODO
 	}
 	
 	// Datasets
@@ -4289,10 +4335,22 @@ public class lcms2
 		return cmscgats.cmsIT8GetPatchName(hIT8, nPatch, buffer);
 	}
 	
+	//TODO: Docs
+	public static int cmsIT8GetPatchByName(cmsHANDLE hIT8, final String cPatch)
+	{
+		//TODO
+	}
+	
 	// The LABEL extension
 	public static int cmsIT8SetTableByLabel(cmsHANDLE hIT8, final String cSet, final String cField, final String ExpectedType)
 	{
 		return cmscgats.cmsIT8SetTableByLabel(hIT8, cSet, cField, ExpectedType);
+	}
+	
+	//TODO: Docs
+	public static boolean cmsIT8SetIndexColumn(cmsHANDLE hIT8, final String cSample)
+	{
+		//TODO
 	}
 	
 	// Formatter for double
@@ -4376,6 +4434,12 @@ public class lcms2
 	public static boolean cmsDetectBlackPoint(cmsCIEXYZ BlackPoint, cmsHPROFILE hProfile, int Intent, int dwFlags)
 	{
 		return cmssamp.cmsDetectBlackPoint(BlackPoint, hProfile, Intent, dwFlags);
+	}
+	
+	//TODO: Docs
+	public static boolean cmsDetectDestinationBlackPoint(cmsCIEXYZ BlackPoint, cmsHPROFILE hProfile, int Intent, int dwFlags)
+	{
+		//TODO
 	}
 	
 	// Estimate total area coverage

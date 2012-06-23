@@ -27,8 +27,9 @@ package littlecms.internal;
 
 import java.util.Calendar;
 
-import littlecms.internal.helper.VirtualPointer;
+import littlecms.internal.lcms2.cmsPipeline;
 import littlecms.internal.lcms2_internal._cmsTRANSFORM;
+import littlecms.internal.helper.VirtualPointer;
 
 /**
  * This is the plug-in header file. Normal LittleCMS clients should not use it.
@@ -721,6 +722,7 @@ public class lcms2_plugin extends lcms2
 	public static final int cmsPluginRenderingIntentSig        = 0x696E7448; // 'intH'
 	public static final int cmsPluginMultiProcessElementSig    = 0x6D706548; // 'mpeH'
 	public static final int cmsPluginOptimizationSig           = 0x6F707448; // 'optH'
+	public static final int cmsPluginTransformSig              = 0x7A666D48; // 'xfmH'
 	
 	public static class cmsPluginBase
 	{
@@ -937,7 +939,7 @@ public class lcms2_plugin extends lcms2
 	// cmsFloat32Number (bps = 4) or double (bps = 0) types are requested via FormatterFloat callback. Others come across
 	// Formatter16 callback
 	
-	//_cmsTRANSFORM
+	//_cmsTRANSFORM //XXX This should be replaced somehow. It's not public yet needs to exist somehow for extensibility purposes
 	
 	public static interface cmsFormatter16
 	{
@@ -1196,6 +1198,41 @@ public class lcms2_plugin extends lcms2
 		public cmsTagTypeHandler Handler;
 	}
 	
+	// Data kept in "Element" member of cmsStage
+	
+	// Curves
+	public static class _cmsStageToneCurvesData
+	{
+		public int nCurves;
+		public cmsToneCurve[] TheCurves;
+	}
+	
+	// Matrix
+	public static class _cmsStageMatrixData
+	{
+		/** floating point for the matrix*/
+		public double[] Double;
+		/** The offset*/
+		public double[] Offset;
+	}
+	
+	// CLUT
+	public static class _cmsStageCLutData
+	{
+		/**
+		 * Can have only one of both representations at same time
+		 * <p>
+		 * Points to the table 16 bits table
+		 * <p>
+		 * Points to the float table
+		 */
+		public VirtualPointer Tab;
+	    
+	    public cmsInterpParams Params;
+	    public int nEntries;
+	    public boolean HasFloatValues;
+	}
+	
 	//----------------------------------------------------------------------------------------------------------
 	// Optimization. Using this plug-in, additional optimization strategies may be implemented.
 	// The function should return TRUE if any optimization is done on the LUT, this terminates
@@ -1235,5 +1272,35 @@ public class lcms2_plugin extends lcms2
 	{
 		// Optimize entry point
 		public _cmsOPToptimizeFn OptimizePtr;
+	}
+	
+	//----------------------------------------------------------------------------------------------------------
+	// Full xform
+	public static interface _cmsTransformFn
+	{
+		public void run(_cmsTRANSFORM CMMcargo, final VirtualPointer InputBuffer, VirtualPointer OutputBuffer, int Size, int Stride);
+	}
+	
+	public static interface _cmsTranformFactory
+	{
+		public boolean run(_cmsTransformFn xform, Object UserData, _cmsOPTfreeDataFn FreeUserData, cmsPipeline[] Lut, int[] InputFormat, int[] OutputFormat, int[] dwFlags);
+	}
+	
+	// Retrieve user data as specified by the factory
+	public static Object _cmsGetTransformUserData(_cmsTRANSFORM CMMcargo)
+	{
+		//TODO
+	}
+	
+	// FIXME: Those are hacks that should be solved somehow.
+	public static Object _cmsOPTgetTransformPipelinePrivateData(_cmsTRANSFORM CMMcargo)
+	{
+		//TODO
+	}
+	
+	public static class cmsPluginTransform extends cmsPluginBase
+	{
+		// Transform entry point
+		public _cmsTranformFactory Factory;
 	}
 }

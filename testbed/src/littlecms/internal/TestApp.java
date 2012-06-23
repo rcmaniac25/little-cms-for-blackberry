@@ -634,6 +634,22 @@ public final class TestApp extends UiApplication
 	    return hProfile;
 	}
 	
+	// A gamma-3.0 gray space
+	private static cmsHPROFILE Create_Gray30()
+	{
+	    cmsHPROFILE hProfile;
+	    cmsToneCurve Curve = lcms2.cmsBuildGamma(DbgThread(), 3.0);
+	    if (Curve == null)
+	    {
+	    	return null;
+	    }
+	    
+	    hProfile = lcms2.cmsCreateGrayProfileTHR(DbgThread(), lcms2.cmsD50_xyY, Curve);
+	    lcms2.cmsFreeToneCurve(Curve);
+	    
+	    return hProfile;
+	}
+	
 	private static cmsHPROFILE Create_GrayLab()
 	{
 	    cmsHPROFILE hProfile;
@@ -937,6 +953,14 @@ public final class TestApp extends UiApplication
 		    
 		    // ----
 		    
+		    h = Create_Gray30();
+		    if (OneVirtual(h, "Gray 3.0 profile", "gray3lcms2.icc") == 0)
+		    {
+		    	return 0;
+		    }
+		    
+		    // ----
+		    
 		    h = Create_GrayLab();
 		    if (OneVirtual(h, "Gray Lab profile", "glablcms2.icc") == 0)
 		    {
@@ -1120,6 +1144,7 @@ public final class TestApp extends UiApplication
 	    fileOperation("sRGBlcms2.icc", remove);
 	    fileOperation("aRGBlcms2.icc", remove);
 	    fileOperation("graylcms2.icc", remove);
+	    fileOperation("gray3lcms2.icc", remove);
 	    fileOperation("linlcms2.icc", remove);
 	    fileOperation("limitlcms2.icc", remove);
 	    fileOperation("labv2lcms2.icc", remove);
@@ -4915,8 +4940,8 @@ public final class TestApp extends UiApplication
 	    info.OutputFormat = info.InputFormat = Type;
 	    
 	    // Go forth and back
-	    f = lcms2_internal._cmsGetFormatter(Type, lcms2_plugin.cmsFormatterInput, 0);
-	    b = lcms2_internal._cmsGetFormatter(Type, lcms2_plugin.cmsFormatterOutput, 0);
+	    f = lcms2_internal._cmsGetFormatter(Type, lcms2_plugin.cmsFormatterInput, lcms2_plugin.CMS_PACK_FLAGS_16BITS);
+	    b = lcms2_internal._cmsGetFormatter(Type, lcms2_plugin.cmsFormatterOutput, lcms2_plugin.CMS_PACK_FLAGS_16BITS);
 	    
 	    if (!f.hasValue() || !b.hasValue())
 	    {
@@ -4924,8 +4949,8 @@ public final class TestApp extends UiApplication
 	        FormatterFailed = true;
 	        
 	        // Useful for debug
-	        f = lcms2_internal._cmsGetFormatter(Type, lcms2_plugin.cmsFormatterInput, 0);
-	        b = lcms2_internal._cmsGetFormatter(Type, lcms2_plugin.cmsFormatterOutput, 0);
+	        f = lcms2_internal._cmsGetFormatter(Type, lcms2_plugin.cmsFormatterInput, lcms2_plugin.CMS_PACK_FLAGS_16BITS);
+	        b = lcms2_internal._cmsGetFormatter(Type, lcms2_plugin.cmsFormatterOutput, lcms2_plugin.CMS_PACK_FLAGS_16BITS);
 	        return;
 	    }
 	    
@@ -5012,12 +5037,15 @@ public final class TestApp extends UiApplication
 			CheckSingleFormatter16(lcms2.TYPE_RGBA_16_PLANAR, "TYPE_RGBA_16_PLANAR");
 			CheckSingleFormatter16(lcms2.TYPE_RGBA_16_SE, "TYPE_RGBA_16_SE");
 			CheckSingleFormatter16(lcms2.TYPE_ARGB_8, "TYPE_ARGB_8");
+			CheckSingleFormatter16(lcms2.TYPE_ARGB_8_PLANAR, "TYPE_ARGB_8_PLANAR");
 			CheckSingleFormatter16(lcms2.TYPE_ARGB_16, "TYPE_ARGB_16");
 			CheckSingleFormatter16(lcms2.TYPE_ABGR_8, "TYPE_ABGR_8");
+			CheckSingleFormatter16(lcms2.TYPE_ABGR_8_PLANAR, "TYPE_ABGR_8_PLANAR");
 			CheckSingleFormatter16(lcms2.TYPE_ABGR_16, "TYPE_ABGR_16");
 			CheckSingleFormatter16(lcms2.TYPE_ABGR_16_PLANAR, "TYPE_ABGR_16_PLANAR");
 			CheckSingleFormatter16(lcms2.TYPE_ABGR_16_SE, "TYPE_ABGR_16_SE");
 			CheckSingleFormatter16(lcms2.TYPE_BGRA_8, "TYPE_BGRA_8");
+			CheckSingleFormatter16(lcms2.TYPE_BGRA_8_PLANAR, "TYPE_BGRA_8_PLANAR");
 			CheckSingleFormatter16(lcms2.TYPE_BGRA_16, "TYPE_BGRA_16");
 			CheckSingleFormatter16(lcms2.TYPE_BGRA_16_SE, "TYPE_BGRA_16_SE");
 			CheckSingleFormatter16(lcms2.TYPE_CMY_8, "TYPE_CMY_8");
@@ -5237,20 +5265,20 @@ public final class TestApp extends UiApplication
 		}
 	};
 	
-	private static int CheckOneRGB(cmsHTRANSFORM xform, int R, int G, int B, int Ro, int Go, int Bo)
+	private static int CheckOneRGB(cmsHTRANSFORM xform, short R, short G, short B, short Ro, short Go, short Bo)
 	{
 		short[] RGB = new short[3];
 		short[] Out = new short[3];
 		
-	    RGB[0] = (short)R;
-	    RGB[1] = (short)G;
-	    RGB[2] = (short)B;
+	    RGB[0] = R;
+	    RGB[1] = G;
+	    RGB[2] = B;
 	    
 	    lcms2.cmsDoTransform(xform, RGB, Out, 1);
 	    
-	    return (IsGoodWord("R", (short)Ro , Out[0]) &&
-	           IsGoodWord("G", (short)Go , Out[1]) &&
-	           IsGoodWord("B", (short)Bo , Out[2])) ? 1 : 0;
+	    return (IsGoodWord("R", Ro , Out[0]) &&
+	           IsGoodWord("G", Go , Out[1]) &&
+	           IsGoodWord("B", Bo , Out[2])) ? 1 : 0;
 	}
 	
 	// Check known values going from sRGB to XYZ
@@ -5286,15 +5314,15 @@ public final class TestApp extends UiApplication
 		    }
 		    
 		    
-		    if (CheckOneRGB(xform, 0, 0, 0, 0, 0, 0) == 0)
+		    if (CheckOneRGB(xform, (short)0, (short)0, (short)0, (short)0, (short)0, (short)0) == 0)
 		    {
 		    	return 0;
 		    }
-		    if (CheckOneRGB(xform, 120, 0, 0, 120, 0, 0) == 0)
+		    if (CheckOneRGB(xform, (short)120, (short)0, (short)0, (short)120, (short)0, (short)0) == 0)
 		    {
 		    	return 0;
 		    }
-		    if (CheckOneRGB(xform, 0, 222, 255, 0, 222, 255) == 0)
+		    if (CheckOneRGB(xform, (short)0, (short)222, (short)255, (short)0, (short)222, (short)255) == 0)
 		    {
 		    	return 0;
 		    }
@@ -5304,11 +5332,11 @@ public final class TestApp extends UiApplication
 		    	return 0;
 		    }
 		    
-		    if (CheckOneRGB(xform, 0, 0, 123, 123, 0, 0) == 0)
+		    if (CheckOneRGB(xform, (short)0, (short)0, (short)123, (short)123, (short)0, (short)0) == 0)
 		    {
 		    	return 0;
 		    }
-		    if (CheckOneRGB(xform, 154, 234, 0, 0, 234, 154) == 0)
+		    if (CheckOneRGB(xform, (short)154, (short)234, (short)0, (short)0, (short)234, (short)154) == 0)
 		    {
 		    	return 0;
 		    }
@@ -8212,26 +8240,26 @@ public final class TestApp extends UiApplication
 		    cmsCIELab Lab = new cmsCIELab();
 		    
 		    hProfile  = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test5.icc", "r");  
-		    lcms2.cmsDetectBlackPoint(Black, hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
+		    lcms2.cmsDetectDestinationBlackPoint(Black, hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
 		    lcms2.cmsCloseProfile(hProfile);
 		    
 		    hProfile = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test1.icc", "r");
-		    lcms2.cmsDetectBlackPoint(Black, hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
+		    lcms2.cmsDetectDestinationBlackPoint(Black, hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
 		    lcms2.cmsXYZ2Lab(null, Lab, Black);
 		    lcms2.cmsCloseProfile(hProfile);
 		    
 		    hProfile = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "lcms2cmyk.icc", "r");
-		    lcms2.cmsDetectBlackPoint(Black, hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
+		    lcms2.cmsDetectDestinationBlackPoint(Black, hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
 		    lcms2.cmsXYZ2Lab(null, Lab, Black);
 		    lcms2.cmsCloseProfile(hProfile);
 		    
 		    hProfile = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test2.icc", "r");
-		    lcms2.cmsDetectBlackPoint(Black, hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
+		    lcms2.cmsDetectDestinationBlackPoint(Black, hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
 		    lcms2.cmsXYZ2Lab(null, Lab, Black);
 		    lcms2.cmsCloseProfile(hProfile);
 		    
 		    hProfile = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test1.icc", "r");
-		    lcms2.cmsDetectBlackPoint(Black, hProfile, lcms2.INTENT_PERCEPTUAL, 0);
+		    lcms2.cmsDetectDestinationBlackPoint(Black, hProfile, lcms2.INTENT_PERCEPTUAL, 0);
 		    lcms2.cmsXYZ2Lab(null, Lab, Black);
 		    lcms2.cmsCloseProfile(hProfile);
 		    
@@ -8302,6 +8330,7 @@ public final class TestApp extends UiApplication
 			cmsHANDLE it8;
 		    int i;
 		    
+		    SubTest("IT8 creation", null);
 		    it8 = lcms2.cmsIT8Alloc(DbgThread());
 		    if (it8 == null)
 		    {
@@ -8324,6 +8353,7 @@ public final class TestApp extends UiApplication
 		    lcms2.cmsIT8SetDataFormat(it8, 2, "RGB_G");
 		    lcms2.cmsIT8SetDataFormat(it8, 3, "RGB_B");
 		    
+		    SubTest("Table creation", null);
 		    for (i=0; i < NPOINTS_IT8; i++)
 		    {
 		    	StringBuffer Patch = new StringBuffer(20);
@@ -8336,15 +8366,29 @@ public final class TestApp extends UiApplication
 		    	lcms2.cmsIT8SetDataRowColDbl(it8, i, 3, i);
 		    }
 		    
+		    SubTest("Save to file", null);
 		    lcms2.cmsIT8SaveToFile(it8, FILE_PREFIX + "TEST.IT8");
 		    lcms2.cmsIT8Free(it8);
 		    
+		    SubTest("Load from file", null);
 		    it8 = lcms2.cmsIT8LoadFromFile(DbgThread(), FILE_PREFIX + "TEST.IT8");
+		    if (it8 == null)
+		    {
+		    	return 0;
+		    }
+		    
+		    SubTest("Save again file", null);
 		    lcms2.cmsIT8SaveToFile(it8, FILE_PREFIX + "TEST.IT8");
 		    lcms2.cmsIT8Free(it8);
 		    
+		    SubTest("Load from file (II)", null);
 		    it8 = lcms2.cmsIT8LoadFromFile(DbgThread(), FILE_PREFIX + "TEST.IT8");
+		    if (it8 == null)
+		    {
+		    	return 0;
+		    }
 		    
+		    SubTest("Change prop value", null);
 		    if (lcms2.cmsIT8GetPropertyDbl(it8, "DESCRIPTOR") != 1234)
 		    {
 		    	return 0;
@@ -8357,9 +8401,31 @@ public final class TestApp extends UiApplication
 		        return 0;
 		    }
 		    
+		    SubTest("Positive numbers", null);
 		    if (lcms2.cmsIT8GetDataDbl(it8, "P3", "RGB_G") != 3)
 		    {
 		        return 0;
+		    }
+		    
+		    SubTest("Positive exponent numbers", null);
+		    lcms2.cmsIT8SetPropertyDbl(it8, "DBL_PROP", 123E+12);
+		    if ((lcms2.cmsIT8GetPropertyDbl(it8, "DBL_PROP") - 123E+12) > 1)
+		    {
+		    	return 0;
+		    }
+		    
+		    SubTest("Negative exponent numbers", null);
+		    lcms2.cmsIT8SetPropertyDbl(it8, "DBL_PROP_NEG", 123E-45);
+		    if ((lcms2.cmsIT8GetPropertyDbl(it8, "DBL_PROP_NEG") - 123E-45) > 1E-45)
+		    {
+		    	return 0;
+		    }
+		    
+		    SubTest("Negative numbers", null);
+		    lcms2.cmsIT8SetPropertyDbl(it8, "DBL_NEG_VAL", -123);
+		    if ((lcms2.cmsIT8GetPropertyDbl(it8, "DBL_NEG_VAL")) != -123)
+		    {
+		    	return 0;
 		    }
 		    
 		    lcms2.cmsIT8Free(it8);
@@ -9400,7 +9466,11 @@ public final class TestApp extends UiApplication
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test1.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test2.icc", "r"));
 	    
-	    SpeedTest8bitsGray("8 bits on gray-to-gray",
+	    SpeedTest8bitsGray("8 bits on gray-to gray",
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "gray3lcms2.icc", "r"), 
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "graylcms2.icc", "r"), lcms2.INTENT_RELATIVE_COLORIMETRIC);
+	    
+	    SpeedTest8bitsGray("8 bits on gray-to-lab gray",
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "graylcms2.icc", "r"), 
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "glablcms2.icc", "r"), lcms2.INTENT_RELATIVE_COLORIMETRIC);
 	    
@@ -9573,10 +9643,10 @@ public final class TestApp extends UiApplication
 	    }
 	    
 	    
-	    lcms2.cmsDetectBlackPoint(Black, h, lcms2.INTENT_PERCEPTUAL, 0);
-	    lcms2.cmsDetectBlackPoint(Black, h, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
-	    lcms2.cmsDetectBlackPoint(Black, h, lcms2.INTENT_SATURATION, 0);
-	    lcms2.cmsDetectBlackPoint(Black, h, lcms2.INTENT_ABSOLUTE_COLORIMETRIC, 0);
+	    lcms2.cmsDetectDestinationBlackPoint(Black, h, lcms2.INTENT_PERCEPTUAL, 0);
+	    lcms2.cmsDetectDestinationBlackPoint(Black, h, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
+	    lcms2.cmsDetectDestinationBlackPoint(Black, h, lcms2.INTENT_SATURATION, 0);
+	    lcms2.cmsDetectDestinationBlackPoint(Black, h, lcms2.INTENT_ABSOLUTE_COLORIMETRIC, 0);
 	    lcms2.cmsDetectTAC(h);
 	}
 	
@@ -9817,7 +9887,7 @@ public final class TestApp extends UiApplication
 	
 	public final class TestScreen extends MainScreen implements FieldChangeListener
 	{
-		private boolean Exhaustive, DoSpeedTests;
+		private boolean Exhaustive, DoSpeedTests, DoCheckTests;
 		private ObjectListField list;
 		private ListOut listOut;
 		private PrintStream print;
@@ -9827,6 +9897,7 @@ public final class TestApp extends UiApplication
 		{
 			Exhaustive = false;
 			DoSpeedTests = false;
+			DoCheckTests = true;
 			running = false;
 			
 			setTitle(new LabelField("Little CMS Test"));
@@ -9948,171 +10019,174 @@ public final class TestApp extends UiApplication
 		    // Create utility profiles
 		    Check("Creation of test profiles", CreateTestProfiles);
 		    
-		    //Check("Base types", CheckBaseTypes); //Base types don't change and are hard-coded
-		    Check("endianess", CheckEndianess);
-		    Check("quick floor", CheckQuickFloor);
-		    Check("quick floor word", CheckQuickFloorWord);
-		    Check("Fixed point 15.16 representation", CheckFixedPoint15_16);
-		    Check("Fixed point 8.8 representation", CheckFixedPoint8_8);
-		    
-		    // Forward 1D interpolation
-		    Check("1D interpolation in 2pt tables", Check1DLERP2);
-		    Check("1D interpolation in 3pt tables", Check1DLERP3);
-		    Check("1D interpolation in 4pt tables", Check1DLERP4);
-		    Check("1D interpolation in 6pt tables", Check1DLERP6);
-		    Check("1D interpolation in 18pt tables", Check1DLERP18);
-		    Check("1D interpolation in descending 2pt tables", Check1DLERP2Down);
-		    Check("1D interpolation in descending 3pt tables", Check1DLERP3Down);
-		    Check("1D interpolation in descending 6pt tables", Check1DLERP6Down);
-		    Check("1D interpolation in descending 18pt tables", Check1DLERP18Down);
-		    
-		    if (Exhaustive)
+		    if (DoCheckTests)
 		    {
-		        Check("1D interpolation in n tables", ExhaustiveCheck1DLERP);
-		        Check("1D interpolation in descending tables", ExhaustiveCheck1DLERPDown);
+			    //Check("Base types", CheckBaseTypes); //Base types don't change and are hard-coded
+			    Check("endianess", CheckEndianess);
+			    Check("quick floor", CheckQuickFloor);
+			    Check("quick floor word", CheckQuickFloorWord);
+			    Check("Fixed point 15.16 representation", CheckFixedPoint15_16);
+			    Check("Fixed point 8.8 representation", CheckFixedPoint8_8);
+			    
+			    // Forward 1D interpolation
+			    Check("1D interpolation in 2pt tables", Check1DLERP2);
+			    Check("1D interpolation in 3pt tables", Check1DLERP3);
+			    Check("1D interpolation in 4pt tables", Check1DLERP4);
+			    Check("1D interpolation in 6pt tables", Check1DLERP6);
+			    Check("1D interpolation in 18pt tables", Check1DLERP18);
+			    Check("1D interpolation in descending 2pt tables", Check1DLERP2Down);
+			    Check("1D interpolation in descending 3pt tables", Check1DLERP3Down);
+			    Check("1D interpolation in descending 6pt tables", Check1DLERP6Down);
+			    Check("1D interpolation in descending 18pt tables", Check1DLERP18Down);
+			    
+			    if (Exhaustive)
+			    {
+			        Check("1D interpolation in n tables", ExhaustiveCheck1DLERP);
+			        Check("1D interpolation in descending tables", ExhaustiveCheck1DLERPDown);
+			    }
+			    
+			    // Forward 3D interpolation
+			    Check("3D interpolation Tetrahedral (float) ", Check3DinterpolationFloatTetrahedral);
+			    Check("3D interpolation Trilinear (float) ", Check3DinterpolationFloatTrilinear);
+			    Check("3D interpolation Tetrahedral (16) ", Check3DinterpolationTetrahedral16);
+			    Check("3D interpolation Trilinear (16) ", Check3DinterpolationTrilinear16); //XXX
+			    
+			    if (Exhaustive)
+			    {
+			        Check("Exhaustive 3D interpolation Tetrahedral (float) ", ExaustiveCheck3DinterpolationFloatTetrahedral);
+			        Check("Exhaustive 3D interpolation Trilinear  (float) ", ExaustiveCheck3DinterpolationFloatTrilinear);
+			        Check("Exhaustive 3D interpolation Tetrahedral (16) ", ExhaustiveCheck3DinterpolationTetrahedral16);
+			        Check("Exhaustive 3D interpolation Trilinear (16) ", ExhaustiveCheck3DinterpolationTrilinear16);
+			    }
+			    
+			    Check("Reverse interpolation 3 -> 3", CheckReverseInterpolation3x3);
+			    Check("Reverse interpolation 4 -> 3", CheckReverseInterpolation4x3);
+			    
+			    // High dimensionality interpolation
+			    Check("3D interpolation", Check3Dinterp);
+			    Check("3D interpolation with granularity", Check3DinterpGranular);
+			    Check("4D interpolation", Check4Dinterp);
+			    Check("4D interpolation with granularity", Check4DinterpGranular);
+			    Check("5D interpolation with granularity", Check5DinterpGranular);
+			    Check("6D interpolation with granularity", Check6DinterpGranular);
+			    Check("7D interpolation with granularity", Check7DinterpGranular);
+			    Check("8D interpolation with granularity", Check8DinterpGranular);
+			    
+			    // Encoding of colorspaces
+			    Check("Lab to LCh and back (float only) ", CheckLab2LCh);
+			    Check("Lab to XYZ and back (float only) ", CheckLab2XYZ);
+			    Check("Lab to xyY and back (float only) ", CheckLab2xyY);
+			    Check("Lab V2 encoding", CheckLabV2encoding);
+			    Check("Lab V4 encoding", CheckLabV4encoding);
+			    
+			    // BlackBody
+			    Check("Blackbody radiator", CheckTemp2CHRM);
+			    
+			    // Tone curves
+			    Check("Linear gamma curves (16 bits)", CheckGammaCreation16);
+			    Check("Linear gamma curves (float)", CheckGammaCreationFlt);
+			    
+			    Check("Curve 1.8 (float)", CheckGamma18);
+			    Check("Curve 2.2 (float)", CheckGamma22);
+			    Check("Curve 3.0 (float)", CheckGamma30);
+			    
+			    Check("Curve 1.8 (table)", CheckGamma18Table);
+			    Check("Curve 2.2 (table)", CheckGamma22Table);
+			    Check("Curve 3.0 (table)", CheckGamma30Table);
+			    
+			    Check("Curve 1.8 (word table)", CheckGamma18TableWord);
+			    Check("Curve 2.2 (word table)", CheckGamma22TableWord);
+			    Check("Curve 3.0 (word table)", CheckGamma30TableWord);
+			    
+			    Check("Parametric curves", CheckParametricToneCurves);
+			    
+			    Check("Join curves", CheckJointCurves);
+			    Check("Join curves descending", CheckJointCurvesDescending);
+			    Check("Join curves degenerated", CheckReverseDegenerated);
+			    Check("Join curves sRGB (Float)", CheckJointFloatCurves_sRGB);
+			    Check("Join curves sRGB (16 bits)", CheckJoint16Curves_sRGB);
+			    Check("Join curves sigmoidal", CheckJointCurvesSShaped);
+			    
+			    // LUT basics
+			    Check("LUT creation & dup", CheckLUTcreation);
+			    Check("1 Stage LUT ", Check1StageLUT);
+			    Check("2 Stage LUT ", Check2StageLUT);
+			    Check("2 Stage LUT (16 bits)", Check2Stage16LUT);
+			    Check("3 Stage LUT ", Check3StageLUT);
+			    Check("3 Stage LUT (16 bits)", Check3Stage16LUT);
+			    Check("4 Stage LUT ", Check4StageLUT);
+			    Check("4 Stage LUT (16 bits)", Check4Stage16LUT);
+			    Check("5 Stage LUT ", Check5StageLUT);
+			    Check("5 Stage LUT (16 bits) ", Check5Stage16LUT);
+			    Check("6 Stage LUT ", Check6StageLUT);
+			    Check("6 Stage LUT (16 bits) ", Check6Stage16LUT);
+			    
+			    // LUT operation
+			    Check("Lab to Lab LUT (float only) ", CheckLab2LabLUT);
+			    Check("XYZ to XYZ LUT (float only) ", CheckXYZ2XYZLUT);
+			    Check("Lab to Lab MAT LUT (float only) ", CheckLab2LabMatLUT);
+			    Check("Named Color LUT", CheckNamedColorLUT);
+			    Check("Usual formatters", CheckFormatters16);
+			    Check("Floating point formatters", CheckFormattersFloat);
+			    
+			    // ChangeBuffersFormat
+			    Check("ChangeBuffersFormat", CheckChangeBufferFormat);
+			    
+			    // MLU
+			    Check("Multilocalized Unicode", CheckMLU);
+			    
+			    // Named color
+			    Check("Named color lists", CheckNamedColorList);
+			    
+			    // Profile I/O (this one is huge!)
+			    Check("Profile creation", CheckProfileCreation);
+			    
+			    // Error reporting
+			    Check("Error reporting on bad profiles", CheckErrReportingOnBadProfiles);
+			    Check("Error reporting on bad transforms", CheckErrReportingOnBadTransforms);
+			    
+			    // Transforms
+			    Check("Curves only transforms", CheckCurvesOnlyTransforms);
+			    Check("Float Lab->Lab transforms", CheckFloatLabTransforms);
+			    Check("Encoded Lab->Lab transforms", CheckEncodedLabTransforms);
+			    Check("Stored identities", CheckStoredIdentities);
+			    
+			    Check("Matrix-shaper transform (float)",   CheckMatrixShaperXFORMFloat);
+			    Check("Matrix-shaper transform (16 bits)", CheckMatrixShaperXFORM16);   
+			    Check("Matrix-shaper transform (8 bits)",  CheckMatrixShaperXFORM8);
+			    
+			    Check("Primaries of sRGB", CheckRGBPrimaries);
+			    
+			    // Known values
+			    Check("Known values across matrix-shaper", Chack_sRGB_Float);
+			    Check("Gray input profile", CheckInputGray);
+			    Check("Gray Lab input profile", CheckLabInputGray);
+			    Check("Gray output profile", CheckOutputGray);
+			    Check("Gray Lab output profile", CheckLabOutputGray);
+			    
+			    Check("Matrix-shaper proofing transform (float)",   CheckProofingXFORMFloat);
+			    Check("Matrix-shaper proofing transform (16 bits)",  CheckProofingXFORM16);
+			    
+			    Check("Gamut check", CheckGamutCheck);
+			    
+			    Check("CMYK roundtrip on perceptual transform",   CheckCMYKRoundtrip);
+			    
+			    Check("CMYK perceptual transform",   CheckCMYKPerceptual);
+			    // Check("CMYK rel.col. transform",   CheckCMYKRelCol);
+			    
+			    Check("Black ink only preservation", CheckKOnlyBlackPreserving);
+			    Check("Black plane preservation", CheckKPlaneBlackPreserving);
+			    
+			    Check("Deciding curve types", CheckV4gamma);
+			    
+			    Check("Black point detection", CheckBlackPoint);
+			    Check("TAC detection", CheckTAC);
+			    
+			    Check("CGATS parser", CheckCGATS);
+			    Check("PostScript generator", CheckPostScript);
+			    Check("Segment maxima GBD", CheckGBD);
+			    Check("MD5 digest", CheckMD5);
 		    }
-		    
-		    // Forward 3D interpolation
-		    Check("3D interpolation Tetrahedral (float) ", Check3DinterpolationFloatTetrahedral);
-		    Check("3D interpolation Trilinear (float) ", Check3DinterpolationFloatTrilinear);
-		    Check("3D interpolation Tetrahedral (16) ", Check3DinterpolationTetrahedral16);
-		    Check("3D interpolation Trilinear (16) ", Check3DinterpolationTrilinear16); //XXX
-		    
-		    if (Exhaustive)
-		    {
-		        Check("Exhaustive 3D interpolation Tetrahedral (float) ", ExaustiveCheck3DinterpolationFloatTetrahedral);
-		        Check("Exhaustive 3D interpolation Trilinear  (float) ", ExaustiveCheck3DinterpolationFloatTrilinear);
-		        Check("Exhaustive 3D interpolation Tetrahedral (16) ", ExhaustiveCheck3DinterpolationTetrahedral16);
-		        Check("Exhaustive 3D interpolation Trilinear (16) ", ExhaustiveCheck3DinterpolationTrilinear16);
-		    }
-		    
-		    Check("Reverse interpolation 3 -> 3", CheckReverseInterpolation3x3);
-		    Check("Reverse interpolation 4 -> 3", CheckReverseInterpolation4x3);
-		    
-		    // High dimensionality interpolation
-		    Check("3D interpolation", Check3Dinterp);
-		    Check("3D interpolation with granularity", Check3DinterpGranular);
-		    Check("4D interpolation", Check4Dinterp);
-		    Check("4D interpolation with granularity", Check4DinterpGranular);
-		    Check("5D interpolation with granularity", Check5DinterpGranular);
-		    Check("6D interpolation with granularity", Check6DinterpGranular);
-		    Check("7D interpolation with granularity", Check7DinterpGranular);
-		    Check("8D interpolation with granularity", Check8DinterpGranular);
-		    
-		    // Encoding of colorspaces
-		    Check("Lab to LCh and back (float only) ", CheckLab2LCh);
-		    Check("Lab to XYZ and back (float only) ", CheckLab2XYZ);
-		    Check("Lab to xyY and back (float only) ", CheckLab2xyY);
-		    Check("Lab V2 encoding", CheckLabV2encoding);
-		    Check("Lab V4 encoding", CheckLabV4encoding);
-		    
-		    // BlackBody
-		    Check("Blackbody radiator", CheckTemp2CHRM);
-		    
-		    // Tone curves
-		    Check("Linear gamma curves (16 bits)", CheckGammaCreation16);
-		    Check("Linear gamma curves (float)", CheckGammaCreationFlt);
-		    
-		    Check("Curve 1.8 (float)", CheckGamma18);
-		    Check("Curve 2.2 (float)", CheckGamma22);
-		    Check("Curve 3.0 (float)", CheckGamma30);
-		    
-		    Check("Curve 1.8 (table)", CheckGamma18Table);
-		    Check("Curve 2.2 (table)", CheckGamma22Table);
-		    Check("Curve 3.0 (table)", CheckGamma30Table);
-		    
-		    Check("Curve 1.8 (word table)", CheckGamma18TableWord);
-		    Check("Curve 2.2 (word table)", CheckGamma22TableWord);
-		    Check("Curve 3.0 (word table)", CheckGamma30TableWord);
-		    
-		    Check("Parametric curves", CheckParametricToneCurves);
-		    
-		    Check("Join curves", CheckJointCurves);
-		    Check("Join curves descending", CheckJointCurvesDescending);
-		    Check("Join curves degenerated", CheckReverseDegenerated);
-		    Check("Join curves sRGB (Float)", CheckJointFloatCurves_sRGB);
-		    Check("Join curves sRGB (16 bits)", CheckJoint16Curves_sRGB);
-		    Check("Join curves sigmoidal", CheckJointCurvesSShaped);
-		    
-		    // LUT basics
-		    Check("LUT creation & dup", CheckLUTcreation);
-		    Check("1 Stage LUT ", Check1StageLUT);
-		    Check("2 Stage LUT ", Check2StageLUT);
-		    Check("2 Stage LUT (16 bits)", Check2Stage16LUT);
-		    Check("3 Stage LUT ", Check3StageLUT);
-		    Check("3 Stage LUT (16 bits)", Check3Stage16LUT);
-		    Check("4 Stage LUT ", Check4StageLUT);
-		    Check("4 Stage LUT (16 bits)", Check4Stage16LUT);
-		    Check("5 Stage LUT ", Check5StageLUT);
-		    Check("5 Stage LUT (16 bits) ", Check5Stage16LUT);
-		    Check("6 Stage LUT ", Check6StageLUT);
-		    Check("6 Stage LUT (16 bits) ", Check6Stage16LUT);
-		    
-		    // LUT operation
-		    Check("Lab to Lab LUT (float only) ", CheckLab2LabLUT);
-		    Check("XYZ to XYZ LUT (float only) ", CheckXYZ2XYZLUT);
-		    Check("Lab to Lab MAT LUT (float only) ", CheckLab2LabMatLUT);
-		    Check("Named Color LUT", CheckNamedColorLUT);
-		    Check("Usual formatters", CheckFormatters16);
-		    Check("Floating point formatters", CheckFormattersFloat);
-		    
-		    // ChangeBuffersFormat
-		    Check("ChangeBuffersFormat", CheckChangeBufferFormat);
-		    
-		    // MLU
-		    Check("Multilocalized Unicode", CheckMLU);
-		    
-		    // Named color
-		    Check("Named color lists", CheckNamedColorList);
-		    
-		    // Profile I/O (this one is huge!)
-		    Check("Profile creation", CheckProfileCreation);
-		    
-		    // Error reporting
-		    Check("Error reporting on bad profiles", CheckErrReportingOnBadProfiles);
-		    Check("Error reporting on bad transforms", CheckErrReportingOnBadTransforms);
-		    
-		    // Transforms
-		    Check("Curves only transforms", CheckCurvesOnlyTransforms);
-		    Check("Float Lab->Lab transforms", CheckFloatLabTransforms);
-		    Check("Encoded Lab->Lab transforms", CheckEncodedLabTransforms);
-		    Check("Stored identities", CheckStoredIdentities);
-		    
-		    Check("Matrix-shaper transform (float)",   CheckMatrixShaperXFORMFloat);
-		    Check("Matrix-shaper transform (16 bits)", CheckMatrixShaperXFORM16);   
-		    Check("Matrix-shaper transform (8 bits)",  CheckMatrixShaperXFORM8);
-		    
-		    Check("Primaries of sRGB", CheckRGBPrimaries);
-		    
-		    // Known values
-		    Check("Known values across matrix-shaper", Chack_sRGB_Float);
-		    Check("Gray input profile", CheckInputGray);
-		    Check("Gray Lab input profile", CheckLabInputGray);
-		    Check("Gray output profile", CheckOutputGray);
-		    Check("Gray Lab output profile", CheckLabOutputGray);
-		    
-		    Check("Matrix-shaper proofing transform (float)",   CheckProofingXFORMFloat);
-		    Check("Matrix-shaper proofing transform (16 bits)",  CheckProofingXFORM16);
-		    
-		    Check("Gamut check", CheckGamutCheck);
-		    
-		    Check("CMYK roundtrip on perceptual transform",   CheckCMYKRoundtrip);
-		    
-		    Check("CMYK perceptual transform",   CheckCMYKPerceptual);
-		    // Check("CMYK rel.col. transform",   CheckCMYKRelCol);
-		    
-		    Check("Black ink only preservation", CheckKOnlyBlackPreserving);
-		    Check("Black plane preservation", CheckKPlaneBlackPreserving);
-		    
-		    Check("Deciding curve types", CheckV4gamma);
-		    
-		    Check("Black point detection", CheckBlackPoint);
-		    Check("TAC detection", CheckTAC);
-		    
-		    Check("CGATS parser", CheckCGATS);
-		    Check("PostScript generator", CheckPostScript);
-		    Check("Segment maxima GBD", CheckGBD);
-		    Check("MD5 digest", CheckMD5);
 		    
 		    if (DoSpeedTests)
 		    {

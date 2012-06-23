@@ -27,7 +27,6 @@
 //
 package littlecms.internal;
 
-import littlecms.internal.helper.VirtualPointer;
 import littlecms.internal.lcms2.cmsCIELab;
 import littlecms.internal.lcms2.cmsCIEXYZ;
 import littlecms.internal.lcms2.cmsContext;
@@ -37,17 +36,18 @@ import littlecms.internal.lcms2.cmsSAMPLERFLOAT;
 import littlecms.internal.lcms2.cmsStage;
 import littlecms.internal.lcms2.cmsToneCurve;
 import littlecms.internal.lcms2_internal._cmsPipelineEvalFloatFn;
-import littlecms.internal.lcms2_internal._cmsStageCLutData;
-import littlecms.internal.lcms2_internal._cmsStageMatrixData;
-import littlecms.internal.lcms2_internal._cmsStageToneCurvesData;
 import littlecms.internal.lcms2_plugin._cmsOPTdupDataFn;
 import littlecms.internal.lcms2_plugin._cmsOPTeval16Fn;
 import littlecms.internal.lcms2_plugin._cmsOPTfreeDataFn;
+import littlecms.internal.lcms2_plugin._cmsStageCLutData;
 import littlecms.internal.lcms2_plugin._cmsStageDupElemFn;
 import littlecms.internal.lcms2_plugin._cmsStageEvalFn;
 import littlecms.internal.lcms2_plugin._cmsStageFreeElemFn;
+import littlecms.internal.lcms2_plugin._cmsStageMatrixData;
+import littlecms.internal.lcms2_plugin._cmsStageToneCurvesData;
 import littlecms.internal.lcms2_plugin.cmsMAT3;
 import littlecms.internal.lcms2_plugin.cmsVEC3;
+import littlecms.internal.helper.VirtualPointer;
 
 //#ifdef CMS_INTERNAL_ACCESS & DEBUG
 public
