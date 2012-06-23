@@ -352,6 +352,12 @@ final class cmserr
 	    VirtualPointer vp;
 //#endif
 	    
+	    // 20K by default
+	    if (Initial == 0)
+	    {
+	    	Initial = 20 * 1024;
+	    }
+	    
 	    // Create the container
 //#ifdef CMS_RAW_C
 	    chunk = (_cmsSubAllocator_chunk)(vp = _cmsMallocZero(ContextID, /*sizeof(_cmsSubAllocator_chunk)*/_cmsSubAllocator_chunk.SIZE)).getProcessor().readObject(_cmsSubAllocator_chunk.class);
@@ -372,12 +378,6 @@ final class cmserr
 	        _cmsFree(ContextID, vp);
 //#endif
 	        return null;
-	    }
-	    
-	    // 20K by default
-	    if (Initial == 0)
-	    {
-	    	Initial = 20 * 1024;
 	    }
 	    
 	    chunk.BlockSize = Initial;
@@ -450,7 +450,7 @@ final class cmserr
 	    int Free = sub.h.BlockSize - sub.h.Used;
 	    VirtualPointer ptr;
 	    
-	    size = lcms2_internal._cmsALIGNLONG(size);
+	    size = lcms2_internal._cmsALIGNMEM(size);
 	    
 	    // Check for memory. If there is no room, allocate a new chunk of double memory size.   
 	    if (size > Free)

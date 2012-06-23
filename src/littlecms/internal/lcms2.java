@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.2
+// Version 2.3
 //
 package littlecms.internal;
 
@@ -39,7 +39,7 @@ import net.rim.device.api.util.Arrays;
 public class lcms2
 {
 	/** Version/release*/
-	public static final int LCMS_VERSION = 2020;
+	public static final int LCMS_VERSION = 2030;
 	
 	// Some common definitions
 	public static final int cmsMAX_PATH = 256;

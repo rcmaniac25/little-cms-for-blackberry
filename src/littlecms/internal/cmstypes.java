@@ -243,7 +243,7 @@ final class cmstypes
 		public boolean run(cmsTagTypeHandler self, cmsIOHANDLER io, Object Cargo, int n, int SizeOfTag);
 	}
 	
-	// Helper function to deal with position tables as decribed in several addendums to ICC spec 4.2
+	// Helper function to deal with position tables as decribed in ICC spec 4.3
 	// A table of n elements is readed, where first comes n records containing offsets and sizes and
 	// then a block containing the data itself. This allows to reuse same data in more than one entry
 	private static boolean ReadPositionTable(cmsTagTypeHandler self, cmsIOHANDLER io, int Count, int BaseOffset, Object Cargo, 
@@ -2136,16 +2136,24 @@ final class cmstypes
 	private static boolean Type_ParametricCurve_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
 		cmsToneCurve Curve = (cmsToneCurve)Ptr;
-	    int i, nParams;
+	    int i, nParams, typen;
 	    final int ParamsByType[] = { 0, 1, 3, 4, 5, 7 };
 	    
-	    if (Curve.nSegments > 1 || Curve.Segments[0].Type < 1)
+	    typen = Curve.Segments[0].Type;
+	    
+	    if (Curve.nSegments > 1 || typen < 1)
 	    {
-	    	cmserr.cmsSignalError(self.ContextID, 0, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_CURVE_CANT_BE_WRITTEN), null);          
+	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_CURVE_CANT_BE_WRITTEN), null);          
 	        return false;
 	    }
 	    
-	    nParams = ParamsByType[Curve.Segments[0].Type];
+	    if (typen > 5)
+	    {
+	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unsupported parametric curve", null);          
+	        return false;    
+	    }
+	    
+	    nParams = ParamsByType[typen];
 	    
 	    if (!cmsplugin._cmsWriteUInt16Number(io, (short)(Curve.Segments[0].Type - 1)))
 	    {

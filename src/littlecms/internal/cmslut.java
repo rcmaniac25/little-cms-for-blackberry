@@ -1130,6 +1130,67 @@ final class cmslut
 	    return mpe;
 	}
 	
+	// To Lab to float. Note that the MPE gives numbers in normal Lab range
+	// and we need 0..1.0 range for the formatters
+	// L* : 0...100 => 0...1.0  (L* / 100)
+	// ab* : -128..+127 to 0..1  ((ab* + 128) / 255)
+	
+	public static cmsStage _cmsStageNormalizeFromLabFloat(cmsContext ContextID)
+	{
+		final double[] a1 = { 
+	        1.0/100.0, 0, 0,
+	        0, 1.0/255.0, 0, 
+	        0, 0, 1.0/255.0 
+	    };
+	    
+		final double[] o1 = { 
+	        0,
+	        128.0/255.0, 
+	        128.0/255.0 
+	    };
+	    
+	    return cmsStageAllocMatrix(ContextID, 3, 3, a1, o1);
+	}
+	
+	public static cmsStage _cmsStageNormalizeFromXyzFloat(cmsContext ContextID)
+	{
+		final double[] a1 = { 
+	        1.0/100.0, 0, 0,
+	        0, 1.0/100.0, 0, 
+	        0, 0, 1.0/100.0 
+	    };
+	    
+	    return cmsStageAllocMatrix(ContextID, 3, 3, a1, null);
+	}
+	
+	public static cmsStage _cmsStageNormalizeToLabFloat(cmsContext ContextID)
+	{
+		final double[] a1 = { 
+	        100.0, 0, 0,
+	        0, 255.0, 0, 
+	        0, 0, 255.0 
+	    };
+		
+		final double[] o1 = { 
+	        0,
+	        -128.0, 
+	        -128.0 
+	    };
+		
+	    return cmsStageAllocMatrix(ContextID, 3, 3, a1, o1);
+	}
+	
+	public static cmsStage _cmsStageNormalizeToXyzFloat(cmsContext ContextID)
+	{
+		final double[] a1 = { 
+	        100.0, 0, 0,
+	        0, 100.0, 0, 
+	        0, 0, 100.0 
+	    };
+	    
+	    return cmsStageAllocMatrix(ContextID, 3, 3, a1, null);
+	}
+	
 	// ********************************************************************************
 	// Type cmsSigXYZ2LabElemType
 	// ********************************************************************************

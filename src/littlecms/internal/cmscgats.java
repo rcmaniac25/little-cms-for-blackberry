@@ -3,7 +3,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2010 Marti Maria Saguer
+//  Copyright (c) 1998-2011 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining 
 // a copy of this software and associated documentation files (the "Software"), 
@@ -115,6 +115,8 @@ final class cmscgats
     // Table. Each individual table can hold properties and rows & cols
     private static class TABLE
     {
+    	public char[] SheetType;                     // The first row of the IT8 (the type)
+    	
     	public int            nSamples, nPatches;    // Cols, Rows
     	public int            SampleID;              // Pos of ID
         
@@ -122,6 +124,11 @@ final class cmscgats
         
     	public VirtualPointer[] DataFormat;          // The binary stream descriptor
     	public VirtualPointer[] Data;                // The binary stream
+    	
+    	public TABLE()
+    	{
+    		SheetType = new char[MAXSTR];
+    	}
     }
     
     // File stream being parsed
@@ -139,8 +146,6 @@ final class cmscgats
     // This struct hold all information about an open IT8 handler.
     private static class cmsIT8 implements cmsHANDLE
     {
-    	public char[] SheetType; // The first row of the IT8 (the type)
-    	
     	public int TablesCount; // How many tables in this stream
         public int nTable; // The actual table
         
@@ -177,8 +182,6 @@ final class cmscgats
     	
     	public cmsIT8()
     	{
-    		SheetType = new char[MAXSTR];
-    		
     		Tab = new TABLE[MAXTABLES];
     		
     		id = new char[MAXID];
@@ -1043,7 +1046,7 @@ final class cmscgats
         int Free = it8.Allocator.BlockSize - it8.Allocator.Used;
         VirtualPointer ptr;
         
-        size = lcms2_internal._cmsALIGNLONG(size);
+        size = lcms2_internal._cmsALIGNMEM(size);
         
         if (size > Free)
         {
@@ -1290,8 +1293,7 @@ final class cmscgats
         
         System.arraycopy(DEFAULT_DBL_FORMAT.toCharArray(), 0, it8.DoubleFormatter, 0, DEFAULT_DBL_FORMAT.length());
         it8.DoubleFormatter[DEFAULT_DBL_FORMAT.length()] = 0;
-        System.arraycopy("CGATS.17".toCharArray(), 0, it8.SheetType, 0, 8);
-        it8.SheetType[8] = 0;
+        cmsIT8SetSheetType((cmsHANDLE)it8, "CGATS.17");
         
         // Initialize predefined properties & data
         
@@ -1310,17 +1312,15 @@ final class cmscgats
     
     public static String cmsIT8GetSheetType(cmsHANDLE hIT8)
     {
-    	cmsIT8 it8 = (cmsIT8)hIT8;
-    	
-    	return Utility.cstringCreation(it8.SheetType);
+    	return Utility.cstringCreation(GetTable((cmsIT8)hIT8).SheetType);
     }
     
     public static boolean cmsIT8SetSheetType(cmsHANDLE hIT8, final String Type)
     {
-    	cmsIT8 it8 = (cmsIT8)hIT8;
+    	TABLE t = GetTable((cmsIT8)hIT8);
     	
-    	Utility.strncpy(it8.SheetType, Type.toCharArray(), MAXSTR-1);
-    	it8.SheetType[MAXSTR-1] = 0;
+    	Utility.strncpy(t.SheetType, Type.toCharArray(), MAXSTR-1);
+    	t.SheetType[MAXSTR-1] = 0;
     	return true;
     }
     
@@ -1622,6 +1622,10 @@ final class cmscgats
         KEYVALUE p;
         TABLE t = GetTable(it8);
         
+        // Writes the type
+        WriteStr(fp, Utility.cstringCreation(t.SheetType));
+        WriteStr(fp, "\n");
+        
         for (p = t.HeaderList[0]; (p != null); p = p.Next)
         {
             if (p.Keyword.charAt(0) == '#')
@@ -1776,8 +1780,6 @@ final class cmscgats
         	return false;
         }
         
-        WriteStr(sd, Utility.cstringCreation(it8.SheetType));
-        WriteStr(sd, "\n");
         for (i = 0; i < it8.TablesCount; i++)
         {
         	cmsIT8SetTable(hIT8, i);
@@ -1816,8 +1818,6 @@ final class cmscgats
         	sd.Max = 0;              // Just counting the needed bytes
         }
         
-        WriteStr(sd, Utility.cstringCreation(it8.SheetType));
-        WriteStr(sd, "\n");
         for (i = 0; i < it8.TablesCount; i++)
         {
         	cmsIT8SetTable(hIT8, i);
@@ -2080,27 +2080,31 @@ final class cmscgats
         return true;
     }
     
+    private static void ReadType(cmsIT8 it8, char[] SheetType, int SheetTypePtr)
+    {
+    	// First line is a very special case.
+    	
+    	while (isseparator(it8.ch))
+    	{
+    		NextCh(it8);
+    	}
+    	
+    	while (it8.ch != '\r' && it8.ch != '\n' && it8.ch != '\t' && it8.ch != -1)
+    	{
+    		SheetType[SheetTypePtr++] = (char)it8.ch;
+    		NextCh(it8);
+    	}
+        
+    	SheetType[SheetTypePtr++] = 0;
+    }
+    
     private static boolean ParseIT8(cmsIT8 it8, boolean nosheet)
     {
-        int SheetTypePtr = 0;
-        
         if (!nosheet)
         {
-        	// First line is a very special case.
-        	
-        	while (isseparator(it8.ch))
-        	{
-        		NextCh(it8);
-        	}
-        	
-        	while (it8.ch != '\r' && it8.ch != '\n' && it8.ch != '\t' && it8.ch != -1)
-        	{
-        		it8.SheetType[SheetTypePtr++] = (char)it8.ch;
-        		NextCh(it8);
-        	}
+            ReadType(it8, it8.Tab[0].SheetType, 0);  
         }
-        
-        it8.SheetType[SheetTypePtr++] = 0;
+    	
         InSymbol(it8);
         
         SkipEOLN(it8);
@@ -2126,6 +2130,43 @@ final class cmscgats
                     {
                         AllocTable(it8);
                         it8.nTable = it8.TablesCount - 1;
+                        
+                        // Read sheet type if present. We only support identifier and string.
+                        // <ident> <eoln> is a type string
+                        // anything else, is not a type string
+                        if (!nosheet)
+                        {
+                        	if (it8.sy == SIDENT)
+                        	{
+                        		// May be a type sheet or may be a prop value statement. We cannot use insymbol in
+                                // this special case...
+                        		while (isseparator(it8.ch))
+                        		{
+                        			NextCh(it8);
+                        		}
+                        		
+                        		// If a newline is found, then this is a type string
+                                if (it8.ch == '\n')
+                                {
+                                	cmsIT8SetSheetType(it8, Utility.cstringCreation(it8.id));
+                                	InSymbol(it8);
+                                } 
+                                else
+                                {
+                                    // It is not. Just continue
+                                    cmsIT8SetSheetType(it8, "");                                       
+                                }
+                        	}
+                            else
+                            {
+                            	// Validate quoted strings
+                                if (it8.sy == SSTRING)
+                                {
+                                	cmsIT8SetSheetType(it8, Utility.cstringCreation(it8.str));
+                                	InSymbol(it8);
+                                }
+                            }
+                        }
                     }
                     break;
                     
@@ -2245,8 +2286,8 @@ final class cmscgats
     
     // Try to infere if the file is a CGATS/IT8 file at all. Read first line
     // that should be something like some printable characters plus a \n
-    
-    private static boolean IsMyBlock(byte[] Buffer, int n)
+    // returns 0 if this is not like a CGATS, or an integer otherwise
+    private static int IsMyBlock(byte[] Buffer, int n)
     {
         int cols = 1;
         boolean space = false, quot = false;
@@ -2254,7 +2295,7 @@ final class cmscgats
         
         if (n < 10)
         {
-        	return false; // Too small
+        	return 0; // Too small
         }
         
         if (n > 132)
@@ -2268,7 +2309,7 @@ final class cmscgats
             {
 	            case '\n':
 	            case '\r':
-	                return quot || cols <= 2;
+	            	return (quot || (cols > 2)) ? 0 : cols;
 	            case '\t':
 	            case ' ':
 	                if(!quot && !space)
@@ -2282,11 +2323,11 @@ final class cmscgats
 	            default:
 	                if (Buffer[i] < 32)
 	                {
-	                	return false;
+	                	return 0;
 	                }
 	                if (Buffer[i] > 127)
 	                {
-	                	return false;
+	                	return 0;
 	                }
 	                cols += space ? 1 : 0;
 	                space = false;
@@ -2294,7 +2335,7 @@ final class cmscgats
             }
         }
         
-        return false;
+        return 0;
     }
     
     private static boolean IsMyFile(final String FileName)
@@ -2319,7 +2360,7 @@ final class cmscgats
        
        Ptr[Size] = '\0';
        
-       return IsMyBlock(Ptr, Size);
+       return IsMyBlock(Ptr, Size) != 0;
     }
     
     // ---------------------------------------------------------- Exported routines
@@ -2333,7 +2374,7 @@ final class cmscgats
     	lcms2_internal._cmsAssert(Ptr != null, "Ptr != null");
     	lcms2_internal._cmsAssert(len != 0, "len != 0");
     	
-        type = IsMyBlock(Ptr, len);
+        type = IsMyBlock(Ptr, len) != 0;
         if (!type)
         {
         	return null;
@@ -2867,5 +2908,7 @@ final class cmscgats
         {
         	Utility.strcpy(it8.DoubleFormatter, Formatter);
         }
+        
+        it8.DoubleFormatter[it8.DoubleFormatter.length-1] = 0;
     }
 }

@@ -273,6 +273,35 @@ final class cmsio1
 	    return Lut;
 	}
 	
+	// Read the DToAX tag, adjusting the encoding of Lab or XYZ if neded
+	private static cmsPipeline _cmsReadFloatInputTag(cmsHPROFILE hProfile, int tagFloat)
+	{
+	    cmsContext ContextID = cmsio0.cmsGetProfileContextID(hProfile);
+	    cmsPipeline Lut      = cmslut.cmsPipelineDup((cmsPipeline)cmsio0.cmsReadTag(hProfile, tagFloat));
+	    int spc              = cmsio0.cmsGetColorSpace(hProfile);
+
+	    if (Lut == null)
+	    {
+	    	return null;
+	    }
+
+	    // If PCS is Lab or XYZ, the floating point tag is accepting data in the space encoding,
+	    // and since the formatter has already accomodated to 0..1.0, we should undo this change
+	    if (spc == lcms2.cmsSigLabData)
+	    {
+	    	cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_END, cmslut._cmsStageNormalizeFromLabFloat(ContextID));
+	    }
+	    else
+	    {
+	        if (spc == lcms2.cmsSigXYZData)
+	        {
+	        	cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_END, cmslut._cmsStageNormalizeFromXyzFloat(ContextID));
+	        }
+	    }
+	    
+	    return Lut;
+	}
+	
 	// Read and create a BRAND NEW MPE LUT from a given profile. All stuff dependent of version, etc
 	// is adjusted here in order to create a LUT that takes care of all those details
 	public static cmsPipeline _cmsReadInputLUT(cmsHPROFILE hProfile, int Intent)
@@ -307,8 +336,9 @@ final class cmsio1
 	    
 	    if (cmsio0.cmsIsTag(hProfile, tagFloat)) // Float tag takes precedence
 	    {
-	        // Floating point LUT are always V4, so no adjustment is required
-	        return cmslut.cmsPipelineDup((cmsPipeline)cmsio0.cmsReadTag(hProfile, tagFloat));
+	    	// Floating point LUT are always V4, but the encoding range is no
+	    	// longer 0..1.0, so we need to add an stage depending on the color space
+	    	return _cmsReadFloatInputTag(hProfile, tagFloat);
 	    }
 	    
 	    // Revert to perceptual if no tag is found
@@ -492,6 +522,35 @@ final class cmsio1
 	    }
 	}
 	
+	// Read the DToAX tag, adjusting the encoding of Lab or XYZ if neded
+	private static cmsPipeline _cmsReadFloatOutputTag(cmsHPROFILE hProfile, int tagFloat)
+	{
+	    cmsContext ContextID = cmsio0.cmsGetProfileContextID(hProfile);
+	    cmsPipeline Lut      = cmslut.cmsPipelineDup((cmsPipeline)cmsio0.cmsReadTag(hProfile, tagFloat));
+	    int PCS              = cmsio0.cmsGetPCS(hProfile);
+	    
+	    if (Lut == null)
+	    {
+	    	return null;
+	    }
+	    
+	    // If PCS is Lab or XYZ, the floating point tag is accepting data in the space encoding,
+	    // and since the formatter has already accomodated to 0..1.0, we should undo this change
+	    if (PCS == lcms2.cmsSigLabData)
+	    {
+	    	cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_BEGIN, cmslut._cmsStageNormalizeToLabFloat(ContextID));
+	    }
+	    else
+	    {
+	        if (PCS == lcms2.cmsSigXYZData)
+	        {
+	        	cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_BEGIN, cmslut._cmsStageNormalizeToXyzFloat(ContextID));
+	        }
+	    }
+	    
+	    return Lut;
+	}
+	
 	// Create an output MPE LUT from agiven profile. Version mismatches are handled here
 	public static cmsPipeline _cmsReadOutputLUT(cmsHPROFILE hProfile, int Intent)
 	{
@@ -502,8 +561,8 @@ final class cmsio1
 	    
 	    if (cmsio0.cmsIsTag(hProfile, tagFloat)) // Float tag takes precedence
 	    {
-	        // Floating point LUT are always V4, so no adjustment is required
-	        return cmslut.cmsPipelineDup((cmsPipeline)cmsio0.cmsReadTag(hProfile, tagFloat));
+	    	// Floating point LUT are always V4
+	        return _cmsReadFloatOutputTag(hProfile, tagFloat);
 	    }
 	    
 	    // Revert to perceptual if no tag is found
@@ -574,6 +633,46 @@ final class cmsio1
 	
 	// ---------------------------------------------------------------------------------------------------------------
 	
+	// Read the AToD0 tag, adjusting the encoding of Lab or XYZ if neded
+	private static cmsPipeline _cmsReadFloatDevicelinkTag(cmsHPROFILE hProfile, int tagFloat)
+	{
+	    cmsContext ContextID = cmsio0.cmsGetProfileContextID(hProfile);
+	    cmsPipeline Lut      = cmslut.cmsPipelineDup((cmsPipeline)cmsio0.cmsReadTag(hProfile, tagFloat));
+	    int PCS              = cmsio0.cmsGetPCS(hProfile);
+	    int spc              = cmsio0.cmsGetColorSpace(hProfile);
+	    
+	    if (Lut == null)
+	    {
+	    	return null;
+	    }
+	    
+	    if (spc == lcms2.cmsSigLabData)
+	    {
+	    	cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_BEGIN, cmslut._cmsStageNormalizeToLabFloat(ContextID));
+	    }
+	    else
+	    {
+	        if (spc == lcms2.cmsSigXYZData)
+	        {
+	        	cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_BEGIN, cmslut._cmsStageNormalizeToXyzFloat(ContextID));
+	        }
+	        
+	        if (PCS == lcms2.cmsSigLabData)
+	        {
+	        	cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_END, cmslut._cmsStageNormalizeFromLabFloat(ContextID));
+	        }
+	        else
+	        {
+	            if (PCS == lcms2.cmsSigXYZData)
+	            {
+	            	cmslut.cmsPipelineInsertStage(Lut, lcms2.cmsAT_END, cmslut._cmsStageNormalizeFromXyzFloat(ContextID));
+	            }
+	        }
+	    }
+	    
+	    return Lut;
+	}
+	
 	// This one includes abstract profiles as well. Matrix-shaper cannot be obtained on that device class. The 
 	// tag name here may default to AToB0
 	public static cmsPipeline _cmsReadDevicelinkLUT(cmsHPROFILE hProfile, int Intent)
@@ -611,8 +710,8 @@ final class cmsio1
 	    
 	    if (cmsio0.cmsIsTag(hProfile, tagFloat)) // Float tag takes precedence
 	    {
-	        // Floating point LUT are always V4, no adjustment is required
-	        return cmslut.cmsPipelineDup((cmsPipeline)cmsio0.cmsReadTag(hProfile, tagFloat));
+	    	// Floating point LUT are always V
+	        return _cmsReadFloatDevicelinkTag(hProfile, tagFloat);
 	    }
 	    
 	    tagFloat = Device2PCSFloat[0];

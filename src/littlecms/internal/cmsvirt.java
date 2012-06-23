@@ -202,7 +202,7 @@ final class cmsvirt
 	    	return null;
 	    }
 	    
-	    cmsio0.cmsSetProfileVersion(hICC, 4.2);
+	    cmsio0.cmsSetProfileVersion(hICC, 4.3);
 	    
 	    cmsio0.cmsSetDeviceClass(hICC, lcms2.cmsSigDisplayClass);
 	    cmsio0.cmsSetColorSpace(hICC,  lcms2.cmsSigRgbData);
@@ -382,7 +382,7 @@ final class cmsvirt
 	    	return null;
 	    }
 	    
-	    cmsio0.cmsSetProfileVersion(hICC, 4.2);
+	    cmsio0.cmsSetProfileVersion(hICC, 4.3);
 	    
 	    cmsio0.cmsSetDeviceClass(hICC, lcms2.cmsSigDisplayClass);
 	    cmsio0.cmsSetColorSpace(hICC,  lcms2.cmsSigGrayData);
@@ -457,7 +457,7 @@ final class cmsvirt
 	    	return null;
 	    }
 	    
-	    cmsio0.cmsSetProfileVersion(hICC, 4.2);
+	    cmsio0.cmsSetProfileVersion(hICC, 4.3);
 	    
 	    cmsio0.cmsSetDeviceClass(hICC, lcms2.cmsSigLinkClass);
 	    cmsio0.cmsSetColorSpace(hICC,  ColorSpace);
@@ -621,7 +621,7 @@ final class cmsvirt
 	    	return null;
 	    }
 	    
-	    cmsio0.cmsSetProfileVersion(hICC, 4.2);
+	    cmsio0.cmsSetProfileVersion(hICC, 4.3);
 	    
 	    cmsio0.cmsSetDeviceClass(hICC, lcms2.cmsSigLinkClass);
 	    cmsio0.cmsSetColorSpace(hICC,  ColorSpace);
@@ -813,7 +813,7 @@ final class cmsvirt
 	    	return null;
 	    }
 	    
-	    cmsio0.cmsSetProfileVersion(hProfile, 4.2);
+	    cmsio0.cmsSetProfileVersion(hProfile, 4.3);
 	    
 	    cmsio0.cmsSetDeviceClass(hProfile, lcms2.cmsSigAbstractClass);
 	    cmsio0.cmsSetColorSpace(hProfile,  lcms2.cmsSigLabData);
@@ -879,7 +879,7 @@ final class cmsvirt
 	    	return null;
 	    }
 	    
-	    cmsio0.cmsSetProfileVersion(hProfile, 4.2);
+	    cmsio0.cmsSetProfileVersion(hProfile, 4.3);
 	    
 	    cmsio0.cmsSetDeviceClass(hProfile, lcms2.cmsSigAbstractClass);
 	    cmsio0.cmsSetColorSpace(hProfile,  lcms2.cmsSigXYZData);
@@ -1153,7 +1153,7 @@ final class cmsvirt
 	    	return null;
 	    }
 	    
-	    cmsio0.cmsSetProfileVersion(hProfile, 4.2);
+	    cmsio0.cmsSetProfileVersion(hProfile, 4.3);
 	    
 	    if (!SetTextTags(hProfile, "NULL profile built-in"))
 	    {

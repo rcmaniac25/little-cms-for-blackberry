@@ -734,6 +734,9 @@ final class cmsnamed
 	    
 	    Utility.strncpy(v.Prefix, Prefix, Utility.strlen(Prefix));
 	    Utility.strncpy(v.Suffix, Suffix, Utility.strlen(Suffix));
+	    v.Prefix.setCharAt(32, '\0');
+	    v.Suffix.setCharAt(32, '\0');
+	    
 	    v.ColorantCount = ColorantCount;
 	    
 	    return v;
@@ -816,7 +819,9 @@ final class cmsnamed
 	    StringBuffer buf = NamedColorList.List[NamedColorList.nColors].Name;
 	    if (Name != null)
 	    {
-	    	Utility.strncpy(buf, Name, Utility.strlen(buf));
+	    	Utility.strncpy(buf, Name, buf.capacity());
+	    	
+	    	buf.setCharAt(lcms2.cmsMAX_PATH-1, '\0');
 	    }
 	    else
 	    {

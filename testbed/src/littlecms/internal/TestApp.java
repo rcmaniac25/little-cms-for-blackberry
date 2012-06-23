@@ -805,7 +805,7 @@ public final class TestApp extends UiApplication
 	    	return null;
 	    }
 	    
-	    lcms2.cmsSetProfileVersion(hICC, 4.2);
+	    lcms2.cmsSetProfileVersion(hICC, 4.3);
 	    
 	    lcms2.cmsSetDeviceClass(hICC, lcms2.cmsSigOutputClass);
 	    lcms2.cmsSetColorSpace(hICC,  lcms2.cmsSigCmykData);
@@ -4639,7 +4639,7 @@ public final class TestApp extends UiApplication
 		    
 		    h = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "mlucheck.icc", "w");
 		    
-		    lcms2.cmsSetProfileVersion(h, 4.2);
+		    lcms2.cmsSetProfileVersion(h, 4.3);
 		    
 		    lcms2.cmsWriteTag(h, lcms2.cmsSigProfileDescriptionTag, mlu2);
 		    lcms2.cmsCloseProfile(h);
@@ -6526,7 +6526,7 @@ public final class TestApp extends UiApplication
 		    	return 0;
 		    }
 		    
-		    lcms2.cmsSetProfileVersion(h, 4.2);
+		    lcms2.cmsSetProfileVersion(h, 4.3);
 		    if (lcms2.cmsGetTagCount(h) != 0)
 		    {
 		    	Fail("Empty profile with nonzero number of tags", null);
@@ -7561,7 +7561,7 @@ public final class TestApp extends UiApplication
 		    lcms2.cmsSaveProfileToFile(hLink, FILE_PREFIX + "abstractv2.icc");
 		    lcms2.cmsCloseProfile(hLink);
 		    
-		    hLink = lcms2.cmsTransform2DeviceLink(xform, 4.2, 0);
+		    hLink = lcms2.cmsTransform2DeviceLink(xform, 4.3, 0);
 		    lcms2.cmsSaveProfileToFile(hLink, FILE_PREFIX + "abstractv4.icc");
 		    lcms2.cmsCloseProfile(hLink);
 		    
@@ -8669,7 +8669,7 @@ public final class TestApp extends UiApplication
 		    	return 0;
 		    }
 		    
-		    lcms2.cmsSetProfileVersion(h, 4.2);
+		    lcms2.cmsSetProfileVersion(h, 4.3);
 		    
 		    if (!lcms2.cmsWriteTag(h, lcms2.cmsSigGrayTRCTag, g))
 		    {

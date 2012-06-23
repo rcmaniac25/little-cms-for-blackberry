@@ -41,10 +41,15 @@ final class lcms2_internal extends lcms2_plugin
 	public static final double M_LOG10E = 0.434294481903251827651;
 	
 	// Alignment of ICC file format uses 4 bytes (cmsUInt32Number)
-	public static final int _cmsSIZEOFLONGMINUS1 = (/*sizeof(int)*/4-1);
 	public static int _cmsALIGNLONG(int x)
 	{
-		return ((x)+_cmsSIZEOFLONGMINUS1) & ~(_cmsSIZEOFLONGMINUS1);
+		return (((x)+(/*sizeof(cmsUInt32Number)*/4-1)) & ~(/*sizeof(cmsUInt32Number)*/4-1));
+	}
+	
+	// Alignment to memory pointer
+	public static int _cmsALIGNMEM(int x)
+	{
+		return (((x)+(/*sizeof(void *)*/VirtualPointer.SIZE - 1)) & ~(/*sizeof(void *)*/VirtualPointer.SIZE - 1));
 	}
 	
 	// Maximum encodeable values in floating point
@@ -574,6 +579,26 @@ final class lcms2_internal extends lcms2_plugin
 	public static cmsStage _cmsStageAllocIdentityCLut(cmsContext ContextID, int nChan)
 	{
 		return cmslut._cmsStageAllocIdentityCLut(ContextID, nChan);
+	}
+	
+	public static cmsStage _cmsStageNormalizeFromLabFloat(cmsContext ContextID)
+	{
+		return cmslut._cmsStageNormalizeFromLabFloat(ContextID);
+	}
+	
+	public static cmsStage _cmsStageNormalizeFromXyzFloat(cmsContext ContextID)
+	{
+		return cmslut._cmsStageNormalizeFromXyzFloat(ContextID);
+	}
+	
+	public static cmsStage _cmsStageNormalizeToLabFloat(cmsContext ContextID)
+	{
+		return cmslut._cmsStageNormalizeToLabFloat(ContextID);
+	}
+	
+	public static cmsStage _cmsStageNormalizeToXyzFloat(cmsContext ContextID)
+	{
+		return cmslut._cmsStageNormalizeToXyzFloat(ContextID);
 	}
 	
 	// For curve set only
