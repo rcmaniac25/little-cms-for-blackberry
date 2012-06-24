@@ -1075,15 +1075,27 @@ final class cmsintrp
 			run(In, Out, (cmsInterpParams)Data);
 		}
 		
+		private static int readUInt16(final VirtualPointer.TypeProcessor LutTable, int pos)
+		{
+			int p = LutTable.getPosition();
+			
+			LutTable.setPosition(pos * 2);
+			int ret = LutTable.readInt16(true) & 0xFFFF;
+			
+			LutTable.setPosition(p);
+			
+			return ret;
+		}
+		
 		public void run(short[] Input, short[] Output, cmsInterpParams p)
 		{
 			int fx, fy, fz;
 		    int rx, ry, rz;
 		    int x0, y0, z0;
-		    int c0, c1, c2, c3, Rest;       
-		    int OutChan;
+		    int c0, c1, c2, c3, Rest;
 		    int X0, X1, Y0, Y1, Z0, Z1;
 		    int TotalOut = p.nOutputs;
+		    int outPos = 0;
 		    
 		    fx  = lcms2_internal._cmsToFixedDomain((Input[0] & 0xFFFF) * p.Domain[0]);
 		    fy  = lcms2_internal._cmsToFixedDomain((Input[1] & 0xFFFF) * p.Domain[1]);
@@ -1098,14 +1110,259 @@ final class cmsintrp
 		    rz  = lcms2_internal.FIXED_REST_TO_INT(fz);
 		    
 		    X0 = p.opta[2] * x0;
-		    X1 = X0 + (Input[0] == (short)0xFFFF ? 0 : p.opta[2]);
+		    X1 = (Input[0] == (short)0xFFFF ? 0 : p.opta[2]);
 		    
 		    Y0 = p.opta[1] * y0;
-		    Y1 = Y0 + (Input[1] == (short)0xFFFF ? 0 : p.opta[1]);
+		    Y1 = (Input[1] == (short)0xFFFF ? 0 : p.opta[1]);
 		    
 		    Z0 = p.opta[0] * z0;
-		    Z1 = Z0 + (Input[2] == (short)0xFFFF ? 0 : p.opta[0]);
+		    Z1 = (Input[2] == (short)0xFFFF ? 0 : p.opta[0]);
 		    
+		    if(p.Table instanceof VirtualPointer)
+		    {
+			    final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p.Table).getProcessor();
+			    final int pos = LutTable.getPosition();
+			    
+			    LutTable.movePosition((X0+Y0+Z0) * 2);
+			    
+			    // Output should be computed as x = ROUND_FIXED_TO_INT(_cmsToFixedDomain(Rest))
+			    // which expands as: x = (Rest + ((Rest+0x7fff)/0xFFFF) + 0x8000)>>16
+			    // This can be replaced by: t = Rest+0x8001, x = (t + (t>>16))>>16
+			    // at the cost of being off by one at 7fff and 17ffe.
+			    
+			    if (rx >= ry)
+		    	{
+		    		if (ry >= rz)
+		    		{
+			            Y1 += X1;
+			            Z1 += Y1;
+			            for (; TotalOut != 0; TotalOut--)
+			            {
+			            	c1 = readUInt16(LutTable, X1);
+			            	c2 = readUInt16(LutTable, Y1);
+			            	c3 = readUInt16(LutTable, Z1);
+			                c0 = LutTable.readInt16(true) & 0xFFFF;
+			                c3 -= c2;
+			                c2 -= c1;
+			                c1 -= c0;
+			                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+			                Output[outPos++] = (short)(c0 + ((Rest + (Rest>>16))>>16));
+			            }
+			        }
+		    		else if (rz >= rx)
+		    		{
+			            X1 += Z1;
+			            Y1 += X1;
+			            for (; TotalOut != 0; TotalOut--)
+			            {
+			            	c1 = readUInt16(LutTable, X1);
+			            	c2 = readUInt16(LutTable, Y1);
+			            	c3 = readUInt16(LutTable, Z1);
+			                c0 = LutTable.readInt16(true) & 0xFFFF;
+			                c2 -= c1;
+			                c1 -= c3;
+			                c3 -= c0;
+			                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+			                Output[outPos++] = (short)(c0 + ((Rest + (Rest>>16))>>16));
+			            }
+			        }
+		    		else
+		    		{
+			            Z1 += X1;
+			            Y1 += Z1;
+			            for (; TotalOut != 0; TotalOut--)
+			            {
+			            	c1 = readUInt16(LutTable, X1);
+			            	c2 = readUInt16(LutTable, Y1);
+			            	c3 = readUInt16(LutTable, Z1);
+			                c0 = LutTable.readInt16(true) & 0xFFFF;
+			                c2 -= c3;
+			                c3 -= c1;
+			                c1 -= c0;
+			                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+			                Output[outPos++] = (short)(c0 + ((Rest + (Rest>>16))>>16));
+			            }
+			        }
+			    }
+		    	else
+		    	{
+			        if (rx >= rz)
+			        {
+			            X1 += Y1;
+			            Z1 += X1;
+			            for (; TotalOut != 0; TotalOut--)
+			            {
+			            	c1 = readUInt16(LutTable, X1);
+			            	c2 = readUInt16(LutTable, Y1);
+			            	c3 = readUInt16(LutTable, Z1);
+			                c0 = LutTable.readInt16(true) & 0xFFFF;
+			                c3 -= c1;
+			                c1 -= c2;
+			                c2 -= c0;
+			                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+			                Output[outPos++] = (short)(c0 + ((Rest + (Rest>>16))>>16));
+			            }
+			        }
+			        else if (ry >= rz)
+			        {
+			            Z1 += Y1;
+			            X1 += Z1;
+			            for (; TotalOut != 0; TotalOut--)
+			            {
+			            	c1 = readUInt16(LutTable, X1);
+			            	c2 = readUInt16(LutTable, Y1);
+			            	c3 = readUInt16(LutTable, Z1);
+			                c0 = LutTable.readInt16(true) & 0xFFFF;
+			                c1 -= c3;
+			                c3 -= c2;
+			                c2 -= c0;
+			                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+			                Output[outPos++] = (short)(c0 + ((Rest + (Rest>>16))>>16));
+			            }
+			        }
+			        else
+			        {
+			            Y1 += Z1;
+			            X1 += Y1;
+			            for (; TotalOut != 0; TotalOut--)
+			            {
+			            	c1 = readUInt16(LutTable, X1);
+			            	c2 = readUInt16(LutTable, Y1);
+			            	c3 = readUInt16(LutTable, Z1);
+			                c0 = LutTable.readInt16(true) & 0xFFFF;
+			                c1 -= c2;
+			                c2 -= c3;
+			                c3 -= c0;
+			                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+			                Output[outPos++] = (short)(c0 + ((Rest + (Rest>>16))>>16));
+			            }
+			        }
+			    }
+			    
+			    LutTable.setPosition(pos);
+		    }
+		    else
+		    {
+		    	final short[] LutTable = (short[])p.Table;
+		    	
+		    	int pos = X0+Y0+Z0;
+		    	
+		    	// Output should be computed as x = ROUND_FIXED_TO_INT(_cmsToFixedDomain(Rest))
+			    // which expands as: x = (Rest + ((Rest+0x7fff)/0xFFFF) + 0x8000)>>16
+			    // This can be replaced by: t = Rest+0x8001, x = (t + (t>>16))>>16
+			    // at the cost of being off by one at 7fff and 17ffe.
+		    	
+		    	if (rx >= ry)
+		    	{
+		    		if (ry >= rz)
+		    		{
+			            Y1 += X1;
+			            Z1 += Y1;
+			            for (; TotalOut != 0; TotalOut--)
+			            {
+			                c1 = LutTable[X1] & 0xFFFF;
+			                c2 = LutTable[Y1] & 0xFFFF;
+			                c3 = LutTable[Z1] & 0xFFFF;
+			                c0 = LutTable[pos++] & 0xFFFF;
+			                c3 -= c2;
+			                c2 -= c1;
+			                c1 -= c0;
+			                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+			                Output[outPos++] = (short)(c0 + ((Rest + (Rest>>16))>>16));
+			            }
+			        }
+		    		else if (rz >= rx)
+		    		{
+			            X1 += Z1;
+			            Y1 += X1;
+			            for (; TotalOut != 0; TotalOut--)
+			            {
+			                c1 = LutTable[X1] & 0xFFFF;
+			                c2 = LutTable[Y1] & 0xFFFF;
+			                c3 = LutTable[Z1] & 0xFFFF;
+			                c0 = LutTable[pos++] & 0xFFFF;
+			                c2 -= c1;
+			                c1 -= c3;
+			                c3 -= c0;
+			                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+			                Output[outPos++] = (short)(c0 + ((Rest + (Rest>>16))>>16));
+			            }
+			        }
+		    		else
+		    		{
+			            Z1 += X1;
+			            Y1 += Z1;
+			            for (; TotalOut != 0; TotalOut--)
+			            {
+			                c1 = LutTable[X1] & 0xFFFF;
+			                c2 = LutTable[Y1] & 0xFFFF;
+			                c3 = LutTable[Z1] & 0xFFFF;
+			                c0 = LutTable[pos++] & 0xFFFF;
+			                c2 -= c3;
+			                c3 -= c1;
+			                c1 -= c0;
+			                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+			                Output[outPos++] = (short)(c0 + ((Rest + (Rest>>16))>>16));
+			            }
+			        }
+			    }
+		    	else
+		    	{
+			        if (rx >= rz)
+			        {
+			            X1 += Y1;
+			            Z1 += X1;
+			            for (; TotalOut != 0; TotalOut--)
+			            {
+			                c1 = LutTable[X1] & 0xFFFF;
+			                c2 = LutTable[Y1] & 0xFFFF;
+			                c3 = LutTable[Z1] & 0xFFFF;
+			                c0 = LutTable[pos++] & 0xFFFF;
+			                c3 -= c1;
+			                c1 -= c2;
+			                c2 -= c0;
+			                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+			                Output[outPos++] = (short)(c0 + ((Rest + (Rest>>16))>>16));
+			            }
+			        }
+			        else if (ry >= rz)
+			        {
+			            Z1 += Y1;
+			            X1 += Z1;
+			            for (; TotalOut != 0; TotalOut--)
+			            {
+			                c1 = LutTable[X1] & 0xFFFF;
+			                c2 = LutTable[Y1] & 0xFFFF;
+			                c3 = LutTable[Z1] & 0xFFFF;
+			                c0 = LutTable[pos++] & 0xFFFF;
+			                c1 -= c3;
+			                c3 -= c2;
+			                c2 -= c0;
+			                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+			                Output[outPos++] = (short)(c0 + ((Rest + (Rest>>16))>>16));
+			            }
+			        }
+			        else
+			        {
+			            Y1 += Z1;
+			            X1 += Y1;
+			            for (; TotalOut != 0; TotalOut--)
+			            {
+			                c1 = LutTable[X1] & 0xFFFF;
+			                c2 = LutTable[Y1] & 0xFFFF;
+			                c3 = LutTable[Z1] & 0xFFFF;
+			                c0 = LutTable[pos++] & 0xFFFF;
+			                c1 -= c2;
+			                c2 -= c3;
+			                c3 -= c0;
+			                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+			                Output[outPos++] = (short)(c0 + ((Rest + (Rest>>16))>>16));
+			            }
+			        }
+			    }
+		    }
+		}
+		/*
 		    if(p.Table instanceof VirtualPointer)
 		    {
 			    final VirtualPointer.TypeProcessor LutTable = ((VirtualPointer)p.Table).getProcessor();
@@ -1249,6 +1506,7 @@ final class cmsintrp
 			    }
 		    }
 		}
+	*/
 	}
 	
 	private static final _cmsInterpFn16 TetrahedralInterp16 = new TetrahedralInterp16Impl();

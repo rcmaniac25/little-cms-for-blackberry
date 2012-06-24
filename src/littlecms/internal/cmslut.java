@@ -1405,13 +1405,21 @@ final class cmslut
 		return NewLUT;
 	}
 	
+	public static cmsContext cmsGetPipelineContextID(final cmsPipeline lut)
+	{
+	    lcms2_internal._cmsAssert(lut != null, "lut != null");
+	    return lut.ContextID;
+	}
+	
 	public static int cmsPipelineInputChannels(final cmsPipeline lut)
 	{
+		lcms2_internal._cmsAssert(lut != null, "lut != null");
 	    return lut.InputChannels;
 	}
 	
 	public static int cmsPipelineOutputChannels(final cmsPipeline lut)
 	{
+		lcms2_internal._cmsAssert(lut != null, "lut != null");
 	    return lut.OutputChannels;
 	}
 	
@@ -1442,12 +1450,14 @@ final class cmslut
 	// Default to evaluate the LUT on 16 bit-basis. 
 	public static void cmsPipelineEval16(final short[] In, short[] Out, final cmsPipeline lut)
 	{
+		lcms2_internal._cmsAssert(lut != null, "lut != null");
 	    lut.Eval16Fn.run(In, Out, lut.Data);
 	}
 	
 	// Does evaluate the LUT on cmsFloat32Number-basis. 
 	public static void cmsPipelineEvalFloat(final float[] In, float[] Out, final cmsPipeline lut)
 	{
+		lcms2_internal._cmsAssert(lut != null, "lut != null");
 	    lut.EvalFloatFn.run(In, Out, lut);
 	}
 	
@@ -1487,6 +1497,8 @@ final class cmslut
 	    	Anterior = NewMPE;
 	    }
 	    
+	    NewLUT.Eval16Fn    = lut.Eval16Fn;
+	    NewLUT.EvalFloatFn = lut.EvalFloatFn;
 	    NewLUT.DupDataFn  = lut.DupDataFn;
 	    NewLUT.FreeDataFn = lut.FreeDataFn;
 	    

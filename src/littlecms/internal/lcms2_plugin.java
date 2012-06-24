@@ -1289,13 +1289,13 @@ public class lcms2_plugin extends lcms2
 	// Retrieve user data as specified by the factory
 	public static Object _cmsGetTransformUserData(_cmsTRANSFORM CMMcargo)
 	{
-		//TODO
+		return cmsxform._cmsGetTransformUserData(CMMcargo);
 	}
 	
 	// FIXME: Those are hacks that should be solved somehow.
 	public static Object _cmsOPTgetTransformPipelinePrivateData(_cmsTRANSFORM CMMcargo)
 	{
-		//TODO
+		throw new UnsupportedOperationException();
 	}
 	
 	public static class cmsPluginTransform extends cmsPluginBase

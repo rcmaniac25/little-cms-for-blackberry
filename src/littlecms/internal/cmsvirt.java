@@ -1321,6 +1321,11 @@ final class cmsvirt
 	    // Colorant count now depends on the output space 
 	    nc2.ColorantCount = cmslut.cmsPipelineOutputChannels(v.Lut);
 	    
+	    // Make sure we have proper formatters    
+	    cmsxform.cmsChangeBuffersFormat(xform, lcms2.TYPE_NAMED_COLOR_INDEX, 
+	    		(0 << lcms2.FLOAT_SHIFT_VALUE) | (cmspcs._cmsLCMScolorSpace(v.ExitColorSpace) << lcms2.COLORSPACE_SHIFT_VALUE) | 
+	    		(2 << lcms2.BYTES_SHIFT_VALUE) | (cmspcs.cmsChannelsOf(v.ExitColorSpace) << lcms2.CHANNELS_SHIFT_VALUE));
+	    
 	    // Apply the transfor to colorants.
 	    for (i=0; i < nColors; i++)
 	    {
@@ -1550,10 +1555,13 @@ final class cmsvirt
 	        LUT = temp4[0];
 	        
 	        // Put identity curves if needed
-	        if (cmslut.cmsPipelineStageCount(LUT) == 1)
+	        if (cmslut.cmsPipelineGetPtrToFirstStage(LUT).Type != lcms2.cmsSigCurveSetElemType)
 	        {
-	        	cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_BEGIN, cmslut._cmsStageAllocIdentityCurves(ContextID, ChansIn));    
-	        	cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_END,   cmslut._cmsStageAllocIdentityCurves(ContextID, ChansOut));   
+	        	cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_BEGIN, cmslut._cmsStageAllocIdentityCurves(ContextID, ChansIn));
+	        }
+	        if (cmslut.cmsPipelineGetPtrToLastStage(LUT).Type != lcms2.cmsSigCurveSetElemType)
+	        {
+	        	cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_END, cmslut._cmsStageAllocIdentityCurves(ContextID, ChansOut));
 	        }
 	        
 	        AllowedLUT = FindCombination(LUT, Version >= 4.0, DestinationTag);

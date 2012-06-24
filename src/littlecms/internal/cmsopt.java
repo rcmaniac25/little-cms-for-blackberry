@@ -653,6 +653,14 @@ final class cmsopt
 	    }
 	    
 	    // It needs to be fixed?
+	    if (Lut.InputChannels != nIns)
+	    {
+	    	return false;
+	    }
+	    if (Lut.OutputChannels != nOuts)
+	    {
+	    	return false;
+	    }
 	    
 	    cmslut.cmsPipelineEval16(WhitePointIn, ObtainedOut, Lut);
 	    
@@ -764,8 +772,9 @@ final class cmsopt
 		public boolean run(cmsPipeline[] Lut, int Intent, int[] InputFormat, int[] OutputFormat, int[] dwFlags)
 		{
 			cmsPipeline Src;
-		    cmsPipeline Dest;   
-		    cmsStage CLUT;      
+		    cmsPipeline Dest;
+		    cmsStage mpe;
+		    cmsStage CLUT;
 		    cmsStage KeepPreLin = null, KeepPostLin = null;
 		    cmsStage[] temp = new cmsStage[1];
 		    int nGridPoints;
@@ -795,7 +804,18 @@ final class cmsopt
 		    
 		    Src = Lut[0];
 		    
-		    // Allocate an empty LUT    
+		    // Named color pipelines cannot be optimized either
+		    for (mpe = cmslut.cmsPipelineGetPtrToFirstStage(Src);
+		    		mpe != null;
+		    		mpe = cmslut.cmsStageNext(mpe))
+		    {
+		    	if (cmslut.cmsStageType(mpe) == lcms2.cmsSigNamedColorElemType)
+		    	{
+		    		return false;
+		    	}
+		    }
+		    
+		    // Allocate an empty LUT
 		    Dest =  cmslut.cmsPipelineAlloc(Src.ContextID, Src.InputChannels, Src.OutputChannels);
 		    if (Dest == null)
 		    {
@@ -1173,9 +1193,8 @@ final class cmsopt
 		            }
 		        }
 		        
-		        Rest = c1 * rx + c2 * ry + c3 * rz;
-		        
-		        Output[OutChan] = (short)(c0 + lcms2_internal.ROUND_FIXED_TO_INT(lcms2_internal._cmsToFixedDomain(Rest)));
+		        Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+		        Output[OutChan] = (short)(c0 + ((Rest + (Rest>>16))>>16));
 		    }
 		}
 	};
@@ -1232,6 +1251,7 @@ final class cmsopt
 		    cmsStage OptimizedCLUTmpe;
 		    int ColorSpace, OutputColorSpace;
 		    cmsStage OptimizedPrelinMpe;
+		    cmsStage mpe;
 		    cmsToneCurve[] OptimizedPrelinCurves;
 		    _cmsStageCLutData OptimizedPrelinCLUT;
 		    
@@ -1261,6 +1281,18 @@ final class cmsopt
 		    }
 		    
 		    OriginalLut = Lut[0];
+		    
+		    // Named color pipelines cannot be optimized either
+		    for (mpe = cmslut.cmsPipelineGetPtrToFirstStage(OriginalLut);
+		    		mpe != null;
+		    		mpe = cmslut.cmsStageNext(mpe))
+		    {
+		    	if (cmslut.cmsStageType(mpe) == lcms2.cmsSigNamedColorElemType)
+		    	{
+		    		return false;
+		    	}
+		    }
+		    
 		    ColorSpace       = cmspcs._cmsICCcolorSpace(lcms2.T_COLORSPACE(InputFormat[0]));
 		    OutputColorSpace = cmspcs._cmsICCcolorSpace(lcms2.T_COLORSPACE(OutputFormat[0]));
 		    nGridPoints      = cmspcs._cmsReasonableGridpointsByColorspace(ColorSpace, dwFlags[0]);
@@ -1966,14 +1998,14 @@ final class cmsopt
 	            // first we compute the resulting byte and then we store the byte times
 	            // 257. This quantization allows to round very quick by doing a >> 8, but
 	            // since the low byte is always equal to msb, we can do a & 0xff and this works!
-	            short w = lcms2_internal._cmsQuickSaturateWord(Val * 65535.0 + 0.5);        
+	            short w = lcms2_internal._cmsQuickSaturateWord(Val * 65535.0);
 	            byte b = lcms2_internal.FROM_16_TO_8(w);
 	            
 	            Table[i] = lcms2_internal.FROM_8_TO_16(b);
 	        }
 	        else
 	        {
-	        	Table[i] = lcms2_internal._cmsQuickSaturateWord(Val * 65535.0 + 0.5);        
+	        	Table[i] = lcms2_internal._cmsQuickSaturateWord(Val * 65535.0);
 	        }
 	    }
 	}

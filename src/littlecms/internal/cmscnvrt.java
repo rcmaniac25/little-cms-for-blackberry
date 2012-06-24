@@ -338,7 +338,7 @@ final class cmscnvrt
 	            cmsCIEXYZ BlackPointIn = new cmsCIEXYZ(), BlackPointOut = new cmsCIEXYZ();
 	            
 	            cmssamp.cmsDetectBlackPoint(BlackPointIn,  hProfiles[i-1], Intent, 0);
-	            cmssamp.cmsDetectBlackPoint(BlackPointOut, hProfiles[i], Intent, 0);
+	            cmssamp.cmsDetectDestinationBlackPoint(BlackPointOut, hProfiles[i], Intent, 0);
 	            
 	            // If black points are equal, then do nothing
 	            if (BlackPointIn.X != BlackPointOut.X ||
@@ -437,6 +437,16 @@ final class cmscnvrt
 	{
 	    // If they are same, they are compatible.
 	    if (a == b)
+	    {
+	    	return true;
+	    }
+	    
+	    // Check for MCH4 substitution of CMYK
+	    if ((a == lcms2.cmsSig4colorData) && (b == lcms2.cmsSigCmykData))
+	    {
+	    	return true;
+	    }
+	    if ((a == lcms2.cmsSigCmykData) && (b == lcms2.cmsSig4colorData))
 	    {
 	    	return true;
 	    }
@@ -971,8 +981,8 @@ final class cmscnvrt
 		    }
 		    
 		    // Check for non-cmyk profiles
-		    if (cmsio0.cmsGetColorSpace(hProfiles[0]) != lcms2.cmsSigCmykData || cmsio0.cmsGetColorSpace(hProfiles[nProfiles-1]) != lcms2.cmsSigCmykData || 
-		    		cmsio0.cmsGetDeviceClass(hProfiles[nProfiles-1]) != lcms2.cmsSigOutputClass)
+		    if (cmsio0.cmsGetColorSpace(hProfiles[0]) != lcms2.cmsSigCmykData || !(cmsio0.cmsGetColorSpace(hProfiles[nProfiles-1]) == lcms2.cmsSigCmykData || 
+		    		cmsio0.cmsGetDeviceClass(hProfiles[nProfiles-1]) == lcms2.cmsSigOutputClass))
 		    {
 		    	return DefaultICCintents.run(ContextID, nProfiles, ICCIntents, hProfiles, BPC, AdaptationStates, dwFlags);
 		    }

@@ -412,13 +412,12 @@ final class cmsio0
 			    
 			    ResData.Block.writeRaw(Ptr, 0, size, ResData.Pointer);
 			    ResData.Pointer += size;
+			    iohandler.UsedSpace += size;
 			    
 			    if(ResData.Pointer > iohandler.UsedSpace)
 			    {
 			    	iohandler.UsedSpace = ResData.Pointer;
 			    }
-			    
-			    iohandler.UsedSpace += size;
 			    
 			    return true;
 			}

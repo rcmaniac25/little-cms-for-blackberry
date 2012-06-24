@@ -768,6 +768,12 @@ final class cmsplugin
                     	return false;
                     }
                     break;
+                case lcms2_plugin.cmsPluginTransformSig:
+                    if (!cmsxform._cmsRegisterTransformPlugin(Plugin))
+                    {
+                    	return false;
+                    }
+                    break;
                 default:
                     cmserr.cmsSignalError(null, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSPLUGIN_UNRECOGNIZED_PLUGIN_TYPE), 
                     		new Object[]{new Integer(Plugin.Type)});
@@ -791,6 +797,7 @@ final class cmsplugin
 		cmsgamma._cmsRegisterParametricCurvesPlugin(null);
 		cmstypes._cmsRegisterMultiProcessElementPlugin(null);
 		cmsopt._cmsRegisterOptimizationPlugin(null);
+		cmsxform._cmsRegisterTransformPlugin(null);
 	    
 	    if (PluginPool != null)
 	    {

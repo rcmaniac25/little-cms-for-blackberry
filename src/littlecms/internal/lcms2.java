@@ -847,6 +847,23 @@ public class lcms2
 		public double L;
 		public double a;
 		public double b;
+		
+		public cmsCIELab()
+		{
+			this(0, 0, 0);
+		}
+		
+		public cmsCIELab(cmsCIELab lab)
+		{
+			this(lab.L, lab.a, lab.b);
+		}
+		
+		public cmsCIELab(double L, double a, double b)
+		{
+			this.L = L;
+			this.a = a;
+			this.b = b;
+		}
 	}
 	
 	public static class cmsCIELCh
@@ -1585,13 +1602,13 @@ public class lcms2
 	//TODO: Docs
 	public static int cmsGetToneCurveEstimatedTableEntries(final cmsToneCurve t)
 	{
-		//TODO
+		return cmsgamma.cmsGetToneCurveEstimatedTableEntries(t);
 	}
 	
 	//TODO: Docs
 	public static short[] cmsGetToneCurveEstimatedTable(final cmsToneCurve t)
 	{
-		//TODO
+		return cmsgamma.cmsGetToneCurveEstimatedTable(t);
 	}
 	
 	// Implements pipelines of multi-processing elements -------------------------------------------------------------
@@ -1635,7 +1652,7 @@ public class lcms2
 	//TODO: Docs
 	public static cmsContext cmsGetPipelineContextID(final cmsPipeline lut)
 	{
-		//TODO
+		return cmslut.cmsGetPipelineContextID(lut);
 	}
 	
 	/**
@@ -3815,7 +3832,7 @@ public class lcms2
 	//TODO: Docs
 	public static void cmsDoTransformStride(cmsHTRANSFORM Transform, final Object InputBuffer, Object OutputBuffer, int Size, int Stride)
 	{
-		//TODO
+		cmsxform.cmsDoTransformStride(Transform, InputBuffer, OutputBuffer, Size, Stride);
 	}
 	
 	/**
@@ -4119,7 +4136,7 @@ public class lcms2
 	//TODO: Docs
 	public static boolean cmsIT8SetPropertyMulti(cmsHANDLE hIT8, final String Key, final String SubKey, final String Buffer)
 	{
-		//TODO
+		return cmscgats.cmsIT8SetPropertyMulti(hIT8, Key, SubKey, Buffer);
 	}
 	
 	/**
@@ -4164,7 +4181,7 @@ public class lcms2
 	//TODO: Docs
 	public static String cmsIT8GetPropertyMulti(cmsHANDLE hIT8, final String Key, final String SubKey)
 	{
-		//TODO
+		return cmscgats.cmsIT8GetPropertyMulti(hIT8, Key, SubKey);
 	}
 	
 	/**
@@ -4181,7 +4198,7 @@ public class lcms2
 	//TODO: Docs
 	public static int cmsIT8EnumPropertyMulti(cmsHANDLE hIT8, final String cProp, String[][] SubpropertyNames)
 	{
-		//TODO
+		return cmscgats.cmsIT8EnumPropertyMulti(hIT8, cProp, SubpropertyNames);
 	}
 	
 	// Datasets
@@ -4338,7 +4355,7 @@ public class lcms2
 	//TODO: Docs
 	public static int cmsIT8GetPatchByName(cmsHANDLE hIT8, final String cPatch)
 	{
-		//TODO
+		return cmscgats.cmsIT8GetPatchByName(hIT8, cPatch);
 	}
 	
 	// The LABEL extension
@@ -4350,7 +4367,7 @@ public class lcms2
 	//TODO: Docs
 	public static boolean cmsIT8SetIndexColumn(cmsHANDLE hIT8, final String cSample)
 	{
-		//TODO
+		return cmscgats.cmsIT8SetIndexColumn(hIT8, cSample);
 	}
 	
 	// Formatter for double
@@ -4439,7 +4456,7 @@ public class lcms2
 	//TODO: Docs
 	public static boolean cmsDetectDestinationBlackPoint(cmsCIEXYZ BlackPoint, cmsHPROFILE hProfile, int Intent, int dwFlags)
 	{
-		//TODO
+		return cmssamp.cmsDetectDestinationBlackPoint(BlackPoint, hProfile, Intent, dwFlags);
 	}
 	
 	// Estimate total area coverage

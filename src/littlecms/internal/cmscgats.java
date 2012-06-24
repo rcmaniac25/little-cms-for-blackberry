@@ -648,6 +648,123 @@ final class cmscgats
         }
     }
     
+    // Parses a float number
+    // This can not call directly atof because it uses locale dependant
+    // parsing, while CCMX files always use . as decimal separator
+    private static double ParseFloatNumber(final String Buffer)
+    {
+    	double dnum = 0.0;
+    	int sign = 1;
+    	int BufferPtr = 0;
+    	char[] BufferChars;
+    	if(Buffer == null)
+    	{
+    		BufferChars = new char[]{'\0'};
+    	}
+    	else
+    	{
+    		if(Buffer.endsWith("\0"))
+    		{
+    			BufferChars = Buffer.toCharArray();
+    		}
+    		else
+    		{
+    			BufferChars = new char[Buffer.length()];
+    			BufferChars[BufferChars.length - 1] = '\0';
+    			Buffer.getChars(0, BufferChars.length, BufferChars, 0);
+    		}
+    	}
+    	
+    	if (BufferChars[BufferPtr] == '-' || BufferChars[BufferPtr] == '+')
+    	{
+    		sign = (BufferChars[BufferPtr] == '-') ? -1 : 1;
+    		BufferPtr++;
+    	}
+    	
+    	while (BufferChars[BufferPtr] != '\0' && Utility.isdigit((int)BufferChars[BufferPtr]))
+    	{
+    		dnum = dnum * 10.0 + (BufferChars[BufferPtr] - '0');
+    		if (BufferChars[BufferPtr] != '\0')
+    		{
+    			BufferPtr++;
+    		}
+    	}
+    	
+    	if (BufferChars[BufferPtr] == '.')
+    	{
+    		double frac = 0.0; // fraction
+    		int prec = 0;      // precission
+    		
+    		if (BufferChars[BufferPtr] != '\0')
+    		{
+    			BufferPtr++; 
+    		}
+    		
+    		while (BufferChars[BufferPtr] != '\0' && Utility.isdigit((int)BufferChars[BufferPtr]))
+    		{
+    			frac = frac * 10.0 + (BufferChars[BufferPtr] - '0');
+    			prec++;
+    			if (BufferChars[BufferPtr] != '\0')
+    			{
+    				BufferPtr++; 
+    			}
+    		}
+    		
+    		dnum = dnum + (frac / xpow10(prec));
+    	}
+    	
+    	// Exponent, example 34.00E+20
+    	if (BufferChars[BufferPtr] != '\0' && Character.toUpperCase(BufferChars[BufferPtr]) == 'E')
+    	{
+    		int e;
+    		int sgn;
+    		
+    		if (BufferChars[BufferPtr] != '\0')
+    		{
+    			BufferPtr++;
+    		}
+    		sgn = 1;
+    		
+    		if (BufferChars[BufferPtr] == '-')
+    		{
+    			sgn = -1;
+    			if (BufferChars[BufferPtr] != '\0')
+    			{
+    				BufferPtr++;
+    			}
+    		}
+    		else
+    		{
+    			if (BufferChars[BufferPtr] == '+')
+    			{
+    				sgn = +1;
+    				if (BufferChars[BufferPtr] != '\0')
+    				{
+    					BufferPtr++;
+    				}
+    			}
+    		}
+    		
+    		e = 0;
+    		while (BufferChars[BufferPtr] != '\0' && Utility.isdigit((int)BufferChars[BufferPtr]))
+    		{
+    			if ((double)e * 10L < Integer.MAX_VALUE)
+    			{
+    				e = e * 10 + (BufferChars[BufferPtr] - '0');
+    			}
+    			
+    			if (BufferChars[BufferPtr] != '\0')
+    			{
+    				BufferPtr++;
+    			}
+    		}
+    		e = sgn * e;
+    		dnum = dnum * xpow10(e);
+    	}
+    	
+    	return sign * dnum;
+    }
+    
     // Reads next symbol
     private static void InSymbol(cmsIT8 it8)
     {
@@ -1407,15 +1524,8 @@ final class cmscgats
     public static double cmsIT8GetPropertyDbl(cmsHANDLE hIT8, final String cProp)
     {
         final String v = cmsIT8GetProperty(hIT8, cProp);
-
-        if (v != null)
-        {
-        	return Double.parseDouble(v);
-        }
-        else
-        {
-        	return 0.0;
-        }
+        
+        return ParseFloatNumber(v);
     }
     
     public static String cmsIT8GetPropertyMulti(cmsHANDLE hIT8, final String Key, final String SubKey)
@@ -1830,8 +1940,7 @@ final class cmscgats
         
         if (!sd.Base.isFree())
         {
-        	sd.Ptr = null;
-        	sd.Base.free(); //Doesn't get rid of data in MemPtr
+        	sd.Ptr.writeRaw(0);
         }
         
         BytesNeeded[0] = sd.Used;
@@ -2286,10 +2395,10 @@ final class cmscgats
     
     // Try to infere if the file is a CGATS/IT8 file at all. Read first line
     // that should be something like some printable characters plus a \n
-    // returns 0 if this is not like a CGATS, or an integer otherwise
+    // returns 0 if this is not like a CGATS, or an integer otherwise. This integer is the number of words in first line?
     private static int IsMyBlock(byte[] Buffer, int n)
     {
-        int cols = 1;
+        int words = 1;
         boolean space = false, quot = false;
         int i;
         
@@ -2309,7 +2418,7 @@ final class cmscgats
             {
 	            case '\n':
 	            case '\r':
-	            	return (quot || (cols > 2)) ? 0 : cols;
+	            	return (quot || (words > 2)) ? 0 : words;
 	            case '\t':
 	            case ' ':
 	                if(!quot && !space)
@@ -2329,7 +2438,7 @@ final class cmscgats
 	                {
 	                	return 0;
 	                }
-	                cols += space ? 1 : 0;
+	                words += space ? 1 : 0;
 	                space = false;
 	                break;
             }
@@ -2650,14 +2759,7 @@ final class cmscgats
         
         Buffer = cmsIT8GetDataRowCol(hIT8, row, col);
         
-        if (Buffer != null)
-        {
-            return Double.parseDouble(Buffer);
-        }
-        else
-        {
-        	return 0;
-        }
+        return ParseFloatNumber(Buffer);
     }
     
     public static boolean cmsIT8SetDataRowCol(cmsHANDLE hIT8, int row, int col, final String Val)
@@ -2711,14 +2813,7 @@ final class cmscgats
     	
         Buffer = cmsIT8GetData(it8, cPatch, cSample);
         
-        if (Buffer != null)
-        {
-            return Double.parseDouble(Buffer);
-        }
-        else
-        {
-            return 0;
-        }
+        return ParseFloatNumber(Buffer);
     }
     
     public static boolean cmsIT8SetData(cmsHANDLE hIT8, final String cPatch, final String cSample, final String Val)

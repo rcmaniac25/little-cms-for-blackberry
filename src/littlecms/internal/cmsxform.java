@@ -35,7 +35,10 @@ import littlecms.internal.lcms2.cmsHTRANSFORM;
 import littlecms.internal.lcms2.cmsNAMEDCOLORLIST;
 import littlecms.internal.lcms2.cmsPipeline;
 import littlecms.internal.lcms2_internal._cmsTRANSFORM;
+import littlecms.internal.lcms2_plugin._cmsTranformFactory;
 import littlecms.internal.lcms2_plugin._cmsTransformFn;
+import littlecms.internal.lcms2_plugin.cmsPluginBase;
+import littlecms.internal.lcms2_plugin.cmsPluginTransform;
 import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
 
@@ -51,27 +54,6 @@ final class cmsxform
 	// no values left to mark out of gamut. volatile is C99 per 6.2.5
 	private static volatile short[] Alarm;
 	private static volatile double[] GlobalAdaptationState;
-	
-	private static final long ALARM_UID = 0x700168E434DDB320L;
-	private static final long GAS_UID = 0x63CF45CCC98E05ACL;
-	
-	static
-	{
-		Object obj;
-		if((obj = Utility.singletonStorageGet(ALARM_UID)) != null)
-		{
-			Alarm = (short[])obj;
-			GlobalAdaptationState = (double[])Utility.singletonStorageGet(GAS_UID);
-		}
-		else
-		{
-			Alarm = new short[lcms2.cmsMAXCHANNELS];
-			Arrays.fill(Alarm, (short)0x7F00, 0, 3);
-			GlobalAdaptationState = new double[]{1};
-			Utility.singletonStorageSet(ALARM_UID, Alarm);
-			Utility.singletonStorageSet(GAS_UID, GlobalAdaptationState);
-		}
-	}
 	
 	// The adaptation state may be defaulted by this function. If you don't like it, use the extended transform routine
 	public static double cmsSetAdaptationState(double d)
@@ -150,6 +132,11 @@ final class cmsxform
 	    {
 	    	cmsnamed.cmsFreeProfileSequenceDescription(p.Sequence);
 	    }
+	    
+	    if (p.UserData != null)
+	    {
+	    	p.FreeUserData.run(p.ContextID, p.UserData);
+	    }
 	}
 	
 	// Apply transform.
@@ -159,7 +146,26 @@ final class cmsxform
 	    
 		VirtualPointer inBuf = buffer2vp(InputBuffer);
 		VirtualPointer outBuf = buffer2vp(OutputBuffer);
-	    p.xform.run(p, inBuf, outBuf, Size);
+	    p.xform.run(p, inBuf, outBuf, Size, Size);
+	    vp2buffer(outBuf, OutputBuffer);
+	    if(inBuf != InputBuffer)
+	    {
+	    	inBuf.free();
+	    }
+	    if(outBuf != OutputBuffer)
+	    {
+	    	outBuf.free();
+	    }
+	}
+	
+	// Apply transform. 
+	public static void cmsDoTransformStride(cmsHTRANSFORM Transform, final Object InputBuffer, Object OutputBuffer, int Size, int Stride)
+	{
+	    _cmsTRANSFORM p = (_cmsTRANSFORM)Transform;
+	    
+	    VirtualPointer inBuf = buffer2vp(InputBuffer);
+		VirtualPointer outBuf = buffer2vp(OutputBuffer);
+	    p.xform.run(p, inBuf, outBuf, Size, Stride);
 	    vp2buffer(outBuf, OutputBuffer);
 	    if(inBuf != InputBuffer)
 	    {
@@ -288,7 +294,7 @@ final class cmsxform
 	// Note that because extended range, we can use a -1.0 value for out of gamut in this case.
 	private static final _cmsTransformFn FloatXFORM = new _cmsTransformFn()
 	{	
-		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size)
+		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size, int Stride)
 		{
 			VirtualPointer accum;
 			VirtualPointer output;
@@ -301,7 +307,7 @@ final class cmsxform
 		    
 		    for (i = 0; i < Size; i++)
 		    {
-		        accum = p.FromInputFloat.run(p, fIn, accum, Size);
+		        accum = p.FromInputFloat.run(p, fIn, accum, Stride);
 		        
 		        // Any gamut chack to do?
 		        if (p.GamutCheck != null)
@@ -331,7 +337,7 @@ final class cmsxform
 		        }
 		        
 		        // Back to asked representation
-		        output = p.ToOutputFloat.run(p, fOut, output, Size);
+		        output = p.ToOutputFloat.run(p, fOut, output, Stride);
 		    }
 		}
 	};
@@ -341,7 +347,7 @@ final class cmsxform
 	// Null transformation, only applies formatters. No caché
 	private static final _cmsTransformFn NullXFORM = new _cmsTransformFn()
 	{	
-		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size)
+		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size, int Stride)
 		{
 			VirtualPointer accum;
 			VirtualPointer output;
@@ -354,8 +360,8 @@ final class cmsxform
 		    
 		    for (i = 0; i < n; i++)
 		    {
-		        accum  = p.FromInput.run(p, wIn, accum, Size);
-		        output = p.ToOutput.run(p, wIn, output, Size);
+		        accum  = p.FromInput.run(p, wIn, accum, Stride);
+		        output = p.ToOutput.run(p, wIn, output, Stride);
 		    }
 		}
 	};
@@ -363,7 +369,7 @@ final class cmsxform
 	// No gamut check, no cache, 16 bits
 	private static final _cmsTransformFn PrecalculatedXFORM = new _cmsTransformFn()
 	{	
-		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size)
+		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size, int Stride)
 		{
 			VirtualPointer accum;
 			VirtualPointer output;
@@ -376,9 +382,9 @@ final class cmsxform
 		    
 		    for (i = 0; i < n; i++)
 		    {
-		        accum = p.FromInput.run(p, wIn, accum, Size);
+		        accum = p.FromInput.run(p, wIn, accum, Stride);
 		        p.Lut.Eval16Fn.run(wIn, wOut, p.Lut.Data);
-		        output = p.ToOutput.run(p, wOut, output, Size);
+		        output = p.ToOutput.run(p, wOut, output, Stride);
 		    }
 		}
 	};
@@ -407,7 +413,7 @@ final class cmsxform
 	// Gamut check, No caché, 16 bits.
 	private static final _cmsTransformFn PrecalculatedXFORMGamutCheck = new _cmsTransformFn()
 	{	
-		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size)
+		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size, int Stride)
 		{
 			VirtualPointer accum;
 			VirtualPointer output;
@@ -420,9 +426,9 @@ final class cmsxform
 		    
 		    for (i = 0; i < n; i++)
 		    {
-		    	accum = p.FromInput.run(p, wIn, accum, Size);
+		    	accum = p.FromInput.run(p, wIn, accum, Stride);
 		        TransformOnePixelWithGamutCheck(p, wIn, wOut);
-		        output = p.ToOutput.run(p, wOut, output, Size);
+		        output = p.ToOutput.run(p, wOut, output, Stride);
 		    }
 		}
 	};
@@ -430,7 +436,7 @@ final class cmsxform
 	// No gamut check, Caché, 16 bits, 
 	private static final _cmsTransformFn CachedXFORM = new _cmsTransformFn()
 	{	
-		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size)
+		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size, int Stride)
 		{
 			VirtualPointer accum;
 			VirtualPointer output;
@@ -447,7 +453,7 @@ final class cmsxform
 		    
 		    for (i = 0; i < n; i++)
 		    {
-		        accum = p.FromInput.run(p, wIn, accum, Size);
+		        accum = p.FromInput.run(p, wIn, accum, Stride);
 		        
 		        if (Arrays.equals(Cache.CacheIn, wIn))
 		        {
@@ -461,7 +467,7 @@ final class cmsxform
 				    System.arraycopy(wOut, 0, Cache.CacheOut, 0, lcms2.cmsMAXCHANNELS);
 		        }
 		        
-		        output = p.ToOutput.run(p, wOut, output, Size);
+		        output = p.ToOutput.run(p, wOut, output, Stride);
 		    }
 		}
 	};
@@ -469,7 +475,7 @@ final class cmsxform
 	// All those nice features together
 	private static final _cmsTransformFn CachedXFORMGamutCheck = new _cmsTransformFn()
 	{	
-		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size)
+		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size, int Stride)
 		{
 			VirtualPointer accum;
 			VirtualPointer output;
@@ -486,7 +492,7 @@ final class cmsxform
 		    
 		    for (i = 0; i < n; i++)
 		    {
-		        accum = p.FromInput.run(p, wIn, accum, Size);
+		        accum = p.FromInput.run(p, wIn, accum, Stride);
 		        
 		        if (Arrays.equals(Cache.CacheIn, wIn))
 		        {
@@ -499,24 +505,118 @@ final class cmsxform
 				    System.arraycopy(wOut, 0, Cache.CacheOut, 0, lcms2.cmsMAXCHANNELS);
 		        }
 		        
-		        output = p.ToOutput.run(p, wOut, output, Size);            
+		        output = p.ToOutput.run(p, wOut, output, Stride);            
 		    }
 		}
 	};
 	
-	// Allocate transform struct and set it to defaults
-	private static _cmsTRANSFORM AllocEmptyTransform(cmsContext ContextID, int InputFormat, int OutputFormat, int dwFlags)
+	// -------------------------------------------------------------------------------------------------------------
+	
+	// List of used-defined transform factories
+	private static class _cmsTransformCollection
 	{
+		public _cmsTranformFactory Factory;
+		public _cmsTransformCollection Next;
+		
+		public _cmsTransformCollection()
+		{
+		}
+		
+		public _cmsTransformCollection(_cmsTranformFactory Factory, _cmsTransformCollection Next)
+		{
+			this.Factory = Factory;
+			this.Next = Next;
+		}
+	}
+	
+	// The linked list head
+	private static _cmsTransformCollection TransformCollection;
+	
+	// Register new ways to transform
+	public static boolean _cmsRegisterTransformPlugin(cmsPluginBase Data)
+	{
+	    cmsPluginTransform Plugin = (cmsPluginTransform)Data;
+	    _cmsTransformCollection fl;
+	    
+	    if (Data == null)
+	    {
+	    	// Free the chain. Memory is safely freed at exit
+	        TransformCollection = null; 
+	        return true;
+	    }
+	    
+	    // Factory callback is required
+	    if (Plugin.Factory == null)
+	    {
+	    	return false;
+	    }
+	    
+	    fl = new _cmsTransformCollection();
+	    
+	    // Copy the parameters
+	    fl.Factory = Plugin.Factory;
+	    
+	    // Keep linked list
+	    fl.Next = TransformCollection;
+	    TransformCollection = fl;
+	    
+	    // All is ok
+	    return true;
+	}
+	
+	// returns the pointer defined by the plug-in to store private data
+	public static Object _cmsGetTransformUserData(_cmsTRANSFORM CMMcargo)
+	{
+	    lcms2_internal._cmsAssert(CMMcargo != null, "CMMcargo != null");
+	    return CMMcargo.UserData;
+	}
+	
+	// Allocate transform struct and set it to defaults. Ask the optimization plug-in about if those formats are proper
+	// for separated transforms. If this is the case,
+	private static _cmsTRANSFORM AllocEmptyTransform(cmsContext ContextID, cmsPipeline lut, int Intent, int[] InputFormat, int[] OutputFormat, int[] dwFlags)
+	{
+		_cmsTransformCollection Plugin;
+		
 		// Allocate needed memory
 	    _cmsTRANSFORM p = new _cmsTRANSFORM();
 	    
+	    // Store the proposed pipeline
+	    p.Lut = lut;
+	    
+	    // Let's see if any plug-in want to do the transform by itself
+	    for (Plugin = TransformCollection;
+	    		Plugin != null;
+	    		Plugin = Plugin.Next)
+	    {
+	    	cmsPipeline[] tlut = new cmsPipeline[]{p.Lut};
+	    	if (Plugin.Factory.run(p.xform, p.UserData, p.FreeUserData, tlut, InputFormat, OutputFormat, dwFlags))
+	    	{
+	    		// Last plugin in the declaration order takes control. We just keep
+	    		// the original parameters as a logging
+	    		p.Lut             = tlut[0];
+	    		p.InputFormat     = InputFormat[0];
+	    		p.OutputFormat    = OutputFormat[0];
+	    		p.dwOriginalFlags = dwFlags[0];
+	    		p.ContextID       = ContextID;
+	    		return p;
+	    	}
+	    }
+	    
+	    // Not suitable for the transform plug-in, let's check  the pipeline plug-in
+	    if (p.Lut != null)
+	    {
+	    	cmsPipeline[] tlut = new cmsPipeline[]{p.Lut};
+	    	cmsopt._cmsOptimizePipeline(tlut, Intent, InputFormat, OutputFormat, dwFlags);
+	    	p.Lut = tlut[0];
+	    }
+	    
 	    // Check whatever this is a true floating point transform
-	    if (cmspack._cmsFormatterIsFloat(InputFormat) && cmspack._cmsFormatterIsFloat(OutputFormat))
+	    if (cmspack._cmsFormatterIsFloat(InputFormat[0]) && cmspack._cmsFormatterIsFloat(OutputFormat[0]))
 	    {
 	        // Get formatter function always return a valid union, but the contents of this union may be NULL.
-	        p.FromInputFloat = cmspack._cmsGetFormatter(InputFormat,  lcms2_plugin.cmsFormatterInput, lcms2_plugin.CMS_PACK_FLAGS_FLOAT).getFloat();
-	        p.ToOutputFloat  = cmspack._cmsGetFormatter(OutputFormat, lcms2_plugin.cmsFormatterOutput, lcms2_plugin.CMS_PACK_FLAGS_FLOAT).getFloat();
-	        dwFlags |= lcms2_internal.cmsFLAGS_CAN_CHANGE_FORMATTER;
+	        p.FromInputFloat = cmspack._cmsGetFormatter(InputFormat[0],  lcms2_plugin.cmsFormatterInput, lcms2_plugin.CMS_PACK_FLAGS_FLOAT).getFloat();
+	        p.ToOutputFloat  = cmspack._cmsGetFormatter(OutputFormat[0], lcms2_plugin.cmsFormatterOutput, lcms2_plugin.CMS_PACK_FLAGS_FLOAT).getFloat();
+	        dwFlags[0] |= lcms2_internal.cmsFLAGS_CAN_CHANGE_FORMATTER;
 	        
 	        if (p.FromInputFloat == null || p.ToOutputFloat == null)
 	        {
@@ -529,16 +629,17 @@ final class cmsxform
 	    }
 	    else
 	    {
-	    	if (InputFormat == 0 && OutputFormat == 0)
+	    	if (InputFormat[0] == 0 && OutputFormat[0] == 0)
 	    	{
 	            p.FromInput = p.ToOutput = null;
+	            dwFlags[0] |= lcms2_internal.cmsFLAGS_CAN_CHANGE_FORMATTER;
 	        }
 	        else
 	        {
 	            int BytesPerPixelInput;
 	            
-		        p.FromInput = cmspack._cmsGetFormatter(InputFormat,  lcms2_plugin.cmsFormatterInput, lcms2_plugin.CMS_PACK_FLAGS_16BITS).get16();
-		        p.ToOutput  = cmspack._cmsGetFormatter(OutputFormat, lcms2_plugin.cmsFormatterOutput, lcms2_plugin.CMS_PACK_FLAGS_16BITS).get16();
+		        p.FromInput = cmspack._cmsGetFormatter(InputFormat[0],  lcms2_plugin.cmsFormatterInput, lcms2_plugin.CMS_PACK_FLAGS_16BITS).get16();
+		        p.ToOutput  = cmspack._cmsGetFormatter(OutputFormat[0], lcms2_plugin.cmsFormatterOutput, lcms2_plugin.CMS_PACK_FLAGS_16BITS).get16();
 		        
 		        if (p.FromInput == null || p.ToOutput == null)
 		        {
@@ -549,19 +650,19 @@ final class cmsxform
 		        BytesPerPixelInput = lcms2.T_BYTES(p.InputFormat);
 	            if (BytesPerPixelInput == 0 || BytesPerPixelInput >= 2)
 	            {
-	            	dwFlags |= lcms2_internal.cmsFLAGS_CAN_CHANGE_FORMATTER;
+	            	dwFlags[0] |= lcms2_internal.cmsFLAGS_CAN_CHANGE_FORMATTER;
 	            }
 	        }
 	        
-	        if ((dwFlags & lcms2.cmsFLAGS_NULLTRANSFORM) != 0)
+	        if ((dwFlags[0] & lcms2.cmsFLAGS_NULLTRANSFORM) != 0)
 	        {
 	            p.xform = NullXFORM;
 	        }
 	        else
 	        {
-	            if ((dwFlags & lcms2.cmsFLAGS_NOCACHE) != 0)
+	            if ((dwFlags[0] & lcms2.cmsFLAGS_NOCACHE) != 0)
 	            {
-	                if ((dwFlags & lcms2.cmsFLAGS_GAMUTCHECK) != 0)
+	                if ((dwFlags[0] & lcms2.cmsFLAGS_GAMUTCHECK) != 0)
 	                {
 	                	p.xform = PrecalculatedXFORMGamutCheck; // Gamut check, no caché
 	                }
@@ -572,7 +673,7 @@ final class cmsxform
 	            }
 	            else
 	            {
-	                if ((dwFlags & lcms2.cmsFLAGS_GAMUTCHECK) != 0)
+	                if ((dwFlags[0] & lcms2.cmsFLAGS_GAMUTCHECK) != 0)
 	                {
 	                	p.xform = CachedXFORMGamutCheck; // Gamut check, caché
 	                }
@@ -584,10 +685,12 @@ final class cmsxform
 	        }
 	    }
 	    
-	    p.InputFormat     = InputFormat;
-	    p.OutputFormat    = OutputFormat;
-	    p.dwOriginalFlags = dwFlags;
+	    p.InputFormat     = InputFormat[0];
+	    p.OutputFormat    = OutputFormat[0];
+	    p.dwOriginalFlags = dwFlags[0];
+	    
 	    p.ContextID       = ContextID;
+	    p.UserData        = null;
 	    return p;
 	}
 	
@@ -687,6 +790,12 @@ final class cmsxform
 	    cmsPipeline Lut;
 	    int LastIntent = Intents[nProfiles-1];
 	    
+	    // If it is a fake transform
+	    if ((dwFlags & lcms2.cmsFLAGS_NULLTRANSFORM) != 0)
+	    {
+	        return AllocEmptyTransform(ContextID, null, lcms2.INTENT_PERCEPTUAL, new int[]{InputFormat}, new int[]{OutputFormat}, new int[]{dwFlags});
+	    }
+	    
 	    // If gamut check is requested, make sure we have a gamut profile
 	    if ((dwFlags & lcms2.cmsFLAGS_GAMUTCHECK) != 0)
 	    {
@@ -732,31 +841,27 @@ final class cmsxform
 	        return null;
 	    }
 	    
-	    // Optimize the LUT if possible
-	    int[] temp1 = new int[]{InputFormat};
-	    int[] temp2 = new int[]{OutputFormat};
-	    int[] temp3 = new int[]{dwFlags};
-	    cmsPipeline[] temp4 = new cmsPipeline[]{Lut};
-	    cmsopt._cmsOptimizePipeline(temp4, LastIntent, temp1, temp2, temp3);
-	    InputFormat = temp1[0];
-	    OutputFormat = temp2[0];
-	    dwFlags = temp3[0];
-	    Lut = temp4[0];
-	    
-	    // All seems ok
-	    xform = AllocEmptyTransform(ContextID, InputFormat, OutputFormat, dwFlags);
-	    if (xform == null)
+	    // Check channel count
+	    if ((cmspcs.cmsChannelsOf(EntryColorSpace[0]) != lcms2.cmsPipelineInputChannels(Lut)) ||
+	    		(cmspcs.cmsChannelsOf(ExitColorSpace[0]) != lcms2.cmsPipelineOutputChannels(Lut)))
 	    {
-	        cmslut.cmsPipelineFree(Lut);
+	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_NOT_SUITABLE, "Channel count doesn't match. Profile is corrupted", null);
 	        return null;
 	    }
+	    
+	    // All seems ok
+	    int[] tdwFlags = new int[]{dwFlags};
+	    xform = AllocEmptyTransform(ContextID, Lut, LastIntent, new int[]{InputFormat}, new int[]{OutputFormat}, tdwFlags);
+	    if (xform == null)
+	    {
+	        return null;
+	    }
+	    dwFlags = tdwFlags[0];
 	    
 	    // Keep values
 	    xform.EntryColorSpace = EntryColorSpace[0];
 	    xform.ExitColorSpace  = ExitColorSpace[0];
 	    xform.RenderingIntent = Intents[nProfiles-1];
-	    xform.Lut             = Lut;
-	    
 	    
 	    // Create a gamut check LUT if requested
 	    if (hGamutProfile != null && ((dwFlags & lcms2.cmsFLAGS_GAMUTCHECK) != 0))
@@ -945,10 +1050,8 @@ final class cmsxform
 	{
 		_cmsTRANSFORM xform = (_cmsTRANSFORM)hTransform;
 	    lcms2_plugin.cmsFormatter16 FromInput, ToOutput;
-	    int BytesPerPixelInput;
 	    
 	    // We only can afford to change formatters if previous transform is at least 16 bits
-	    BytesPerPixelInput = lcms2.T_BYTES(xform.InputFormat);
 	    if ((xform.dwOriginalFlags & lcms2_internal.cmsFLAGS_CAN_CHANGE_FORMATTER) == 0)
 	    {
 	    	cmserr.cmsSignalError(xform.ContextID, lcms2.cmsERROR_NOT_SUITABLE, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_CANT_CHANGE_BUFFER_FORMAT), null);
@@ -969,5 +1072,30 @@ final class cmsxform
 	    xform.FromInput = FromInput;
 	    xform.ToOutput  = ToOutput;
 	    return true;
+	}
+	
+	private static final long ALARM_UID = 0x700168E434DDB320L;
+	private static final long GAS_UID = 0x63CF45CCC98E05ACL;
+	private static final long TRANSFORM_UID = 0x34570BD8864C20EDL;
+	
+	static
+	{
+		Object obj;
+		if((obj = Utility.singletonStorageGet(ALARM_UID)) != null)
+		{
+			Alarm = (short[])obj;
+			GlobalAdaptationState = (double[])Utility.singletonStorageGet(GAS_UID);
+			TransformCollection = (_cmsTransformCollection)Utility.singletonStorageGet(TRANSFORM_UID);
+		}
+		else
+		{
+			Alarm = new short[lcms2.cmsMAXCHANNELS];
+			Arrays.fill(Alarm, (short)0x7F00, 0, 3);
+			GlobalAdaptationState = new double[]{1};
+			TransformCollection = null;
+			Utility.singletonStorageSet(ALARM_UID, Alarm);
+			Utility.singletonStorageSet(GAS_UID, GlobalAdaptationState);
+			Utility.singletonStorageSet(TRANSFORM_UID, TransformCollection);
+		}
 	}
 }

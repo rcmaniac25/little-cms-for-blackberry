@@ -646,7 +646,7 @@ final class cmspack
 				}
 			}),
 			
-			new cmsFormatters16((1 << lcms2.BYTES_SHIFT_VALUE)|(1 << lcms2.PLANAR_SHIFT_VALUE), ANYFLAVOR|ANYSWAP|ANYEXTRA|ANYCHANNELS|ANYSPACE, new cmsFormatter16()
+			new cmsFormatters16((1 << lcms2.BYTES_SHIFT_VALUE)|(1 << lcms2.PLANAR_SHIFT_VALUE), ANYFLAVOR|ANYSWAPFIRST|ANYSWAP|ANYEXTRA|ANYCHANNELS|ANYSPACE, new cmsFormatter16()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -659,11 +659,12 @@ final class cmspack
 //#endif
 					int nChan       = lcms2.T_CHANNELS(CMMcargo.InputFormat);
 				    boolean DoSwap  = lcms2.T_DOSWAP(CMMcargo.InputFormat);
+				    boolean SwapFirst = lcms2.T_SWAPFIRST(CMMcargo.InputFormat);
 				    boolean Reverse = lcms2.T_FLAVOR(CMMcargo.InputFormat);
 				    int i;
 				    int Init = Buffer.getPosition();
 
-				    if (DoSwap)
+				    if (DoSwap ^ SwapFirst)
 				    {
 				    	Buffer.movePosition(lcms2.T_EXTRA(CMMcargo.InputFormat) * Stride);
 				    }
@@ -1077,31 +1078,32 @@ final class cmspack
 	    int i;
 	    cmsFormatter fr = new cmsFormatter();
 	    
-	    if ((dwFlags & lcms2_plugin.CMS_PACK_FLAGS_FLOAT) == 0)
+	    switch (dwFlags)
 	    {
-	        for (i = 0; i < DEFAULT_FORM_IN_16_COUNT; i++)
-	        {
-	            cmsFormatters16 f = InputFormatters16[i];
-	            
-	            if ((dwInput & ~f.Mask) == f.Type)
-	            {
-	            	fr.set(f.Frm);
-	                return fr;
-	            }
-	        }
-	    }
-	    else
-	    {
-	        for (i = 0; i < DEFAULT_FORM_IN_FLOAT_COUNT; i++)
-	        {
-	            cmsFormattersFloat f = InputFormattersFloat[i];
-	            
-	            if ((dwInput & ~f.Mask) == f.Type)
-	            {
-	            	fr.set(f.Frm);
-	                return fr;
-	            }
-	        }
+		    case lcms2_plugin.CMS_PACK_FLAGS_16BITS:
+		    	for (i = 0; i < DEFAULT_FORM_IN_16_COUNT; i++)
+		        {
+		            cmsFormatters16 f = InputFormatters16[i];
+		            
+		            if ((dwInput & ~f.Mask) == f.Type)
+		            {
+		            	fr.set(f.Frm);
+		                return fr;
+		            }
+		        }
+		    	break;
+		    case lcms2_plugin.CMS_PACK_FLAGS_FLOAT:
+		    	for (i = 0; i < DEFAULT_FORM_IN_FLOAT_COUNT; i++)
+		        {
+		            cmsFormattersFloat f = InputFormattersFloat[i];
+		            
+		            if ((dwInput & ~f.Mask) == f.Type)
+		            {
+		            	fr.set(f.Frm);
+		                return fr;
+		            }
+		        }
+		    	break;
 	    }
 	    
 	    fr.set(null);
@@ -1813,7 +1815,7 @@ final class cmspack
 				    return Buffer;
 				}
 			}),
-			new cmsFormatters16((1 << lcms2.BYTES_SHIFT_VALUE)|(1 << lcms2.PLANAR_SHIFT_VALUE), ANYFLAVOR|ANYSWAP|ANYEXTRA|ANYCHANNELS|ANYSPACE, new cmsFormatter16()
+			new cmsFormatters16((1 << lcms2.BYTES_SHIFT_VALUE)|(1 << lcms2.PLANAR_SHIFT_VALUE), ANYFLAVOR|ANYSWAPFIRST|ANYSWAP|ANYEXTRA|ANYCHANNELS|ANYSPACE, new cmsFormatter16()
 			{
 				public VirtualPointer run(_cmsTRANSFORM CMMcargo, short[] Values, VirtualPointer Buffer, int Stride)
 				{
@@ -1825,9 +1827,15 @@ final class cmspack
 					
 					int nChan       = lcms2.T_CHANNELS(CMMcargo.OutputFormat);
 					boolean DoSwap  = lcms2.T_DOSWAP(CMMcargo.OutputFormat);
+					boolean SwapFirst = lcms2.T_SWAPFIRST(CMMcargo.OutputFormat);
 				    boolean Reverse = lcms2.T_FLAVOR(CMMcargo.OutputFormat);
 				    int i;
 				    int Init = Buffer.getPosition();
+				    
+				    if (DoSwap ^ SwapFirst)
+				    {
+				    	Buffer.movePosition(lcms2.T_EXTRA(CMMcargo.OutputFormat) * Stride);
+				    }
 				    
 				    VirtualPointer.TypeProcessor proc = Buffer.getProcessor();
 				    for (i = 0; i < nChan; i++)
@@ -2899,32 +2907,32 @@ final class cmspack
 	    int i;
 	    cmsFormatter fr = new cmsFormatter();
 	    
-	    if ((dwFlags & lcms2_plugin.CMS_PACK_FLAGS_FLOAT) != 0)
+	    switch (dwFlags)
 	    {
-	        for (i = 0; i < DEFAULT_FORM_OUT_FLOAT_COUNT; i++)
-	        {
-	            cmsFormattersFloat f = OutputFormattersFloat[i];
-	            
-	            if ((dwInput & ~f.Mask) == f.Type)
-	            {
-	            	fr.set(f.Frm);
-	                return fr;
-	            }
-	        }
-
-	    }
-	    else
-	    {
-	        for (i = 0; i < DEFAULT_FORM_OUT_16_COUNT; i++)
-	        {
-	            cmsFormatters16 f = OutputFormatters16[i];
-	            
-	            if ((dwInput & ~f.Mask) == f.Type)
-	            {
-	            	fr.set(f.Frm);
-	                return fr;
-	            }
-	        }
+		    case lcms2_plugin.CMS_PACK_FLAGS_16BITS:
+		    	for (i = 0; i < DEFAULT_FORM_OUT_16_COUNT; i++)
+		        {
+		            cmsFormatters16 f = OutputFormatters16[i];
+		            
+		            if ((dwInput & ~f.Mask) == f.Type)
+		            {
+		            	fr.set(f.Frm);
+		                return fr;
+		            }
+		        }
+		    	break;
+		    case lcms2_plugin.CMS_PACK_FLAGS_FLOAT:
+		    	for (i = 0; i < DEFAULT_FORM_OUT_FLOAT_COUNT; i++)
+		        {
+		            cmsFormattersFloat f = OutputFormattersFloat[i];
+		            
+		            if ((dwInput & ~f.Mask) == f.Type)
+		            {
+		            	fr.set(f.Frm);
+		                return fr;
+		            }
+		        }
+		    	break;
 	    }
 	    
 	    fr.set(null);
@@ -3005,7 +3013,7 @@ final class cmspack
 	
 	public static cmsFormatter _cmsGetFormatter(int Type, // Specific type, i.e. TYPE_RGB_8
 			int Dir, 
-            int dwFlags) // Float or 16 bits
+            int dwFlags)
 	{
 		cmsFormattersFactoryList f;
 		

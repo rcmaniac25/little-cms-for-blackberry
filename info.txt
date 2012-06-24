@@ -1,13 +1,15 @@
---Last update: 06/23/2012--
+--Last update: 06/24/2012--
 --Revision Used: 05/23/2012--
 
 TODO:
 Update LCMS 4 BB to the same level as the GIT build
--Implement everything else
--Re/move cmsFormatterInfo if it's new dest is found.
 -Replace _cmsTRANSFORM somehow
+-Go through all _cms* functions (and classes) to double check if they are public or private
+-Go through all plugin functions to make sure they are stored properly in memory
 If Test system has been updated then do testing
 Get full JavaDoc to be created for lcms
+
+Go through and remove all code related to CMS_RAW_C
 
 Go through cmstypes and adjust "SizeOfTag" so it acts like an unsigned int (for types that could be larger then an int, such as those that handle Strings)
 Comment PrintUtility and LargeNumber

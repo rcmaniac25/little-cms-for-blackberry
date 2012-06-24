@@ -315,9 +315,16 @@ final class cmsgamma
 		    {
 			    // X = Y ^ Gamma
 			    case 1:
-			        if (R < 0)
-			        {
-			        	Val = 0;
+			    	if (R < 0)
+			    	{
+			    		if (Math.abs(Params[0] - 1.0) < lcms2_internal.MATRIX_DET_TOLERANCE)
+			    		{
+			    			Val = R;
+			    		}
+			            else
+			            {
+			            	Val = 0;
+			            }
 			        }
 			        else
 			        {
@@ -331,9 +338,16 @@ final class cmsgamma
 			        
 			    // Type 1 Reversed: X = Y ^1/gamma
 			    case -1:
-			        if (R < 0)
-			        {
-			        	Val = 0;
+			    	if (R < 0)
+			    	{
+			    		if (Math.abs(Params[0] - 1.0) < lcms2_internal.MATRIX_DET_TOLERANCE)
+			    		{
+			    			Val = R;
+			    		}
+			            else
+			            {
+			            	Val = 0;
+			            }
 			        }
 			        else
 			        {
@@ -732,6 +746,19 @@ final class cmsgamma
 	    }
 	    
 	    return MINUS_INF;
+	}
+	
+	// Access to estimated low-res table
+	public static int cmsGetToneCurveEstimatedTableEntries(final cmsToneCurve t)
+	{
+	    lcms2_internal._cmsAssert(t != null, "t != null");
+	    return t.nEntries;
+	}
+	
+	public static short[] cmsGetToneCurveEstimatedTable(final cmsToneCurve t)
+	{
+		lcms2_internal._cmsAssert(t != null, "t != null");
+	    return t.Table16;
 	}
 	
 	// Create an empty gamma curve, by using tables. This specifies only the limited-precision part, and leaves the

@@ -129,7 +129,7 @@ final class lcms2_internal extends lcms2_plugin
 	    return (int)Math.floor(val);
 //#else
 	    //Java is always little endian with regards to storing and handling bytes (I/O being the exception)
-	    return ((int)(Double.doubleToLongBits(val + _lcms_double2fixmagic) & 0xFFFFFFFFL)) >> 16;
+	    return (int)(Double.doubleToLongBits(val + _lcms_double2fixmagic) >> 48);
 //#endif
 	}
 	
@@ -220,7 +220,7 @@ final class lcms2_internal extends lcms2_plugin
 	// Transform
 	public static boolean _cmsRegisterTransformPlugin(cmsPluginBase Plugin)
 	{
-		//TODO
+		return cmsxform._cmsRegisterTransformPlugin(Plugin);
 	}
 	
 	// ---------------------------------------------------------------------------------------------------------
@@ -733,14 +733,6 @@ final class lcms2_internal extends lcms2_plugin
 	    	System.arraycopy(CacheOut, 0, cache.CacheOut, 0, cmsMAXCHANNELS);
 	    }
 	}
-	
-	/*//XXX Find where this should go
-	public static class cmsFormatterInfo
-	{
-		public int InputFormat, OutputFormat; // Keep formats for further reference
-		public int StrideIn, StrideOut;       // Planar support
-	}
-	*/
 	
 	// Transformation
 	public static class _cmsTRANSFORM implements cmsHTRANSFORM
