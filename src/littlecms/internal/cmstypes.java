@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -66,14 +66,14 @@ import littlecms.internal.helper.Utility;
 import littlecms.internal.helper.VirtualPointer;
 
 /**
- * Tag Serialization  ----------------------------------------------------------------------------- 
+ * Tag Serialization  -----------------------------------------------------------------------------
  * This file implements every single tag and tag type as described in the ICC spec. Some types
  * have been deprecated, like ncl and Data. There is no implementation for those types as there
  * are no profiles holding them. The programmer can also extend this list by defining his own types
  * by using the appropiate plug-in. There are three types of plug ins regarding that. First type
  * allows to define new tags using any existing type. Next plug-in type allows to define new types
  * and the third one is very specific: allows to extend the number of elements in the multiprofile
- * elements special type. 
+ * elements special type.
  * --------------------------------------------------------------------------------------------------
  */
 //#ifdef CMS_INTERNAL_ACCESS & DEBUG
@@ -121,18 +121,18 @@ final class cmstypes
 	        return true;
 	    }
 	    
-	    pt = Anterior = LinkedList; 
+	    pt = Anterior = LinkedList;
 	    while (pt != null)
 	    {
 	        if (Plugin.Handler.Signature == pt.Handler.Signature)
 	        {
-	            pt.Handler = Plugin.Handler; // Replace old behaviour. 
+	            pt.Handler = Plugin.Handler; // Replace old behaviour.
 	            // Note that since no memory is allocated, unregister does not
-	            // reset this action. 
+	            // reset this action.
 	            return true;
-	        }   
+	        }
 	        
-	        Anterior = pt;          
+	        Anterior = pt;
 	        pt = pt.Next;
 	    }
 	    
@@ -147,7 +147,7 @@ final class cmstypes
 	    pt = new _cmsTagTypeLinkedList();
 //#endif
 	    
-	    pt.Handler   = Plugin.Handler;  
+	    pt.Handler   = Plugin.Handler;
 	    pt.Next      = null;
 	    
 	    if (Anterior != null)
@@ -245,7 +245,7 @@ final class cmstypes
 	// Helper function to deal with position tables as decribed in ICC spec 4.3
 	// A table of n elements is readed, where first comes n records containing offsets and sizes and
 	// then a block containing the data itself. This allows to reuse same data in more than one entry
-	private static boolean ReadPositionTable(cmsTagTypeHandler self, cmsIOHANDLER io, int Count, int BaseOffset, Object Cargo, 
+	private static boolean ReadPositionTable(cmsTagTypeHandler self, cmsIOHANDLER io, int Count, int BaseOffset, Object Cargo,
 			PositionTableEntryFn ElementFn)
 	{
 	    int i;
@@ -402,7 +402,7 @@ final class cmstypes
 	}
 	        
     // Same as anterior, but for write position tables
-    private static boolean WritePositionTable(cmsTagTypeHandler self, cmsIOHANDLER io, int SizeOfTag, int Count, int BaseOffset, Object Cargo, 
+    private static boolean WritePositionTable(cmsTagTypeHandler self, cmsIOHANDLER io, int SizeOfTag, int Count, int BaseOffset, Object Cargo,
     		PositionTableEntryFn ElementFn)
     {
         int i;
@@ -584,7 +584,7 @@ final class cmstypes
                 	cmserr._cmsFree(io.ContextID, ElementSizes);
                 }
 //#endif
-                return false; 
+                return false;
             }
         }
         
@@ -621,7 +621,7 @@ final class cmstypes
 	// ********************************************************************************
 	
 	//The XYZType contains an array of three encoded values for the XYZ tristimulus
-	//values. Tristimulus values must be non-negative. The signed encoding allows for 
+	//values. Tristimulus values must be non-negative. The signed encoding allows for
 	//implementation optimizations by minimizing the number of fixed formats.
     
 	private static Object Type_XYZ_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
@@ -703,7 +703,7 @@ final class cmstypes
 	// ********************************************************************************
 	// Type chromaticity. Only one value is allowed
 	// ********************************************************************************
-	// The chromaticity tag type provides basic chromaticity data and type of 
+	// The chromaticity tag type provides basic chromaticity data and type of
 	// phosphors or colorants of a monitor to applications and utilities.
 	
 	private static Object Type_Chromaticity_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
@@ -909,11 +909,11 @@ final class cmstypes
 	// Type cmsSigColorantOrderType
 	// ********************************************************************************
 	
-	// This is an optional tag which specifies the laydown order in which colorants will 
-	// be printed on an n-colorant device. The laydown order may be the same as the 
-	// channel generation order listed in the colorantTableTag or the channel order of a 
-	// colour space such as CMYK, in which case this tag is not needed. When this is not 
-	// the case (for example, ink-towers sometimes use the order KCMY), this tag may be 
+	// This is an optional tag which specifies the laydown order in which colorants will
+	// be printed on an n-colorant device. The laydown order may be the same as the
+	// channel generation order listed in the colorantTableTag or the channel order of a
+	// colour space such as CMYK, in which case this tag is not needed. When this is not
+	// the case (for example, ink-towers sometimes use the order KCMY), this tag may be
 	// used to specify the laydown order of the colorants.
 	
 	private static Object Type_ColorantOrderType_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
@@ -1033,7 +1033,7 @@ final class cmstypes
 	// ********************************************************************************
 	// Type cmsSigS15Fixed16ArrayType
 	// ********************************************************************************
-	// This type represents an array of generic 4-byte/32-bit fixed point quantity. 
+	// This type represents an array of generic 4-byte/32-bit fixed point quantity.
 	// The number of values is determined from the size of the tag.
 	
 	private static Object Type_S15Fixed16_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
@@ -1104,7 +1104,7 @@ final class cmstypes
 	        if (!cmsplugin._cmsWrite15Fixed16Number(io, Value[i]))
 //#endif
 	        {
-	        	return false;  
+	        	return false;
 	        }
 	    }
 //#ifdef CMS_RAW_C
@@ -1136,7 +1136,7 @@ final class cmstypes
 	// ********************************************************************************
 	// Type cmsSigU16Fixed16ArrayType
 	// ********************************************************************************
-	// This type represents an array of generic 4-byte/32-bit quantity. 
+	// This type represents an array of generic 4-byte/32-bit quantity.
 	// The number of values is determined from the size of the tag.
 	
 	private static Object Type_U16Fixed16_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
@@ -1210,7 +1210,7 @@ final class cmstypes
             
             if (!cmsplugin._cmsWriteUInt32Number(io, v))
             {
-            	return false;    
+            	return false;
             }
         }
 //#ifdef CMS_RAW_C
@@ -1243,9 +1243,9 @@ final class cmstypes
 	// Type cmsSigSignatureType
 	// ********************************************************************************
 	//
-	// The signatureType contains a four-byte sequence, Sequences of less than four 
-	// characters are padded at the end with spaces, 20h. 
-	// Typically this type is used for registered tags that can be displayed on many 
+	// The signatureType contains a four-byte sequence, Sequences of less than four
+	// characters are padded at the end with spaces, 20h.
+	// Typically this type is used for registered tags that can be displayed on many
 	// development systems as a sequence of four characters.
 	
 	private static Object Type_Signature_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
@@ -1278,11 +1278,11 @@ final class cmstypes
 	private static boolean Type_Signature_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
 //-ifdef CMS_RAW_C
-//-		VirtualPointer SigPtr = (VirtualPointer)Ptr; 
-//-	    
+//-		VirtualPointer SigPtr = (VirtualPointer)Ptr;
+//-
 //-	    return cmsplugin._cmsWriteUInt32Number(io, SigPtr.getProcessor().readInt32());
 //-else
-	    Integer SigPtr = (Integer)Ptr; 
+	    Integer SigPtr = (Integer)Ptr;
 	    
 	    return cmsplugin._cmsWriteUInt32Number(io, SigPtr.intValue());
 //-endif
@@ -1308,8 +1308,8 @@ final class cmstypes
 	// Type cmsSigTextType
 	// ********************************************************************************
 	//
-	// The textType is a simple text structure that contains a 7-bit ASCII text string. 
-	// The length of the string is obtained by subtracting 8 from the element size portion 
+	// The textType is a simple text structure that contains a 7-bit ASCII text string.
+	// The length of the string is obtained by subtracting 8 from the element size portion
 	// of the tag itself. This string must be terminated with a 00h byte.
 	
 	private static Object Type_Text_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
@@ -1428,7 +1428,7 @@ final class cmstypes
 	// The conversion implies to choose a language. So, we choose the actual language.
 	private static boolean Type_Text_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
-		cmsMLU mlu = (cmsMLU)Ptr; 
+		cmsMLU mlu = (cmsMLU)Ptr;
 	    int size;
 	    boolean rc;
 	    StringBuffer Text; //Normally would do a VirtualPointer/byte[] impl but cmsMLUgetASCII takes a StringBuffer
@@ -1665,7 +1665,7 @@ final class cmstypes
 	    // Check for size
 	    if (SizeOfTag < AsciiCount)
 	    {
-	    	return null; 
+	    	return null;
 	    }
 	    
 	    // All seems Ok, allocate the container
@@ -1787,7 +1787,7 @@ final class cmstypes
 	    SizeOfTag -= UnicodeCount * /*sizeof(cmsUInt16Number)*/2;
 	    
 	    // Skip ScriptCode code if present. Some buggy profiles does have less
-	    // data that stricttly required. We need to skip it as this type may come 
+	    // data that stricttly required. We need to skip it as this type may come
 	    // embedded in other types.
 	    
 	    short[] temp3 = new short[1];
@@ -1844,7 +1844,7 @@ final class cmstypes
 	    len = cmsnamed.cmsMLUgetASCII(mlu, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, null, 0);
 	    
 	    // From ICC3.4: It has been found that textDescription Type can contain misaligned data
-	    //(see clause 4.1 for the definition of “aligned”). Because the Unicode language
+	    //(see clause 4.1 for the definition of ï¿½alignedï¿½). Because the Unicode language
 	    // code and Unicode count immediately follow the ASCII description, their
 	    // alignment is not correct if the ASCII count is not a multiple of four. The
 	    // ScriptCode code is misaligned when the ASCII count is odd. Profile reading and
@@ -2147,14 +2147,14 @@ final class cmstypes
 	    
 	    if (Curve.nSegments > 1 || typen < 1)
 	    {
-	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_CURVE_CANT_BE_WRITTEN), null);          
+	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_CURVE_CANT_BE_WRITTEN), null);
 	        return false;
 	    }
 	    
 	    if (typen > 5)
 	    {
-	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unsupported parametric curve", null);          
-	        return false;    
+	    	cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, "Unsupported parametric curve", null);
+	        return false;
 	    }
 	    
 	    nParams = ParamsByType[typen];
@@ -2172,7 +2172,7 @@ final class cmstypes
 	    {
 	        if (!cmsplugin._cmsWrite15Fixed16Number(io, Curve.Segments[0].Params[i]))
 	        {
-	        	return false;        
+	        	return false;
 	        }
 	    }
 	    
@@ -2195,14 +2195,14 @@ final class cmstypes
 	// Type cmsSigDateTimeType
 	// ********************************************************************************
 	
-	// A 12-byte value representation of the time and date, where the byte usage is assigned 
-	// as specified in table 1. The actual values are encoded as 16-bit unsigned integers 
+	// A 12-byte value representation of the time and date, where the byte usage is assigned
+	// as specified in table 1. The actual values are encoded as 16-bit unsigned integers
 	// (uInt16Number - see 5.1.6).
 	//
-	// All the dateTimeNumber values in a profile shall be in Coordinated Universal Time 
+	// All the dateTimeNumber values in a profile shall be in Coordinated Universal Time
 	// (UTC, also known as GMT or ZULU Time). Profile writers are required to convert local
-	// time to UTC when setting these values. Programmes that display these values may show 
-	// the dateTimeNumber as UTC, show the equivalent local time (at current locale), or 
+	// time to UTC when setting these values. Programmes that display these values may show
+	// the dateTimeNumber as UTC, show the equivalent local time (at current locale), or
 	// display both UTC and local versions of the dateTimeNumber.
 	
 	private static Object Type_DateTime_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
@@ -2257,7 +2257,7 @@ final class cmstypes
 	
 	/*
 	The measurementType information refers only to the internal profile data and is
-	meant to provide profile makers an alternative to the default measurement 
+	meant to provide profile makers an alternative to the default measurement
 	specifications.
 	*/
 	
@@ -2354,7 +2354,7 @@ final class cmstypes
 	// ********************************************************************************
 	
 	//
-	//   Do NOT trust SizeOfTag as there is an issue on the definition of profileSequenceDescTag. See the TechNote from 
+	//   Do NOT trust SizeOfTag as there is an issue on the definition of profileSequenceDescTag. See the TechNote from
 	//   Max Derhak and Rohit Patil about this: basically the size of the string table should be guessed and cannot be
 	//   taken from the size of tag if this tag is embedded as part of bigger structures (profileSequenceDescTag, for instance)
 	//
@@ -2456,7 +2456,7 @@ final class cmstypes
 	        BeginOfThisString = Offset - SizeOfHeader - 8;
 	        
 	        // Ajust to wchar_t elements
-	        mlu.Entries[i].Len = (Len * /*sizeof(wchar_t)*/2) / /*sizeof(cmsUInt16Number)*/2;        
+	        mlu.Entries[i].Len = (Len * /*sizeof(wchar_t)*/2) / /*sizeof(cmsUInt16Number)*/2;
 	        mlu.Entries[i].StrW = (BeginOfThisString * /*sizeof(wchar_t)*/2) / /*sizeof(cmsUInt16Number)*/2;
 	        
 	        // To guess maximum size, add offset + len
@@ -2529,7 +2529,7 @@ final class cmstypes
 	    
 	    if (!cmsplugin._cmsWriteUInt32Number(io, mlu.UsedEntries))
 	    {
-	    	return false;           
+	    	return false;
 	    }
 	    if (!cmsplugin._cmsWriteUInt32Number(io, 12))
 	    {
@@ -2624,10 +2624,10 @@ final class cmstypes
 	}
 	
 	/*
-	This structure represents a colour transform using tables of 8-bit precision. 
-	This type contains four processing elements: a 3 by 3 matrix (which shall be 
-	the identity matrix unless the input colour space is XYZ), a set of one dimensional 
-	input tables, a multidimensional lookup table, and a set of one dimensional output 
+	This structure represents a colour transform using tables of 8-bit precision.
+	This type contains four processing elements: a 3 by 3 matrix (which shall be
+	the identity matrix unless the input colour space is XYZ), a set of one dimensional
+	input tables, a multidimensional lookup table, and a set of one dimensional output
 	tables. Data is processed using these elements via the following sequence:
 	(matrix) -> (1d input tables)  -> (multidimensional lookup table - CLUT) -> (1d output tables)
 	
@@ -2814,7 +2814,7 @@ final class cmstypes
 	    return (int)rc;
 	}
 	
-	// That will create a MPE LUT with Matrix, pre tables, CLUT and post tables. 
+	// That will create a MPE LUT with Matrix, pre tables, CLUT and post tables.
 	// 8 bit lut may be scaled easely to v4 PCS, but we need also to properly adjust
 	// PCS on BToAxx tags and AtoB if abstract. We need to fix input direction.
 	
@@ -2824,7 +2824,7 @@ final class cmstypes
 	    VirtualPointer Temp = null;
 	    cmsPipeline NewLUT = null;
 	    cmsStage mpemat, mpeclut;
-	    int nTabSize, i;    
+	    int nTabSize, i;
 	    double[] Matrix = new double[3*3];
 	    
 	    nItems[0] = 0;
@@ -3035,7 +3035,7 @@ final class cmstypes
 	        
 	        T  = new short[nTabSize];
 	        
-	        Temp = cmserr._cmsMalloc(self.ContextID, nTabSize);             
+	        Temp = cmserr._cmsMalloc(self.ContextID, nTabSize);
 	        if (Temp == null)
 	        {
 	        	if (NewLUT != null)
@@ -3405,7 +3405,7 @@ final class cmstypes
 		byte[] InputChannels = new byte[1], OutputChannels = new byte[1], CLUTpoints = new byte[1];
 		cmsPipeline NewLUT = null;
 		cmsStage mpemat, mpeclut;
-	    int nTabSize;    
+	    int nTabSize;
 	    double[] Matrix = new double[3*3];
 	    short[] InputEntries = new short[1], OutputEntries = new short[1];
 	    
@@ -3673,7 +3673,7 @@ final class cmstypes
 	    return NewLUT;
 	}
 	
-	// We only allow some specific MPE structures: Matrix plus prelin, plus clut, plus post-lin. 
+	// We only allow some specific MPE structures: Matrix plus prelin, plus clut, plus post-lin.
 	// Some empty defaults are created for missing parts
 	
 	private static boolean Type_LUT16_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
@@ -3918,7 +3918,7 @@ final class cmstypes
 	    double[] dOff = new double[3];
 	    cmsStage Mat;
 	    
-	    // Go to address 
+	    // Go to address
 	    if (!io.Seek.run(io, Offset))
 	    {
 	    	return null;
@@ -3997,7 +3997,7 @@ final class cmstypes
 	
 	private static cmsStage ReadCLUT(cmsTagTypeHandler self, cmsIOHANDLER io, int Offset, int InputChannels, int OutputChannels)
 	{
-		byte[] gridPoints8 = new byte[lcms2.cmsMAXCHANNELS]; // Number of grid points in each dimension.  
+		byte[] gridPoints8 = new byte[lcms2.cmsMAXCHANNELS]; // Number of grid points in each dimension.
 	    int[] GridPoints = new int[lcms2.cmsMAXCHANNELS];
 	    int i;
 	    byte[] Precision = new byte[1];
@@ -4078,7 +4078,7 @@ final class cmstypes
 	        }
 	        else
 		    {
-		        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_PRECISION), new Object[]{new Integer(Precision[0])}); 
+		        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_PRECISION), new Object[]{new Integer(Precision[0])});
 		        return null;
 		    }
 	    }
@@ -4098,7 +4098,7 @@ final class cmstypes
                 return (cmsToneCurve)Type_Curve_Read(self, io, nItems, 0);
             case lcms2.cmsSigParametricCurveType:
                 return (cmsToneCurve)Type_ParametricCurve_Read(self, io, nItems, 0);
-            default: 
+            default:
 	            {
 	                StringBuffer String = new StringBuffer(4);
 	                
@@ -4164,18 +4164,18 @@ final class cmstypes
 	    return Lin;
 	}
 	
-	// LutAtoB type 
+	// LutAtoB type
 	
-	// This structure represents a colour transform. The type contains up to five processing 
-	// elements which are stored in the AtoBTag tag in the following order: a set of one 
-	// dimensional curves, a 3 by 3 matrix with offset terms, a set of one dimensional curves, 
+	// This structure represents a colour transform. The type contains up to five processing
+	// elements which are stored in the AtoBTag tag in the following order: a set of one
+	// dimensional curves, a 3 by 3 matrix with offset terms, a set of one dimensional curves,
 	// a multidimensional lookup table, and a set of one dimensional output curves.
 	// Data are processed using these elements via the following sequence:
 	//
 	//("A" curves) -> (multidimensional lookup table - CLUT) -> ("M" curves) -> (matrix) -> ("B" curves).
 	//
 	/*
-	It is possible to use any or all of these processing elements. At least one processing element 
+	It is possible to use any or all of these processing elements. At least one processing element
 	must be included.Only the following combinations are allowed:
 	
 	B
@@ -4312,7 +4312,7 @@ final class cmstypes
 	
 	// Write a set of curves
 	private static boolean WriteMatrix(cmsTagTypeHandler self, cmsIOHANDLER io, cmsStage mpe)
-	{   
+	{
 	    _cmsStageMatrixData m = (_cmsStageMatrixData)mpe.Data;
 	    
 	    // Write the Matrix
@@ -4389,7 +4389,7 @@ final class cmstypes
 	
 	// Write a set of curves
 	private static boolean WriteSetOfCurves(cmsTagTypeHandler self, cmsIOHANDLER io, int Type, cmsStage mpe)
-	{   
+	{
 	    int i, n;
 	    int CurrentType;
 	    cmsToneCurve[] Curves;
@@ -4402,7 +4402,7 @@ final class cmstypes
 	        // If this is a table-based curve, use curve type even on V4
 	        CurrentType = Type;
 	        
-	        if ((Curves[i].nSegments == 0) || 
+	        if ((Curves[i].nSegments == 0) ||
 	        		((Curves[i].nSegments == 2) && (Curves[i].Segments[1].Type == 0)))
 	        {
 	        	CurrentType = lcms2.cmsSigCurveType;
@@ -4456,7 +4456,7 @@ final class cmstypes
 	private static boolean WriteCLUT(cmsTagTypeHandler self, cmsIOHANDLER io, byte Precision, cmsStage mpe)
 	{
 		byte[] gridPoints = new byte[lcms2.cmsMAXCHANNELS]; // Number of grid points in each dimension.
-	    int i;    
+	    int i;
 	    _cmsStageCLutData CLUT = ( _cmsStageCLutData)mpe.Data;
 	    
 	    if (CLUT.HasFloatValues)
@@ -4502,7 +4502,7 @@ final class cmstypes
 	            if (!cmsplugin._cmsWriteUInt8Number(io, lcms2_internal.FROM_16_TO_8(proc.readInt16(true))))
 	            {
 	            	CLUT.Tab.setPosition(pos);
-	            	return false;                
+	            	return false;
 	            }
 	        }
 	        CLUT.Tab.setPosition(pos);
@@ -5071,8 +5071,8 @@ final class cmstypes
 	// Type cmsSigColorantTableType
 	// ********************************************************************************
 	/*
-	The purpose of this tag is to identify the colorants used in the profile by a 
-	unique name and set of XYZ or L*a*b* values to give the colorant an unambiguous 
+	The purpose of this tag is to identify the colorants used in the profile by a
+	unique name and set of XYZ or L*a*b* values to give the colorant an unambiguous
 	value. The first colorant listed is the colorant of the first device channel of
 	a lut tag. The second colorant listed is the colorant of the second device channel
 	of a lut tag, and so on.
@@ -5130,7 +5130,7 @@ final class cmstypes
 	// Saves a colorant table. It is using the named color structure for simplicity sake
 	private static boolean Type_ColorantTable_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
-		cmsNAMEDCOLORLIST NamedColorList = (cmsNAMEDCOLORLIST)Ptr; 
+		cmsNAMEDCOLORLIST NamedColorList = (cmsNAMEDCOLORLIST)Ptr;
 	    int i, nColors;
 	    
 	    nColors = cmsnamed.cmsNamedColorCount(NamedColorList);
@@ -5181,24 +5181,24 @@ final class cmstypes
 	// Type cmsSigNamedColor2Type
 	// ********************************************************************************
 	//
-	//The namedColor2Type is a count value and array of structures that provide color 
-	//coordinates for 7-bit ASCII color names. For each named color, a PCS and optional 
-	//device representation of the color are given. Both representations are 16-bit values. 
-	//The device representation corresponds to the header’s “color space of data” field. 
-	//This representation should be consistent with the “number of device components”
+	//The namedColor2Type is a count value and array of structures that provide color
+	//coordinates for 7-bit ASCII color names. For each named color, a PCS and optional
+	//device representation of the color are given. Both representations are 16-bit values.
+	//The device representation corresponds to the headerï¿½s ï¿½color space of dataï¿½ field.
+	//This representation should be consistent with the ï¿½number of device componentsï¿½
 	//field in the namedColor2Type. If this field is 0, device coordinates are not provided.
-	//The PCS representation corresponds to the header’s PCS field. The PCS representation 
-	//is always provided. Color names are fixed-length, 32-byte fields including null 
-	//termination. In order to maintain maximum portability, it is strongly recommended 
+	//The PCS representation corresponds to the headerï¿½s PCS field. The PCS representation
+	//is always provided. Color names are fixed-length, 32-byte fields including null
+	//termination. In order to maintain maximum portability, it is strongly recommended
 	//that special characters of the 7-bit ASCII set not be used.
 	
 	private static Object Type_NamedColor_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
 	{
-		int vendorFlag;									// Bottom 16 bits for ICC use 
-		int count;										// Count of named colors 
-		int nDeviceCoords;								// Num of device coordinates 
-	    VirtualPointer prefix = new VirtualPointer(32);	// Prefix for each color name 
-	    VirtualPointer suffix = new VirtualPointer(32);	// Suffix for each color name 
+		int vendorFlag;									// Bottom 16 bits for ICC use
+		int count;										// Count of named colors
+		int nDeviceCoords;								// Num of device coordinates
+	    VirtualPointer prefix = new VirtualPointer(32);	// Prefix for each color name
+	    VirtualPointer suffix = new VirtualPointer(32);	// Suffix for each color name
 	    cmsNAMEDCOLORLIST v;
 	    int i;
 	    
@@ -5280,8 +5280,8 @@ final class cmstypes
 	private static boolean Type_NamedColor_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
 		cmsNAMEDCOLORLIST NamedColorList = (cmsNAMEDCOLORLIST)Ptr;
-		VirtualPointer prefix = new VirtualPointer(32); // Prefix for each color name 
-		VirtualPointer suffix = new VirtualPointer(32); // Suffix for each color name 
+		VirtualPointer prefix = new VirtualPointer(32); // Prefix for each color name
+		VirtualPointer suffix = new VirtualPointer(32); // Suffix for each color name
 	    int i, nColors;
 	    
 	    nColors = cmsnamed.cmsNamedColorCount(NamedColorList);
@@ -5358,11 +5358,11 @@ final class cmstypes
 	// Type cmsSigProfileSequenceDescType
 	// ********************************************************************************
 	
-	// This type is an array of structures, each of which contains information from the 
-	// header fields and tags from the original profiles which were combined to create 
-	// the final profile. The order of the structures is the order in which the profiles 
-	// were combined and includes a structure for the final profile. This provides a 
-	// description of the profile sequence from source to destination, 
+	// This type is an array of structures, each of which contains information from the
+	// header fields and tags from the original profiles which were combined to create
+	// the final profile. The order of the structures is the order in which the profiles
+	// were combined and includes a structure for the final profile. This provides a
+	// description of the profile sequence from source to destination,
 	// typically used with the DeviceLink profile.
 	
 	private static boolean ReadEmbeddedText(cmsTagTypeHandler self, cmsIOHANDLER io, cmsMLU[] mlu, int SizeOfTag)
@@ -5370,7 +5370,7 @@ final class cmstypes
 		int BaseType;
 	    int[] nItems = new int[1];
 	    
-	    BaseType = cmsplugin._cmsReadTypeBase(io); 
+	    BaseType = cmsplugin._cmsReadTypeBase(io);
 	    
 	    switch (BaseType)
 	    {
@@ -5592,9 +5592,9 @@ final class cmstypes
 	// Type cmsSigProfileSequenceIdType
 	// ********************************************************************************
 	/*
-	In certain workflows using ICC Device Link Profiles, it is necessary to identify the 
+	In certain workflows using ICC Device Link Profiles, it is necessary to identify the
 	original profiles that were combined to create the Device Link Profile.
-	This type is an array of structures, each of which contains information for 
+	This type is an array of structures, each of which contains information for
 	identification of a profile used in a sequence
 	*/
 	
@@ -5954,7 +5954,7 @@ final class cmstypes
 	private static boolean WriteCountAndSting(cmsTagTypeHandler self, cmsIOHANDLER io, cmsMLU mlu, final String Section)
 	{
 		int TextSize;
-		StringBuffer Text;    
+		StringBuffer Text;
 	    
 	    TextSize = cmsnamed.cmsMLUgetASCII(mlu, "PS", Section, null, 0);
 	    Text = new StringBuffer(TextSize);
@@ -6116,7 +6116,7 @@ final class cmstypes
 	
 	private static boolean Type_Screening_Write(cmsTagTypeHandler self, cmsIOHANDLER io, Object Ptr, int nItems)
 	{
-		cmsScreening sc = (cmsScreening)Ptr; 
+		cmsScreening sc = (cmsScreening)Ptr;
 	    int i;
 	    
 	    if (!cmsplugin._cmsWriteUInt32Number(io, sc.Flag))
@@ -6193,8 +6193,8 @@ final class cmstypes
 	// Type cmsSigViewingConditionsType
 	// ********************************************************************************
 	//
-	//This type represents a set of viewing condition parameters including: 
-	//CIE ’absolute’ illuminant white point tristimulus values and CIE ’absolute’ 
+	//This type represents a set of viewing condition parameters including:
+	//CIE ï¿½absoluteï¿½ illuminant white point tristimulus values and CIE ï¿½absoluteï¿½
 	//surround tristimulus values.
 	
 	private static Object Type_ViewingConditions_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
@@ -6285,7 +6285,7 @@ final class cmstypes
 	}
 	
 	// Each curve is stored in one or more curve segments, with break-points specified between curve segments.
-	// The first curve segment always starts at –Infinity, and the last curve segment always ends at +Infinity. The
+	// The first curve segment always starts at ï¿½Infinity, and the last curve segment always ends at +Infinity. The
 	// first and last curve segments shall be specified in terms of a formula, whereas the other segments shall be
 	// specified either in terms of a formula, or by a sampled curve.
 	
@@ -6663,13 +6663,13 @@ final class cmstypes
 	// The matrix is organized as an array of PxQ+Q elements, where P is the number of input channels to the
 	// matrix, and Q is the number of output channels. The matrix elements are each float32Numbers. The array
 	// is organized as follows:
-	// array = [e11, e12, …, e1P, e21, e22, …, e2P, …, eQ1, eQ2, …, eQP, e1, e2, …, eQ]
+	// array = [e11, e12, ï¿½, e1P, e21, e22, ï¿½, e2P, ï¿½, eQ1, eQ2, ï¿½, eQP, e1, e2, ï¿½, eQ]
 	
 	private static Object Type_MPEmatrix_Read(cmsTagTypeHandler self, cmsIOHANDLER io, int[] nItems, int SizeOfTag)
 	{
 		cmsStage mpe;
 	    short InputChans, OutputChans;
-	    int nElems, i;  
+	    int nElems, i;
 	    double[] Matrix;
 	    double[] Offsets;
 	    
@@ -6834,7 +6834,7 @@ final class cmstypes
 	    }
 	    clut.Tab.setPosition(pos);
 	    
-	    nItems[0] = 1;    
+	    nItems[0] = 1;
 	    return mpe;
 	}
 	
@@ -7009,7 +7009,7 @@ final class cmstypes
 		        
 		        cmserr._cmsTagSignature2String(String, ElementSig);
 		        
-		        // An unknown element was found. 
+		        // An unknown element was found.
 		        cmserr.cmsSignalError(self.ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSTYPES_UNK_MPE_TYPE_NOT_FOUND), new Object[]{String});
 		        return false;
 		    }
@@ -7254,7 +7254,7 @@ final class cmstypes
 	    switch (TagType)
 	    {
 		    // Gamma is stored as a table
-		    case cmsVideoCardGammaTableType: 
+		    case cmsVideoCardGammaTableType:
 		    {
 		    	short nChannels, nElems, nBytes;
 		    	
@@ -7381,10 +7381,10 @@ final class cmstypes
 		            // Y = cX + f             | X < d
 		    		
 		            // vcgt formula is:
-		            // Y = (Max – Min) * (X ^ Gamma) + Min
+		            // Y = (Max ï¿½ Min) * (X ^ Gamma) + Min
 		            
 		            // So, the translation is
-		            // a = (Max – Min) ^ ( 1 / Gamma) 
+		            // a = (Max ï¿½ Min) ^ ( 1 / Gamma)
 		            // e = Min
 		            // b=c=d=f=0
 		    		
@@ -7736,7 +7736,7 @@ final class cmstypes
 	{
 		int nChars;
 		
-		// Special case for undefined strings (see ICC Votable 
+		// Special case for undefined strings (see ICC Votable
 		// Proposal Submission, Dictionary Type and Metadata TAG Definition)
 		if (e.Offsets[i] == 0)
 		{
@@ -7782,7 +7782,7 @@ final class cmstypes
 	    int Before = io.Tell.run(io);
 	    int n;
 	    
-	    e.Offsets[i] = Before - BaseOffset;   
+	    e.Offsets[i] = Before - BaseOffset;
 	    
 	    if (wcstr == null)
 	    {
@@ -7801,7 +7801,7 @@ final class cmstypes
 	    	return false;
 	    }
 	    
-	    e.Sizes[i] = io.Tell.run(io) - Before;       
+	    e.Sizes[i] = io.Tell.run(io) - Before;
 	    return true;
 	}
 	
@@ -7829,7 +7829,7 @@ final class cmstypes
 	{
 		int Before;
 		
-		// Special case for undefined strings (see ICC Votable 
+		// Special case for undefined strings (see ICC Votable
 		// Proposal Submission, Dictionary Type and Metadata TAG Definition)
 		if (mlu == null)
 		{
@@ -7846,7 +7846,7 @@ final class cmstypes
 	    	return false;
 	    }
 	    
-	    e.Sizes[i] = io.Tell.run(io) - Before;       
+	    e.Sizes[i] = io.Tell.run(io) - Before;
 	    return true;
 	}
 	
@@ -9167,11 +9167,11 @@ final class cmstypes
 	
 	/*
     Not supported                 Why
-    =======================       =========================================                
-    cmsSigOutputResponseTag   ==> WARNING, POSSIBLE PATENT ON THIS SUBJECT!                
-    cmsSigNamedColorTag       ==> Deprecated                                 
-    cmsSigDataTag             ==> Ancient, unused             
-    cmsSigDeviceSettingsTag   ==> Deprecated, useless     
+    =======================       =========================================
+    cmsSigOutputResponseTag   ==> WARNING, POSSIBLE PATENT ON THIS SUBJECT!
+    cmsSigNamedColorTag       ==> Deprecated
+    cmsSigDataTag             ==> Ancient, unused
+    cmsSigDeviceSettingsTag   ==> Deprecated, useless
 	 */
 	
 	private static final int DEFAULT_TAG_COUNT = 62;
@@ -9196,23 +9196,23 @@ final class cmstypes
 	        return true;
 	    }
 	    
-	    pt = Anterior = SupportedTags; 
+	    pt = Anterior = SupportedTags;
 	    while (pt != null)
 	    {
 	        if (Plugin.Signature == pt.Signature)
 	        {
 	            pt.Descriptor = Plugin.Descriptor; // Replace old behaviour
 	            return true;
-	        }   
+	        }
 	        
-	        Anterior = pt;          
+	        Anterior = pt;
 	        pt = pt.Next;
 	    }
 	    
 	    pt = new _cmsTagLinkedList();
 	    
 	    pt.Signature  = Plugin.Signature;
-	    pt.Descriptor = Plugin.Descriptor;  
+	    pt.Descriptor = Plugin.Descriptor;
 	    pt.Next       = null;
 	    
 	    if (Anterior != null)

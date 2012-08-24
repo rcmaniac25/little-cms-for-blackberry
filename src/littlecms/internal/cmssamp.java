@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2010 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ final class cmssamp
 {
 	// Black point detection -------------------------------------------------------------------------
 	
-	// PCS -> PCS round trip transform, always uses relative intent on the device -> pcs 
+	// PCS -> PCS round trip transform, always uses relative intent on the device -> pcs
 	private static cmsHTRANSFORM CreateRoundtripXForm(cmsHPROFILE hProfile, int nIntent)
 	{
 	    cmsHPROFILE hLab = cmsvirt.cmsCreateLab4Profile(null);
@@ -59,7 +59,7 @@ final class cmssamp
 	    hProfiles[0] = hLab; hProfiles[1] = hProfile; hProfiles[2] = hProfile; hProfiles[3] = hLab;
 	    Intents[0] = lcms2.INTENT_RELATIVE_COLORIMETRIC; Intents[1] = nIntent; Intents[2] = lcms2.INTENT_RELATIVE_COLORIMETRIC; Intents[3] = lcms2.INTENT_RELATIVE_COLORIMETRIC;
 	    
-	    xform = cmsxform.cmsCreateExtendedTransform(ContextID, 4, hProfiles, BPC, Intents, 
+	    xform = cmsxform.cmsCreateExtendedTransform(ContextID, 4, hProfiles, BPC, Intents,
 	        States, null, 0, lcms2.TYPE_Lab_DBL, lcms2.TYPE_Lab_DBL, lcms2.cmsFLAGS_NOCACHE|lcms2.cmsFLAGS_NOOPTIMIZE);
 	    
 	    cmsio0.cmsCloseProfile(hLab);
@@ -74,13 +74,13 @@ final class cmssamp
 	    cmsHTRANSFORM xform;
 	    int Space;
 	    int[] nChannels;
-	    int dwFormat; 
+	    int dwFormat;
 	    cmsHPROFILE hLab;
 	    cmsCIELab Lab;
-	    cmsCIEXYZ BlackXYZ;        
+	    cmsCIEXYZ BlackXYZ;
 	    cmsContext ContextID = cmsio0.cmsGetProfileContextID(hInput);
 	    
-	    // If the profile does not support input direction, assume Black point 0    
+	    // If the profile does not support input direction, assume Black point 0
 	    if (!cmsio1.cmsIsIntentSupported(hInput, Intent, lcms2.LCMS_USED_AS_INPUT))
 	    {
 	        BlackPoint.X = BlackPoint.Y = BlackPoint.Z = 0.0;
@@ -90,7 +90,7 @@ final class cmssamp
 	    // Create a formatter which has n channels and floating point
 	    dwFormat = cmspack.cmsFormatterForColorspaceOfProfile(hInput, 2, false);
 	    
-	    // Try to get black by using black colorant    
+	    // Try to get black by using black colorant
 	    Space = cmsio0.cmsGetColorSpace(hInput);
 	    
 	    // This function is used in this instance to get the number of elements needed
@@ -146,7 +146,7 @@ final class cmssamp
 	    	Lab.L = 50;
 	    }
 	    
-	    // Free the resources    
+	    // Free the resources
 	    cmsxform.cmsDeleteTransform(xform);
 	    
 	    // Convert from Lab (which is now clipped) to XYZ.
@@ -163,12 +163,12 @@ final class cmssamp
 	    return true;
 	}
 	
-	// Get a black point of output CMYK profile, discounting any ink-limiting embedded 
+	// Get a black point of output CMYK profile, discounting any ink-limiting embedded
 	// in the profile. For doing that, we use perceptual intent in input direction:
 	// Lab (0, 0, 0) -> [Perceptual] Profile -> CMYK -> [Rel. colorimetric] Profile -> Lab
 	private static boolean BlackPointUsingPerceptualBlack(cmsCIEXYZ BlackPoint, cmsHPROFILE hProfile)
-	{    
-	    cmsHTRANSFORM hRoundTrip;    
+	{
+	    cmsHTRANSFORM hRoundTrip;
 	    cmsCIELab LabIn, LabOut;
 	    cmsCIEXYZ BlackXYZ;
 	    
@@ -202,7 +202,7 @@ final class cmssamp
 	    
 	    // Convert it to XYZ
 	    BlackXYZ = new cmsCIEXYZ();
-	    cmspcs.cmsLab2XYZ(null, BlackXYZ, LabOut);   
+	    cmspcs.cmsLab2XYZ(null, BlackXYZ, LabOut);
 	    
 	    if (BlackPoint != null)
 	    {
@@ -215,22 +215,22 @@ final class cmssamp
 	}
 	
 	// This function shouldn't exist at all -- there is such quantity of broken
-	// profiles on black point tag, that we must somehow fix chromaticity to 
+	// profiles on black point tag, that we must somehow fix chromaticity to
 	// avoid huge tint when doing Black point compensation. This function does
-	// just that. There is a special flag for using black point tag, but turned 
-	// off by default because it is bogus on most profiles. The detection algorithm 
+	// just that. There is a special flag for using black point tag, but turned
+	// off by default because it is bogus on most profiles. The detection algorithm
 	// involves to turn BP to neutral and to use only L component.
 	
 	public static boolean cmsDetectBlackPoint(cmsCIEXYZ BlackPoint, cmsHPROFILE hProfile, int Intent, int dwFlags)
-	{    
+	{
 	    // Zero for black point
 	    if (cmsio0.cmsGetDeviceClass(hProfile) == lcms2.cmsSigLinkClass)
 	    {
 	    	BlackPoint.X = BlackPoint.Y = BlackPoint.Z = 0.0;
-	        return false;      
+	        return false;
 	    }
 	    
-	    // v4 + perceptual & saturation intents does have its own black point, and it is 
+	    // v4 + perceptual & saturation intents does have its own black point, and it is
 	    // well specified enough to use it. Black point tag is deprecated in V4.
 	    
 	    if ((cmsio0.cmsGetEncodedICCversion(hProfile) >= 0x4000000) && (Intent == lcms2.INTENT_PERCEPTUAL || Intent == lcms2.INTENT_SATURATION))
@@ -296,7 +296,7 @@ final class cmssamp
 	    // That is about v2 profiles.
 	    
 	    // If output profile, discount ink-limiting and that's all
-	    if (Intent == lcms2.INTENT_RELATIVE_COLORIMETRIC && (cmsio0.cmsGetDeviceClass(hProfile) == lcms2.cmsSigOutputClass) && 
+	    if (Intent == lcms2.INTENT_RELATIVE_COLORIMETRIC && (cmsio0.cmsGetDeviceClass(hProfile) == lcms2.cmsSigOutputClass) &&
 	    		(cmsio0.cmsGetColorSpace(hProfile) == lcms2.cmsSigCmykData))
 	    {
 	    	return BlackPointUsingPerceptualBlack(BlackPoint, hProfile);
@@ -311,7 +311,7 @@ final class cmssamp
 	// Least Squares Fit of a Quadratic Curve to Data
 	// http://www.personal.psu.edu/jhm/f90/lectures/lsq2.html
 	
-	private static double RootOfLeastSquaresFitQuadraticCurve(int n, double[] x, double[] y) 
+	private static double RootOfLeastSquaresFitQuadraticCurve(int n, double[] x, double[] y)
 	{
 		double sum_x = 0, sum_x2 = 0, sum_x3 = 0, sum_x4 = 0;
 	    double sum_y = 0, sum_yx = 0, sum_yx2 = 0;
@@ -354,7 +354,7 @@ final class cmssamp
 	    	return 0;
 	    }
 	    
-	    // y = t x2 + u x + c 
+	    // y = t x2 + u x + c
 		// x = ( - u + Sqrt( u^2 - 4 t c ) ) / ( 2 t )
 	    disc = res.n[1]*res.n[1] - 4.0 * res.n[0] * res.n[2];
 	    if (disc < 0)
@@ -362,7 +362,7 @@ final class cmssamp
 	    	return -1;
 	    }
 	    
-	    return ( -1.0 * res.n[1] + Math.sqrt( disc )) / (2.0 * res.n[0]);	
+	    return ( -1.0 * res.n[1] + Math.sqrt( disc )) / (2.0 * res.n[0]);
 	}
 	
 	private static boolean IsMonotonic(int n, final double[] Table)
@@ -387,8 +387,8 @@ final class cmssamp
 	    return true;
 	}
 	
-	// Calculates the black point of a destination profile. 
-	// This algorithm comes from the Adobe paper disclosing its black point compensation method. 
+	// Calculates the black point of a destination profile.
+	// This algorithm comes from the Adobe paper disclosing its black point compensation method.
 	public static boolean cmsDetectDestinationBlackPoint(cmsCIEXYZ BlackPoint, cmsHPROFILE hProfile, int Intent, int dwFlags)
 	{
 		int ColorSpace;
@@ -411,7 +411,7 @@ final class cmssamp
 	    	return false;
 		}
 	    
-	    // v4 + perceptual & saturation intents does have its own black point, and it is 
+	    // v4 + perceptual & saturation intents does have its own black point, and it is
 	    // well specified enough to use it. Black point tag is deprecated in V4.
 	    if ((cmsio0.cmsGetEncodedICCversion(hProfile) >= 0x4000000) &&
 	    		(Intent == lcms2.INTENT_PERCEPTUAL || Intent == lcms2.INTENT_SATURATION))
@@ -432,8 +432,8 @@ final class cmssamp
 	    // Check if the profile is lut based and gray, rgb or cmyk (7.2 in Adobe's document)
 	    ColorSpace = cmsio0.cmsGetColorSpace(hProfile);
 	    if (!cmsio1.cmsIsCLUT(hProfile, Intent, lcms2.LCMS_USED_AS_OUTPUT ) ||
-	    		(ColorSpace != lcms2.cmsSigGrayData && 
-	    		ColorSpace != lcms2.cmsSigRgbData && 
+	    		(ColorSpace != lcms2.cmsSigGrayData &&
+	    		ColorSpace != lcms2.cmsSigRgbData &&
 	    		ColorSpace != lcms2.cmsSigCmykData))
 	    {
 	    	// In this case, handle as input case
@@ -492,12 +492,12 @@ final class cmssamp
 	    // Step 3
 	    // ======
 	    
-	    // check if quadratic estimation needs to be done.  
+	    // check if quadratic estimation needs to be done.
 	    if (Intent == lcms2.INTENT_RELATIVE_COLORIMETRIC)
 	    {
 	        // Conceptually, this code tests how close the source l and converted L are to one another in the mid-range
-	        // of the values. If the converted ramp of L values is close enough to a straight line y=x, then InitialLab 
-	        // is good enough to be the DestinationBlackPoint,        
+	        // of the values. If the converted ramp of L values is close enough to a straight line y=x, then InitialLab
+	        // is good enough to be the DestinationBlackPoint,
 	        NearlyStraightMidRange = true;
 	        
 	        for (l=0; l <= 100; l++)
@@ -532,12 +532,12 @@ final class cmssamp
 	    // If no furter checking is needed, we are done
 	    if (NearlyStraightMidRange)
 	    {
-	    	cmspcs.cmsLab2XYZ(null, BlackPoint, InitialLab);          
+	    	cmspcs.cmsLab2XYZ(null, BlackPoint, InitialLab);
 	        cmsxform.cmsDeleteTransform(hRoundTrip);
 	        return true;
 	    }
 	    
-	    // The round-trip curve normally looks like a nearly constant section at the black point, 
+	    // The round-trip curve normally looks like a nearly constant section at the black point,
 	    // with a corner and a nearly straight line to the white point.
 	    
 	    // STEP 4

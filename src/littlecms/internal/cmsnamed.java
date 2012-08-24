@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2010 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ final class cmsnamed
 		return mlu;
 	}
 	
-	// Grows a mempool table for a MLU. Each time this function is called, mempool size is multiplied times two. 
+	// Grows a mempool table for a MLU. Each time this function is called, mempool size is multiplied times two.
 	private static boolean GrowMLUpool(cmsMLU mlu)
 	{
 		int size;
@@ -118,7 +118,7 @@ final class cmsnamed
 		return true;
 	}
 	
-	// Grows a entry table for a MLU. Each time this function is called, table size is multiplied times two. 
+	// Grows a entry table for a MLU. Each time this function is called, table size is multiplied times two.
 	private static boolean GrowMLUtable(cmsMLU mlu)
 	{
 	    int AllocatedEntries;
@@ -148,7 +148,7 @@ final class cmsnamed
 	    return true;
 	}
 	
-	// Search for a specific entry in the structure. Language and Country are used. 
+	// Search for a specific entry in the structure. Language and Country are used.
 	private static int SearchMLUEntry(cmsMLU mlu, short LanguageCode, short CountryCode)
 	{
 	    int i;
@@ -172,7 +172,7 @@ final class cmsnamed
 	    return -1;
 	}
 	
-	// Add a block of characters to the intended MLU. Language and country are specified. 
+	// Add a block of characters to the intended MLU. Language and country are specified.
 	// Only one entry for Language/country pair is allowed.
 	private static boolean AddMLUBlock(cmsMLU mlu, int size, final char[] Block, short LanguageCode, short CountryCode)
 	{
@@ -244,7 +244,7 @@ final class cmsnamed
 		return BitConverter.toInt16(values, 0);
 	}
 	
-	// Add an ASCII entry. 
+	// Add an ASCII entry.
 	public static boolean cmsMLUsetASCII(cmsMLU mlu, final String LanguageCode, final String CountryCode, final String ASCIIString)
 	{
 	    int i, len = Utility.strlen(ASCIIString)+1;
@@ -411,7 +411,7 @@ final class cmsnamed
 		}
 	}
 	
-	// The algorithm first searches for an exact match of country and language, if not found it uses 
+	// The algorithm first searches for an exact match of country and language, if not found it uses
 	// the Language. If none is found, first entry is used instead.
 	private static String _cmsMLUgetWide(final cmsMLU mlu, int[] len, short LanguageCode, short CountryCode, short[] UsedLanguageCode, short[] UsedCountryCode)
 	{
@@ -572,7 +572,7 @@ final class cmsnamed
 	    return ASCIIlen + 1;
 	}
 	
-	// Obtain a wide representation of the MLU, on depending on current locale settings 
+	// Obtain a wide representation of the MLU, on depending on current locale settings
 	public static int cmsMLUgetWide(cmsMLU mlu, final String LanguageCode, final String CountryCode, StringBuffer Buffer, int BufferSize)
 	{
 	    final String Wide;
@@ -676,7 +676,7 @@ final class cmsnamed
 	
 	// Grow the list to keep at least NumElements
 	private static boolean GrowNamedColorList(cmsNAMEDCOLORLIST v)
-	{           
+	{
 	    int size;
 	    _cmsNAMEDCOLOR[] NewPtr;
 	    
@@ -744,7 +744,7 @@ final class cmsnamed
 	
 	// Free a list
 	public static void cmsFreeNamedColorList(cmsNAMEDCOLORLIST v)
-	{               
+	{
 	    if (v.List != null)
 	    {
 	    	v.List = null;
@@ -839,7 +839,7 @@ final class cmsnamed
 	    return true;
 	}
 	
-	// Returns number of elements 
+	// Returns number of elements
 	public static int cmsNamedColorCount(final cmsNAMEDCOLORLIST NamedColorList)
 	{
 		if (NamedColorList == null)
@@ -850,7 +850,7 @@ final class cmsnamed
 	}
 	
 	// Info aboout a given color
-	public static boolean cmsNamedColorInfo(final cmsNAMEDCOLORLIST NamedColorList, int nColor, StringBuffer Name, StringBuffer Prefix, StringBuffer Suffix, 
+	public static boolean cmsNamedColorInfo(final cmsNAMEDCOLORLIST NamedColorList, int nColor, StringBuffer Name, StringBuffer Prefix, StringBuffer Suffix,
 			short[] PCS, short[] Colorant)
 	{
 		String str;
@@ -895,7 +895,7 @@ final class cmsnamed
 	
 	// Search for a given color name (no prefix or suffix)
 	public static int cmsNamedColorIndex(final cmsNAMEDCOLORLIST NamedColorList, final String Name)
-	{    
+	{
 	    int i, n;
 	    
 	    if (NamedColorList == null)
@@ -971,7 +971,7 @@ final class cmsnamed
 		    {
 		        for (j=0; j < NamedColorList.ColorantCount; j++)
 		        {
-		        	Out[j] = (NamedColorList.List[index].DeviceColorant[j] * (1f / 65535f));      
+		        	Out[j] = (NamedColorList.List[index].DeviceColorant[j] * (1f / 65535f));
 		        }
 		    }
 		}
@@ -980,8 +980,8 @@ final class cmsnamed
 	// Named color lookup element
 	public static cmsStage _cmsStageAllocNamedColor(cmsNAMEDCOLORLIST NamedColorList, boolean UsePCS)
 	{
-	    return cmslut._cmsStageAllocPlaceholder(NamedColorList.ContextID, 
-			                           lcms2.cmsSigNamedColorElemType, 
+	    return cmslut._cmsStageAllocPlaceholder(NamedColorList.ContextID,
+			                           lcms2.cmsSigNamedColorElemType,
 			                           1, UsePCS ? 3 : NamedColorList.ColorantCount,
 					                   UsePCS ? EvalNamedColorPCS : EvalNamedColor,
 									   DupNamedColorList,

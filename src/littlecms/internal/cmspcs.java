@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2010 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -195,7 +195,7 @@ final class cmspcs
 	
 	// the a/b part
 	private static double ab2float2(short v)
-	{   
+	{
 		return ((v & 0xFFFF) / 256.0) - 128.0;
 	}
 	
@@ -392,12 +392,12 @@ final class cmspcs
 	    
 	    Lab.L = LCh.L;
 	    Lab.a = LCh.C * Math.cos(h);
-	    Lab.b = LCh.C * Math.sin(h);          
+	    Lab.b = LCh.C * Math.sin(h);
 	}
 	
 	// In XYZ All 3 components are encoded using 1.15 fixed point
 	private static short XYZ2Fix(double d)
-	{     
+	{
 	    return lcms2_internal._cmsQuickSaturateWord(d * 32768.0);
 	}
 	
@@ -409,7 +409,7 @@ final class cmspcs
 	    xyz.Y = fXYZ.Y;
 	    xyz.Z = fXYZ.Z;
 	    
-	    // Clamp to encodeable values.     
+	    // Clamp to encodeable values.
 	    if (xyz.Y <= 0)
 	    {
 	        xyz.X = 0;
@@ -449,7 +449,7 @@ final class cmspcs
 	    
 	    XYZ[0] = XYZ2Fix(xyz.X);
 	    XYZ[1] = XYZ2Fix(xyz.Y);
-	    XYZ[2] = XYZ2Fix(xyz.Z);        
+	    XYZ[2] = XYZ2Fix(xyz.Z);
 	}
 	
 	//  To convert from Fixed 1.15 point to cmsFloat64Number
@@ -487,7 +487,7 @@ final class cmspcs
 //#endif
 	}
 	
-	// Return the CIE94 Delta E 
+	// Return the CIE94 Delta E
 	public static double cmsCIE94DeltaE(final cmsCIELab Lab1, final cmsCIELab Lab2)
 	{
 	    cmsCIELCh LCh1 = new cmsCIELCh(), LCh2 = new cmsCIELCh();
@@ -571,7 +571,7 @@ final class cmspcs
 	    
 	    dc   = 0.035 * AveC / (1 + 0.00365 * AveC)+0.521;
 	    g    = Math.sqrt(Sqr(Sqr(AveC))/(Sqr(Sqr(AveC))+14000));
-	    t    = 0.627+(0.055*Math.cos((Aveh-254)/(180/lcms2_internal.M_PI))-       
+	    t    = 0.627+(0.055*Math.cos((Aveh-254)/(180/lcms2_internal.M_PI))-
 	           0.040*Math.cos((2*Aveh-136)/(180/lcms2_internal.M_PI))+
 	           0.070*Math.cos((3*Aveh-31)/(180/lcms2_internal.M_PI))+
 	           0.049*Math.cos((4*Aveh+114)/(180/lcms2_internal.M_PI))-
@@ -634,7 +634,7 @@ final class cmspcs
 		
 		if (Lab1.L<16)
 		{
-			sl = 0.511; 
+			sl = 0.511;
 		}
 		
 		f   = Math.sqrt((LCh1.C * LCh1.C * LCh1.C * LCh1.C)/((LCh1.C * LCh1.C * LCh1.C * LCh1.C)+1900));
@@ -644,7 +644,7 @@ final class cmspcs
 		return cmc;
 	}
 	
-	// dE2000 The weightings KL, KC and KH can be modified to reflect the relative 
+	// dE2000 The weightings KL, KC and KH can be modified to reflect the relative
 	// importance of lightness, chroma and hue in different industrial applications
 	public static double cmsCIE2000DeltaE(final cmsCIELab Lab1, final cmsCIELab Lab2, double Kl, double Kc, double Kh)
 	{
@@ -680,12 +680,12 @@ final class cmspcs
 	    double hps_plus_hp  = h_ps + h_p;
 	    double hps_minus_hp = h_ps - h_p;
 	    
-	    double meanh_p = Math.abs(hps_minus_hp) <= 180.000001 ? (hps_plus_hp)/2 : 
-	                            (hps_plus_hp) < 360 ? (hps_plus_hp + 360)/2 : 
+	    double meanh_p = Math.abs(hps_minus_hp) <= 180.000001 ? (hps_plus_hp)/2 :
+	                            (hps_plus_hp) < 360 ? (hps_plus_hp + 360)/2 :
 	                                                 (hps_plus_hp - 360)/2;
 	                            
 	    double delta_h = (hps_minus_hp) <= -180.000001 ?  (hps_minus_hp + 360) :
-	                            (hps_minus_hp) > 180 ? (hps_minus_hp - 360) : 
+	                            (hps_minus_hp) > 180 ? (hps_minus_hp - 360) :
 	                                                    (hps_minus_hp);
 	    double delta_L = (Ls - L1);
 	    double delta_C = (C_ps - C_p );
@@ -693,9 +693,9 @@ final class cmspcs
 	    
 	    double delta_H =2 * Math.sqrt(C_ps*C_p) * Math.sin(RADIANS(delta_h) / 2);
 	    
-	    double T = 1 - 0.17 * Math.cos(RADIANS(meanh_p-30)) 
-	                 + 0.24 * Math.cos(RADIANS(2*meanh_p))  
-	                 + 0.32 * Math.cos(RADIANS(3*meanh_p + 6)) 
+	    double T = 1 - 0.17 * Math.cos(RADIANS(meanh_p-30))
+	                 + 0.24 * Math.cos(RADIANS(2*meanh_p))
+	                 + 0.32 * Math.cos(RADIANS(3*meanh_p + 6))
 	                 - 0.2  * Math.cos(RADIANS(4*meanh_p - 63));
 	    
 	    double Sl = 1 + (0.015 * Sqr((Ls + L1) /2- 50) )/ Math.sqrt(20 + Sqr( (Ls+L1)/2 - 50) );
@@ -713,9 +713,9 @@ final class cmspcs
 	    
 	    double Rt = -Math.sin(2 * RADIANS(delta_ro)) * Rc;
 	    
-	    double deltaE00 = Math.sqrt( Sqr(delta_L /(Sl * Kl)) + 
-	                            Sqr(delta_C/(Sc * Kc))  + 
-	                            Sqr(delta_H/(Sh * Kh))  + 
+	    double deltaE00 = Math.sqrt( Sqr(delta_L /(Sl * Kl)) +
+	                            Sqr(delta_C/(Sc * Kc))  +
+	                            Sqr(delta_H/(Sh * Kh))  +
 	                            Rt*(delta_C/(Sc * Kc)) * (delta_H / (Sh * Kh)));
 	    
 	    return deltaE00;
@@ -749,7 +749,7 @@ final class cmspcs
 	        	return 23;
 	        }
 	        
-	        return 49; // 49 for RGB and others        
+	        return 49; // 49 for RGB and others
 	    }
 	    
 	    // LowResPrecal is lower resolution
@@ -779,7 +779,7 @@ final class cmspcs
 	    	return 17; // 17 for CMYK
 	    }
 	    
-	    return 33; // 33 for RGB   
+	    return 33; // 33 for RGB
 	}
 	
 	public static boolean _cmsEndPointsBySpace(int Space, short[] White, short[] Black, int[] nOutputs)
@@ -1066,10 +1066,10 @@ final class cmspcs
 		    case lcms2.cmsSigLuvData:
 		    case lcms2.cmsSigYCbCrData:
 		    case lcms2.cmsSigYxyData:
-		    case lcms2.cmsSigRgbData:   
+		    case lcms2.cmsSigRgbData:
 		    case lcms2.cmsSigHsvData:
 		    case lcms2.cmsSigHlsData:
-		    case lcms2.cmsSigCmyData: 
+		    case lcms2.cmsSigCmyData:
 		    case lcms2.cmsSig3colorData:
 		    	return 3;
 		    case lcms2.cmsSigLuvKData:
@@ -1079,7 +1079,7 @@ final class cmspcs
 		    case lcms2.cmsSigMCH5Data:
 		    case lcms2.cmsSig5colorData:
 		    	return 5;
-		    case lcms2.cmsSigMCH6Data:   
+		    case lcms2.cmsSigMCH6Data:
 		    case lcms2.cmsSig6colorData:
 		    	return 6;
 		    case lcms2.cmsSigMCH7Data:

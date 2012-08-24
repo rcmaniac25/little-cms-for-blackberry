@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2010 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -38,14 +38,14 @@ import littlecms.internal.lcms2_plugin.cmsPluginBase;
 import littlecms.internal.lcms2_plugin.cmsPluginParametricCurves;
 
 /**
- * Tone curves are powerful constructs that can contain curves specified in diverse ways. 
+ * Tone curves are powerful constructs that can contain curves specified in diverse ways.
  * The curve is stored in segments, where each segment can be sampled or specified by parameters.
- * a 16.bit simplification of the *whole* curve is kept for optimization purposes. For float operation, 
- * each segment is evaluated separately. Plug-ins may be used to define new parametric schemes, 
- * each plug-in may define up to MAX_TYPES_IN_LCMS_PLUGIN functions types. For defining a function, 
+ * a 16.bit simplification of the *whole* curve is kept for optimization purposes. For float operation,
+ * each segment is evaluated separately. Plug-ins may be used to define new parametric schemes,
+ * each plug-in may define up to MAX_TYPES_IN_LCMS_PLUGIN functions types. For defining a function,
  * the plug-in should provide the type id, how many parameters each type has, and a pointer to
- * a procedure that evaluates the function. In the case of reverse evaluation, the evaluator will 
- * be called with the type id as a negative value, and a sampled version of the reversed curve 
+ * a procedure that evaluates the function. In the case of reverse evaluation, the evaluator will
+ * be called with the type id as a negative value, and a sampled version of the reversed curve
  * will be built.
  */
 //#ifdef CMS_INTERNAL_ACCESS & DEBUG
@@ -75,7 +75,7 @@ final class cmsgamma
 	    	this.ParameterCount = new int[lcms2_plugin.MAX_TYPES_IN_LCMS_PLUGIN];
 	    }
 	    
-	    public _cmsParametricCurvesCollection(int nFunctions, int[] FunctionTypes, int[] ParameterCount, cmsParametricCurveEvaluator Evaluator, 
+	    public _cmsParametricCurvesCollection(int nFunctions, int[] FunctionTypes, int[] ParameterCount, cmsParametricCurveEvaluator Evaluator,
 	    		_cmsParametricCurvesCollection Next)
 	    {
 	    	this();
@@ -179,7 +179,7 @@ final class cmsgamma
 	    return null;
 	}
 	
-	// Low level allocate, which takes care of memory details. nEntries may be zero, and in this case 
+	// Low level allocate, which takes care of memory details. nEntries may be zero, and in this case
 	// no optimation curve is computed. nSegments may also be zero in the inverse case, where only the
 	// optimization curve is given. Both features simultaneously is an error
 	private static cmsToneCurve AllocateToneCurveStruct(cmsContext ContextID, int nEntries, int nSegments, final cmsCurveSegment[] Segments, final short[] Values)
@@ -406,7 +406,7 @@ final class cmsgamma
 			         
 			         if (Val < 0)
 			         {
-			        	 Val = 0;                            
+			        	 Val = 0;
 			         }
 			         break;
 			         
@@ -445,7 +445,7 @@ final class cmsgamma
 			        
 			    // Type 3 reversed
 			    // X=((Y-c)^1/g - b)/a      | (Y>=c)
-			    // X=-b/a                   | (Y<c) 
+			    // X=-b/a                   | (Y<c)
 			    case -3:
 			        if (R >= Params[3])
 			        {
@@ -548,7 +548,7 @@ final class cmsgamma
 			            {
 			            	Val = 0;
 			            }
-			        }        
+			        }
 			        else
 			        {
 			        	Val = R*Params[3] + Params[6];
@@ -603,7 +603,7 @@ final class cmsgamma
 			        }
 			        break;
 			        
-			    // ((Y - c) ^1/Gamma - b) / a                        
+			    // ((Y - c) ^1/Gamma - b) / a
 			    case -6:
 			        e = R - Params[3];
 			        if (e < 0)
@@ -639,7 +639,7 @@ final class cmsgamma
 			       
 			    // (Y - d) / a = log(b * X ^Gamma + c)
 			    // pow(10, (Y-d) / a) = b * X ^Gamma + c
-			    // pow((pow(10, (Y-d) / a) - c) / b, 1/g) = X 
+			    // pow((pow(10, (Y-d) / a) - c) / b, 1/g) = X
 			    case -7:
 //#ifndef BlackBerrySDK4.5.0
 			    	Val = MathUtilities.pow((MathUtilities.pow(10.0, (R-Params[4]) / Params[1]) - Params[3]) / Params[2], 1.0 / Params[0]);
@@ -648,7 +648,7 @@ final class cmsgamma
 //#endif
 			    	break;
 			       
-			   //Y = a * b^(c*X+d) + e          
+			   //Y = a * b^(c*X+d) + e
 			   case 8:
 //#ifndef BlackBerrySDK4.5.0
 				   Val = (Params[0] * MathUtilities.pow(Params[1], Params[2] * R + Params[3]) + Params[4]);
@@ -667,11 +667,11 @@ final class cmsgamma
 		    	   }
 			       else
 			       {
-			    	   Val = (MathUtilities.log(disc / Params[0]) / MathUtilities.log(Params[1]) - Params[3]) / Params[2];         
+			    	   Val = (MathUtilities.log(disc / Params[0]) / MathUtilities.log(Params[1]) - Params[3]) / Params[2];
 			       }
 			       break;
 			       
-			   // S-Shaped: (1 - (1-x)^1/g)^1/g                    
+			   // S-Shaped: (1 - (1-x)^1/g)^1/g
 			   case 108:
 //#ifndef BlackBerrySDK4.5.0
 				   Val = MathUtilities.pow(1.0 - MathUtilities.pow(1 - R, 1/Params[0]), 1/Params[0]);
@@ -715,7 +715,7 @@ final class cmsgamma
 	private static _cmsParametricCurvesCollection ParametricCurves;
 	
 	// Evaluate a segmented funtion for a single value. Return -1 if no valid segment found .
-	// If fn type is 0, perform an interpolation on the table 
+	// If fn type is 0, perform an interpolation on the table
 	private static double EvalSegmentedFn(final cmsToneCurve g, double R)
 	{
 	    int i;
@@ -787,7 +787,7 @@ final class cmsgamma
 	    
 	    lcms2_internal._cmsAssert(Segments != null, "Segments != null");
 	    
-	    // Optimizatin for identity curves. 
+	    // Optimizatin for identity curves.
 	    if (nSegments == 1 && Segments[0].Type == 1)
 	    {
 	    	nGridPoints = EntriesByGamma(Segments[0].Params[0]);
@@ -859,7 +859,7 @@ final class cmsgamma
 	    
 	    if (c == null)
 	    {
-	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSGAMMA_INVALID_CURVE_TYPE), new Object[]{new Integer(Type)});     
+	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSGAMMA_INVALID_CURVE_TYPE), new Object[]{new Integer(Type)});
 	        return null;
 	    }
 	    
@@ -962,7 +962,7 @@ final class cmsgamma
 	
 	// Duplicate a gamma table
 	public static cmsToneCurve cmsDupToneCurve(final cmsToneCurve In)
-	{   
+	{
 	    if (In == null)
 	    {
 	    	return null;
@@ -972,9 +972,9 @@ final class cmsgamma
 	}
 	
 	// Joins two curves for X and Y. Curves should be monotonic.
-	// We want to get 
+	// We want to get
 	//
-	//	      y = Y^-1(X(t)) 
+	//	      y = Y^-1(X(t))
 	//
 	public static cmsToneCurve cmsJoinToneCurve(cmsContext ContextID, final cmsToneCurve X, final cmsToneCurve Y, int nResultingPoints)
 	{
@@ -1014,9 +1014,9 @@ final class cmsgamma
 	    return out;
 	}
 	
-	// Get the surrounding nodes. This is tricky on non-monotonic tables 
+	// Get the surrounding nodes. This is tricky on non-monotonic tables
 	private static int GetInterval(double In, final short[] LutTable, final cmsInterpParams p)
-	{   
+	{
 	    int i;
 	    int y0, y1;
 	    
@@ -1026,13 +1026,13 @@ final class cmsgamma
 	    	return -1;
 	    }
 	    
-	    // Let's see if ascending or descending. 
+	    // Let's see if ascending or descending.
 	    if ((LutTable[0] & 0xFFFF) < (LutTable[p.Domain[0]] & 0xFFFF))
 	    {
 	        // Table is overall ascending
 	        for (i=p.Domain[0]-1; i >=0; --i)
 	        {
-	            y0 = (LutTable[i] & 0xFFFF); 
+	            y0 = (LutTable[i] & 0xFFFF);
 	            y1 = (LutTable[i+1] & 0xFFFF);
 	            
 	            if (y0 <= y1) // Increasing
@@ -1059,7 +1059,7 @@ final class cmsgamma
 	        // Table is overall descending
 	        for (i=0; i < p.Domain[0]; i++)
 	        {
-	            y0 = (LutTable[i] & 0xFFFF); 
+	            y0 = (LutTable[i] & 0xFFFF);
 	            y1 = (LutTable[i+1] & 0xFFFF);
 	            
 	            if (y0 <= y1) // Increasing
@@ -1098,12 +1098,12 @@ final class cmsgamma
 	    // Try to reverse it analytically whatever possible
 	    if (InCurve.nSegments == 1 && InCurve.Segments[0].Type > 0 && InCurve.Segments[0].Type <= 5)
 	    {
-	        return cmsBuildParametricToneCurve(InCurve.InterpParams.ContextID, 
-	                                       -(InCurve.Segments[0].Type), 
+	        return cmsBuildParametricToneCurve(InCurve.InterpParams.ContextID,
+	                                       -(InCurve.Segments[0].Type),
 	                                       InCurve.Segments[0].Params);
 	    }
 	    
-	    // Nope, reverse the table. 
+	    // Nope, reverse the table.
 	    out = cmsBuildTabulatedToneCurve16(InCurve.InterpParams.ContextID, nResultSamples, null);
 	    if (out == null)
 	    {
@@ -1118,12 +1118,12 @@ final class cmsgamma
 	    {
 	        y = (i * 65535.0) / (nResultSamples - 1);
 	        
-	        // Find interval in which y is within. 
+	        // Find interval in which y is within.
 	        j = GetInterval(y, InCurve.Table16, InCurve.InterpParams);
 	        if (j >= 0)
 	        {
 	            // Get limits of interval
-	            x1 = (InCurve.Table16[j] & 0xFFFF); 
+	            x1 = (InCurve.Table16[j] & 0xFFFF);
 	            x2 = (InCurve.Table16[j+1] & 0xFFFF);
 	            
 	            y1 = (j * 65535.0) / (InCurve.nEntries - 1);
@@ -1137,7 +1137,7 @@ final class cmsgamma
 	            }
 	            else
 	            {
-	                // Interpolate      
+	                // Interpolate
 	                a = (y2 - y1) / (x2 - x1);
 	                b = y2 - a * x2;
 	            }
@@ -1212,7 +1212,7 @@ final class cmsgamma
 	    return true;
 	}
 	
-	// Smooths a curve sampled at regular intervals. 
+	// Smooths a curve sampled at regular intervals.
 	public static boolean cmsSmoothToneCurve(cmsToneCurve Tab, double lambda)
 	{
 	    float[] w = new float[MAX_NODES_IN_CURVE], y = new float[MAX_NODES_IN_CURVE], z = new float[MAX_NODES_IN_CURVE];
@@ -1418,21 +1418,21 @@ final class cmsgamma
 	}
 	
 	// Least squares fitting.
-	// A mathematical procedure for finding the best-fitting curve to a given set of points by 
-	// minimizing the sum of the squares of the offsets ("the residuals") of the points from the curve. 
-	// The sum of the squares of the offsets is used instead of the offset absolute values because 
-	// this allows the residuals to be treated as a continuous differentiable quantity. 
+	// A mathematical procedure for finding the best-fitting curve to a given set of points by
+	// minimizing the sum of the squares of the offsets ("the residuals") of the points from the curve.
+	// The sum of the squares of the offsets is used instead of the offset absolute values because
+	// this allows the residuals to be treated as a continuous differentiable quantity.
 	//
 	// y = f(x) = x ^ g
 	//
 	// R  = (yi - (xi^g))
 	// R2 = (yi - (xi^g))2
 	// SUM R2 = SUM (yi - (xi^g))2
-	// 
-	// dR2/dg = -2 SUM x^g log(x)(y - x^g)    
-	// solving for dR2/dg = 0 
-	// 
-	// g = 1/n * SUM(log(y) / log(x)) 
+	//
+	// dR2/dg = -2 SUM x^g log(x)(y - x^g)
+	// solving for dR2/dg = 0
+	//
+	// g = 1/n * SUM(log(y) / log(x))
 	
 	public static double cmsEstimateGamma(final cmsToneCurve t, double Precision)
 	{
@@ -1444,13 +1444,13 @@ final class cmsgamma
 	    
 	    sum = sum2 = n = 0;
 	    
-	    // Excluding endpoints   
+	    // Excluding endpoints
 	    for (i=1; i < (MAX_NODES_IN_CURVE-1); i++)
 	    {
 	        x = ((double)i) / (MAX_NODES_IN_CURVE-1);
 	        y = cmsEvalToneCurveFloat(t, (float)x);
 	        
-	        // Avoid 7% on lower part to prevent 
+	        // Avoid 7% on lower part to prevent
 	        // artifacts due to linear ramps
 	        
 	        if (y > 0. && y < 1. && x > 0.07)

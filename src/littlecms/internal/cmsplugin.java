@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2010 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ final class cmsplugin
 
 	    if (io.Read.run(io, tmp, /*sizeof(cmsUInt8Number)*/1, 1) != 1)
 	    {
-	    	return false;   
+	    	return false;
 	    }
 	    
 	    if (n != null)
@@ -269,7 +269,7 @@ final class cmsplugin
 	    
 	    if (io.Read.run(io, tmp, /*sizeof(cmsFloat32Number)*/4, 1) != 1)
 	    {
-	    	return false;   
+	    	return false;
 	    }
 	    
 	    if (n != null)
@@ -305,7 +305,7 @@ final class cmsplugin
 	    
 	    if (io.Read.run(io, tmp, /*sizeof(cmsUInt32Number)*/4, 1) != 1)
 	    {
-	    	return false;   
+	    	return false;
 	    }
 	    
 	    if (n != null)
@@ -375,7 +375,7 @@ final class cmsplugin
 	    tmp = BitConverter.getBytes(n);
 	    if (!io.Write.run(io, /*sizeof(cmsUInt16Number)*/2, tmp))
 	    {
-	    	return false;   
+	    	return false;
 	    }
 	    
 	    return true;
@@ -445,7 +445,7 @@ final class cmsplugin
 	    tmp = BitConverter.getBytes(Float.floatToIntBits(n));
 	    if (!io.Write.run(io, /*sizeof(cmsUInt32Number)*/4, tmp))
 	    {
-	    	return false;   
+	    	return false;
 	    }
 	    
 	    return true;
@@ -472,7 +472,7 @@ final class cmsplugin
 	    tmp = BitConverter.getBytes(_cmsDoubleTo15Fixed16(n));
 	    if (!io.Write.run(io, /*sizeof(cmsUInt32Number)*/4, tmp))
 	    {
-	    	return false;   
+	    	return false;
 	    }
 	    
 	    return true;
@@ -506,7 +506,7 @@ final class cmsplugin
 	public static short _cmsDoubleTo8Fixed8(double val)
 	{
 	    int GammaFixed32 = _cmsDoubleTo15Fixed16(val);
-	    return  (short)((GammaFixed32 >> 8) & 0xFFFF);       
+	    return  (short)((GammaFixed32 >> 8) & 0xFFFF);
 	}
 	
 	// from Fixed point 15.16 to double
@@ -527,7 +527,7 @@ final class cmsplugin
 	    return sign * floater;
 	}
 	
-	// from double to Fixed point 15.16 
+	// from double to Fixed point 15.16
 	public static int _cmsDoubleTo15Fixed16(double v)
 	{
 	    return ((int)Math.floor((v) * 65536.0 + 0.5));
@@ -707,7 +707,7 @@ final class cmsplugin
 	    	
 			if (Plugin.ExpectedVersion > lcms2.LCMS_VERSION)
 			{
-				cmserr.cmsSignalError(null, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSPLUGIN_NEED_HIGHER_VERSION), 
+				cmserr.cmsSignalError(null, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSPLUGIN_NEED_HIGHER_VERSION),
 						new Object[]{new Integer(Plugin.ExpectedVersion), new Integer(lcms2.LCMS_VERSION)});
 				return false;
 			}
@@ -775,7 +775,7 @@ final class cmsplugin
                     }
                     break;
                 default:
-                    cmserr.cmsSignalError(null, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSPLUGIN_UNRECOGNIZED_PLUGIN_TYPE), 
+                    cmserr.cmsSignalError(null, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSPLUGIN_UNRECOGNIZED_PLUGIN_TYPE),
                     		new Object[]{new Integer(Plugin.Type)});
                     return false;
             }

@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2010 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -138,7 +138,7 @@ final class cmswtpnt
 	}
 	
 	private static final ISOTEMPERATURE[] isotempdata = {
-	//  {Mirek, Ut,       Vt,      Tt      } 
+	//  {Mirek, Ut,       Vt,      Tt      }
 	    new ISOTEMPERATURE(0,     0.18006,  0.26352,  -0.24341),
 	    new ISOTEMPERATURE(10,    0.18066,  0.26589,  -0.25479),
 	    new ISOTEMPERATURE(20,    0.18133,  0.26846,  -0.26876),
@@ -189,7 +189,7 @@ final class cmswtpnt
 		xs = WhitePoint.x;
 		ys = WhitePoint.y;
 		
-		// convert (x,y) to CIE 1960 (u,WhitePoint) 
+		// convert (x,y) to CIE 1960 (u,WhitePoint)
 		
 		us = (2*xs) / (-xs + 6*ys + 1.5);
 		vs = (3*ys) / (-xs + 6*ys + 1.5);
@@ -218,7 +218,7 @@ final class cmswtpnt
 		return false;
 	}
 	
-	// Compute chromatic adaptation matrix using Chad as cone matrix 
+	// Compute chromatic adaptation matrix using Chad as cone matrix
 	
 	private static boolean ComputeChromaticAdaptation(cmsMAT3 Conversion, final cmsCIEXYZ SourceWhitePoint, final cmsCIEXYZ DestWhitePoint, final cmsMAT3 Chad)
 	{
@@ -268,7 +268,7 @@ final class cmswtpnt
 			ConeMatrix = LamRigg;
 		}
 		
-		return ComputeChromaticAdaptation(r, FromIll, ToIll, ConeMatrix);	
+		return ComputeChromaticAdaptation(r, FromIll, ToIll, ConeMatrix);
 	}
 	
 	// Same as anterior, but assuming D50 destination. White point is given in xyY
@@ -351,7 +351,7 @@ final class cmswtpnt
 	}
 	
 	// Adapts a color to a given illuminant. Original color is expected to have
-	// a SourceWhitePt white point. 
+	// a SourceWhitePt white point.
 	public static boolean cmsAdaptToIlluminant(cmsCIEXYZ Result, final cmsCIEXYZ SourceWhitePt, final cmsCIEXYZ Illuminant, final cmsCIEXYZ Value)
 	{
 		cmsMAT3 Bradford = new cmsMAT3();

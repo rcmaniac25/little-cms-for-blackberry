@@ -1,9 +1,9 @@
 //#preprocessor
 
-/* 
+/*
  * TestApp.java
- * 
- * © Rebuild, 2004-2011
+ *
+ * (c) Rebuild, 2004-2011
  * Confidential and proprietary
  */
 package littlecms.internal;
@@ -325,7 +325,7 @@ public final class TestApp extends UiApplication
 		public long HiSparc;
 	}
 	
-	// This is a fake thread descriptor used to check thread integrity. 
+	// This is a fake thread descriptor used to check thread integrity.
 	// Basically it returns a different threadID each time it is called.
 	// Then the memory management replacement functions does check if each
 	// free() is being called with same ContextID used on malloc()
@@ -555,11 +555,11 @@ public final class TestApp extends UiApplication
 	        
 	        if (SimultaneousErrors > 1)
 	        {
-	        	Utility.fprintf(print, "\tMore than one (%d) errors were reported\n", new Object[]{new Integer(SimultaneousErrors)}); 
+	        	Utility.fprintf(print, "\tMore than one (%d) errors were reported\n", new Object[]{new Integer(SimultaneousErrors)});
 	        }
 	        
 	        TotalFail++;
-	    }   
+	    }
 	    print.flush();
 	}
 	
@@ -595,8 +595,8 @@ public final class TestApp extends UiApplication
 	// -------------------------------------------------------------------------------------------------
 
 
-	// Used to perform several checks. 
-	// The space used is a clone of a well-known commercial 
+	// Used to perform several checks.
+	// The space used is a clone of a well-known commercial
 	// color space which I will name "Above RGB"
 	private static cmsHPROFILE Create_AboveRGB()
 	{
@@ -693,7 +693,7 @@ public final class TestApp extends UiApplication
 	    return hProfile;
 	}
 	
-	// Create a fake CMYK profile, without any other requeriment that being coarse CMYK. 
+	// Create a fake CMYK profile, without any other requeriment that being coarse CMYK.
 	// DONT USE THIS PROFILE FOR ANYTHING, IT IS USELESS BUT FOR TESTING PURPOSES.
 	private static class FakeCMYKParams
 	{
@@ -732,7 +732,7 @@ public final class TestApp extends UiApplication
 		    
 		    k = (c < m ? Math.min(c, y) : Math.min(m, y));
 		    
-		    // NONSENSE WARNING!: I'm doing this just because this is a test 
+		    // NONSENSE WARNING!: I'm doing this just because this is a test
 		    // profile that may have ink limit up to 400%. There is no UCR here
 		    // so the profile is basically useless for anything but testing.
 		    
@@ -776,7 +776,7 @@ public final class TestApp extends UiApplication
 		        {
 		            rgb[0] = Clip((1 - c) * (1 - k));
 		            rgb[1] = Clip((1 - m) * (1 - k));
-		            rgb[2] = Clip((1 - y) * (1 - k));       
+		            rgb[2] = Clip((1 - y) * (1 - k));
 		        }
 		    }
 		    
@@ -842,7 +842,7 @@ public final class TestApp extends UiApplication
 	    	return null;
 	    }
 	    
-	    lcms2.cmsPipelineInsertStage(BToA0, lcms2.cmsAT_BEGIN, lcms2_internal._cmsStageAllocIdentityCurves(ContextID, 3)); 
+	    lcms2.cmsPipelineInsertStage(BToA0, lcms2.cmsAT_BEGIN, lcms2_internal._cmsStageAllocIdentityCurves(ContextID, 3));
 	    lcms2.cmsPipelineInsertStage(BToA0, lcms2.cmsAT_END, CLUT);
 	    lcms2.cmsPipelineInsertStage(BToA0, lcms2.cmsAT_END, lcms2_internal._cmsStageAllocIdentityCurves(ContextID, 4));
 	    
@@ -867,7 +867,7 @@ public final class TestApp extends UiApplication
 	    	return null;
 	    }
 	    
-	    lcms2.cmsPipelineInsertStage(AToB0, lcms2.cmsAT_BEGIN, lcms2_internal._cmsStageAllocIdentityCurves(ContextID, 4)); 
+	    lcms2.cmsPipelineInsertStage(AToB0, lcms2.cmsAT_BEGIN, lcms2_internal._cmsStageAllocIdentityCurves(ContextID, 4));
 	    lcms2.cmsPipelineInsertStage(AToB0, lcms2.cmsAT_END, CLUT);
 	    lcms2.cmsPipelineInsertStage(AToB0, lcms2.cmsAT_END, lcms2_internal._cmsStageAllocIdentityCurves(ContextID, 3));
 	    
@@ -886,7 +886,7 @@ public final class TestApp extends UiApplication
 	    lcms2.cmsLinkTag(hICC, lcms2.cmsSigBToA1Tag, lcms2.cmsSigBToA0Tag);
 	    lcms2.cmsLinkTag(hICC, lcms2.cmsSigBToA2Tag, lcms2.cmsSigBToA0Tag);
 	    
-	    return hICC;    
+	    return hICC;
 	}
 	
 	// Does create several profiles for latter use------------------------------------------------------------------------------------------------
@@ -920,7 +920,7 @@ public final class TestApp extends UiApplication
 	    return 1;
 	}
 	
-	// This test checks the ability of lcms2 to save its built-ins as valid profiles. 
+	// This test checks the ability of lcms2 to save its built-ins as valid profiles.
 	// It does not check the functionality of such profiles
 	private static final TestFn CreateTestProfiles = new TestFn()
 	{
@@ -1188,7 +1188,7 @@ public final class TestApp extends UiApplication
 		    
 		    if (!IsOk)
 		    {
-		        Fail("\nOOOPPSS! You have CMS_USE_BIG_ENDIAN toggle misconfigured!\n\n" + 
+		        Fail("\nOOOPPSS! You have CMS_USE_BIG_ENDIAN toggle misconfigured!\n\n" +
 		            "Please, edit lcms2.h and %s the CMS_USE_BIG_ENDIAN toggle.\n", new Object[]{BigEndian? "uncomment" : "comment"});
 		        return 0;
 		    }
@@ -1239,9 +1239,9 @@ public final class TestApp extends UiApplication
 	
 	// -------------------------------------------------------------------------------------------------
 	
-	// Precision stuff. 
+	// Precision stuff.
 	
-	// On 15.16 fixed point, this is the maximum we can obtain. Remember ICC profiles have storage limits on this number 
+	// On 15.16 fixed point, this is the maximum we can obtain. Remember ICC profiles have storage limits on this number
 	private static final double FIXED_PRECISION_15_16 = (1.0 / 65535.0);
 	
 	// On 8.8 fixed point, that is the max we can obtain.
@@ -1272,7 +1272,7 @@ public final class TestApp extends UiApplication
 	}
 	
 	private static boolean IsGoodFixed15_16(final String title, double in, double out)
-	{   
+	{
 	    return IsGoodVal(title, in, out, FIXED_PRECISION_15_16);
 	}
 	
@@ -1431,7 +1431,7 @@ public final class TestApp extends UiApplication
 	// nNodesToCheck = number on nodes to check
 	// Down = Create decreasing tables
 	// Reverse = Check reverse interpolation
-	// max_err = max allowed error 
+	// max_err = max allowed error
 	
 	private static int Check1D(int nNodesToCheck, boolean Down, int max_err)
 	{
@@ -1562,7 +1562,7 @@ public final class TestApp extends UiApplication
 		        
 		        if (Check1D(j, false, 1) == 0)
 		        {
-		        	return 0;    
+		        	return 0;
 		        }
 		    }
 		    
@@ -1587,7 +1587,7 @@ public final class TestApp extends UiApplication
 		        
 		        if (Check1D(j, true, 1) == 0)
 		        {
-		        	return 0; 
+		        	return 0;
 		        }
 		    }
 		    
@@ -1717,18 +1717,18 @@ public final class TestApp extends UiApplication
 			cmsInterpParams p;
 		    int i;
 		    short[] In = new short[3], Out = new short[3];
-		    short[] Table = { 
-		            0,    0,   0,     
-		            0,    0,   (short)0xffff,    
+		    short[] Table = {
+		            0,    0,   0,
+		            0,    0,   (short)0xffff,
 		            
-		            0,    (short)0xffff,    0,   
-		            0,    (short)0xffff,    (short)0xffff,  
+		            0,    (short)0xffff,    0,
+		            0,    (short)0xffff,    (short)0xffff,
 		            
-		            (short)0xffff,    0,    0,    
-		            (short)0xffff,    0,    (short)0xffff,   
+		            (short)0xffff,    0,    0,
+		            (short)0xffff,    0,    (short)0xffff,
 		            
-		            (short)0xffff,    (short)0xffff,   0,    
-		            (short)0xffff,    (short)0xffff,   (short)0xffff    
+		            (short)0xffff,    (short)0xffff,   0,
+		            (short)0xffff,    (short)0xffff,   (short)0xffff
 		        };
 		    
 		    p = lcms2_internal._cmsComputeInterpParams(DbgThread(), 2, 3, 3, Table, lcms2_plugin.CMS_LERP_FLAGS_16BITS);
@@ -1773,18 +1773,18 @@ public final class TestApp extends UiApplication
 			cmsInterpParams p;
 		    int i;
 		    short[] In = new short[3], Out = new short[3];
-		    short[] Table = { 
-		            0,    0,   0,     
-		            0,    0,   (short)0xffff,    
+		    short[] Table = {
+		            0,    0,   0,
+		            0,    0,   (short)0xffff,
 		            
-		            0,    (short)0xffff,    0,   
-		            0,    (short)0xffff,    (short)0xffff,  
+		            0,    (short)0xffff,    0,
+		            0,    (short)0xffff,    (short)0xffff,
 		            
-		            (short)0xffff,    0,    0,    
-		            (short)0xffff,    0,    (short)0xffff,   
+		            (short)0xffff,    0,    0,
+		            (short)0xffff,    0,    (short)0xffff,
 		            
-		            (short)0xffff,    (short)0xffff,   0,    
-		            (short)0xffff,    (short)0xffff,   (short)0xffff    
+		            (short)0xffff,    (short)0xffff,   0,
+		            (short)0xffff,    (short)0xffff,   (short)0xffff
 		        };
 		    
 		    p = lcms2_internal._cmsComputeInterpParams(DbgThread(), 2, 3, 3, Table, lcms2_plugin.CMS_LERP_FLAGS_TRILINEAR);
@@ -1850,7 +1850,7 @@ public final class TestApp extends UiApplication
 		    {
 		    	for (g=0; g < 0xff; g++)
 		    	{
-		            for (b=0; b < 0xff; b++) 
+		            for (b=0; b < 0xff; b++)
 			        {
 			            In[0] = r / 255.0F;
 			            In[1] = g / 255.0F;
@@ -1914,7 +1914,7 @@ public final class TestApp extends UiApplication
 		    {
 		    	for (g=0; g < 0xff; g++)
 		    	{
-		            for (b=0; b < 0xff; b++) 
+		            for (b=0; b < 0xff; b++)
 			        {
 			            In[0] = r / 255.0F;
 			            In[1] = g / 255.0F;
@@ -1957,18 +1957,18 @@ public final class TestApp extends UiApplication
 			cmsInterpParams p;
 		    int r, g, b;
 		    short[] In = new short[3], Out = new short[3];
-		    short[] Table = { 
-		            0,    0,   0,     
-		            0,    0,   (short)0xffff,    
+		    short[] Table = {
+		            0,    0,   0,
+		            0,    0,   (short)0xffff,
 		            
-		            0,    (short)0xffff,    0,   
-		            0,    (short)0xffff,    (short)0xffff,  
+		            0,    (short)0xffff,    0,
+		            0,    (short)0xffff,    (short)0xffff,
 		            
-		            (short)0xffff,    0,    0,    
-		            (short)0xffff,    0,    (short)0xffff,   
+		            (short)0xffff,    0,    0,
+		            (short)0xffff,    0,    (short)0xffff,
 		            
-		            (short)0xffff,    (short)0xffff,   0,    
-		            (short)0xffff,    (short)0xffff,   (short)0xffff    
+		            (short)0xffff,    (short)0xffff,   0,
+		            (short)0xffff,    (short)0xffff,   (short)0xffff
 		        };
 		    
 		    p = lcms2_internal._cmsComputeInterpParams(DbgThread(), 2, 3, 3, Table, lcms2_plugin.CMS_LERP_FLAGS_16BITS);
@@ -2021,18 +2021,18 @@ public final class TestApp extends UiApplication
 			cmsInterpParams p;
 		    int r, g, b;
 		    short[] In = new short[3], Out = new short[3];
-		    short[] Table = { 
-		            0,    0,   0,     
-		            0,    0,   (short)0xffff,    
+		    short[] Table = {
+		            0,    0,   0,
+		            0,    0,   (short)0xffff,
 		            
-		            0,    (short)0xffff,    0,   
-		            0,    (short)0xffff,    (short)0xffff,  
+		            0,    (short)0xffff,    0,
+		            0,    (short)0xffff,    (short)0xffff,
 		            
-		            (short)0xffff,    0,    0,    
-		            (short)0xffff,    0,    (short)0xffff,   
+		            (short)0xffff,    0,    0,
+		            (short)0xffff,    0,    (short)0xffff,
 		            
-		            (short)0xffff,    (short)0xffff,   0,    
-		            (short)0xffff,    (short)0xffff,   (short)0xffff    
+		            (short)0xffff,    (short)0xffff,   0,
+		            (short)0xffff,    (short)0xffff,   (short)0xffff
 		        };
 		    
 		    p = lcms2_internal._cmsComputeInterpParams(DbgThread(), 2, 3, 3, Table, lcms2_plugin.CMS_LERP_FLAGS_TRILINEAR);
@@ -2088,17 +2088,17 @@ public final class TestApp extends UiApplication
 			float[] Target = new float[3], Result = new float[3], Hint = new float[3];
 			float err, max;
 			int i;
-			short[] Table = new short[]{ 
-			        0,    0,   0,										// 0 0 0  
-			        0,    0,   (short)0xffff,							// 0 0 1  
+			short[] Table = new short[]{
+			        0,    0,   0,										// 0 0 0
+			        0,    0,   (short)0xffff,							// 0 0 1
 			        
-			        0,    (short)0xffff,    0,							// 0 1 0  
-			        0,    (short)0xffff,    (short)0xffff,				// 0 1 1  
+			        0,    (short)0xffff,    0,							// 0 1 0
+			        0,    (short)0xffff,    (short)0xffff,				// 0 1 1
 			        
-			        (short)0xffff,    0,    0,							// 1 0 0  
-			        (short)0xffff,    0,    (short)0xffff,				// 1 0 1  
+			        (short)0xffff,    0,    0,							// 1 0 0
+			        (short)0xffff,    0,    (short)0xffff,				// 1 0 1
 			        
-			        (short)0xffff,    (short)0xffff,   0,				// 1 1 0  
+			        (short)0xffff,    (short)0xffff,   0,				// 1 1 0
 			        (short)0xffff,    (short)0xffff,   (short)0xffff,	// 1 1 1
 			};
 			
@@ -2150,7 +2150,7 @@ public final class TestApp extends UiApplication
 			int i;
 			
 			// 4 -> 3, output gets 3 first channels copied
-			short[] Table = new short[]{ 
+			short[] Table = new short[]{
 			        0,         0,         0,							//  0 0 0 0   = ( 0, 0, 0)
 			        0,         0,         0,							//  0 0 0 1   = ( 0, 0, 0)
 			        
@@ -2343,7 +2343,7 @@ public final class TestApp extends UiApplication
 	{
 		short[] In = new short[3], Out1 = new short[3], Out2 = new short[3];
 		
-	    In[0] = a1; In[1] = a2; In[2] = a3; 
+	    In[0] = a1; In[1] = a2; In[2] = a3;
 	    
 	    // This is the interpolated value
 	    lcms2.cmsPipelineEval16(In, Out1, lut);
@@ -3191,7 +3191,7 @@ public final class TestApp extends UiApplication
 		            lcms2.cmsFreeToneCurve(LinGamma);
 		            return 0;
 		        }
-		    }       
+		    }
 		    
 		    if (CheckGammaEstimation(LinGamma, 1.0) == 0)
 		    {
@@ -3221,7 +3221,7 @@ public final class TestApp extends UiApplication
 		            lcms2.cmsFreeToneCurve(LinGamma);
 		            return 0;
 		        }
-		    }       
+		    }
 		    
 		    if (CheckGammaEstimation(LinGamma, 1.0) == 0)
 		    {
@@ -3255,7 +3255,7 @@ public final class TestApp extends UiApplication
 	        Err = Math.abs(val - out);
 	        if (Err > MaxErr)
 	        {
-	        	MaxErr = Err;     
+	        	MaxErr = Err;
 	        }
 	    }
 	    
@@ -3301,7 +3301,7 @@ public final class TestApp extends UiApplication
 	private static int CheckGammaFloatTable(double g)
 	{
 	    float[] Values = new float[1025];
-	    cmsToneCurve Curve; 
+	    cmsToneCurve Curve;
 	    int i;
 	    float in, out;
 	    double val, Err;
@@ -3332,7 +3332,7 @@ public final class TestApp extends UiApplication
 	        Err = Math.abs(val - out);
 	        if (Err > MaxErr)
 	        {
-	        	MaxErr = Err;     
+	        	MaxErr = Err;
 	        }
 	    }
 	    
@@ -3378,7 +3378,7 @@ public final class TestApp extends UiApplication
 	private static int CheckGammaWordTable(double g)
 	{
 	    short[] Values = new short[1025];
-	    cmsToneCurve Curve; 
+	    cmsToneCurve Curve;
 	    int i;
 	    float in, out;
 	    double val, Err;
@@ -3465,10 +3465,10 @@ public final class TestApp extends UiApplication
 		    
 		    Result = lcms2.cmsJoinToneCurve(DbgThread(), Forward, Reverse, 256);
 		    
-		    lcms2.cmsFreeToneCurve(Forward); lcms2.cmsFreeToneCurve(Reverse); 
+		    lcms2.cmsFreeToneCurve(Forward); lcms2.cmsFreeToneCurve(Reverse);
 		    
 		    rc = lcms2.cmsIsToneCurveLinear(Result);
-		    lcms2.cmsFreeToneCurve(Result); 
+		    lcms2.cmsFreeToneCurve(Result);
 		    
 		    if (!rc)
 		    {
@@ -3509,7 +3509,7 @@ public final class TestApp extends UiApplication
 			cmsToneCurve Forward, Reverse, Result;
 		    int i, rc;
 		    
-		    Forward = lcms2.cmsBuildGamma(DbgThread(), 2.2); 
+		    Forward = lcms2.cmsBuildGamma(DbgThread(), 2.2);
 		    
 		    // Fake the curve to be table-based
 		    
@@ -3519,7 +3519,7 @@ public final class TestApp extends UiApplication
 		    }
 		    Forward.Segments[0].Type = 0;
 		    
-		    Reverse = lcms2.cmsReverseToneCurve(Forward); 
+		    Reverse = lcms2.cmsReverseToneCurve(Forward);
 		    
 		    Result = lcms2.cmsJoinToneCurve(DbgThread(), Reverse, Reverse, 256);
 		    
@@ -3527,7 +3527,7 @@ public final class TestApp extends UiApplication
 		    lcms2.cmsFreeToneCurve(Reverse);
 		    
 		    rc = lcms2.cmsIsToneCurveLinear(Result) ? 1 : 0;
-		    lcms2.cmsFreeToneCurve(Result); 
+		    lcms2.cmsFreeToneCurve(Result);
 		    
 		    return rc;
 		}
@@ -3641,7 +3641,7 @@ public final class TestApp extends UiApplication
 	    {
 	        short wValIn;
 	        
-	        wValIn = lcms2_internal._cmsQuantizeVal(i, 256);     
+	        wValIn = lcms2_internal._cmsQuantizeVal(i, 256);
 	        Tab[i] = lcms2.cmsEvalToneCurve16(g2, lcms2.cmsEvalToneCurve16(g1, wValIn));
 	    }
 	    
@@ -3658,10 +3658,10 @@ public final class TestApp extends UiApplication
 		    Forward = Build_sRGBGamma();
 		    Reverse = lcms2.cmsReverseToneCurve(Forward);
 		    Result = CombineGammaFloat(Forward, Reverse);
-		    lcms2.cmsFreeToneCurve(Forward); lcms2.cmsFreeToneCurve(Reverse); 
+		    lcms2.cmsFreeToneCurve(Forward); lcms2.cmsFreeToneCurve(Reverse);
 		    
 		    rc = lcms2.cmsIsToneCurveLinear(Result);
-		    lcms2.cmsFreeToneCurve(Result); 
+		    lcms2.cmsFreeToneCurve(Result);
 		    
 		    return rc ? 1 : 0;
 		}
@@ -3677,10 +3677,10 @@ public final class TestApp extends UiApplication
 		    Forward = Build_sRGBGamma();
 		    Reverse = lcms2.cmsReverseToneCurve(Forward);
 		    Result = CombineGamma16(Forward, Reverse);
-		    lcms2.cmsFreeToneCurve(Forward); lcms2.cmsFreeToneCurve(Reverse); 
+		    lcms2.cmsFreeToneCurve(Forward); lcms2.cmsFreeToneCurve(Reverse);
 		    
 		    rc = lcms2.cmsIsToneCurveLinear(Result);
-		    lcms2.cmsFreeToneCurve(Result); 
+		    lcms2.cmsFreeToneCurve(Result);
 		    
 		    return rc ? 1 : 0;
 		}
@@ -3696,7 +3696,7 @@ public final class TestApp extends UiApplication
 		    cmsToneCurve Forward, Reverse, Result;
 		    int rc;
 		    
-		    Forward = lcms2.cmsBuildParametricToneCurve(DbgThread(), 108, p);    
+		    Forward = lcms2.cmsBuildParametricToneCurve(DbgThread(), 108, p);
 		    Reverse = lcms2.cmsReverseToneCurve(Forward);
 		    Result = lcms2.cmsJoinToneCurve(DbgThread(), Forward, Forward, 4096);
 		    
@@ -3704,7 +3704,7 @@ public final class TestApp extends UiApplication
 		    lcms2.cmsFreeToneCurve(Reverse);
 		    
 		    rc = lcms2.cmsIsToneCurveLinear(Result) ? 1 : 0;
-		    lcms2.cmsFreeToneCurve(Result); 
+		    lcms2.cmsFreeToneCurve(Result);
 		    return rc;
 		}
 	};
@@ -4119,8 +4119,8 @@ public final class TestApp extends UiApplication
 	private static void AddIdentityMatrix(cmsPipeline lut)
 	{
 	    final double[] Identity = { 1, 0, 0,
-	                          0, 1, 0, 
-	                          0, 0, 1, 
+	                          0, 1, 0,
+	                          0, 0, 1,
 	                          0, 0, 0 };
 
 	    lcms2.cmsPipelineInsertStage(lut, lcms2.cmsAT_END, lcms2.cmsStageAllocMatrix(DbgThread(), 3, 3, Identity, null));
@@ -4129,17 +4129,17 @@ public final class TestApp extends UiApplication
 	// Create a MPE for identity cmsFloat32Number CLUT
 	private static void AddIdentityCLUTfloat(cmsPipeline lut)
 	{
-	    final float[] Table = { 
-	        0,    0,    0,    
+	    final float[] Table = {
+	        0,    0,    0,
 	        0,    0,    1.0f,
 	        
-	        0,    1.0f,    0, 
+	        0,    1.0f,    0,
 	        0,    1.0f,    1.0f,
 	        
-	        1.0f,    0,    0,    
+	        1.0f,    0,    0,
 	        1.0f,    0,    1.0f,
 	        
-	        1.0f,    1.0f,    0, 
+	        1.0f,    1.0f,    0,
 	        1.0f,    1.0f,    1.0f
 	    };
 
@@ -4149,17 +4149,17 @@ public final class TestApp extends UiApplication
 	// Create a MPE for identity cmsFloat32Number CLUT
 	private static void AddIdentityCLUT16(cmsPipeline lut)
 	{
-	    final short[] Table = { 
-	        0,    0,    0,    
+	    final short[] Table = {
+	        0,    0,    0,
 	        0,    0,    (short)0xffff,
 	        
-	        0,    (short)0xffff,    0, 
+	        0,    (short)0xffff,    0,
 	        0,    (short)0xffff,    (short)0xffff,
 	        
-	        (short)0xffff,    0,    0,    
+	        (short)0xffff,    0,    0,
 	        (short)0xffff,    0,    (short)0xffff,
 	        
-	        (short)0xffff,    (short)0xffff,    0, 
+	        (short)0xffff,    (short)0xffff,    0,
 	        (short)0xffff,    (short)0xffff,    (short)0xffff
 	    };
 	    
@@ -4962,7 +4962,7 @@ public final class TestApp extends UiApplication
 	    for (j=0; j < 5; j++)
 	    {
 	        for (i=0; i < nChannels; i++)
-	        { 
+	        {
 	            Values[i] = (short) (i+j);
 	            // For 8-bit
 	            if (bytes == 1)
@@ -5216,7 +5216,7 @@ public final class TestApp extends UiApplication
 	    for (j=0; j < 5; j++)
 	    {
 	        for (i=0; i < nChannels; i++)
-	        { 
+	        {
 	            Values[i] = (float) (i+j);
 	        }
 	        
@@ -5233,12 +5233,12 @@ public final class TestApp extends UiApplication
 	            
 	            if (delta > 0.000000001)
 	            {
-	                Fail("%s failed", new Object[]{Text});        
+	                Fail("%s failed", new Object[]{Text});
 	                FormatterFailed = true;
 	                
 	                // Useful for debug
 	                for (i=0; i < nChannels; i++)
-	                { 
+	                {
 	                    Values[i] = (float) (i+j);
 	                }
 	                
@@ -5302,7 +5302,7 @@ public final class TestApp extends UiApplication
 		    {
 		        float f = lcms2_internal._cmsHalf2Float((short)i);
 		        
-		        if (!my_isfinite(f)) 
+		        if (!my_isfinite(f))
 		        {
 		            j = lcms2_internal._cmsFloat2Half(f);
 		            
@@ -5570,8 +5570,8 @@ public final class TestApp extends UiApplication
 	            {
 	            	return 0;
 	            }
-	            return (Pt.get(Calendar.HOUR_OF_DAY) == 1 && 
-	            		Pt.get(Calendar.MINUTE) == 2 && 
+	            return (Pt.get(Calendar.HOUR_OF_DAY) == 1 &&
+	            		Pt.get(Calendar.MINUTE) == 2 &&
 	            		Pt.get(Calendar.SECOND) == 3 &&
 	            		Pt.get(Calendar.DAY_OF_MONTH) == 4 &&
 	            		Pt.get(Calendar.MONTH) == 5 &&
@@ -5719,7 +5719,7 @@ public final class TestApp extends UiApplication
 	    
 	    switch (Pass)
 	    {
-	        case 1:         
+	        case 1:
 	            return lcms2.cmsWriteTag(hProfile, tag, CHAD) ? 1 : 0;
 	            
 	        case 2:
@@ -5750,7 +5750,7 @@ public final class TestApp extends UiApplication
 	    
 	    switch (Pass)
 	    {
-	        case 1:         
+	        case 1:
 	            return lcms2.cmsWriteTag(hProfile, tag, c) ? 1 : 0;
 	            
 	        case 2:
@@ -5798,7 +5798,7 @@ public final class TestApp extends UiApplication
 	    
 	    switch (Pass)
 	    {
-	        case 1:         
+	        case 1:
 	            for (i=0; i < lcms2.cmsMAXCHANNELS; i++)
 	            {
 	            	c[i] = (byte)(lcms2.cmsMAXCHANNELS - i - 1);
@@ -5899,7 +5899,7 @@ public final class TestApp extends UiApplication
 	            m.Ucr = lcms2.cmsBuildGamma(DbgThread(), 2.4);
 	            m.Bg  = lcms2.cmsBuildGamma(DbgThread(), -2.2);
 	            m.Desc = lcms2.cmsMLUalloc(DbgThread(), 1);
-	            lcms2.cmsMLUsetASCII(m.Desc, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, "test UCR/BG");         
+	            lcms2.cmsMLUsetASCII(m.Desc, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, "test UCR/BG");
 	            rc = lcms2.cmsWriteTag(hProfile, tag, m) ? 1 : 0;
 	            lcms2.cmsMLUfree(m.Desc);
 	            lcms2.cmsFreeToneCurve(m.Bg);
@@ -5916,7 +5916,7 @@ public final class TestApp extends UiApplication
 	            lcms2.cmsMLUgetASCII(Pt.Desc, lcms2.cmsNoLanguage, lcms2.cmsNoCountry, Buffer, 256);
 	            if (strcmp(Buffer, "test UCR/BG") != 0)
 	            {
-	            	return 0;       
+	            	return 0;
 	            }
 	            return 1;
 	            
@@ -5940,7 +5940,7 @@ public final class TestApp extends UiApplication
 	            lcms2.cmsMLUsetWide(mlu,  "PS", "#0", "perceptual");
 	            lcms2.cmsMLUsetWide(mlu,  "PS", "#1", "relative_colorimetric");
 	            lcms2.cmsMLUsetWide(mlu,  "PS", "#2", "saturation");
-	            lcms2.cmsMLUsetWide(mlu,  "PS", "#3", "absolute_colorimetric");  
+	            lcms2.cmsMLUsetWide(mlu,  "PS", "#3", "absolute_colorimetric");
 	            rc = lcms2.cmsWriteTag(hProfile, tag, mlu) ? 1 : 0;
 	            lcms2.cmsMLUfree(mlu);
 	            return rc;
@@ -6014,7 +6014,7 @@ public final class TestApp extends UiApplication
 	    Seg[2].Params[0] = 1;
 	    Seg[2].Params[1] = 0;
 	    Seg[2].Params[2] = 0;
-	    Seg[2].Params[3] = 0;               
+	    Seg[2].Params[3] = 0;
 	    Seg[2].x0 = 1;
 	    Seg[2].x1 = 1E22F;
 	    
@@ -6029,7 +6029,7 @@ public final class TestApp extends UiApplication
 	    
 	    switch (Pass)
 	    {
-	        case 1: 
+	        case 1:
 	            Lut = lcms2.cmsPipelineAlloc(DbgThread(), 3, 3);
 	            
 	            lcms2.cmsPipelineInsertStage(Lut, lcms2.cmsAT_BEGIN, lcms2_internal._cmsStageAllocLabV2ToV4(DbgThread()));
@@ -6048,7 +6048,7 @@ public final class TestApp extends UiApplication
 	            Pt = (cmsPipeline)lcms2.cmsReadTag(hProfile, tag);
 	            if (Pt == null)
 	            {
-	            	return 0;           
+	            	return 0;
 	            }
 	            return CheckFloatLUT(Pt);
 	            
@@ -6169,7 +6169,7 @@ public final class TestApp extends UiApplication
 		        if (!lcms2.cmsWriteTag(hProfile, lcms2.cmsSigProfileSequenceDescTag, s))
 	            {
 	            	return 0;
-	            }  
+	            }
 		        lcms2.cmsFreeProfileSequenceDescription(s);
 		        return 1;
 		        
@@ -6413,7 +6413,7 @@ public final class TestApp extends UiApplication
 				lcms2.cmsDictAddEntry(hDict, "Name2", "12", null, null);
 				if (!lcms2.cmsWriteTag(hProfile, lcms2.cmsSigMetaTag, hDict))
 				{
-					return 0;    
+					return 0;
 				}
 				lcms2.cmsDictFree(hDict);
 				return 1;
@@ -6481,10 +6481,10 @@ public final class TestApp extends UiApplication
 	    
 	    switch (Pass)
 	    {
-	    	case 1:     
+	    	case 1:
 		        hDict = lcms2.cmsDictAlloc(DbgThread());
 		        
-		        DisplayName = lcms2.cmsMLUalloc(DbgThread(), 0);    
+		        DisplayName = lcms2.cmsMLUalloc(DbgThread(), 0);
 		        
 		        lcms2.cmsMLUsetWide(DisplayName, "en", "US", "Hello, world");
 		        lcms2.cmsMLUsetWide(DisplayName, "es", "ES", "Hola, mundo");
@@ -6497,7 +6497,7 @@ public final class TestApp extends UiApplication
 		        lcms2.cmsDictAddEntry(hDict, "Name2", "12", null, null);
 		        if (!lcms2.cmsWriteTag(hProfile, lcms2.cmsSigMetaTag, hDict))
 		        {
-		        	return 0;    
+		        	return 0;
 		        }
 		        lcms2.cmsDictFree(hDict);
 		        
@@ -6513,20 +6513,20 @@ public final class TestApp extends UiApplication
 		        e = lcms2.cmsDictGetEntryList(hDict);
 		        if (!e.Name.equals("Name2"))
 		        {
-		        	return 0;  
+		        	return 0;
 		        }
 		        if (!e.Value.equals("12"))
 		        {
-		        	return 0;  
+		        	return 0;
 		        }
-		        e = lcms2.cmsDictNextEntry(e);         
+		        e = lcms2.cmsDictNextEntry(e);
 		        if (!e.Name.equals("Name"))
 		        {
-		        	return 0;  
+		        	return 0;
 		        }
 		        if (!e.Value.equals("String"))
 		        {
-		        	return 0;  
+		        	return 0;
 		        }
 		        
 		        lcms2.cmsMLUgetASCII(e.DisplayName, "en", "US", Buffer, 256);
@@ -6965,13 +6965,13 @@ public final class TestApp extends UiApplication
 		        }
 		    }
 		    
-		    /*    
+		    /*
 		    Not implemented (by design):
 		    
-		    cmsSigDataTag                           = 0x64617461,  // 'data'  -- Unused   
+		    cmsSigDataTag                           = 0x64617461,  // 'data'  -- Unused
 		    cmsSigDeviceSettingsTag                 = 0x64657673,  // 'devs'  -- Unused
 		    cmsSigNamedColorTag                     = 0x6E636f6C,  // 'ncol'  -- Don't use this one, deprecated by ICC
-		    cmsSigOutputResponseTag                 = 0x72657370,  // 'resp'  -- Possible patent on this 
+		    cmsSigOutputResponseTag                 = 0x72657370,  // 'resp'  -- Possible patent on this
 		    */
 		    
 		    lcms2.cmsCloseProfile(h);
@@ -7064,7 +7064,7 @@ public final class TestApp extends UiApplication
 		    
 		    if (SimultaneousErrors != 9)
 		    {
-		    	return 0;      
+		    	return 0;
 		    }
 		    
 		    return 1;
@@ -7189,7 +7189,7 @@ public final class TestApp extends UiApplication
 	        }
 	    }
 	    
-	    // We allow 2 contone of difference on 8 bits 
+	    // We allow 2 contone of difference on 8 bits
 	    if (n2 > 2)
 	    {
 	        Fail("Differences too big (%x)", new Object[]{new Integer(n2)});
@@ -7222,7 +7222,7 @@ public final class TestApp extends UiApplication
 	        }
 	    }
 	    
-	    // We allow 2 contone of difference on 8 bits 
+	    // We allow 2 contone of difference on 8 bits
 	    if (n2 > 2)
 	    {
 	        Fail("Differences too big (%x)", new Object[]{new Integer(n2)});
@@ -7238,7 +7238,7 @@ public final class TestApp extends UiApplication
 	    int n2, i, j;
 	    short[] Inw = new short[lcms2.cmsMAXCHANNELS], Outw = new short[lcms2.cmsMAXCHANNELS];
 	    
-	    n2=0;    
+	    n2=0;
 	    for (j=0; j < 0xFFFF; j++)
 	    {
 	    	Arrays.fill(Inw, (short)j);
@@ -7289,7 +7289,7 @@ public final class TestApp extends UiApplication
 	        }
 	    }
 	    
-	    // We allow 2 contone of difference on 16 bits 
+	    // We allow 2 contone of difference on 16 bits
 	    if (n2 > 0x200) {
 
 	        Fail("Differences too big (%x)", new Object[]{new Integer(n2)});
@@ -7323,7 +7323,7 @@ public final class TestApp extends UiApplication
 	            {
 	            	return 0;
 	            }
-	        }        
+	        }
 	    }
 	    
 	    return 1;
@@ -7380,7 +7380,7 @@ public final class TestApp extends UiApplication
 		    h3 = lcms2.cmsCreateLinearizationDeviceLinkTHR(DbgThread(), lcms2.cmsSigGrayData, new cmsToneCurve[]{c3});
 		    
 		    SubTest("Gray float optimizeable transform", null);
-		    xform1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_GRAY_FLT, h2, lcms2.TYPE_GRAY_FLT, lcms2.INTENT_PERCEPTUAL, 0);    
+		    xform1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_GRAY_FLT, h2, lcms2.TYPE_GRAY_FLT, lcms2.INTENT_PERCEPTUAL, 0);
 		    rc &= CheckFloatlinearXFORM(xform1, 1);
 		    lcms2.cmsDeleteTransform(xform1);
 		    if (rc == 0)
@@ -7392,7 +7392,7 @@ public final class TestApp extends UiApplication
 		    }
 		    
 		    SubTest("Gray 8 optimizeable transform", null);
-		    xform1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_GRAY_8, h2, lcms2.TYPE_GRAY_8, lcms2.INTENT_PERCEPTUAL, 0);    
+		    xform1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_GRAY_8, h2, lcms2.TYPE_GRAY_8, lcms2.INTENT_PERCEPTUAL, 0);
 		    rc &= Check8linearXFORM(xform1, 1);
 		    lcms2.cmsDeleteTransform(xform1);
 		    if (rc == 0)
@@ -7404,7 +7404,7 @@ public final class TestApp extends UiApplication
 		    }
 		    
 		    SubTest("Gray 16 optimizeable transform", null);
-		    xform1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_GRAY_16, h2, lcms2.TYPE_GRAY_16, lcms2.INTENT_PERCEPTUAL, 0);  
+		    xform1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_GRAY_16, h2, lcms2.TYPE_GRAY_16, lcms2.INTENT_PERCEPTUAL, 0);
 		    rc &= Check16linearXFORM(xform1, 1);
 		    lcms2.cmsDeleteTransform(xform1);
 		    if (rc == 0)
@@ -7416,8 +7416,8 @@ public final class TestApp extends UiApplication
 		    }
 		    
 		    SubTest("Gray float non-optimizeable transform", null);
-		    xform1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_GRAY_FLT, h1, lcms2.TYPE_GRAY_FLT, lcms2.INTENT_PERCEPTUAL, 0);    
-		    xform2 = lcms2.cmsCreateTransform(h3, lcms2.TYPE_GRAY_FLT, null, lcms2.TYPE_GRAY_FLT, lcms2.INTENT_PERCEPTUAL, 0);  
+		    xform1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_GRAY_FLT, h1, lcms2.TYPE_GRAY_FLT, lcms2.INTENT_PERCEPTUAL, 0);
+		    xform2 = lcms2.cmsCreateTransform(h3, lcms2.TYPE_GRAY_FLT, null, lcms2.TYPE_GRAY_FLT, lcms2.INTENT_PERCEPTUAL, 0);
 		    
 		    rc &= CompareFloatXFORM(xform1, xform2, 1);
 		    lcms2.cmsDeleteTransform(xform1);
@@ -7431,8 +7431,8 @@ public final class TestApp extends UiApplication
 		    }
 		    
 		    SubTest("Gray 8 non-optimizeable transform", null);
-		    xform1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_GRAY_8, h1, lcms2.TYPE_GRAY_8, lcms2.INTENT_PERCEPTUAL, 0);    
-		    xform2 = lcms2.cmsCreateTransform(h3, lcms2.TYPE_GRAY_8, null, lcms2.TYPE_GRAY_8, lcms2.INTENT_PERCEPTUAL, 0);  
+		    xform1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_GRAY_8, h1, lcms2.TYPE_GRAY_8, lcms2.INTENT_PERCEPTUAL, 0);
+		    xform2 = lcms2.cmsCreateTransform(h3, lcms2.TYPE_GRAY_8, null, lcms2.TYPE_GRAY_8, lcms2.INTENT_PERCEPTUAL, 0);
 		    
 		    rc &= Compare8bitXFORM(xform1, xform2, 1);
 		    lcms2.cmsDeleteTransform(xform1);
@@ -7446,8 +7446,8 @@ public final class TestApp extends UiApplication
 		    }
 		    
 		    SubTest("Gray 16 non-optimizeable transform", null);
-		    xform1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_GRAY_16, h1, lcms2.TYPE_GRAY_16, lcms2.INTENT_PERCEPTUAL, 0);  
-		    xform2 = lcms2.cmsCreateTransform(h3, lcms2.TYPE_GRAY_16, null, lcms2.TYPE_GRAY_16, lcms2.INTENT_PERCEPTUAL, 0);    
+		    xform1 = lcms2.cmsCreateTransform(h1, lcms2.TYPE_GRAY_16, h1, lcms2.TYPE_GRAY_16, lcms2.INTENT_PERCEPTUAL, 0);
+		    xform2 = lcms2.cmsCreateTransform(h3, lcms2.TYPE_GRAY_16, null, lcms2.TYPE_GRAY_16, lcms2.INTENT_PERCEPTUAL, 0);
 		    
 		    rc &= Compare16bitXFORM(xform1, xform2, 1);
 		    lcms2.cmsDeleteTransform(xform1);
@@ -7512,7 +7512,7 @@ public final class TestApp extends UiApplication
 	}
 	
 	private static int OneTrivialLab(cmsHPROFILE hLab1, cmsHPROFILE hLab2, final String txt)
-	{   
+	{
 	    cmsHTRANSFORM xform;
 	    int rc;
 	    
@@ -7902,9 +7902,9 @@ public final class TestApp extends UiApplication
 		    
 		    if (!IsGoodFixed15_16("xRed", tripxyY.Red.x, 0.64) ||
 		        !IsGoodFixed15_16("yRed", tripxyY.Red.y, 0.33) ||
-		        !IsGoodFixed15_16("xGreen", tripxyY.Green.x, 0.30) || 
+		        !IsGoodFixed15_16("xGreen", tripxyY.Green.x, 0.30) ||
 		        !IsGoodFixed15_16("yGreen", tripxyY.Green.y, 0.60) ||
-		        !IsGoodFixed15_16("xBlue", tripxyY.Blue.x, 0.15) || 
+		        !IsGoodFixed15_16("xBlue", tripxyY.Blue.x, 0.15) ||
 		        !IsGoodFixed15_16("yBlue", tripxyY.Blue.y, 0.06))
 		    {
 		    	Fail("One or more primaries are wrong.", null);
@@ -8201,7 +8201,7 @@ public final class TestApp extends UiApplication
 		    int rc;
 		    
 		    hAbove = Create_AboveRGB();
-		    xform = lcms2.cmsCreateProofingTransformTHR(DbgThread(), hAbove, lcms2.TYPE_RGB_FLT, hAbove, lcms2.TYPE_RGB_FLT, hAbove, 
+		    xform = lcms2.cmsCreateProofingTransformTHR(DbgThread(), hAbove, lcms2.TYPE_RGB_FLT, hAbove, lcms2.TYPE_RGB_FLT, hAbove,
 		    		lcms2.INTENT_RELATIVE_COLORIMETRIC, lcms2.INTENT_RELATIVE_COLORIMETRIC, lcms2.cmsFLAGS_SOFTPROOFING);
 		    lcms2.cmsCloseProfile(hAbove);
 		    rc = CheckFloatlinearXFORM(xform, 3);
@@ -8219,7 +8219,7 @@ public final class TestApp extends UiApplication
 		    int rc;
 		    
 		    hAbove = Create_AboveRGB();
-		    xform = lcms2.cmsCreateProofingTransformTHR(DbgThread(), hAbove, lcms2.TYPE_RGB_16, hAbove, lcms2.TYPE_RGB_16, hAbove, 
+		    xform = lcms2.cmsCreateProofingTransformTHR(DbgThread(), hAbove, lcms2.TYPE_RGB_16, hAbove, lcms2.TYPE_RGB_16, hAbove,
 		    		lcms2.INTENT_RELATIVE_COLORIMETRIC, lcms2.INTENT_RELATIVE_COLORIMETRIC, lcms2.cmsFLAGS_SOFTPROOFING|lcms2.cmsFLAGS_NOCACHE);
 		    lcms2.cmsCloseProfile(hAbove);
 		    rc = Check16linearXFORM(xform, 3);
@@ -8252,7 +8252,7 @@ public final class TestApp extends UiApplication
 	        SubTest("Gamut check on floating point", null);
 	        
 	        // Create a gamut checker in the same space. No value should be out of gamut
-	        xform = lcms2.cmsCreateProofingTransformTHR(DbgThread(), hAbove, lcms2.TYPE_RGB_FLT, hAbove, lcms2.TYPE_RGB_FLT, hAbove, 
+	        xform = lcms2.cmsCreateProofingTransformTHR(DbgThread(), hAbove, lcms2.TYPE_RGB_FLT, hAbove, lcms2.TYPE_RGB_FLT, hAbove,
 	        		lcms2.INTENT_RELATIVE_COLORIMETRIC, lcms2.INTENT_RELATIVE_COLORIMETRIC, lcms2.cmsFLAGS_GAMUTCHECK);
 	        
 	        if (CheckFloatlinearXFORM(xform, 3) == 0)
@@ -8268,7 +8268,7 @@ public final class TestApp extends UiApplication
 	        
 	        SubTest("Gamut check on 16 bits", null);
 	        
-	        xform = lcms2.cmsCreateProofingTransformTHR(DbgThread(), hAbove, lcms2.TYPE_RGB_16, hAbove, lcms2.TYPE_RGB_16, hAbove, 
+	        xform = lcms2.cmsCreateProofingTransformTHR(DbgThread(), hAbove, lcms2.TYPE_RGB_16, hAbove, lcms2.TYPE_RGB_16, hAbove,
 	        		lcms2.INTENT_RELATIVE_COLORIMETRIC, lcms2.INTENT_RELATIVE_COLORIMETRIC, lcms2.cmsFLAGS_GAMUTCHECK);
 	        
 	        lcms2.cmsCloseProfile(hSRGB);
@@ -8292,7 +8292,7 @@ public final class TestApp extends UiApplication
 		    cmsCIEXYZ Black = new cmsCIEXYZ();
 		    cmsCIELab Lab = new cmsCIELab();
 		    
-		    hProfile  = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test5.icc", "r");  
+		    hProfile  = lcms2.cmsOpenProfileFromFileTHR(DbgThread(), FILE_PREFIX + "test5.icc", "r");
 		    lcms2.cmsDetectDestinationBlackPoint(Black, hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
 		    lcms2.cmsCloseProfile(hProfile);
 		    
@@ -8492,7 +8492,7 @@ public final class TestApp extends UiApplication
 	
 	private static void GenerateCSA(final String cInProf, final String FileName)
 	{
-	    cmsHPROFILE hProfile;   
+	    cmsHPROFILE hProfile;
 	    int n;
 	    byte[] Buffer;
 	    cmsContext BuffThread = DbgThread();
@@ -8615,7 +8615,7 @@ public final class TestApp extends UiApplication
 		    	return 0;
 		    }
 		    
-		    xform = lcms2.cmsCreateTransform(hGray, lcms2.TYPE_GRAY_8, hLab, lcms2.TYPE_Lab_DBL, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0); 
+		    xform = lcms2.cmsCreateTransform(hGray, lcms2.TYPE_GRAY_8, hLab, lcms2.TYPE_Lab_DBL, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
 		    lcms2.cmsCloseProfile(hGray); lcms2.cmsCloseProfile(hLab);
 		    
 		    if (CheckGray(xform, new Byte((byte)0), 0) == 0)
@@ -8705,7 +8705,7 @@ public final class TestApp extends UiApplication
 		    	return 0;
 		    }
 		    
-		    xform = lcms2.cmsCreateTransform( hLab, lcms2.TYPE_Lab_DBL, hGray, lcms2.TYPE_GRAY_8, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0); 
+		    xform = lcms2.cmsCreateTransform( hLab, lcms2.TYPE_Lab_DBL, hGray, lcms2.TYPE_GRAY_8, lcms2.INTENT_RELATIVE_COLORIMETRIC, 0);
 		    lcms2.cmsCloseProfile(hGray); lcms2.cmsCloseProfile(hLab);
 		    
 		    if (CheckOutGray(xform, 0, (byte)0) == 0)
@@ -8884,10 +8884,10 @@ public final class TestApp extends UiApplication
 		        {
 		            for (b1=0; b1 < 256; b1 += 5)
 		            {
-		                byte[] rgb = new byte[3];  
+		                byte[] rgb = new byte[3];
 		                
 		                rgb[0] = (byte) r1;
-		                rgb[1] = (byte) g1; 
+		                rgb[1] = (byte) g1;
 		                rgb[2] = (byte) b1;
 		                
 		                lcms2.cmsDoTransform(xform, rgb, Lab, 1);
@@ -8915,10 +8915,10 @@ public final class TestApp extends UiApplication
 		        {
 		            for (b1=10; b1 < 200; b1 += 10)
 		            {
-		                byte[] rgb = new byte[3];  
+		                byte[] rgb = new byte[3];
 
 		                rgb[0] = (byte) r1;
-		                rgb[1] = (byte) g1; 
+		                rgb[1] = (byte) g1;
 		                rgb[2] = (byte) b1;
 
 		                lcms2.cmsDoTransform(xform, rgb, Lab, 1);
@@ -8970,17 +8970,17 @@ public final class TestApp extends UiApplication
 		public int run()
 		{
 			lcms2_internal._cmsICCPROFILE h;
-		    cmsHPROFILE pProfile = lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGBlcms2.icc", "r"); 
+		    cmsHPROFILE pProfile = lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "sRGBlcms2.icc", "r");
 		    cmsProfileID ProfileID1 = new cmsProfileID(), ProfileID2 = new cmsProfileID(), ProfileID3 = new cmsProfileID(), ProfileID4 = new cmsProfileID();
 		    
 		    h =(lcms2_internal._cmsICCPROFILE)pProfile;
 		    if (lcms2.cmsMD5computeID(pProfile))
 		    {
-		    	lcms2.cmsGetHeaderProfileID(pProfile, ProfileID1); 
+		    	lcms2.cmsGetHeaderProfileID(pProfile, ProfileID1);
 		    }
 		    if (lcms2.cmsMD5computeID(pProfile))
 		    {
-		    	lcms2.cmsGetHeaderProfileID(pProfile,ProfileID2); 
+		    	lcms2.cmsGetHeaderProfileID(pProfile,ProfileID2);
 		    }
 		    
 		    lcms2.cmsCloseProfile(pProfile);
@@ -8990,11 +8990,11 @@ public final class TestApp extends UiApplication
 		    h =(lcms2_internal._cmsICCPROFILE)pProfile;
 		    if (lcms2.cmsMD5computeID(pProfile))
 		    {
-		    	lcms2.cmsGetHeaderProfileID(pProfile, ProfileID3); 
+		    	lcms2.cmsGetHeaderProfileID(pProfile, ProfileID3);
 		    }
 		    if (lcms2.cmsMD5computeID(pProfile))
 		    {
-		    	lcms2.cmsGetHeaderProfileID(pProfile,ProfileID4); 
+		    	lcms2.cmsGetHeaderProfileID(pProfile,ProfileID4);
 		    }
 		    
 		    lcms2.cmsCloseProfile(pProfile);
@@ -9525,17 +9525,17 @@ public final class TestApp extends UiApplication
 		Utility.fprintf(print,     "=================================\n\n", null);
 		print.flush();
 	    
-	    SpeedTest16bits("16 bits on CLUT profiles", 
+	    SpeedTest16bits("16 bits on CLUT profiles",
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test3.icc", "r"), lcms2.INTENT_PERCEPTUAL);
 	    
-	    SpeedTest8bits("8 bits on CLUT profiles", 
+	    SpeedTest8bits("8 bits on CLUT profiles",
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test3.icc", "r"),
 	    		lcms2.INTENT_PERCEPTUAL);
 	    
-	    SpeedTest8bits("8 bits on Matrix-Shaper profiles", 
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"), 
+	    SpeedTest8bits("8 bits on Matrix-Shaper profiles",
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "aRGBlcms2.icc", "r"),
 	    		lcms2.INTENT_PERCEPTUAL);
 	    
@@ -9544,22 +9544,22 @@ public final class TestApp extends UiApplication
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
 	    		lcms2.INTENT_PERCEPTUAL);
 	    
-	    SpeedTest8bits("8 bits on Matrix-Shaper profiles (AbsCol)", 
+	    SpeedTest8bits("8 bits on Matrix-Shaper profiles (AbsCol)",
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "aRGBlcms2.icc", "r"),
-	    		lcms2.INTENT_ABSOLUTE_COLORIMETRIC);  
+	    		lcms2.INTENT_ABSOLUTE_COLORIMETRIC);
 	    
-	    SpeedTest16bits("16 bits on Matrix-Shaper profiles", 
+	    SpeedTest16bits("16 bits on Matrix-Shaper profiles",
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "aRGBlcms2.icc", "r"),
 	    		lcms2.INTENT_PERCEPTUAL);
 	    
-	    SpeedTest16bits("16 bits on SAME Matrix-Shaper profiles", 
+	    SpeedTest16bits("16 bits on SAME Matrix-Shaper profiles",
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "aRGBlcms2.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "aRGBlcms2.icc", "r"),
 	    		lcms2.INTENT_PERCEPTUAL);
 	    
-	    SpeedTest16bits("16 bits on Matrix-Shaper profiles (AbsCol)", 
+	    SpeedTest16bits("16 bits on Matrix-Shaper profiles (AbsCol)",
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test5.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "aRGBlcms2.icc", "r"),
 	    		lcms2.INTENT_ABSOLUTE_COLORIMETRIC);
@@ -9574,24 +9574,24 @@ public final class TestApp extends UiApplication
 	    		CreateCurves(),
 	    		lcms2.INTENT_PERCEPTUAL);
 	    
-	    SpeedTest8bitsCMYK("8 bits on CMYK profiles", 
+	    SpeedTest8bitsCMYK("8 bits on CMYK profiles",
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test1.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test2.icc", "r"));
 	    
-	    SpeedTest16bitsCMYK("16 bits on CMYK profiles", 
+	    SpeedTest16bitsCMYK("16 bits on CMYK profiles",
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test1.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "test2.icc", "r"));
 	    
 	    SpeedTest8bitsGray("8 bits on gray-to gray",
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "gray3lcms2.icc", "r"), 
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "gray3lcms2.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "graylcms2.icc", "r"), lcms2.INTENT_RELATIVE_COLORIMETRIC);
 	    
 	    SpeedTest8bitsGray("8 bits on gray-to-lab gray",
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "graylcms2.icc", "r"), 
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "graylcms2.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "glablcms2.icc", "r"), lcms2.INTENT_RELATIVE_COLORIMETRIC);
 	    
 	    SpeedTest8bitsGray("8 bits on SAME gray-to-gray",
-	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "graylcms2.icc", "r"), 
+	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "graylcms2.icc", "r"),
 	    		lcms2.cmsOpenProfileFromFile(FILE_PREFIX + "graylcms2.icc", "r"), lcms2.INTENT_PERCEPTUAL);
 	}
 	
@@ -10036,7 +10036,7 @@ public final class TestApp extends UiApplication
 			
 			list = new ObjectListField(ObjectListField.ELLIPSIS | ObjectListField.FOCUSABLE)
 			{
-				protected boolean keyChar( char character, int status, int time ) 
+				protected boolean keyChar( char character, int status, int time )
 			    {
 			        if( character == Characters.ENTER ) {
 			            clickButton();
@@ -10045,35 +10045,35 @@ public final class TestApp extends UiApplication
 			        return super.keyChar( character, status, time );
 			    }
 			    
-			    protected boolean navigationClick( int status, int time ) 
+			    protected boolean navigationClick( int status, int time )
 			    {
 			        clickButton();
 			        return true;
 			    }
 			    
 			    protected boolean trackwheelClick( int status, int time )
-			    {        
+			    {
 			        clickButton();
 			        return true;
 			    }
 			    
 //#ifndef BlackBerrySDK4.1.0 | BlackBerrySDK4.0.0
-			        protected boolean invokeAction( int action ) 
+			        protected boolean invokeAction( int action )
 			        {
 			            switch( action ) {
 			                case ACTION_INVOKE: {
-			                    clickButton(); 
+			                    clickButton();
 			                    return true;
 			                }
 			            }
 			            return super.invokeAction( action );
 			        }
-//#endif        
+//#endif
 			         
 			    /**
 			     * A public way to click this button
 			     */
-			    public void clickButton() 
+			    public void clickButton()
 			    {
 			    	//this.getChangeListener().fieldChanged(this, 0);
 			        fieldChangeNotify( 0 );
@@ -10107,8 +10107,8 @@ public final class TestApp extends UiApplication
 		
 		public void runTest()
 		{
-			Utility.fprintf(print, "LittleCMS %2.2f test bed %s %s\n\n", new Object[]{new Double(lcms2.LCMS_VERSION / 1000.0), 
-					new SimpleDateFormat("MMM dd yyyy").format(Calendar.getInstance(), new StringBuffer(), null), 
+			Utility.fprintf(print, "LittleCMS %2.2f test bed %s %s\n\n", new Object[]{new Double(lcms2.LCMS_VERSION / 1000.0),
+					new SimpleDateFormat("MMM dd yyyy").format(Calendar.getInstance(), new StringBuffer(), null),
 					new SimpleDateFormat("HH':'mm':'ss").format(Calendar.getInstance(), new StringBuffer(), null)});
 			
 			if(Exhaustive)
@@ -10269,7 +10269,7 @@ public final class TestApp extends UiApplication
 			    Check("Stored identities", CheckStoredIdentities);
 			    
 			    Check("Matrix-shaper transform (float)",   CheckMatrixShaperXFORMFloat);
-			    Check("Matrix-shaper transform (16 bits)", CheckMatrixShaperXFORM16);   
+			    Check("Matrix-shaper transform (16 bits)", CheckMatrixShaperXFORM16);
 			    Check("Matrix-shaper transform (8 bits)",  CheckMatrixShaperXFORM8);
 			    
 			    Check("Primaries of sRGB", CheckRGBPrimaries);
@@ -10357,8 +10357,8 @@ public final class TestApp extends UiApplication
 						}
 						else
 						{
-							if(Dialog.ask(Dialog.D_YES_NO, 
-									"Your phone might not have enough memory, it will not tell you if it crashed. Are you sure you want to continue? Needs at least 512mb of memory.") 
+							if(Dialog.ask(Dialog.D_YES_NO,
+									"Your phone might not have enough memory, it will not tell you if it crashed. Are you sure you want to continue? Needs at least 512mb of memory.")
 									== Dialog.YES)
 							{
 								button.setLabel("Do Speed Tests [ON]");

@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2010 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ final class cmsintrp
 	    // Invoke factory, possibly in the Plug-in
 	    p.Interpolation = Interpolators.run(p.nInputs, p.nOutputs, p.dwFlags);
 	    
-	    // If unsupported by the plug-in, go for the LittleCMS default. 
+	    // If unsupported by the plug-in, go for the LittleCMS default.
 	    // If happens only if an extern plug-in is being used
 	    if (!p.Interpolation.hasValue())
 	    {
@@ -96,7 +96,7 @@ final class cmsintrp
 	    // Check for maximum inputs
 	    if (InputChan > lcms2_internal.MAX_INPUT_DIMENSIONS)
 	    {
-	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSINTRP_TOO_MANY_INPUT_CHANNELS), 
+	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSINTRP_TOO_MANY_INPUT_CHANNELS),
 	    			new Object[]{new Integer(InputChan), new Integer(lcms2_internal.MAX_INPUT_DIMENSIONS)});
 	    	return null;
 	    }
@@ -128,7 +128,7 @@ final class cmsintrp
 	    
 	    if (!_cmsSetInterpolationRoutine(p))
 	    {
-	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSINTRP_UNSUP_INTERP), 
+	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSINTRP_UNSUP_INTERP),
 	    			new Object[]{new Integer(InputChan), new Integer(OutputChan)});
 	        return null;
 	    }
@@ -167,7 +167,7 @@ final class cmsintrp
 	    }
 	}
 	
-	// Inline fixed point interpolation 
+	// Inline fixed point interpolation
 	private static short LinearInterp(int a, int l, int h)
 	{
 	    int dif = (int)(h - l) * a + 0x8000;
@@ -456,7 +456,7 @@ final class cmsintrp
 	
 	private static int DENS(int i,int j,int k,short[] LutTable,int tableOffset,int OutChan)
 	{
-		return (LutTable[(i)+(j)+(k)+OutChan+tableOffset]) & 0xFFFF; 
+		return (LutTable[(i)+(j)+(k)+OutChan+tableOffset]) & 0xFFFF;
 	}
 	//Float
 	private static float DENS(int i,int j,float[] LutTable,int OutChan)
@@ -466,7 +466,7 @@ final class cmsintrp
 	
 	private static float DENS(int i,int j,int k,float[] LutTable,int OutChan)
 	{
-		return (LutTable[(i)+(j)+(k)+OutChan]); 
+		return (LutTable[(i)+(j)+(k)+OutChan]);
 	}
 	
 	// Bilinear interpolation (16 bits) - cmsFloat32Number version
@@ -655,7 +655,7 @@ final class cmsintrp
 
 		    if (px < 0)
 		    {
-		    	px = 0; 
+		    	px = 0;
 		    }
 		    if (px > 1)
 		    {
@@ -663,7 +663,7 @@ final class cmsintrp
 		    }
 		    if (py < 0)
 		    {
-		    	py = 0; 
+		    	py = 0;
 		    }
 		    if (py > 1)
 		    {
@@ -671,7 +671,7 @@ final class cmsintrp
 		    }
 		    if (pz < 0)
 		    {
-		    	pz = 0; 
+		    	pz = 0;
 		    }
 		    if (pz > 1)
 		    {
@@ -885,7 +885,7 @@ final class cmsintrp
 
 		    if (px < 0)
 		    {
-		    	px = 0; 
+		    	px = 0;
 		    }
 		    if (px > 1)
 		    {
@@ -893,7 +893,7 @@ final class cmsintrp
 		    }
 		    if (py < 0)
 		    {
-		    	py = 0; 
+		    	py = 0;
 		    }
 		    if (py > 1)
 		    {
@@ -901,7 +901,7 @@ final class cmsintrp
 		    }
 		    if (pz < 0)
 		    {
-		    	pz = 0; 
+		    	pz = 0;
 		    }
 		    if (pz > 1)
 		    {
@@ -945,7 +945,7 @@ final class cmsintrp
 			        else
 			        {
 			            if (rx >= rz && rz >= ry)
-			            {            
+			            {
 			                c1 = DENSF(X1, Y0, Z0, LutTable, pos, OutChan) - c0;
 			                c2 = DENSF(X1, Y1, Z1, LutTable, pos, OutChan) - DENSF(X1, Y0, Z1, LutTable, pos, OutChan);
 			                c3 = DENSF(X1, Y0, Z1, LutTable, pos, OutChan) - DENSF(X1, Y0, Z0, LutTable, pos, OutChan);
@@ -977,14 +977,14 @@ final class cmsintrp
 			                        else
 			                        {
 			                            if (rz >= ry && ry >= rx)
-			                            {             
+			                            {
 			                                c1 = DENSF(X1, Y1, Z1, LutTable, pos, OutChan) - DENSF(X0, Y1, Z1, LutTable, pos, OutChan);
 			                                c2 = DENSF(X0, Y1, Z1, LutTable, pos, OutChan) - DENSF(X0, Y0, Z1, LutTable, pos, OutChan);
 			                                c3 = DENSF(X0, Y0, Z1, LutTable, pos, OutChan) - c0;
 			                            }
 			                            else
 			                            {
-			                                c1 = c2 = c3 = 0;                               
+			                                c1 = c2 = c3 = 0;
 			                            }
 			                        }
 			                    }
@@ -1015,7 +1015,7 @@ final class cmsintrp
 			        else
 			        {
 			            if (rx >= rz && rz >= ry)
-			            {            
+			            {
 			                c1 = DENS(X1, Y0, Z0, LutTable, OutChan) - c0;
 			                c2 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y0, Z1, LutTable, OutChan);
 			                c3 = DENS(X1, Y0, Z1, LutTable, OutChan) - DENS(X1, Y0, Z0, LutTable, OutChan);
@@ -1047,14 +1047,14 @@ final class cmsintrp
 			                        else
 			                        {
 			                            if (rz >= ry && ry >= rx)
-			                            {             
+			                            {
 			                                c1 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X0, Y1, Z1, LutTable, OutChan);
 			                                c2 = DENS(X0, Y1, Z1, LutTable, OutChan) - DENS(X0, Y0, Z1, LutTable, OutChan);
 			                                c3 = DENS(X0, Y0, Z1, LutTable, OutChan) - c0;
 			                            }
 			                            else
 			                            {
-			                                c1 = c2 = c3 = 0;                               
+			                                c1 = c2 = c3 = 0;
 			                            }
 			                        }
 			                    }
@@ -1102,7 +1102,7 @@ final class cmsintrp
 		    fz  = lcms2_internal._cmsToFixedDomain((Input[2] & 0xFFFF) * p.Domain[2]);
 		    
 		    x0  = lcms2_internal.FIXED_TO_INT(fx);
-		    y0  = lcms2_internal.FIXED_TO_INT(fy); 
+		    y0  = lcms2_internal.FIXED_TO_INT(fy);
 		    z0  = lcms2_internal.FIXED_TO_INT(fz);
 		    
 		    rx  = lcms2_internal.FIXED_REST_TO_INT(fx);
@@ -1382,7 +1382,7 @@ final class cmsintrp
 			        else
 			        {
 			            if (rx >= rz && rz >= ry)
-			            {            
+			            {
 			                c1 = DENSS(X1, Y0, Z0, LutTable, pos, OutChan) - c0;
 			                c2 = DENSS(X1, Y1, Z1, LutTable, pos, OutChan) - DENSS(X1, Y0, Z1, LutTable, pos, OutChan);
 			                c3 = DENSS(X1, Y0, Z1, LutTable, pos, OutChan) - DENSS(X1, Y0, Z0, LutTable, pos, OutChan);
@@ -1393,7 +1393,7 @@ final class cmsintrp
 			                {
 			                    c1 = DENSS(X1, Y0, Z1, LutTable, pos, OutChan) - DENSS(X0, Y0, Z1, LutTable, pos, OutChan);
 			                    c2 = DENSS(X1, Y1, Z1, LutTable, pos, OutChan) - DENSS(X1, Y0, Z1, LutTable, pos, OutChan);
-			                    c3 = DENSS(X0, Y0, Z1, LutTable, pos, OutChan) - c0;                            
+			                    c3 = DENSS(X0, Y0, Z1, LutTable, pos, OutChan) - c0;
 			                }
 			                else
 			                {
@@ -1414,14 +1414,14 @@ final class cmsintrp
 			                        else
 			                        {
 			                            if (rz >= ry && ry >= rx)
-			                            {             
+			                            {
 			                                c1 = DENSS(X1, Y1, Z1, LutTable, pos, OutChan) - DENSS(X0, Y1, Z1, LutTable, pos, OutChan);
 			                                c2 = DENSS(X0, Y1, Z1, LutTable, pos, OutChan) - DENSS(X0, Y0, Z1, LutTable, pos, OutChan);
 			                                c3 = DENSS(X0, Y0, Z1, LutTable, pos, OutChan) - c0;
 			                            }
 			                            else
 			                            {
-			                                c1 = c2 = c3 = 0;                               
+			                                c1 = c2 = c3 = 0;
 			                            }
 			                        }
 			                    }
@@ -1453,7 +1453,7 @@ final class cmsintrp
 			        else
 			        {
 			            if (rx >= rz && rz >= ry)
-			            {            
+			            {
 			                c1 = DENS(X1, Y0, Z0, LutTable, OutChan) - c0;
 			                c2 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y0, Z1, LutTable, OutChan);
 			                c3 = DENS(X1, Y0, Z1, LutTable, OutChan) - DENS(X1, Y0, Z0, LutTable, OutChan);
@@ -1464,7 +1464,7 @@ final class cmsintrp
 			                {
 			                    c1 = DENS(X1, Y0, Z1, LutTable, OutChan) - DENS(X0, Y0, Z1, LutTable, OutChan);
 			                    c2 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y0, Z1, LutTable, OutChan);
-			                    c3 = DENS(X0, Y0, Z1, LutTable, OutChan) - c0;                            
+			                    c3 = DENS(X0, Y0, Z1, LutTable, OutChan) - c0;
 			                }
 			                else
 			                {
@@ -1485,14 +1485,14 @@ final class cmsintrp
 			                        else
 			                        {
 			                            if (rz >= ry && ry >= rx)
-			                            {             
+			                            {
 			                                c1 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X0, Y1, Z1, LutTable, OutChan);
 			                                c2 = DENS(X0, Y1, Z1, LutTable, OutChan) - DENS(X0, Y0, Z1, LutTable, OutChan);
 			                                c3 = DENS(X0, Y0, Z1, LutTable, OutChan) - c0;
 			                            }
 			                            else
 			                            {
-			                                c1 = c2 = c3 = 0;                               
+			                                c1 = c2 = c3 = 0;
 			                            }
 			                        }
 			                    }
@@ -1528,7 +1528,7 @@ final class cmsintrp
 		    int x0, y0, z0;
 		    int X0, X1, Y0, Y1, Z0, Z1;
 		    int i;
-		    int c0, c1, c2, c3, Rest;       
+		    int c0, c1, c2, c3, Rest;
 		    int OutChan;
 		    short[] Tmp1 = new short[lcms2_internal.MAX_STAGE_CHANNELS], Tmp2 = new short[lcms2_internal.MAX_STAGE_CHANNELS];
 		    
@@ -1579,7 +1579,7 @@ final class cmsintrp
 			        else
 			        {
 			            if (rx >= rz && rz >= ry)
-			            {            
+			            {
 			                c1 = DENSS(X1, Y0, Z0, LutTable, tpos, OutChan) - c0;
 			                c2 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X1, Y0, Z1, LutTable, tpos, OutChan);
 			                c3 = DENSS(X1, Y0, Z1, LutTable, tpos, OutChan) - DENSS(X1, Y0, Z0, LutTable, tpos, OutChan);
@@ -1611,14 +1611,14 @@ final class cmsintrp
 			                        else
 			                        {
 			                            if (rz >= ry && ry >= rx)
-			                            {             
+			                            {
 			                                c1 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y1, Z1, LutTable, tpos, OutChan);
 			                                c2 = DENSS(X0, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y0, Z1, LutTable, tpos, OutChan);
 			                                c3 = DENSS(X0, Y0, Z1, LutTable, tpos, OutChan) - c0;
 			                            }
-			                            else 
+			                            else
 			                            {
-			                                c1 = c2 = c3 = 0;                               
+			                                c1 = c2 = c3 = 0;
 			                            }
 			                        }
 			                    }
@@ -1678,14 +1678,14 @@ final class cmsintrp
 			                        else
 			                        {
 			                            if (rz >= ry && ry >= rx)
-			                            {             
+			                            {
 			                                c1 = DENSS(X1, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y1, Z1, LutTable, tpos, OutChan);
 			                                c2 = DENSS(X0, Y1, Z1, LutTable, tpos, OutChan) - DENSS(X0, Y0, Z1, LutTable, tpos, OutChan);
 			                                c3 = DENSS(X0, Y0, Z1, LutTable, tpos, OutChan) - c0;
 			                            }
 			                            else
 			                            {
-			                                c1 = c2 = c3 = 0;                               
+			                                c1 = c2 = c3 = 0;
 			                            }
 			                        }
 			                    }
@@ -1717,7 +1717,7 @@ final class cmsintrp
 			        else
 			        {
 			            if (rx >= rz && rz >= ry)
-			            {            
+			            {
 			                c1 = DENS(X1, Y0, Z0, LutTable, LutTablePos, OutChan) - c0;
 			                c2 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X1, Y0, Z1, LutTable, LutTablePos, OutChan);
 			                c3 = DENS(X1, Y0, Z1, LutTable, LutTablePos, OutChan) - DENS(X1, Y0, Z0, LutTable, LutTablePos, OutChan);
@@ -1749,14 +1749,14 @@ final class cmsintrp
 			                        else
 			                        {
 			                            if (rz >= ry && ry >= rx)
-			                            {             
+			                            {
 			                                c1 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y1, Z1, LutTable, LutTablePos, OutChan);
 			                                c2 = DENS(X0, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y0, Z1, LutTable, LutTablePos, OutChan);
 			                                c3 = DENS(X0, Y0, Z1, LutTable, LutTablePos, OutChan) - c0;
 			                            }
-			                            else 
+			                            else
 			                            {
-			                                c1 = c2 = c3 = 0;                               
+			                                c1 = c2 = c3 = 0;
 			                            }
 			                        }
 			                    }
@@ -1816,14 +1816,14 @@ final class cmsintrp
 			                        else
 			                        {
 			                            if (rz >= ry && ry >= rx)
-			                            {             
+			                            {
 			                                c1 = DENS(X1, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y1, Z1, LutTable, LutTablePos, OutChan);
 			                                c2 = DENS(X0, Y1, Z1, LutTable, LutTablePos, OutChan) - DENS(X0, Y0, Z1, LutTable, LutTablePos, OutChan);
 			                                c3 = DENS(X0, Y0, Z1, LutTable, LutTablePos, OutChan) - c0;
 			                            }
 			                            else
 			                            {
-			                                c1 = c2 = c3 = 0;                               
+			                                c1 = c2 = c3 = 0;
 			                            }
 			                        }
 			                    }
@@ -2481,7 +2481,7 @@ final class cmsintrp
 		    switch (nInputChannels)
 		    {
 		    	case 1: // Gray LUT / linear
-		    		Interpolation.set(nOutputChannels == 1 ? 
+		    		Interpolation.set(nOutputChannels == 1 ?
 		    				(IsFloat ? (Object)LinLerp1Dfloat : LinLerp1D) :
 		    				(IsFloat ? (Object)Eval1InputFloat : Eval1Input));
 		    		break;
@@ -2489,7 +2489,7 @@ final class cmsintrp
 		    		Interpolation.set(IsFloat ? (Object)BilinearInterpFloat : BilinearInterp16);
 		    		break;
 	    		case 3: // RGB et al
-	    			Interpolation.set(IsTrilinear ? 
+	    			Interpolation.set(IsTrilinear ?
 		    				(IsFloat ? (Object)TrilinearInterpFloat : TrilinearInterp16) :
 		    				(IsFloat ? (Object)TetrahedralInterpFloat : TetrahedralInterp16));
 	    			break;

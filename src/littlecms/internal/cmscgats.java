@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -281,37 +281,37 @@ final class cmscgats
 														        // needed.
 		
 		new PROPERTY("SAMPLE_BACKING", WRITE_STRINGIFY),		// Identifies the backing material used behind the sample during
-																// measurement. Allowed values are “black”, “white”, or {"na".
+																// measurement. Allowed values are ï¿½blackï¿½, ï¿½whiteï¿½, or {"na".
 		
 		new PROPERTY("CHISQ_DOF", WRITE_STRINGIFY),				// Degrees of freedom associated with the Chi squared statistic
 		
 		// below properties are new in recent specs:
 		
-		new PROPERTY("MEASUREMENT_GEOMETRY", WRITE_STRINGIFY),	// The type of measurement, either reflection or transmission, should be indicated 
-														        // along with details of the geometry and the aperture size and shape. For example, 
-														        // for transmission measurements it is important to identify 0/diffuse, diffuse/0, 
-														        // opal or integrating sphere, etc. For reflection it is important to identify 0/45, 
+		new PROPERTY("MEASUREMENT_GEOMETRY", WRITE_STRINGIFY),	// The type of measurement, either reflection or transmission, should be indicated
+														        // along with details of the geometry and the aperture size and shape. For example,
+														        // for transmission measurements it is important to identify 0/diffuse, diffuse/0,
+														        // opal or integrating sphere, etc. For reflection it is important to identify 0/45,
 														        // 45/0, sphere (specular included or excluded), etc.
 		
-		new PROPERTY("FILTER", WRITE_STRINGIFY),				// Identifies the use of physical filter(s) during measurement. Typically used to 
+		new PROPERTY("FILTER", WRITE_STRINGIFY),				// Identifies the use of physical filter(s) during measurement. Typically used to
         														// denote the use of filters such as none, D65, Red, Green or Blue.
 		
-		new PROPERTY("POLARIZATION", WRITE_STRINGIFY),			// Identifies the use of a physical polarization filter during measurement. Allowed 
-        														// values are {"yes”, “white”, “none” or “na”.
+		new PROPERTY("POLARIZATION", WRITE_STRINGIFY),			// Identifies the use of a physical polarization filter during measurement. Allowed
+        														// values are {"yesï¿½, ï¿½whiteï¿½, ï¿½noneï¿½ or ï¿½naï¿½.
 		
-		new PROPERTY("WEIGHTING_FUNCTION", WRITE_PAIR),			// Indicates such functions as: the CIE standard observer functions used in the 
-														        // calculation of various data parameters (2 degree and 10 degree), CIE standard 
+		new PROPERTY("WEIGHTING_FUNCTION", WRITE_PAIR),			// Indicates such functions as: the CIE standard observer functions used in the
+														        // calculation of various data parameters (2 degree and 10 degree), CIE standard
 														        // illuminant functions used in the calculation of various data parameters (e.g., D50,
-														        // D65, etc.), density status response, etc. If used there shall be at least one 
-														        // name-value pair following the WEIGHTING_FUNCTION tag/keyword. The first attribute 
+														        // D65, etc.), density status response, etc. If used there shall be at least one
+														        // name-value pair following the WEIGHTING_FUNCTION tag/keyword. The first attribute
 														        // in the set shall be {"name" and shall identify the particular parameter used.
-														        // The second shall be {"value" and shall provide the value associated with that name. 
-														        // For ASCII data, a string containing the Name and Value attribute pairs shall follow 
-														        // the weighting function keyword. A semi-colon separates attribute pairs from each 
+														        // The second shall be {"value" and shall provide the value associated with that name.
+														        // For ASCII data, a string containing the Name and Value attribute pairs shall follow
+														        // the weighting function keyword. A semi-colon separates attribute pairs from each
 														        // other and within the attribute the name and value are separated by a comma.
 		
-		new PROPERTY("COMPUTATIONAL_PARAMETER", WRITE_PAIR),	// Parameter that is used in computing a value from measured data. Name is the name 
-														        // of the calculation, parameter is the name of the parameter used in the calculation 
+		new PROPERTY("COMPUTATIONAL_PARAMETER", WRITE_PAIR),	// Parameter that is used in computing a value from measured data. Name is the name
+														        // of the calculation, parameter is the name of the parameter used in the calculation
 														        // and value is the value of the parameter.
 		
 		new PROPERTY("TARGET_TYPE", WRITE_STRINGIFY),			// The type of target being measured, e.g. IT8.7/1, IT8.7/3, user defined, etc.
@@ -328,7 +328,7 @@ final class cmscgats
     // Predefined sample types on dataset
     private static final String[] PredefinedSampleID = {
         "SAMPLE_ID",      // Identifies sample that data represents
-        "STRING",         // Identifies label, or other non-machine readable value. 
+        "STRING",         // Identifies label, or other non-machine readable value.
                           // Value must begin and end with a " symbol
         
         "CMYK_C",         // Cyan component of CMYK data expressed as a percentage
@@ -533,7 +533,7 @@ final class cmscgats
                 {
                 	it8.ch = 0; // EOF
                 }
-            }              
+            }
         }
         else
         {
@@ -697,7 +697,7 @@ final class cmscgats
     		
     		if (BufferChars[BufferPtr] != '\0')
     		{
-    			BufferPtr++; 
+    			BufferPtr++;
     		}
     		
     		while (BufferChars[BufferPtr] != '\0' && Utility.isdigit((int)BufferChars[BufferPtr]))
@@ -706,7 +706,7 @@ final class cmscgats
     			prec++;
     			if (BufferChars[BufferPtr] != '\0')
     			{
-    				BufferPtr++; 
+    				BufferPtr++;
     			}
     		}
     		
@@ -926,7 +926,7 @@ final class cmscgats
                             NextCh(it8);
                         } while (isidchar(it8.ch));
                         
-                        idptr[idptrPos] = '\0';                    
+                        idptr[idptrPos] = '\0';
                         it8.sy = SIDENT;
                     }
                     return;
@@ -944,7 +944,7 @@ final class cmscgats
 			            case -1:
 			                it8.sy = SEOF;
 			                break;
-			            // Next line            
+			            // Next line
 			            case '\n':
 			                NextCh(it8);
 			                it8.sy = SEOLN;
@@ -975,7 +975,7 @@ final class cmscgats
 			                    	k = MAXSTR+1;
 			                    }
 			                    else
-			                    {                                    
+			                    {
 			                        idptr[idptrPos++] = (char)it8.ch;
 			                        NextCh(it8);
 			                        k++;
@@ -987,7 +987,7 @@ final class cmscgats
 			                NextCh(it8);
 			                break;
 			            default:
-			                SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_UNRECOGNIZED_CHAR), new Object[]{new Integer(it8.ch)});            
+			                SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_UNRECOGNIZED_CHAR), new Object[]{new Integer(it8.ch)});
 			                return;
 	                }
                 }
@@ -1135,7 +1135,7 @@ final class cmscgats
         
         if (it8.MemoryBlock != null)
         {
-        	cmserr._cmsFree(it8.ContextID, it8.MemoryBlock);    
+        	cmserr._cmsFree(it8.ContextID, it8.MemoryBlock);
         }
     }
     
@@ -1262,13 +1262,13 @@ final class cmscgats
         KEYVALUE[] p = new KEYVALUE[1];
         KEYVALUE last;
         
-        // Check if property is already in list 
+        // Check if property is already in list
         
         if (IsAvailableOnList(Head[0], Key, Subkey, p))
         {
             // This may work for editing properties
         	
-            //return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_DUP_KEY), new Object[]{Key});                                        
+            //return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_DUP_KEY), new Object[]{Key});
         }
         else
         {
@@ -1393,7 +1393,7 @@ final class cmscgats
         it8.Allocator = new SUBALLOCATOR();
         it8.Allocator.Used = 0;
         it8.Allocator.Block = null;
-        it8.Allocator.BlockSize = 0;  
+        it8.Allocator.BlockSize = 0;
         
         it8.ValidKeywords = new KEYVALUE[1];
         it8.ValidSampleID = new KEYVALUE[1];
@@ -1663,7 +1663,7 @@ final class cmscgats
         
         if (nSet > t.nPatches || nSet < 0)
         {
-        	return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_DATA_OUTOFRANGE_FORMAT_PATCH), new Object[]{new Integer(nSet), new Integer(t.nPatches)});            
+        	return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_DATA_OUTOFRANGE_FORMAT_PATCH), new Object[]{new Integer(nSet), new Integer(t.nPatches)});
         }
         
         if (nField > t.nSamples || nField < 0)
@@ -1909,7 +1909,7 @@ final class cmscgats
     // Saves to memory
     public static boolean cmsIT8SaveToMem(cmsHANDLE hIT8, byte[] MemPtr, int[] BytesNeeded)
     {
-        SAVESTREAM sd = new SAVESTREAM();  
+        SAVESTREAM sd = new SAVESTREAM();
         int i;
         cmsIT8 it8 = (cmsIT8)hIT8;
         
@@ -2052,9 +2052,9 @@ final class cmscgats
         char[] Buffer = new char[MAXSTR];
         KEYVALUE Key;
         
-        while (it8.sy != SEOF && 
-        		it8.sy != SSYNERROR && 
-        		it8.sy != SBEGIN_DATA_FORMAT && 
+        while (it8.sy != SEOF &&
+        		it8.sy != SSYNERROR &&
+        		it8.sy != SBEGIN_DATA_FORMAT &&
         		it8.sy != SBEGIN_DATA)
         {
         	switch (it8.sy)
@@ -2112,7 +2112,7 @@ final class cmscgats
                     
                     if(Key.WriteAs != WRITE_PAIR)
                     {
-                        AddToList(it8, GetTable(it8).HeaderList, Utility.cstringCreation(VarName), null, Utility.cstringCreation(Buffer), 
+                        AddToList(it8, GetTable(it8).HeaderList, Utility.cstringCreation(VarName), null, Utility.cstringCreation(Buffer),
                         		(it8.sy == SSTRING) ? WRITE_STRINGIFY : WRITE_UNCOOKED);
                     }
                     else
@@ -2168,7 +2168,7 @@ final class cmscgats
                             {
                             	return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_INVALID_VALUE_FOR_PROP), new Object[]{VarName});
                             }
-                            AddToList(it8, GetTable(it8).HeaderList, Utility.cstringCreation(VarName), Utility.cstringCreation(Buffer, Subkey), 
+                            AddToList(it8, GetTable(it8).HeaderList, Utility.cstringCreation(VarName), Utility.cstringCreation(Buffer, Subkey),
                             		Utility.cstringCreation(Buffer, Value), WRITE_PAIR);
                         }
                     }
@@ -2211,7 +2211,7 @@ final class cmscgats
     {
         if (!nosheet)
         {
-            ReadType(it8, it8.Tab[0].SheetType, 0);  
+            ReadType(it8, it8.Tab[0].SheetType, 0);
         }
     	
         InSymbol(it8);
@@ -2259,11 +2259,11 @@ final class cmscgats
                                 {
                                 	cmsIT8SetSheetType(it8, Utility.cstringCreation(it8.id));
                                 	InSymbol(it8);
-                                } 
+                                }
                                 else
                                 {
                                     // It is not. Just continue
-                                    cmsIT8SetSheetType(it8, "");                                       
+                                    cmsIT8SetSheetType(it8, "");
                                 }
                         	}
                             else
@@ -2476,7 +2476,7 @@ final class cmscgats
     
     public static cmsHANDLE cmsIT8LoadFromMem(cmsContext ContextID, byte[] Ptr, int len)
     {
-        cmsHANDLE hIT8; 
+        cmsHANDLE hIT8;
         cmsIT8 it8;
     	boolean type;
     	
@@ -2506,7 +2506,7 @@ final class cmscgats
         
         if (!ParseIT8(it8, !type))
         {
-            cmsIT8Free(hIT8); 
+            cmsIT8Free(hIT8);
             return null;
         }
         
@@ -2564,7 +2564,7 @@ final class cmscgats
         {
         	it8.FileStack[0].Stream.close();
         	cmsIT8Free(hIT8);
-        	return null; 
+        	return null;
         }
         
         CookPointers(it8);
@@ -2573,7 +2573,7 @@ final class cmscgats
         if (it8.FileStack[0].Stream.close() != 0)
         {
         	cmsIT8Free(hIT8);
-        	return null; 
+        	return null;
     	}
         
         return hIT8;
@@ -2784,7 +2784,7 @@ final class cmscgats
         return SetData(it8, row, col, dat.substring(0, Utility.strlen(dat)));
     }
     
-    public static String cmsIT8GetData(cmsHANDLE hIT8, final String cPatch, final String cSample)                        
+    public static String cmsIT8GetData(cmsHANDLE hIT8, final String cPatch, final String cSample)
     {
         cmsIT8 it8 = (cmsIT8)hIT8;
         int iField, iSet;
@@ -2793,7 +2793,7 @@ final class cmscgats
         
         iField = LocateSample(it8, cSample);
         if (iField < 0)
-        {       
+        {
             return null;
         }
         
@@ -2845,7 +2845,7 @@ final class cmscgats
             iSet = LocateEmptyPatch(it8);
             if (iSet < 0)
             {
-                return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_COULDNT_ADD_PATCH), new Object[]{cPatch});                        
+                return SynError(it8, Utility.LCMS_Resources.getString(LCMSResource.CGATS_COULDNT_ADD_PATCH), new Object[]{cPatch});
             }
             
             iField = t.SampleID;
@@ -2898,7 +2898,7 @@ final class cmscgats
     	}
     	
     	buffer.ensureCapacity(MAXSTR);
-    	Utility.strncpy(buffer, Data, MAXSTR-1);       
+    	Utility.strncpy(buffer, Data, MAXSTR-1);
     	if(buffer.length() > MAXSTR-1)
     	{
     		buffer.setCharAt(MAXSTR-1, '\0');
@@ -2923,7 +2923,7 @@ final class cmscgats
     	return it8.TablesCount;
     }
     
-    // This handles the "LABEL" extension. 
+    // This handles the "LABEL" extension.
     // Label, nTable, Type
     
     public static int cmsIT8SetTableByLabel(cmsHANDLE hIT8, final String cSet, String cField, String ExpectedType)
@@ -2944,7 +2944,7 @@ final class cmscgats
         	cField = "LABEL";
         }
         
-        cLabelFld = cmsIT8GetData(hIT8, cSet, cField); 
+        cLabelFld = cmsIT8GetData(hIT8, cSet, cField);
         if (cLabelFld == null)
         {
         	return -1;
@@ -2968,7 +2968,7 @@ final class cmscgats
             }
         }
         
-        return cmsIT8SetTable(hIT8, nTable[0]);    
+        return cmsIT8SetTable(hIT8, nTable[0]);
     }
     
     public static boolean cmsIT8SetIndexColumn(cmsHANDLE hIT8, final String cSample)

@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -186,10 +186,10 @@ final class cmsvirt
 	
 	// This function creates a profile based on White point, primaries and
 	// transfer functions.
-	public static cmsHPROFILE cmsCreateRGBProfileTHR(cmsContext ContextID, final cmsCIExyY WhitePoint, final cmsCIExyYTRIPLE Primaries, 
+	public static cmsHPROFILE cmsCreateRGBProfileTHR(cmsContext ContextID, final cmsCIExyY WhitePoint, final cmsCIExyYTRIPLE Primaries,
 			final cmsToneCurve[] TransferFunction)
 	{
-	    cmsHPROFILE hICC;   
+	    cmsHPROFILE hICC;
 	    cmsMAT3 MColorants;
 	    cmsCIEXYZTRIPLE Colorants;
 	    cmsCIExyY MaxWhite;
@@ -374,7 +374,7 @@ final class cmsvirt
 	public static cmsHPROFILE cmsCreateGrayProfileTHR(cmsContext ContextID, final cmsCIExyY WhitePoint, final cmsToneCurve TransferFunction)
 	{
 	    cmsHPROFILE hICC;
-	    cmsCIEXYZ tmp;              
+	    cmsCIEXYZ tmp;
 	    
 	    hICC = cmsio0.cmsCreateProfilePlaceholder(ContextID);
 	    if (hICC == null) // can't allocate
@@ -395,7 +395,7 @@ final class cmsvirt
 	    //  2 cmsSigMediaWhitePointTag
 	    //  3 cmsSigGrayTRCTag
 	    
-	    // This conforms a standard Gray DisplayProfile 
+	    // This conforms a standard Gray DisplayProfile
 	    
 	    // Fill-in the tags
 	    
@@ -494,7 +494,7 @@ final class cmsvirt
 	    
 	    cmslut.cmsPipelineInsertStage(Pipeline, lcms2.cmsAT_BEGIN, Lin);
 	    
-	    // Create tags       
+	    // Create tags
 	    if (!SetTextTags(hICC, "Linearization built-in"))
 	    {
 	    	if (hICC != null)
@@ -537,13 +537,13 @@ final class cmsvirt
 	
 	// Ink-limiting algorithm
 	//
-	//  Sum = C + M + Y + K 
-	//  If Sum > InkLimit 
+	//  Sum = C + M + Y + K
+	//  If Sum > InkLimit
 	//	        Ratio= 1 - (Sum - InkLimit) / (C + M + Y)
-	//	        if Ratio <0 
+	//	        if Ratio <0
 	//	              Ratio=0
-	//	        endif     
-	//	     Else 
+	//	        endif
+	//	     Else
 	//	         Ratio=1
 	//	     endif
 	//
@@ -562,7 +562,7 @@ final class cmsvirt
 		    InkLimit = (InkLimit * 655.35);
 		    
 		    SumCMY   = (In[0] & 0xFFFF) + (In[1] & 0xFFFF) + (In[2] & 0xFFFF);
-		    SumCMYK  = SumCMY + (In[3] & 0xFFFF);      
+		    SumCMYK  = SumCMY + (In[3] & 0xFFFF);
 		    
 		    if (SumCMYK > InkLimit)
 		    {
@@ -674,7 +674,7 @@ final class cmsvirt
 		    return null;
 	    }
 	    
-	    cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_BEGIN, cmslut._cmsStageAllocIdentityCurves(ContextID, nChannels));  
+	    cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_BEGIN, cmslut._cmsStageAllocIdentityCurves(ContextID, nChannels));
 	    cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_END, CLUT);
 	    cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_END, cmslut._cmsStageAllocIdentityCurves(ContextID, nChannels));
 	    
@@ -738,7 +738,7 @@ final class cmsvirt
 	// Creates a fake Lab identity.
 	public static cmsHPROFILE cmsCreateLab2ProfileTHR(cmsContext ContextID, final cmsCIExyY WhitePoint)
 	{
-	    cmsHPROFILE hProfile;        
+	    cmsHPROFILE hProfile;
 	    cmsPipeline LUT = null;
 	    
 	    hProfile = cmsCreateRGBProfileTHR(ContextID, WhitePoint == null ? lcms2.cmsD50_xyY : WhitePoint, null, null);
@@ -935,18 +935,18 @@ final class cmsvirt
 	
 	//sRGB Curves are defined by:
 	//
-	//If  R’sRGB,G’sRGB, B’sRGB < 0.04045
+	//If  Rï¿½sRGB,Gï¿½sRGB, Bï¿½sRGB < 0.04045
 	//
-	//	    R =  R’sRGB / 12.92
-	//	    G =  G’sRGB / 12.92
-	//	    B =  B’sRGB / 12.92
+	//	    R =  Rï¿½sRGB / 12.92
+	//	    G =  Gï¿½sRGB / 12.92
+	//	    B =  Bï¿½sRGB / 12.92
 	//
 	//
-	//else if  R’sRGB,G’sRGB, B’sRGB >= 0.04045
+	//else if  Rï¿½sRGB,Gï¿½sRGB, Bï¿½sRGB >= 0.04045
 	//
-	//	    R = ((R’sRGB + 0.055) / 1.055)^2.4
-	//	    G = ((G’sRGB + 0.055) / 1.055)^2.4
-	//	    B = ((B’sRGB + 0.055) / 1.055)^2.4
+	//	    R = ((Rï¿½sRGB + 0.055) / 1.055)^2.4
+	//	    G = ((Gï¿½sRGB + 0.055) / 1.055)^2.4
+	//	    B = ((Bï¿½sRGB + 0.055) / 1.055)^2.4
 	
 	private static cmsToneCurve Build_sRGBGamma(cmsContext ContextID)
 	{
@@ -956,12 +956,12 @@ final class cmsvirt
 	    Parameters[1] = 1. / 1.055;
 	    Parameters[2] = 0.055 / 1.055;
 	    Parameters[3] = 1. / 12.92;
-	    Parameters[4] = 0.04045;    
+	    Parameters[4] = 0.04045;
 	    
 	    return cmsgamma.cmsBuildParametricToneCurve(ContextID, 4, Parameters);
 	}
 	
-	// Create the ICC virtual profile for sRGB space 
+	// Create the ICC virtual profile for sRGB space
 	public static cmsHPROFILE cmsCreate_sRGBProfileTHR(cmsContext ContextID)
 	{
 		cmsCIExyY D65 = new cmsCIExyY();
@@ -1052,7 +1052,7 @@ final class cmsvirt
 	// Creates an abstract profile operating in Lab space for Brightness,
 	// contrast, Saturation and white point displacement
 
-	public static cmsHPROFILE cmsCreateBCHSWabstractProfileTHR(cmsContext ContextID, int nLUTPoints, double Bright, double Contrast, double Hue, double Saturation, 
+	public static cmsHPROFILE cmsCreateBCHSWabstractProfileTHR(cmsContext ContextID, int nLUTPoints, double Bright, double Contrast, double Hue, double Saturation,
 			int TempSrc, int TempDest)
 	{
 		cmsHPROFILE hICC;
@@ -1118,7 +1118,7 @@ final class cmsvirt
 		
 		if (!SetTextTags(hICC, "BCHS built-in"))
 		{
-			return null;    
+			return null;
 		}
 		
 		cmsio0.cmsWriteTag(hICC, lcms2.cmsSigMediaWhitePointTag, lcms2.cmsD50_XYZ);
@@ -1137,7 +1137,7 @@ final class cmsvirt
 	    return cmsCreateBCHSWabstractProfileTHR(null, nLUTPoints, Bright, Contrast, Hue, Saturation, TempSrc, TempDest);
 	}
 	
-	// Creates a fake NULL profile. This profile return 1 channel as always 0. 
+	// Creates a fake NULL profile. This profile return 1 channel as always 0.
 	// Is useful only for gamut checking tricks
 	public static cmsHPROFILE cmsCreateNULLProfileTHR(cmsContext ContextID)
 	{
@@ -1271,7 +1271,7 @@ final class cmsvirt
 	private static cmsHPROFILE CreateNamedColorDevicelink(cmsHTRANSFORM xform)
 	{
 	    _cmsTRANSFORM v = (_cmsTRANSFORM)xform;
-	    cmsHPROFILE hICC = null;  
+	    cmsHPROFILE hICC = null;
 	    int i, nColors;
 	    cmsNAMEDCOLORLIST nc2 = null, Original = null;
 	    
@@ -1318,12 +1318,12 @@ final class cmsvirt
 		    return null;
 	    }
 	    
-	    // Colorant count now depends on the output space 
+	    // Colorant count now depends on the output space
 	    nc2.ColorantCount = cmslut.cmsPipelineOutputChannels(v.Lut);
 	    
-	    // Make sure we have proper formatters    
-	    cmsxform.cmsChangeBuffersFormat(xform, lcms2.TYPE_NAMED_COLOR_INDEX, 
-	    		(0 << lcms2.FLOAT_SHIFT_VALUE) | (cmspcs._cmsLCMScolorSpace(v.ExitColorSpace) << lcms2.COLORSPACE_SHIFT_VALUE) | 
+	    // Make sure we have proper formatters
+	    cmsxform.cmsChangeBuffersFormat(xform, lcms2.TYPE_NAMED_COLOR_INDEX,
+	    		(0 << lcms2.FLOAT_SHIFT_VALUE) | (cmspcs._cmsLCMScolorSpace(v.ExitColorSpace) << lcms2.COLORSPACE_SHIFT_VALUE) |
 	    		(2 << lcms2.BYTES_SHIFT_VALUE) | (cmspcs.cmsChannelsOf(v.ExitColorSpace) << lcms2.CHANNELS_SHIFT_VALUE));
 	    
 	    // Apply the transfor to colorants.
@@ -1400,7 +1400,7 @@ final class cmsvirt
 	        }
 	        if (cmslut.cmsStageType(mpe) != Tab.MpeTypes[n])
 	        {
-	        	return false;             
+	        	return false;
 	        }
 	    }
 	    
@@ -1470,13 +1470,13 @@ final class cmsvirt
 	    // Time to fix the Lab2/Lab4 issue.
 	    if ((xform.EntryColorSpace == lcms2.cmsSigLabData) && (Version < 4.0))
 	    {
-	    	cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_BEGIN, cmslut._cmsStageAllocLabV2ToV4curves(ContextID));        
+	    	cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_BEGIN, cmslut._cmsStageAllocLabV2ToV4curves(ContextID));
 	    }
 	    
 	    // On the output side too
 	    if ((xform.ExitColorSpace) == lcms2.cmsSigLabData && (Version < 4.0))
 	    {
-	    	cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_END, cmslut._cmsStageAllocLabV4ToV2(ContextID));        
+	    	cmslut.cmsPipelineInsertStage(LUT, lcms2.cmsAT_END, cmslut._cmsStageAllocLabV4ToV2(ContextID));
 	    }
 	    
 	    hProfile = cmsio0.cmsCreateProfilePlaceholder(ContextID);

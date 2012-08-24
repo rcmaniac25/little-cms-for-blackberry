@@ -3,22 +3,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -143,7 +143,7 @@ public class lcms2_plugin extends lcms2
 	}
 	
 	/**
-	 * Fills “a” with identity matrix
+	 * Fills ï¿½aï¿½ with identity matrix
 	 * @param a A pointer to a cmsMAT3 object.
 	 */
 	public static void _cmsMAT3identity(cmsMAT3 a)
@@ -152,7 +152,7 @@ public class lcms2_plugin extends lcms2
 	}
 	
 	/**
-	 * Return true if “a” is close enough to be interpreted as identity. Else return false
+	 * Return true if ï¿½aï¿½ is close enough to be interpreted as identity. Else return false
 	 * @param a A pointer to a cmsMAT3 object.
 	 * @return TRUE on identity, FALSE on non-identity.
 	 */
@@ -196,7 +196,7 @@ public class lcms2_plugin extends lcms2
 	}
 	
 	/**
-	 * Evaluates a matrix and stores the result in “r”.
+	 * Evaluates a matrix and stores the result in ï¿½rï¿½.
 	 * @param r a pointer to a cmsVEC3 object to receive the result.
 	 * @param a A pointer to the cmsMAT3 object containing the transformation matrix.
 	 * @param v a pointer to a cmsVEC3 object to be evaluated.
@@ -221,17 +221,17 @@ public class lcms2_plugin extends lcms2
 	
 	// Memory management ----------------------------------------------------------------------------------
 	
-	/* 
+	/*
 	 * These functions are pretty much pointless since the JVM manages memory, leave these in for now but see later if they should be removed or not. The only reason for
 	 * "not" is that it could offer a way to do low-level memory management (say with LowMemoryManager) or statistics and profiling. Not sure how but it could work.
-	 * 
+	 *
 	 * Maybe change the functions to be as follows:
 	 * _cmsMalloc(cmsContext, int) --> _cmsMalloc(cmsContext, Object)
 	 * _cmsMallocZero(cmsContext, int) --> _cmsMallocZero(cmsContext, Object)
 	 * _cmsCalloc(cmsContext, int, int) --> _cmsCalloc(cmsContext, Object) //where Object would be an array, if it was primitives then Object[] would throw a cast exception
 	 * _cmsRealloc(cmsContext, Object, int) --> _cmsRealloc(cmsContext, Object, Object) //The first is the old, the second is the new
 	 * //_cmsFree doesn't need to be changed but _cmsDupMem would be nearly impossible to create unless the function had a duplication/clone function
-	 * 
+	 *
 	 * Maybe work around this by using "VirtualPointer", it acts like a "void*" but with "VirtualPointer.Serializer"s any data type can be inside it
 	 */
 	/**
@@ -291,7 +291,7 @@ public class lcms2_plugin extends lcms2
 	}
 	
 	/**
-	 * Duplicates the contents of memory at “Org” into a new block
+	 * Duplicates the contents of memory at ï¿½Orgï¿½ into a new block
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @param Org pointer to source memory block.
 	 * @param size number of bytes to duplicate.
@@ -1166,7 +1166,7 @@ public class lcms2_plugin extends lcms2
 	 * @param dwFlags color transform flags (prefix is cmsFLAGS_*).
 	 * @return A pointer to a newly created pipeline holding the color transform on success, NULL on error.
 	 */
-	public static cmsPipeline _cmsDefaultICCintents(cmsContext ContextID, int nProfiles, int[] Intents, cmsHPROFILE[] hProfiles, boolean[] BPC, double[] AdaptationStates, 
+	public static cmsPipeline _cmsDefaultICCintents(cmsContext ContextID, int nProfiles, int[] Intents, cmsHPROFILE[] hProfiles, boolean[] BPC, double[] AdaptationStates,
 			int dwFlags)
 	{
 		return cmscnvrt._cmsDefaultICCintents(ContextID, nProfiles, Intents, hProfiles, BPC, AdaptationStates, dwFlags);
@@ -1200,7 +1200,7 @@ public class lcms2_plugin extends lcms2
 	 * @param Data Pointer to user-defined data or NULL if no data is needed. A generic pointer to whatever memory needed by the element
 	 * @return A pointer to the newly created stage on success, NULL on error.
 	 */
-	public static cmsStage _cmsStageAllocPlaceholder(cmsContext ContextID, int Type, int InputChannels, int OutputChannels, _cmsStageEvalFn EvalPtr, 
+	public static cmsStage _cmsStageAllocPlaceholder(cmsContext ContextID, int Type, int InputChannels, int OutputChannels, _cmsStageEvalFn EvalPtr,
 			_cmsStageDupElemFn DupElemPtr, _cmsStageFreeElemFn FreePtr, Object Data)
 	{
 		return cmslut._cmsStageAllocPlaceholder(ContextID, Type, InputChannels, OutputChannels, EvalPtr, DupElemPtr, FreePtr, Data);
@@ -1265,7 +1265,7 @@ public class lcms2_plugin extends lcms2
 	// This function may be used to set the optional evaluator and a block of private data. If private data is being used, an optional
 	// duplicator and free functions should also be specified in order to duplicate the LUT construct. Use NULL to inhibit such functionality.
 	
-	public static void _cmsPipelineSetOptimizationParameters(cmsPipeline Lut, _cmsOPTeval16Fn Eval16, Object PrivateData, _cmsFreeUserDataFn FreePrivateDataFn, 
+	public static void _cmsPipelineSetOptimizationParameters(cmsPipeline Lut, _cmsOPTeval16Fn Eval16, Object PrivateData, _cmsFreeUserDataFn FreePrivateDataFn,
 			_cmsDupUserDataFn DupPrivateDataFn)
 	{
 		cmslut._cmsPipelineSetOptimizationParameters(Lut, Eval16, PrivateData, FreePrivateDataFn, DupPrivateDataFn);

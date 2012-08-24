@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -72,8 +72,8 @@ final class cmsio1
 	
 	// Several resources for gray conversions.
 	private static final double[] GrayInputMatrix = { (InpAdj*lcms2.cmsD50X), (InpAdj*lcms2.cmsD50Y), (InpAdj*lcms2.cmsD50Z) };
-	private static final double[] OneToThreeInputMatrix = { 1, 1, 1 };   
-	private static final double[] PickYMatrix = { 0, (OutpAdj*lcms2.cmsD50Y), 0 };   
+	private static final double[] OneToThreeInputMatrix = { 1, 1, 1 };
+	private static final double[] PickYMatrix = { 0, (OutpAdj*lcms2.cmsD50Y), 0 };
 	private static final double[] PickLstarMatrix = { 1, 0, 0 };
 	
 	// Get a media white point fixing some issues found in certain old profiles
@@ -102,7 +102,7 @@ final class cmsio1
 	        	Dest.X = lcms2.cmsD50X;
 		    	Dest.Y = lcms2.cmsD50Y;
 		    	Dest.Z = lcms2.cmsD50Z;
-	            return true;            
+	            return true;
 	        }
 	    }
 	    
@@ -200,7 +200,7 @@ final class cmsio1
 	        cmsToneCurve EmptyTab;
 	        cmsToneCurve[] LabCurves = new cmsToneCurve[3];
 	        
-	        EmptyTab = cmsgamma.cmsBuildTabulatedToneCurve16(ContextID, 2, Zero); 
+	        EmptyTab = cmsgamma.cmsBuildTabulatedToneCurve16(ContextID, 2, Zero);
 	        
 	        if (EmptyTab == null)
 	        {
@@ -241,7 +241,7 @@ final class cmsio1
 	    }
 	    
 	    // XYZ PCS in encoded in 1.15 format, and the matrix output comes in 0..0xffff range, so
-	    // we need to adjust the output by a factor of (0x10000/0xffff) to put data in 
+	    // we need to adjust the output by a factor of (0x10000/0xffff) to put data in
 	    // a 1.16 range, and then a >> 1 to obtain 1.15. The total factor is (65536.0)/(65535.0*2)
 	    
 	    for (i=0; i < 3; i++)
@@ -314,7 +314,7 @@ final class cmsio1
 	    // On named color, take the appropiate tag
 	    if (cmsio0.cmsGetDeviceClass(hProfile) == lcms2.cmsSigNamedColorClass)
 	    {
-	    	cmsPipeline Lut; 
+	    	cmsPipeline Lut;
 	    	lcms2.cmsNAMEDCOLORLIST nc = (lcms2.cmsNAMEDCOLORLIST)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigNamedColor2Tag);
 	    	
 	        if (nc == null)
@@ -386,18 +386,18 @@ final class cmsio1
 	    // Check if this is a grayscale profile.
 	    if (cmsio0.cmsGetColorSpace(hProfile) == lcms2.cmsSigGrayData)
 	    {
-	        // if so, build appropiate conversion tables. 
+	        // if so, build appropiate conversion tables.
 	        // The tables are the PCS iluminant, scaled across GrayTRC
-	        return BuildGrayInputMatrixPipeline(hProfile);              
+	        return BuildGrayInputMatrixPipeline(hProfile);
 	    }
 	    
-	    // Not gray, create a normal matrix-shaper 
+	    // Not gray, create a normal matrix-shaper
 	    return BuildRGBInputMatrixShaper(hProfile);
 	}
 	
 	// ---------------------------------------------------------------------------------------------------------------
 	
-	// Gray output pipeline. 
+	// Gray output pipeline.
 	// XYZ -> Gray or Lab -> Gray. Since we only know the GrayTRC, we need to do some assumptions. Gray component will be
 	// given by Y on XYZ PCS and by L* on Lab PCS, Both across inverse TRC curve.
 	// The complete pipeline on XYZ is Matrix[3:1] -> Tone curve and in Lab Matrix[3:1] -> Tone Curve as well.
@@ -408,7 +408,7 @@ final class cmsio1
 	    cmsPipeline Lut;
 	    cmsContext ContextID = cmsio0.cmsGetProfileContextID(hProfile);
 	    
-	    GrayTRC = (cmsToneCurve)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigGrayTRCTag);       
+	    GrayTRC = (cmsToneCurve)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigGrayTRCTag);
 	    if (GrayTRC == null)
 	    {
 	    	return null;
@@ -461,7 +461,7 @@ final class cmsio1
 	    }
 	    
 	    // XYZ PCS in encoded in 1.15 format, and the matrix input should come in 0..0xffff range, so
-	    // we need to adjust the input by a << 1 to obtain a 1.16 fixed and then by a factor of 
+	    // we need to adjust the input by a << 1 to obtain a 1.16 fixed and then by a factor of
 	    // (0xffff/0x10000) to put data in 0..0xffff range. Total factor is (2.0*65535.0)/65536.0;
 	    
 	    for (i=0; i < 3; i++)
@@ -472,7 +472,7 @@ final class cmsio1
 	        }
 	    }
 	    
-	    Shapes[0] = (cmsToneCurve)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigRedTRCTag);        
+	    Shapes[0] = (cmsToneCurve)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigRedTRCTag);
 	    Shapes[1] = (cmsToneCurve)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigGreenTRCTag);
 	    Shapes[2] = (cmsToneCurve)cmsio0.cmsReadTag(hProfile, lcms2.cmsSigBlueTRCTag);
 	    
@@ -615,7 +615,7 @@ final class cmsio1
 	        }
 	        
 	        return Lut;
-	    }   
+	    }
 	    
 	    // Lut not found, try to create a matrix-shaper
 	    
@@ -627,7 +627,7 @@ final class cmsio1
 	    	return BuildGrayOutputPipeline(hProfile);
 	    }
 	    
-	    // Not gray, create a normal matrix-shaper 
+	    // Not gray, create a normal matrix-shaper
 	    return BuildRGBOutputMatrixShaper(hProfile);
 	}
 	
@@ -673,7 +673,7 @@ final class cmsio1
 	    return Lut;
 	}
 	
-	// This one includes abstract profiles as well. Matrix-shaper cannot be obtained on that device class. The 
+	// This one includes abstract profiles as well. Matrix-shaper cannot be obtained on that device class. The
 	// tag name here may default to AToB0
 	public static cmsPipeline _cmsReadDevicelinkLUT(cmsHPROFILE hProfile, int Intent)
 	{
@@ -725,7 +725,7 @@ final class cmsio1
 	        tag16    = Device2PCS16[0];
 	        if (!cmsio0.cmsIsTag(hProfile, tag16))
 	        {
-	        	return null;        
+	        	return null;
 	        }
 	    }
 	    
@@ -799,7 +799,7 @@ final class cmsio1
 	
 	// Returns TRUE if the intent is implemented as CLUT
 	public static boolean cmsIsCLUT(cmsHPROFILE hProfile, int Intent, int UsedDirection)
-	{    
+	{
 	    final int[] TagTable;
 	    
 	    // For devicelinks, the supported intent is that one stated in the header
@@ -815,9 +815,9 @@ final class cmsio1
 	    	   break;
 	       case lcms2.LCMS_USED_AS_OUTPUT:
 	    	   TagTable = PCS2Device16;
-	    	   break; 
+	    	   break;
 	       // For proofing, we need rel. colorimetric in output. Let's do some recursion
-	       case lcms2.LCMS_USED_AS_PROOF: 
+	       case lcms2.LCMS_USED_AS_PROOF:
 	           return cmsIsIntentSupported(hProfile, Intent, lcms2.LCMS_USED_AS_INPUT) &&
 	                  cmsIsIntentSupported(hProfile, lcms2.INTENT_RELATIVE_COLORIMETRIC, lcms2.LCMS_USED_AS_OUTPUT);
 	       default:
@@ -876,7 +876,7 @@ final class cmsio1
 	    	return cmsnamed.cmsDupProfileSequenceDescription(ProfileSeq);
 	    }
 	    
-	    // We have to mix both together. For that they must agree 
+	    // We have to mix both together. For that they must agree
 	    if (ProfileSeq.n != ProfileId.n)
 	    {
 	    	return cmsnamed.cmsDupProfileSequenceDescription(ProfileSeq);
@@ -948,7 +948,7 @@ final class cmsio1
 	        long[] tmp = new long[]{ps.attributes};
 	        cmsio0.cmsGetHeaderAttributes(h, tmp);
 	        ps.attributes = tmp[0];
-	        cmsio0.cmsGetHeaderProfileID(h, ps.ProfileID);       
+	        cmsio0.cmsGetHeaderProfileID(h, ps.ProfileID);
 	        ps.deviceMfg   = cmsio0.cmsGetHeaderManufacturer(h);
 	        ps.deviceModel = cmsio0.cmsGetHeaderModel(h);
 	        
@@ -979,7 +979,7 @@ final class cmsio1
 	    switch (Info)
 	    {
 		    case lcms2.cmsInfoDescription:
-		        sig = lcms2.cmsSigProfileDescriptionTag; 
+		        sig = lcms2.cmsSigProfileDescriptionTag;
 		        break;
 		    case lcms2.cmsInfoManufacturer:
 		        sig = lcms2.cmsSigDeviceMfgDescTag;

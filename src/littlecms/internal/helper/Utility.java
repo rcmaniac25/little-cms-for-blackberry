@@ -4,22 +4,22 @@
 //
 //  Little Color Management System
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -95,10 +95,10 @@ public final class Utility
     //polevl and p1evl taken from Java-ML 0.1.6 (Java Machine Learning Library)(http://java-ml.sourceforge.net/)
     /*
     Copyright (C) 1999 CERN - European Organization for Nuclear Research.
-    Permission to use, copy, modify, distribute and sell this software and its documentation for any purpose 
-    is hereby granted without fee, provided that the above copyright notice appear in all copies and 
-    that both that copyright notice and this permission notice appear in supporting documentation. 
-    CERN makes no representations about the suitability of this software for any purpose. 
+    Permission to use, copy, modify, distribute and sell this software and its documentation for any purpose
+    is hereby granted without fee, provided that the above copyright notice appear in all copies and
+    that both that copyright notice and this permission notice appear in supporting documentation.
+    CERN makes no representations about the suitability of this software for any purpose.
     It is provided "as is" without expressed or implied warranty.
     */
     private static double p1evl(double x, double[] coef, int N)
@@ -398,7 +398,7 @@ public final class Utility
     //Singleton functions (taken from PDFRenderer for BlackBerry)
     
     /**
-	 * Get a singleton object. This is not the same as just calling RuntimeStore and is managed for memory usage. It will be cleaned up when 
+	 * Get a singleton object. This is not the same as just calling RuntimeStore and is managed for memory usage. It will be cleaned up when
 	 * {@link #singltonStorageCleanup()} is called.
 	 * @param uid The ID of the object to get.
 	 * @return The object (if it was set using {@link #singletonStorageSet(long, Object)}) or null if it doesn't exist or was not set using {@link #singletonStorageSet(long, Object)}.
@@ -571,19 +571,19 @@ public final class Utility
 	
 	public static boolean isPrimitive(Object obj, boolean readOnlyAllowed)
 	{
-		if(obj instanceof byte[] || obj instanceof short[] || obj instanceof char[] || obj instanceof int[] || obj instanceof long[] || 
+		if(obj instanceof byte[] || obj instanceof short[] || obj instanceof char[] || obj instanceof int[] || obj instanceof long[] ||
 				obj instanceof float[] || obj instanceof double[] || obj instanceof boolean[] || obj instanceof String[] || obj instanceof VirtualPointer[])
 		{
 			return true;
 		}
 		if(readOnlyAllowed)
 		{
-			if(obj instanceof Byte[] || obj instanceof Short[] || obj instanceof Character[] || obj instanceof Integer[] || obj instanceof Long[] || 
+			if(obj instanceof Byte[] || obj instanceof Short[] || obj instanceof Character[] || obj instanceof Integer[] || obj instanceof Long[] ||
 					obj instanceof Float[] || obj instanceof Double[] || obj instanceof Boolean[])
 			{
 				return true;
 			}
-			if(obj instanceof Byte || obj instanceof Short || obj instanceof Character || obj instanceof Integer || obj instanceof Long || 
+			if(obj instanceof Byte || obj instanceof Short || obj instanceof Character || obj instanceof Integer || obj instanceof Long ||
 					obj instanceof Float || obj instanceof Double || obj instanceof Boolean)
 			{
 				return true;

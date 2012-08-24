@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2010 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -84,20 +84,20 @@ final class cmserr
 	    p = f.getPosition(); // register current file position
 	    
 		if (f.seek(0, Stream.SEEK_END) != 0)
-		{		
+		{
 			return -1;
 		}
 	    n = f.getPosition();
 	    f.seek(p, Stream.SEEK_SET); // file position restored
 	    
-	    return n;    
+	    return n;
 	}
 	
 	// Memory handling ------------------------------------------------------------------
 	//
 	// This is the interface to low-level memory management routines. By default a simple
 	// wrapping to malloc/free/realloc is provided, although there is a limit on the max
-	// amount of memory that can be reclaimed. This is mostly as a safety feature to 
+	// amount of memory that can be reclaimed. This is mostly as a safety feature to
 	// prevent bogus or malintentionated code to allocate huge blocks that otherwise lcms
 	// would never need.
 	
@@ -105,16 +105,16 @@ final class cmserr
 	public static final int MAX_MEMORY_FOR_ALLOC = (1024 * 1024 * MAX_MEMORY_FOR_ALLOC_MB);
 	
 	// User may override this behaviour by using a memory plug-in, which basically replaces
-	// the default memory management functions. In this case, no check is performed and it 
-	// is up to the plug-in writter to keep in the safe side. There are only three functions 
-	// required to be implemented: malloc, realloc and free, although the user may want to 
+	// the default memory management functions. In this case, no check is performed and it
+	// is up to the plug-in writter to keep in the safe side. There are only three functions
+	// required to be implemented: malloc, realloc and free, although the user may want to
 	// replace the optional mallocZero, calloc and dup as well.
 	
 	//--memory function is located father down in the source code.
 	
 	// *********************************************************************************
 	
-	// This is the default memory allocation function. It does a very coarse 
+	// This is the default memory allocation function. It does a very coarse
 	// check of amout of memory, just to prevent exploits
 	private static final cmsPluginMemHandler.pluginMallocPtr _cmsMallocDefaultFn = new cmsPluginMemHandler.pluginMallocPtr()
 	{
@@ -154,8 +154,8 @@ final class cmserr
 		}
 	};
 	
-	// The default realloc function. Again it check for exploits. If Ptr is NULL, 
-	// realloc behaves the same way as malloc and allocates a new block of size bytes. 
+	// The default realloc function. Again it check for exploits. If Ptr is NULL,
+	// realloc behaves the same way as malloc and allocates a new block of size bytes.
 	private static final cmsPluginMemHandler.pluginReallocPtr _cmsReallocDefaultFn = new cmsPluginMemHandler.pluginReallocPtr()
 	{
 		public VirtualPointer run(cmsContext ContextID, VirtualPointer Ptr, int size)
@@ -343,7 +343,7 @@ final class cmserr
 
 	// Sub allocation takes care of many pointers of small size. The memory allocated in
 	// this way have be freed at once. Next function allocates a single chunk for linked list
-	// I prefer this method over realloc due to the big inpact on xput realloc may have if 
+	// I prefer this method over realloc due to the big inpact on xput realloc may have if
 	// memory is being swapped to disk. This approach is safer (although that may not be true on all platforms)
 	private static _cmsSubAllocator_chunk _cmsCreateSubAllocChunk(cmsContext ContextID, int Initial)
 	{
@@ -452,7 +452,7 @@ final class cmserr
 	    
 	    size = lcms2_internal._cmsALIGNMEM(size);
 	    
-	    // Check for memory. If there is no room, allocate a new chunk of double memory size.   
+	    // Check for memory. If there is no room, allocate a new chunk of double memory size.
 	    if (size > Free)
 	    {
 	        _cmsSubAllocator_chunk chunk;
@@ -487,7 +487,7 @@ final class cmserr
 	// For example, all create functions does return NULL on failure. Other return FALSE
 	// It may be interesting, for the developer, to know why the function is failing.
 	// for that reason, lcms2 does offer a logging function. This function does recive
-	// a ENGLISH string with some clues on what is going wrong. You can show this 
+	// a ENGLISH string with some clues on what is going wrong. You can show this
 	// info to the end user, or just create some sort of log.
 	// The logging function should NOT terminate the program, as this obviously can leave
 	// resources. It is the programmer's responsability to check each function return code
@@ -560,7 +560,7 @@ final class cmserr
 	    Utility.singletonStorageSet(LOG_ERROR_HANDLER_UID, LogErrorHandler);
 	}
 	
-	// Log an error 
+	// Log an error
 	// ErrorText is a text holding an english description of error.
 	public static void cmsSignalError(cmsContext ContextID, int ErrorCode, final String ErrorText, Object[] args)
 	{

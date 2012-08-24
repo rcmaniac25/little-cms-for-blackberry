@@ -2,22 +2,22 @@
 
 //---------------------------------------------------------------------------------
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -360,7 +360,7 @@ public class VirtualPointer
 			}
             vp.writeIn(data,
 //#ifdef DEBUG
-                unicode ? VirtualPointer.StringUnicode : VirtualPointer.StringAscii, 
+                unicode ? VirtualPointer.StringUnicode : VirtualPointer.StringAscii,
 //#endif
                 inc, false);
             this.stat = VirtualPointer.Serializer.STATUS_SUCCESS;
@@ -1284,16 +1284,16 @@ public class VirtualPointer
 		 * the Serializer should deserialize an array of items. Array support is necessary (specified below):
 		 * <p>
 		 * The first element is a Integer that specifies how many elements are in the array, if this value is
-		 * negative then it is the number of bytes that should be read (simply negate the number). If the element has a fixed size then the size can simply be 
+		 * negative then it is the number of bytes that should be read (simply negate the number). If the element has a fixed size then the size can simply be
 		 * divided to get the number of elements, else the Serializer should read until the byte count equals or exceeds the specified size, VirtualPointer will take
 		 * care of the rest.
 		 * <p>
 		 * The second element is the total read in byte count, it is a int[] of one element and should be set before returning out of the function.
 		 * <p>
 		 * Finally the last element is the data itself, if this is not null then it should be used to set the data. Do not take the first element in the <i>val</i>
-		 * array as fact, if this element in the array is smaller then what the first element says then take this element's length instead of the first element. 
-		 * If it is null then take the first element in <i>val</i> and use that as the length the array should be. Note that if the first parameter does not 
-		 * end on the proper bounds for an element the the rest of the element should be made up so as to not mix up data (as if the element went outside of it's 
+		 * array as fact, if this element in the array is smaller then what the first element says then take this element's length instead of the first element.
+		 * If it is null then take the first element in <i>val</i> and use that as the length the array should be. Note that if the first parameter does not
+		 * end on the proper bounds for an element the the rest of the element should be made up so as to not mix up data (as if the element went outside of it's
 		 * allocated bounds where it is undefined).
 		 */
 		public int deserialize(VirtualPointer vp, Object[] val);
@@ -1787,7 +1787,7 @@ public class VirtualPointer
     {
         if (buffer == null)
         {
-        	/* 
+        	/*
         	 * Little insider ability. By default if data read is past the bounds of the allocated memory it returns what it can and fills the rest with random data
         	 * because nobody knows what is outside the allocated data. BUT by passing in a null buffer it will return how much data can actually be read out.
         	 */
@@ -1874,9 +1874,9 @@ public class VirtualPointer
         }
     }
     
-    private void writeIn(byte[] value, 
+    private void writeIn(byte[] value,
 //#ifdef DEBUG
-                byte type, 
+                byte type,
 //#endif
                 boolean inc, boolean reverse)
     {

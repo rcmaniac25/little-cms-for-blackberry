@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -55,8 +55,8 @@ public
 final class cmslut
 {
 	// Allocates an empty multi profile element
-	public static cmsStage _cmsStageAllocPlaceholder(cmsContext ContextID, int Type, int InputChannels, int OutputChannels, _cmsStageEvalFn EvalPtr, 
-			_cmsStageDupElemFn DupElemPtr, _cmsStageFreeElemFn FreePtr, Object Data)             
+	public static cmsStage _cmsStageAllocPlaceholder(cmsContext ContextID, int Type, int InputChannels, int OutputChannels, _cmsStageEvalFn EvalPtr,
+			_cmsStageDupElemFn DupElemPtr, _cmsStageFreeElemFn FreePtr, Object Data)
 	{
 	    cmsStage ph = new cmsStage();
 	    
@@ -67,9 +67,9 @@ final class cmslut
 	    
 	    ph.InputChannels  = InputChannels;
 	    ph.OutputChannels = OutputChannels;
-	    ph.EvalPtr        = EvalPtr;      
-	    ph.DupElemPtr     = DupElemPtr;   
-	    ph.FreePtr        = FreePtr;               
+	    ph.EvalPtr        = EvalPtr;
+	    ph.DupElemPtr     = DupElemPtr;
+	    ph.FreePtr        = FreePtr;
 	    ph.Data           = Data;
 	    
 	    return ph;
@@ -114,7 +114,7 @@ final class cmslut
 	// that conform the LUT. It should be called with the LUT, the number of expected elements and
 	// then a list of expected types followed with a list of cmsFloat64Number pointers to MPE elements. If
 	// the function founds a match with current pipeline, it fills the pointers and returns TRUE
-	// if not, returns FALSE without touching anything. Setting pointers to NULL does bypass 
+	// if not, returns FALSE without touching anything. Setting pointers to NULL does bypass
 	// the storage process.
 	public static boolean cmsPipelineCheckAndRetreiveStages(final cmsPipeline Lut, int n, Object[] stages)
 	{
@@ -247,7 +247,7 @@ final class cmslut
 		        if (NewElem.TheCurves[i] == null)
 		        {
 		        	if (NewElem.TheCurves != null)
-				    { 
+				    {
 				        for (i=0; i < NewElem.nCurves; i++)
 				        {
 				            if (NewElem.TheCurves[i] != null)
@@ -300,7 +300,7 @@ final class cmslut
 	        
 	        if (NewElem.TheCurves[i] == null)
 	        {
-	            cmsStageFree(NewMPE); 
+	            cmsStageFree(NewMPE);
 	            return null;
 	        }
 	    }
@@ -542,9 +542,9 @@ final class cmslut
 		    }
 		    
 		    NewElem.Params   = cmsintrp._cmsComputeInterpParamsEx(mpe.ContextID,
-		                                                   Data.Params.nSamples, 
+		                                                   Data.Params.nSamples,
 		                                                   Data.Params.nInputs,
-		                                                   Data.Params.nOutputs, 
+		                                                   Data.Params.nOutputs,
 		                                                   NewElem.Tab,
 		                                                   Data.Params.dwFlags);
 		    
@@ -570,7 +570,7 @@ final class cmslut
 		    	cmserr._cmsFree(mpe.ContextID, Data.Tab);
 		    }
 		    
-		    cmsintrp._cmsFreeInterpParams(Data.Params);    
+		    cmsintrp._cmsFreeInterpParams(Data.Params);
 		    //_cmsFree(mpe.ContextID, mpe.Data);
 		    mpe.Data = null;
 		}
@@ -774,7 +774,7 @@ final class cmslut
 	public static boolean cmsStageSampleCLut16bit(cmsStage mpe, cmsSAMPLER16 Sampler, Object Cargo, int dwFlags)
 	{
 	    int i, t, nTotalPoints, index, rest;
-	    int nInputs, nOutputs;  
+	    int nInputs, nOutputs;
 	    int[] nSamples;
 	    short[] In = new short[lcms2.cmsMAXCHANNELS], Out = new short[lcms2_internal.MAX_STAGE_CHANNELS];
 	    _cmsStageCLutData clut;
@@ -900,7 +900,7 @@ final class cmslut
 	        	
 	            rest /= nSamples[t];
 	            
-	            In[t] = (_cmsQuantizeVal(Colorant, nSamples[t]) * (1f / 65535f));                        
+	            In[t] = (_cmsQuantizeVal(Colorant, nSamples[t]) * (1f / 65535f));
 	        }
 	        
 	        if (clut.Tab != null)
@@ -1003,7 +1003,7 @@ final class cmslut
 	        	int Colorant = rest % clutPoints[t];
 	        	
 	            rest /= clutPoints[t];
-	            In[t] = (_cmsQuantizeVal(Colorant, clutPoints[t]) * (1f / 65535f));    
+	            In[t] = (_cmsQuantizeVal(Colorant, clutPoints[t]) * (1f / 65535f));
 	        }
 	        
 	        if (Sampler.run(In, null, Cargo) == 0)
@@ -1034,7 +1034,7 @@ final class cmslut
 		    
 		    cmspcs.cmsLab2XYZ(null, XYZ, Lab);
 		    
-		    // From XYZ, range 0..19997 to 0..1.0, note that 1.99997 comes from 0xffff 
+		    // From XYZ, range 0..19997 to 0..1.0, note that 1.99997 comes from 0xffff
 		    // encoded as 1.15 fixed point, so 1 + (32767.0 / 32768.0)
 		    
 		    Out[0] = (float)(XYZ.X * XYZadj);
@@ -1051,9 +1051,9 @@ final class cmslut
 	
 	// ********************************************************************************
 	
-	// v2 L=100 is supposed to be placed on 0xFF00. There is no reasonable 
+	// v2 L=100 is supposed to be placed on 0xFF00. There is no reasonable
 	// number of gridpoints that would make exact match. However, a prelinearization
-	// of 258 entries, would map 0xFF00 exactly on entry 257, and this is good to avoid scum dot. 
+	// of 258 entries, would map 0xFF00 exactly on entry 257, and this is good to avoid scum dot.
 	// Almost all what we need but unfortunately, the rest of entries should be scaled by
 	// (255*257/256) and this is not exact.
 	
@@ -1075,9 +1075,9 @@ final class cmslut
 	            return null;
 	        }
 	        
-	        // We need to map * (0xffff / 0xff00), thats same as (257 / 256) 
+	        // We need to map * (0xffff / 0xff00), thats same as (257 / 256)
 	        // So we can use 258-entry tables to do the trick (i / 257) * (255 * 257) * (257 / 256);
-	        for (i=0; i < 257; i++) 
+	        for (i=0; i < 257; i++)
 	        {
 	        	LabTable[j].Table16[i] = (short)((i * 0xffff + 0x80) >> 8);
 	        }
@@ -1098,8 +1098,8 @@ final class cmslut
 	public static cmsStage _cmsStageAllocLabV2ToV4(cmsContext ContextID)
 	{
 	    final double[] V2ToV4 = { 65535.0/65280.0, 0, 0,
-	                                     0, 65535.0/65280.0, 0, 
-	                                     0, 0, 65535.0/65280.0 
+	                                     0, 65535.0/65280.0, 0,
+	                                     0, 0, 65535.0/65280.0
 	                                     };
 	    
 	    cmsStage mpe = cmsStageAllocMatrix(ContextID, 3, 3, V2ToV4, null);
@@ -1116,8 +1116,8 @@ final class cmslut
 	public static cmsStage _cmsStageAllocLabV4ToV2(cmsContext ContextID)
 	{
 	    final double[] V4ToV2 = { 65280.0/65535.0, 0, 0,
-	                                     0, 65280.0/65535.0, 0, 
-	                                     0, 0, 65280.0/65535.0 
+	                                     0, 65280.0/65535.0, 0,
+	                                     0, 0, 65280.0/65535.0
 	                                     };
 	    
 	     cmsStage mpe = cmsStageAllocMatrix(ContextID, 3, 3, V4ToV2, null);
@@ -1137,16 +1137,16 @@ final class cmslut
 	
 	public static cmsStage _cmsStageNormalizeFromLabFloat(cmsContext ContextID)
 	{
-		final double[] a1 = { 
+		final double[] a1 = {
 	        1.0/100.0, 0, 0,
-	        0, 1.0/255.0, 0, 
-	        0, 0, 1.0/255.0 
+	        0, 1.0/255.0, 0,
+	        0, 0, 1.0/255.0
 	    };
 	    
-		final double[] o1 = { 
+		final double[] o1 = {
 	        0,
-	        128.0/255.0, 
-	        128.0/255.0 
+	        128.0/255.0,
+	        128.0/255.0
 	    };
 	    
 	    return cmsStageAllocMatrix(ContextID, 3, 3, a1, o1);
@@ -1154,10 +1154,10 @@ final class cmslut
 	
 	public static cmsStage _cmsStageNormalizeFromXyzFloat(cmsContext ContextID)
 	{
-		final double[] a1 = { 
+		final double[] a1 = {
 	        1.0/100.0, 0, 0,
-	        0, 1.0/100.0, 0, 
-	        0, 0, 1.0/100.0 
+	        0, 1.0/100.0, 0,
+	        0, 0, 1.0/100.0
 	    };
 	    
 	    return cmsStageAllocMatrix(ContextID, 3, 3, a1, null);
@@ -1165,16 +1165,16 @@ final class cmslut
 	
 	public static cmsStage _cmsStageNormalizeToLabFloat(cmsContext ContextID)
 	{
-		final double[] a1 = { 
+		final double[] a1 = {
 	        100.0, 0, 0,
-	        0, 255.0, 0, 
-	        0, 0, 255.0 
+	        0, 255.0, 0,
+	        0, 0, 255.0
 	    };
 		
-		final double[] o1 = { 
+		final double[] o1 = {
 	        0,
-	        -128.0, 
-	        -128.0 
+	        -128.0,
+	        -128.0
 	    };
 		
 	    return cmsStageAllocMatrix(ContextID, 3, 3, a1, o1);
@@ -1182,10 +1182,10 @@ final class cmslut
 	
 	public static cmsStage _cmsStageNormalizeToXyzFloat(cmsContext ContextID)
 	{
-		final double[] a1 = { 
+		final double[] a1 = {
 	        100.0, 0, 0,
-	        0, 100.0, 0, 
-	        0, 0, 100.0 
+	        0, 100.0, 0,
+	        0, 0, 100.0
 	    };
 	    
 	    return cmsStageAllocMatrix(ContextID, 3, 3, a1, null);
@@ -1205,16 +1205,16 @@ final class cmslut
 		    
 		    // From 0..1.0 to XYZ
 		    
-		    XYZ.X = In[0] * XYZadj; 
-		    XYZ.Y = In[1] * XYZadj; 
+		    XYZ.X = In[0] * XYZadj;
+		    XYZ.Y = In[1] * XYZadj;
 		    XYZ.Z = In[2] * XYZadj;
 		    
 		    cmspcs.cmsXYZ2Lab(null, Lab, XYZ);
 		    
 		    // From V4 Lab to 0..1.0
 		    
-		    Out[0] = (float)(Lab.L / 100.0); 
-		    Out[1] = (float)((Lab.a + 128.0) / 255.0); 
+		    Out[0] = (float)(Lab.L / 100.0);
+		    Out[1] = (float)((Lab.a + 128.0) / 255.0);
 		    Out[2] = (float)((Lab.b + 128.0) / 255.0);
 		}
 	};
@@ -1240,7 +1240,7 @@ final class cmslut
 	    return cmsStageAllocToneCurves(ContextID, 3, LabTable);
 	}
 	
-	// Free a single MPE 
+	// Free a single MPE
 	public static void cmsStageFree(cmsStage mpe)
 	{
 	    if (mpe.FreePtr != null)
@@ -1311,7 +1311,7 @@ final class cmslut
 	
 	private static void BlessLUT(cmsPipeline lut)
 	{
-	    // We can set the input/ouput channels only if we have elements. 
+	    // We can set the input/ouput channels only if we have elements.
 	    if (lut.Elements != null)
 	    {
 	        cmsStage First, Last;
@@ -1447,14 +1447,14 @@ final class cmslut
 	    //_cmsFree(lut.ContextID, lut);
 	}
 	
-	// Default to evaluate the LUT on 16 bit-basis. 
+	// Default to evaluate the LUT on 16 bit-basis.
 	public static void cmsPipelineEval16(final short[] In, short[] Out, final cmsPipeline lut)
 	{
 		lcms2_internal._cmsAssert(lut != null, "lut != null");
 	    lut.Eval16Fn.run(In, Out, lut.Data);
 	}
 	
-	// Does evaluate the LUT on cmsFloat32Number-basis. 
+	// Does evaluate the LUT on cmsFloat32Number-basis.
 	public static void cmsPipelineEvalFloat(final float[] In, float[] Out, final cmsPipeline lut)
 	{
 		lcms2_internal._cmsAssert(lut != null, "lut != null");
@@ -1465,7 +1465,7 @@ final class cmslut
 	public static cmsPipeline cmsPipelineDup(final cmsPipeline lut)
 	{
 	    cmsPipeline NewLUT;
-	    cmsStage NewMPE, Anterior = null, mpe;   
+	    cmsStage NewMPE, Anterior = null, mpe;
 	    boolean First = true;
 	    
 	    if (lut == null)
@@ -1473,7 +1473,7 @@ final class cmslut
 	    	return null;
 	    }
 	    
-	    NewLUT = cmsPipelineAlloc(lut.ContextID, lut.InputChannels, lut.OutputChannels);  
+	    NewLUT = cmsPipelineAlloc(lut.ContextID, lut.InputChannels, lut.OutputChannels);
 	    for (mpe = lut.Elements; mpe != null; mpe = (cmsStage)mpe.Next)
 	    {
 	    	NewMPE = cmsStageDup(mpe);
@@ -1567,7 +1567,7 @@ final class cmslut
 	    // On depending on the strategy...
 	    switch (loc)
 	    {
-	        case lcms2.cmsAT_BEGIN: 
+	        case lcms2.cmsAT_BEGIN:
 	            {
 	                cmsStage elem = lut.Elements;
 	                
@@ -1616,7 +1616,7 @@ final class cmslut
 	{
 	    cmsStage mpe, NewMPE;
 	    
-	    // If both LUTS does not have elements, we need to inherit 
+	    // If both LUTS does not have elements, we need to inherit
 	    // the number of channels
 	    if (l1.Elements == null && l2.Elements == null)
 	    {
@@ -1682,12 +1682,12 @@ final class cmslut
 	
 	// This function may be used to set the optional evalueator and a block of private data. If private data is being used, an optional
 	// duplicator and free functions should also be specified in order to duplicate the LUT construct. Use NULL to inhibit such functionality.
-	public static void _cmsPipelineSetOptimizationParameters(cmsPipeline Lut, _cmsOPTeval16Fn Eval16, Object PrivateData, _cmsFreeUserDataFn FreePrivateDataFn, 
+	public static void _cmsPipelineSetOptimizationParameters(cmsPipeline Lut, _cmsOPTeval16Fn Eval16, Object PrivateData, _cmsFreeUserDataFn FreePrivateDataFn,
 			_cmsDupUserDataFn DupPrivateDataFn)
 	{
 	    Lut.Eval16Fn = Eval16;
 	    Lut.DupDataFn = DupPrivateDataFn;
-	    Lut.FreeDataFn = FreePrivateDataFn;   
+	    Lut.FreeDataFn = FreePrivateDataFn;
 	    Lut.Data = PrivateData;
 	}
 	
@@ -1746,7 +1746,7 @@ final class cmslut
 	// Evaluate a LUT in reverse direction. It only searches on 3->3 LUT. Uses Newton method
 	//
 	// x1 <- x - [J(x)]^-1 * f(x)
-	// 
+	//
 	// lut: The LUT on where to do the search
 	// Target: LabK, 3 values of Lab plus destination K which is fixed
 	// Result: The obtained CMYK
@@ -1755,10 +1755,10 @@ final class cmslut
 	public static boolean cmsPipelineEvalReverseFloat(float[] Target, float[] Result, float[] Hint, final cmsPipeline lut)
 	{
 		int i, j;
-		double error, LastError = 1E20;    
+		double error, LastError = 1E20;
 		float[] fx = new float[4], x = new float[4], xd = new float[4], fxd = new float[4];
 		cmsVEC3 tmp = new cmsVEC3(), tmp2 = new cmsVEC3();
-		cmsMAT3 Jacobian = new cmsMAT3();    
+		cmsMAT3 Jacobian = new cmsMAT3();
 		double[] LastResult = new double[4];
 		
 		// Only 3->3 and 4->3 are supported
@@ -1818,7 +1818,7 @@ final class cmslut
 			LastError = error;
 			for (j=0; j < lut.InputChannels; j++)
 			{
-				Result[j] = x[j]; 
+				Result[j] = x[j];
 			}
 			
 			// Found an exact match?

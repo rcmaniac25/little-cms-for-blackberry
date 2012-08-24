@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -101,7 +101,7 @@ final class cmscnvrt
 	    return null;
 	}
 	
-	// Black point compensation. Implemented as a linear scaling in XYZ. Black points 
+	// Black point compensation. Implemented as a linear scaling in XYZ. Black points
 	// should come relative to the white point. Fills an matrix/offset element m
 	// which is organized as a 4x4 matrix.
 	private static void ComputeBlackPointCompensation(final cmsCIEXYZ BlackPointIn, final cmsCIEXYZ BlackPointOut, cmsMAT3 m, cmsVEC3 off)
@@ -177,7 +177,7 @@ final class cmscnvrt
 	    cmsCIEXYZ White = new cmsCIEXYZ();
 	    cmsCIExyY ChromaticityOfWhite = new cmsCIExyY();
 	    
-	    cmswtpnt.cmsWhitePointFromTemp(ChromaticityOfWhite, Temp);  
+	    cmswtpnt.cmsWhitePointFromTemp(ChromaticityOfWhite, Temp);
 	    cmspcs.cmsxyY2XYZ(White, ChromaticityOfWhite);
 	    cmswtpnt._cmsAdaptationMatrix(Chad, null, White, lcms2.cmsD50_XYZ);
 
@@ -185,7 +185,7 @@ final class cmscnvrt
 	
 	// Join scalings to obtain relative input to absolute and then to relative output.
 	// Result is stored in a 3x3 matrix
-	private static boolean ComputeAbsoluteIntent(double AdaptationState, final cmsCIEXYZ WhitePointIn, final cmsMAT3 ChromaticAdaptationMatrixIn, 
+	private static boolean ComputeAbsoluteIntent(double AdaptationState, final cmsCIEXYZ WhitePointIn, final cmsMAT3 ChromaticAdaptationMatrixIn,
 			final cmsCIEXYZ WhitePointOut, final cmsMAT3 ChromaticAdaptationMatrixOut, cmsMAT3 m)
 	{
 	    cmsMAT3 Scale, m1, m2, m3, m4;
@@ -193,7 +193,7 @@ final class cmscnvrt
 	    // Adaptation state
 	    if (AdaptationState == 1.0)
 	    {
-	        // Observer is fully adapted. Keep chromatic adaptation. 
+	        // Observer is fully adapted. Keep chromatic adaptation.
 	        // That is the standard V4 behaviour
 	    	cmsmtrx._cmsVEC3init(m.v[0], WhitePointIn.X / WhitePointOut.X, 0, 0);
 	    	cmsmtrx._cmsVEC3init(m.v[1], 0, WhitePointIn.Y / WhitePointOut.Y, 0);
@@ -314,7 +314,7 @@ final class cmscnvrt
 	    if (Intent == lcms2.INTENT_ABSOLUTE_COLORIMETRIC)
 	    {
 	        cmsCIEXYZ WhitePointIn = new cmsCIEXYZ(), WhitePointOut = new cmsCIEXYZ();
-	        cmsMAT3 ChromaticAdaptationMatrixIn = new cmsMAT3(), ChromaticAdaptationMatrixOut = new cmsMAT3();  
+	        cmsMAT3 ChromaticAdaptationMatrixIn = new cmsMAT3(), ChromaticAdaptationMatrixOut = new cmsMAT3();
 	        
 	        cmsio1._cmsReadMediaWhitePoint(WhitePointIn,  hProfiles[i-1]);
 	        cmsio1._cmsReadCHAD(ChromaticAdaptationMatrixIn, hProfiles[i-1]);
@@ -322,8 +322,8 @@ final class cmscnvrt
 	        cmsio1._cmsReadMediaWhitePoint(WhitePointOut,  hProfiles[i]);
 	        cmsio1._cmsReadCHAD(ChromaticAdaptationMatrixOut, hProfiles[i]);
 	        
-	        if (!ComputeAbsoluteIntent(AdaptationState, 
-	                                  WhitePointIn,  ChromaticAdaptationMatrixIn, 
+	        if (!ComputeAbsoluteIntent(AdaptationState,
+	                                  WhitePointIn,  ChromaticAdaptationMatrixIn,
 	                                  WhitePointOut, ChromaticAdaptationMatrixOut, m))
 	        {
 	        	return false;
@@ -352,12 +352,12 @@ final class cmscnvrt
 	    
 	    // Offset should be adjusted because the encoding. We encode XYZ normalized to 0..1.0,
 	    // to do that, we divide by MAX_ENCODEABLE_XZY. The conversion stage goes XYZ -> XYZ so
-	    // we have first to convert from encoded to XYZ and then convert back to encoded. 
+	    // we have first to convert from encoded to XYZ and then convert back to encoded.
 	    // y = Mx + Off
 	    // x = x'c
 	    // y = M x'c + Off
 	    // y = y'c; y' = y / c
-	    // y' = (Mx'c + Off) /c = Mx' + (Off / c) 
+	    // y' = (Mx'c + Off) /c = Mx' + (Off / c)
 	    
 	    for (k=0; k < 3; k++)
 	    {
@@ -367,7 +367,7 @@ final class cmscnvrt
 	    return true;
 	}
 	
-	// Add a conversion stage if needed. If a matrix/offset m is given, it applies to XYZ space 
+	// Add a conversion stage if needed. If a matrix/offset m is given, it applies to XYZ space
 	private static boolean AddConversion(cmsPipeline Result, int InPCS, int OutPCS, cmsMAT3 m, cmsVEC3 off)
 	{
 		double[] m_as_dbl = new double[3*3];
@@ -410,8 +410,8 @@ final class cmscnvrt
 		                break;
 		            case lcms2.cmsSigLabData: // Lab -> Lab
 		                if (!IsEmptyLayer(m, off))
-		                {            
-		                	cmslut.cmsPipelineInsertStage(Result, lcms2.cmsAT_END, cmslut._cmsStageAllocLab2XYZ(Result.ContextID));        
+		                {
+		                	cmslut.cmsPipelineInsertStage(Result, lcms2.cmsAT_END, cmslut._cmsStageAllocLab2XYZ(Result.ContextID));
 		                    cmslut.cmsPipelineInsertStage(Result, lcms2.cmsAT_END, cmslut.cmsStageAllocMatrix(Result.ContextID, 3, 3, m_as_dbl, off_as_dbl));
 		                    cmslut.cmsPipelineInsertStage(Result, lcms2.cmsAT_END, cmslut._cmsStageAllocXYZ2Lab(Result.ContextID));
 		                }
@@ -464,7 +464,7 @@ final class cmscnvrt
 	    return false;
 	}
 	
-	// This is the default routine for ICC-style intents. A user may decide to override it by using a plugin. 
+	// This is the default routine for ICC-style intents. A user may decide to override it by using a plugin.
 	// Supported intents are perceptual, relative colorimetric, saturation and ICC-absolute colorimetric
 	
 	// Default handler for ICC-style intents
@@ -476,7 +476,7 @@ final class cmscnvrt
 		    cmsHPROFILE hProfile;
 		    cmsMAT3 m = null;
 		    cmsVEC3 off = null;
-		    int ColorSpaceIn, ColorSpaceOut, CurrentColorSpace; 
+		    int ColorSpaceIn, ColorSpaceOut, CurrentColorSpace;
 		    int ClassSig;
 		    int i, Intent;
 		    
@@ -537,8 +537,8 @@ final class cmscnvrt
 				    return null;
 		        }
 		        
-		        // If devicelink is found, then no custom intent is allowed and we can 
-		        // read the LUT to be applied. Settings don't apply here.       
+		        // If devicelink is found, then no custom intent is allowed and we can
+		        // read the LUT to be applied. Settings don't apply here.
 		        if (lIsDeviceLink || ((ClassSig == lcms2.cmsSigNamedColorClass) && (nProfiles == 1)))
 		        {
 		            // Get the involved LUT from the profile
@@ -602,7 +602,7 @@ final class cmscnvrt
 		            else
 		            {
 		                // Output direction means PCS connection. Intent may apply here
-		                Lut = cmsio1._cmsReadOutputLUT(hProfile, Intent); 
+		                Lut = cmsio1._cmsReadOutputLUT(hProfile, Intent);
 		                if (Lut == null)
 			            {
 			            	if (Result != null)
@@ -663,7 +663,7 @@ final class cmscnvrt
 	    {
 	        case lcms2.INTENT_PRESERVE_K_ONLY_PERCEPTUAL:
 	        case lcms2.INTENT_PRESERVE_K_PLANE_PERCEPTUAL:
-	            return lcms2.INTENT_PERCEPTUAL; 
+	            return lcms2.INTENT_PERCEPTUAL;
 	        case lcms2.INTENT_PRESERVE_K_ONLY_RELATIVE_COLORIMETRIC:
 	        case lcms2.INTENT_PRESERVE_K_PLANE_RELATIVE_COLORIMETRIC:
 	            return lcms2.INTENT_RELATIVE_COLORIMETRIC;
@@ -728,7 +728,7 @@ final class cmscnvrt
 		    // Translate black-preserving intents to ICC ones
 		    for (i=0; i < nProfiles; i++)
 		    {
-		    	ICCIntents[i] = TranslateNonICCIntents(TheIntents[i]); 
+		    	ICCIntents[i] = TranslateNonICCIntents(TheIntents[i]);
 		    }
 		    
 		    // Check for non-cmyk profiles
@@ -747,10 +747,10 @@ final class cmscnvrt
 		    }
 		    
 		    // Create a LUT holding normal ICC transform
-		    bp.cmyk2cmyk = DefaultICCintents.run(ContextID, 
+		    bp.cmyk2cmyk = DefaultICCintents.run(ContextID,
 		        nProfiles,
-		        ICCIntents, 
-		        hProfiles, 
+		        ICCIntents,
+		        hProfiles,
 		        BPC,
 		        AdaptationStates,
 		        dwFlags);
@@ -765,10 +765,10 @@ final class cmscnvrt
 		    }
 		    
 		    // Now, compute the tone curve
-		    bp.KTone = cmsgmt._cmsBuildKToneCurve(ContextID, 
+		    bp.KTone = cmsgmt._cmsBuildKToneCurve(ContextID,
 		        4096,
 		        nProfiles,
-		        ICCIntents, 
+		        ICCIntents,
 		        hProfiles,
 		        BPC,
 		        AdaptationStates,
@@ -849,7 +849,7 @@ final class cmscnvrt
 		public cmsPipeline		LabK2cmyk;     // The output profile
 		public double			MaxError;
 		
-		public cmsHTRANSFORM	hRoundTrip;               
+		public cmsHTRANSFORM	hRoundTrip;
 	    public double			MaxTAC;
 	}
 	
@@ -860,7 +860,7 @@ final class cmscnvrt
 		{
 			int i;
 		    float[] Inf = new float[4], Outf = new float[4];
-		    float[] LabK = new float[4];   
+		    float[] LabK = new float[4];
 		    double SumCMY, SumCMYK, Error, Ratio;
 		    cmsCIELab ColorimetricLab, BlackPreservingLab;
 		    PreserveKPlaneParams bp = (PreserveKPlaneParams)Cargo;
@@ -882,8 +882,8 @@ final class cmscnvrt
 		        return 1;
 		    }
 		    
-		    // Try the original transform, 
-		    cmslut.cmsPipelineEvalFloat(Inf, Outf, bp.cmyk2cmyk);  
+		    // Try the original transform,
+		    cmslut.cmsPipelineEvalFloat(Inf, Outf, bp.cmyk2cmyk);
 		    
 		    // Store a copy of the floating point result into 16-bit
 		    for (i=0; i < 4; i++)
@@ -906,7 +906,7 @@ final class cmscnvrt
 		    // Obtain the Lab of output CMYK. After that we have Lab + K
 		    cmsxform.cmsDoTransform(bp.cmyk2Lab, Outf, LabK, 1);
 		    
-		    // Obtain the corresponding CMY using reverse interpolation 
+		    // Obtain the corresponding CMY using reverse interpolation
 		    // (K is fixed in LabK[3])
 		    if (!cmslut.cmsPipelineEvalReverseFloat(LabK, Outf, Outf, bp.LabK2cmyk))
 		    {
@@ -918,7 +918,7 @@ final class cmscnvrt
 		    // Make sure to pass thru K (which now is fixed)
 		    Outf[3] = LabK[3];
 		    
-		    // Apply TAC if needed    
+		    // Apply TAC if needed
 		    SumCMY   = Outf[0]  + Outf[1] + Outf[2];
 		    SumCMYK  = SumCMY + Outf[3];
 		    
@@ -977,11 +977,11 @@ final class cmscnvrt
 		    // Translate black-preserving intents to ICC ones
 		    for (i=0; i < nProfiles; i++)
 		    {
-		    	ICCIntents[i] = TranslateNonICCIntents(TheIntents[i]); 
+		    	ICCIntents[i] = TranslateNonICCIntents(TheIntents[i]);
 		    }
 		    
 		    // Check for non-cmyk profiles
-		    if (cmsio0.cmsGetColorSpace(hProfiles[0]) != lcms2.cmsSigCmykData || !(cmsio0.cmsGetColorSpace(hProfiles[nProfiles-1]) == lcms2.cmsSigCmykData || 
+		    if (cmsio0.cmsGetColorSpace(hProfiles[0]) != lcms2.cmsSigCmykData || !(cmsio0.cmsGetColorSpace(hProfiles[nProfiles-1]) == lcms2.cmsSigCmykData ||
 		    		cmsio0.cmsGetDeviceClass(hProfiles[nProfiles-1]) == lcms2.cmsSigOutputClass))
 		    {
 		    	return DefaultICCintents.run(ContextID, nProfiles, ICCIntents, hProfiles, BPC, AdaptationStates, dwFlags);
@@ -1003,7 +1003,7 @@ final class cmscnvrt
 		    {
 			    if (bp.cmyk2Lab != null)
 			    {
-			    	cmsxform.cmsDeleteTransform(bp.cmyk2Lab);       
+			    	cmsxform.cmsDeleteTransform(bp.cmyk2Lab);
 			    }
 			    if (bp.hProofOutput != null)
 			    {
@@ -1012,7 +1012,7 @@ final class cmscnvrt
 			    
 			    if (bp.KTone != null)
 			    {
-			    	cmsgamma.cmsFreeToneCurve(bp.KTone);   
+			    	cmsgamma.cmsFreeToneCurve(bp.KTone);
 			    }
 			    if (bp.LabK2cmyk != null)
 			    {
@@ -1037,8 +1037,8 @@ final class cmscnvrt
 		    // Create a LUT holding normal ICC transform
 		    bp.cmyk2cmyk = DefaultICCintents.run(ContextID,
 		                                         nProfiles,
-		                                         ICCIntents, 
-		                                         hProfiles, 
+		                                         ICCIntents,
+		                                         hProfiles,
 		                                         BPC,
 		                                         AdaptationStates,
 		                                         dwFlags);
@@ -1054,9 +1054,9 @@ final class cmscnvrt
 		    
 		    // Now the tone curve
 		    bp.KTone = cmsgmt._cmsBuildKToneCurve(ContextID, 4096, nProfiles,
-		                                   ICCIntents, 
-		                                   hProfiles, 
-		                                   BPC, 
+		                                   ICCIntents,
+		                                   hProfiles,
+		                                   BPC,
 		                                   AdaptationStates,
 		                                   dwFlags);
 		    if (bp.KTone == null)
@@ -1076,9 +1076,9 @@ final class cmscnvrt
 		    
 		    // To measure the output, Last profile to Lab
 		    hLab = cmsvirt.cmsCreateLab4ProfileTHR(ContextID, null);
-		    bp.hProofOutput = cmsxform.cmsCreateTransformTHR(ContextID, hProfiles[nProfiles-1], 
-		                                         (4 << lcms2.CHANNELS_SHIFT_VALUE)|(2 << lcms2.BYTES_SHIFT_VALUE), hLab, lcms2.TYPE_Lab_DBL, 
-		                                         lcms2.INTENT_RELATIVE_COLORIMETRIC, 
+		    bp.hProofOutput = cmsxform.cmsCreateTransformTHR(ContextID, hProfiles[nProfiles-1],
+		                                         (4 << lcms2.CHANNELS_SHIFT_VALUE)|(2 << lcms2.BYTES_SHIFT_VALUE), hLab, lcms2.TYPE_Lab_DBL,
+		                                         lcms2.INTENT_RELATIVE_COLORIMETRIC,
 		                                         lcms2.cmsFLAGS_NOCACHE|lcms2.cmsFLAGS_NOOPTIMIZE);
 		    if (bp.hProofOutput == null)
 		    {
@@ -1089,7 +1089,7 @@ final class cmscnvrt
 			    
 			    if (bp.KTone != null)
 			    {
-			    	cmsgamma.cmsFreeToneCurve(bp.KTone);   
+			    	cmsgamma.cmsFreeToneCurve(bp.KTone);
 			    }
 			    if (bp.LabK2cmyk != null)
 			    {
@@ -1100,10 +1100,10 @@ final class cmscnvrt
 		    }
 		    
 		    // Same as anterior, but lab in the 0..1 range
-		    bp.cmyk2Lab = cmsxform.cmsCreateTransformTHR(ContextID, hProfiles[nProfiles-1], 
-		                                         (1 << lcms2.FLOAT_SHIFT_VALUE)|(4 << lcms2.CHANNELS_SHIFT_VALUE)|(4 << lcms2.BYTES_SHIFT_VALUE), hLab, 
-												 (1 << lcms2.FLOAT_SHIFT_VALUE)|(3 << lcms2.CHANNELS_SHIFT_VALUE)|(4 << lcms2.BYTES_SHIFT_VALUE), 
-												 lcms2.INTENT_RELATIVE_COLORIMETRIC, 
+		    bp.cmyk2Lab = cmsxform.cmsCreateTransformTHR(ContextID, hProfiles[nProfiles-1],
+		                                         (1 << lcms2.FLOAT_SHIFT_VALUE)|(4 << lcms2.CHANNELS_SHIFT_VALUE)|(4 << lcms2.BYTES_SHIFT_VALUE), hLab,
+												 (1 << lcms2.FLOAT_SHIFT_VALUE)|(3 << lcms2.CHANNELS_SHIFT_VALUE)|(4 << lcms2.BYTES_SHIFT_VALUE),
+												 lcms2.INTENT_RELATIVE_COLORIMETRIC,
 		                                         lcms2.cmsFLAGS_NOCACHE|lcms2.cmsFLAGS_NOOPTIMIZE);
 		    if (bp.cmyk2Lab == null)
 		    {
@@ -1118,7 +1118,7 @@ final class cmscnvrt
 			    
 			    if (bp.KTone != null)
 			    {
-			    	cmsgamma.cmsFreeToneCurve(bp.KTone);   
+			    	cmsgamma.cmsFreeToneCurve(bp.KTone);
 			    }
 			    if (bp.LabK2cmyk != null)
 			    {
@@ -1144,7 +1144,7 @@ final class cmscnvrt
 			    }
 			    if (bp.cmyk2Lab != null)
 			    {
-			    	cmsxform.cmsDeleteTransform(bp.cmyk2Lab);       
+			    	cmsxform.cmsDeleteTransform(bp.cmyk2Lab);
 			    }
 			    if (bp.hProofOutput != null)
 			    {
@@ -1153,7 +1153,7 @@ final class cmscnvrt
 			    
 			    if (bp.KTone != null)
 			    {
-			    	cmsgamma.cmsFreeToneCurve(bp.KTone);   
+			    	cmsgamma.cmsFreeToneCurve(bp.KTone);
 			    }
 			    if (bp.LabK2cmyk != null)
 			    {
@@ -1173,7 +1173,7 @@ final class cmscnvrt
 		    }
 		    if (bp.cmyk2Lab != null)
 		    {
-		    	cmsxform.cmsDeleteTransform(bp.cmyk2Lab);       
+		    	cmsxform.cmsDeleteTransform(bp.cmyk2Lab);
 		    }
 		    if (bp.hProofOutput != null)
 		    {
@@ -1182,7 +1182,7 @@ final class cmscnvrt
 		    
 		    if (bp.KTone != null)
 		    {
-		    	cmsgamma.cmsFreeToneCurve(bp.KTone);   
+		    	cmsgamma.cmsFreeToneCurve(bp.KTone);
 		    }
 		    if (bp.LabK2cmyk != null)
 		    {
@@ -1214,14 +1214,14 @@ final class cmscnvrt
 	
 	// Link routines ------------------------------------------------------------------------------------------------------
 	
-	// Link several profiles to obtain a single LUT modelling the whole color transform. Intents, Black point 
+	// Link several profiles to obtain a single LUT modelling the whole color transform. Intents, Black point
 	// compensation and Adaptation parameters may vary across profiles. BPC and Adaptation refers to the PCS
 	// after the profile. I.e, BPC[0] refers to connexion between profile(0) and profile(1)
 	
 	// Chain several profiles into a single LUT. It just checks the parameters and then calls the handler
-	// for the first intent in chain. The handler may be user-defined. Is up to the handler to deal with the 
+	// for the first intent in chain. The handler may be user-defined. Is up to the handler to deal with the
 	// rest of intents in chain. A maximum of 255 profiles at time are supported, which is pretty reasonable.
-	public static cmsPipeline _cmsLinkProfiles(cmsContext ContextID, int nProfiles, int[] TheIntents, cmsHPROFILE[] hProfiles, boolean[] BPC, 
+	public static cmsPipeline _cmsLinkProfiles(cmsContext ContextID, int nProfiles, int[] TheIntents, cmsHPROFILE[] hProfiles, boolean[] BPC,
 			double[] AdaptationStates, int dwFlags)
 	{
 		int i;
@@ -1236,9 +1236,9 @@ final class cmscnvrt
 		
 		for (i=0; i < nProfiles; i++)
 		{
-			// Check if black point is really needed or allowed. Note that 
+			// Check if black point is really needed or allowed. Note that
 			// following Adobe's document:
-			// BPC does not apply to devicelink profiles, nor to abs colorimetric, 
+			// BPC does not apply to devicelink profiles, nor to abs colorimetric,
 			// and applies always on V4 perceptual and saturation.
 			
 			if (TheIntents[i] == lcms2.INTENT_ABSOLUTE_COLORIMETRIC)
@@ -1274,8 +1274,8 @@ final class cmscnvrt
 	
 	// -------------------------------------------------------------------------------------------------
 	
-	// Get information about available intents. nMax is the maximum space for the supplied "Codes" 
-	// and "Descriptions" the function returns the total number of intents, which may be greater 
+	// Get information about available intents. nMax is the maximum space for the supplied "Codes"
+	// and "Descriptions" the function returns the total number of intents, which may be greater
 	// than nMax, although the matrices are not populated beyond this level.
 	public static int cmsGetSupportedIntents(int nMax, int[] Codes, String[] Descriptions)
 	{

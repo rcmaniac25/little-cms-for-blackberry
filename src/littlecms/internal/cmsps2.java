@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -61,26 +61,26 @@ final class cmsps2
 	  Implementation
 	  --------------
 	
-	  PostScript does use XYZ as its internal PCS. But since PostScript 
-	  interpolation tables are limited to 8 bits, I use Lab as a way to 
-	  improve the accuracy, favoring perceptual results. So, for the creation 
-	  of each CRD, CSA the profiles are converted to Lab via a device 
+	  PostScript does use XYZ as its internal PCS. But since PostScript
+	  interpolation tables are limited to 8 bits, I use Lab as a way to
+	  improve the accuracy, favoring perceptual results. So, for the creation
+	  of each CRD, CSA the profiles are converted to Lab via a device
 	  link between  profile -> Lab or Lab -> profile. The PS code necessary to
 	  convert Lab <-> XYZ is also included.
 	
 	
 	
-	  Color Space Arrays (CSA) 
+	  Color Space Arrays (CSA)
 	  ==================================================================================
 	
 	  In order to obtain precision, code chooses between three ways to implement
 	  the device -> XYZ transform. These cases identifies monochrome profiles (often
 	  implemented as a set of curves), matrix-shaper and Pipeline-based.
 	
-	  Monochrome 
+	  Monochrome
 	  -----------
 	
-	  This is implemented as /CIEBasedA CSA. The prelinearization curve is 
+	  This is implemented as /CIEBasedA CSA. The prelinearization curve is
 	  placed into /DecodeA section, and matrix equals to D50. Since here is
 	  no interpolation tables, I do the conversion directly to XYZ
 	
@@ -88,15 +88,15 @@ final class cmsps2
 	  flag is forced on such profiles.
 	
 	    [ /CIEBasedA
-	      <<            
+	      <<
 	            /DecodeA { transfer function } bind
-	            /MatrixA [D50]  
+	            /MatrixA [D50]
 	            /RangeLMN [ 0.0 cmsD50X 0.0 cmsD50Y 0.0 cmsD50Z ]
 	            /WhitePoint [D50]
 	            /BlackPoint [BP]
 	            /RenderingIntent (intent)
 	      >>
-	    ] 
+	    ]
 	
 	   On simpler profiles, the PCS is already XYZ, so no conversion is required.
 	
@@ -105,7 +105,7 @@ final class cmsps2
 	   -------------------
 	
 	   This is implemented both with /CIEBasedABC or /CIEBasedDEF on dependig
-	   of profile implementation. Since here there are no interpolation tables, I do 
+	   of profile implementation. Since here there are no interpolation tables, I do
 	   the conversion directly to XYZ
 	
 	
@@ -120,7 +120,7 @@ final class cmsps2
 	                /BlackPoint [BP]
 	                /RenderingIntent (intent)
 	            >>
-	    ] 
+	    ]
 	
 	
 	    CLUT based
@@ -134,13 +134,13 @@ final class cmsps2
 	            /Table [ p p p [<...>]]
 	            /RangeABC [ 0 1 0 1 0 1]
 	            /DecodeABC[ <postlinearization> ]
-	            /RangeLMN [ -0.236 1.254 0 1 -0.635 1.640 ] 
-	               % -128/500 1+127/500 0 1  -127/200 1+128/200 
+	            /RangeLMN [ -0.236 1.254 0 1 -0.635 1.640 ]
+	               % -128/500 1+127/500 0 1  -127/200 1+128/200
 	            /MatrixABC [ 1 1 1 1 0 0 0 0 -1]
 	            /WhitePoint [D50]
 	            /BlackPoint [BP]
 	            /RenderingIntent (intent)
-	    ] 
+	    ]
 	
 	
 	  Color Rendering Dictionaries (CRD)
@@ -154,7 +154,7 @@ final class cmsps2
 	    /BlackPoint [BP]
 	    /MatrixPQR [ Bradford ]
 	    /RangePQR [-0.125 1.375 -0.125 1.375 -0.125 1.375 ]
-	    /TransformPQR [            
+	    /TransformPQR [
 	    {4 index 3 get div 2 index 3 get mul exch pop exch pop exch pop exch pop } bind
 	    {4 index 4 get div 2 index 4 get mul exch pop exch pop exch pop exch pop } bind
 	    {4 index 5 get div 2 index 5 get mul exch pop exch pop exch pop exch pop } bind
@@ -163,15 +163,15 @@ final class cmsps2
 	    /EncodeABC <...>
 	    /RangeABC  <.. used for  XYZ -> Lab>
 	    /EncodeLMN
-	    /RenderTable [ p p p [<...>]]   
+	    /RenderTable [ p p p [<...>]]
 	    
 	    /RenderingIntent (Perceptual)
-	  >> 
+	  >>
 	  /Current exch /ColorRendering defineresource pop
 	
 	
 	  The following stages are used to convert from XYZ to Lab
-	  --------------------------------------------------------  
+	  --------------------------------------------------------
 	
 	  Input is given at LMN stage on X, Y, Z
 	
@@ -200,7 +200,7 @@ final class cmsps2
 	    { 116 mul  16 sub 100 div  } bind
 	    { 500 mul 128 add 255 div  } bind
 	    { 200 mul 128 add 255 div  } bind
-	    ]   
+	    ]
 	    
 	  The following stages are used to convert Lab to XYZ
 	  ----------------------------------------------------
@@ -208,7 +208,7 @@ final class cmsps2
 	    /RangeABC [ 0 1 0 1 0 1]
 	    /DecodeABC [ { 100 mul 16 add 116 div } bind
 	                 { 255 mul 128 sub 500 div } bind
-	                 { 255 mul 128 sub 200 div } bind 
+	                 { 255 mul 128 sub 200 div } bind
 	               ]
 	    
 	    /MatrixABC [ 1 1 1 1 0 0 0 0 -1]
@@ -226,7 +226,7 @@ final class cmsps2
 	 PostScript algorithms discussion.
 	 =========================================================================================================
 	
-	  1D interpolation algorithm 
+	  1D interpolation algorithm
 	
 	
 	  1D interpolation (float)
@@ -264,21 +264,21 @@ final class cmsps2
 	    exch                            % tab val2 cell0 val2
 	    ceiling cvi                     % tab val2 cell0 cell1
 	
-	    3 index                         % tab val2 cell0 cell1 tab  
+	    3 index                         % tab val2 cell0 cell1 tab
 	    exch                            % tab val2 cell0 tab cell1
 	    get                             % tab val2 cell0 y1
 	
 	    4 -1 roll                       % val2 cell0 y1 tab
-	    3 -1 roll                       % val2 y1 tab cell0 
-	    get                             % val2 y1 y0 
+	    3 -1 roll                       % val2 y1 tab cell0
+	    get                             % val2 y1 y0
 	
 	    dup                             % val2 y1 y0 y0
-	    3 1 roll                        % val2 y0 y1 y0 
+	    3 1 roll                        % val2 y0 y1 y0
 	
 	    sub                             % val2 y0 (y1-y0)
 	    3 -1 roll                       % y0 (y1-y0) val2
 	    dup                             % y0 (y1-y0) val2 val2
-	    floor cvi                       % y0 (y1-y0) val2 floor(val2) 
+	    floor cvi                       % y0 (y1-y0) val2 floor(val2)
 	    sub                             % y0 (y1-y0) rest
 	    mul                             % y0 t1
 	    add                             % y
@@ -303,7 +303,7 @@ final class cmsps2
 		public String PreMin;
 		public String PostMin;
 		
-		public boolean FixWhite; // Force mapping of pure white 
+		public boolean FixWhite; // Force mapping of pure white
 		
 		public int ColorSpace;  // ColorSpace of profile
 	}
@@ -335,7 +335,7 @@ final class cmsps2
 	// Convert to byte (using ICC2 notation)
 	/*
 	private static byte L2Byte(short w)
-	{    
+	{
 		int ww = w + 0x0080;
 		
 		if ((ww & 0xFFFF) > 0xFFFF)
@@ -412,7 +412,7 @@ final class cmsps2
 	    cmsplugin._cmsIOPrintf(m, "%%%%BeginResource\n", null);
 	}
 	
-	// Emits White & Black point. White point is always D50, Black point is the device 
+	// Emits White & Black point. White point is always D50, Black point is the device
 	// Black point adapted to D50.
 	
 	private static void EmitWhiteBlackD50(cmsIOHANDLER m, cmsCIEXYZ BlackPoint)
@@ -424,7 +424,7 @@ final class cmsps2
 	
 	private static void EmitRangeCheck(cmsIOHANDLER m)
 	{
-		cmsplugin._cmsIOPrintf(m, "dup 0.0 lt { pop 0.0 } if " + 
+		cmsplugin._cmsIOPrintf(m, "dup 0.0 lt { pop 0.0 } if " +
 	                    		  "dup 1.0 gt { pop 1.0 } if ", null);
 	}
 	
@@ -457,13 +457,13 @@ final class cmsps2
 	/*
 	private static void EmitL2Y(cmsIOHANDLER m)
 	{
-		cmsplugin._cmsIOPrintf(m, 
+		cmsplugin._cmsIOPrintf(m,
 	            "{ " +
 	                "100 mul 16 add 116 div " +             // (L * 100 + 16) / 116
-	                 "dup 6 29 div ge "       +             // >= 6 / 29 ?          
+	                 "dup 6 29 div ge "       +             // >= 6 / 29 ?
 	                 "{ dup dup mul mul } "   +             // yes, ^3 and done
 	                 "{ 4 29 div sub 108 841 div mul } " +  // no, slope limiting
-	            "ifelse } bind ", null); 
+	            "ifelse } bind ", null);
 	}
 	*/
 	
@@ -478,7 +478,7 @@ final class cmsps2
 	    cmsplugin._cmsIOPrintf(m, "{255 mul 128 sub 200 div } bind\n", null);
 	    cmsplugin._cmsIOPrintf(m, "]\n", null);
 	    cmsplugin._cmsIOPrintf(m, "/MatrixABC [ 1 1 1 1 0 0 0 0 -1]\n", null);
-	    cmsplugin._cmsIOPrintf(m, "/RangeLMN [ -0.236 1.254 0 1 -0.635 1.640 ]\n", null); 
+	    cmsplugin._cmsIOPrintf(m, "/RangeLMN [ -0.236 1.254 0 1 -0.635 1.640 ]\n", null);
 	    cmsplugin._cmsIOPrintf(m, "/DecodeLMN [\n", null);
 	    cmsplugin._cmsIOPrintf(m, "{dup 6 29 div ge {dup dup mul mul} {4 29 div sub 108 841 div mul} ifelse 0.964200 mul} bind\n", null);
 	    cmsplugin._cmsIOPrintf(m, "{dup 6 29 div ge {dup dup mul mul} {4 29 div sub 108 841 div mul} ifelse } bind\n", null);
@@ -585,7 +585,7 @@ final class cmsps2
 	
 	// Does write a set of gamma curves
 	
-	private static void EmitNGamma(cmsIOHANDLER m, int n, cmsToneCurve[] g)                  
+	private static void EmitNGamma(cmsIOHANDLER m, int n, cmsToneCurve[] g)
 	{
 	    int i;
 	    
@@ -618,8 +618,8 @@ final class cmsps2
 	//
 	//  Returning a value other than 0 does terminate the sampling process
 	//
-	//  Each row contains Pipeline values for all but first component. So, I 
-	//  detect row changing by keeping a copy of last value of first 
+	//  Each row contains Pipeline values for all but first component. So, I
+	//  detect row changing by keeping a copy of last value of first
 	//  component. -1 is used to mark begining of whole block.
 	
 	private static final cmsSAMPLER16 OutputValueSampler = new cmsSAMPLER16()
@@ -708,7 +708,7 @@ final class cmsps2
 	
 	// Writes a Pipeline on memstream. Could be 8 or 16 bits based
 	
-	private static void WriteCLUT(cmsIOHANDLER m, cmsStage mpe, final String PreMaj, final String PostMaj, final String PreMin, final String PostMin, boolean FixWhite, 
+	private static void WriteCLUT(cmsIOHANDLER m, cmsStage mpe, final String PreMaj, final String PostMaj, final String PreMin, final String PostMin, boolean FixWhite,
 			int ColorSpace)
 	{
 	    int i;
@@ -761,7 +761,7 @@ final class cmsps2
 		EmitWhiteBlackD50(m, BlackPoint);
 		EmitIntent(m, lcms2.INTENT_PERCEPTUAL);
 		
-		cmsplugin._cmsIOPrintf(m, ">>\n", null);        
+		cmsplugin._cmsIOPrintf(m, ">>\n", null);
 		cmsplugin._cmsIOPrintf(m, "]\n", null);
 		
 		return 1;
@@ -897,7 +897,7 @@ final class cmsps2
 	    cmsHPROFILE[] Profiles = new cmsHPROFILE[2];
 	    cmsCIEXYZ BlackPointAdaptedToD50 = new cmsCIEXYZ();
 	    
-	    // Does create a device-link based transform. 
+	    // Does create a device-link based transform.
 	    // The DeviceLink is next dumped as working CSA.
 	    
 	    InputFormat = cmspack.cmsFormatterForColorspaceOfProfile(hProfile, 2, false);
@@ -905,7 +905,7 @@ final class cmsps2
 	    
 		cmssamp.cmsDetectBlackPoint(BlackPointAdaptedToD50, hProfile, Intent, 0);
 		
-	 	// Adjust output to Lab4 
+	 	// Adjust output to Lab4
 	    hLab = cmsvirt.cmsCreateLab4ProfileTHR(m.ContextID, null);
 	    
 		Profiles[0] = hProfile;
@@ -1002,11 +1002,11 @@ final class cmsps2
 	            	Mat[i] *= lcms2_internal.MAX_ENCODEABLE_XYZ;
 	            }
 	            
-	            rc = EmitCIEBasedABC(m, Mat, 
-				                        cmslut._cmsStageGetPtrToCurveSet(Shaper), 
+	            rc = EmitCIEBasedABC(m, Mat,
+				                        cmslut._cmsStageGetPtrToCurveSet(Shaper),
 										BlackPointAdaptedToD50);
 	        }
-	        else 
+	        else
 	        {
 	        	cmserr.cmsSignalError(m.ContextID, lcms2.cmsERROR_COLORSPACE_CHECK, Utility.LCMS_Resources.getString(LCMSResource.CMSPS2_CSA_INVALID_COLORSPACE), null);
 	            return 0;
@@ -1016,7 +1016,7 @@ final class cmsps2
 	    return rc;
 	}
 	
-	// Creates a PostScript color list from a named profile data. 
+	// Creates a PostScript color list from a named profile data.
 	// This is a HP extension, and it works in Lab instead of XYZ
 	
 	private static int WriteNamedColorCSA(cmsIOHANDLER m, cmsHPROFILE hNamedColor, int Intent)
@@ -1059,7 +1059,7 @@ final class cmsps2
 	        	continue;
 	        }
 	        
-	        cmsxform.cmsDoTransform(xform, In, Lab, 1);     
+	        cmsxform.cmsDoTransform(xform, In, Lab, 1);
 	        cmsplugin._cmsIOPrintf(m, "  (%s) [ %.3f %.3f %.3f ]\n", new Object[]{ColorName, new Double(Lab.L), new Double(Lab.a), new Double(Lab.b)});
 	    }
 	    
@@ -1072,7 +1072,7 @@ final class cmsps2
 	
 	// Does create a Color Space Array on XYZ colorspace for PostScript usage
 	private static int GenerateCSA(cmsContext ContextID, cmsHPROFILE hProfile, int Intent, int dwFlags, cmsIOHANDLER mem)
-	{	
+	{
 		int dwBytesUsed;
 		cmsPipeline lut = null;
 		cmsStage Matrix, Shaper;
@@ -1166,7 +1166,7 @@ final class cmsps2
 	  =================================
 
 	          (WPout - BPout)*X - WPout*(BPin - BPout)
-	    out = --------------------------------------- 
+	    out = ---------------------------------------
 	                        WPout - BPin
 
 
@@ -1181,31 +1181,31 @@ final class cmsps2
 	  Algorithm             Stack 0...n
 	  ===========================================================
 	                        PQR BPout WPout BPin WPin
-	  4 index 3 get         WPin PQR BPout WPout BPin WPin  
-	  div                   (PQR/WPin) BPout WPout BPin WPin   
-	  2 index 3 get         WPout (PQR/WPin) BPout WPout BPin WPin   
-	  mult                  WPout*(PQR/WPin) BPout WPout BPin WPin   
+	  4 index 3 get         WPin PQR BPout WPout BPin WPin
+	  div                   (PQR/WPin) BPout WPout BPin WPin
+	  2 index 3 get         WPout (PQR/WPin) BPout WPout BPin WPin
+	  mult                  WPout*(PQR/WPin) BPout WPout BPin WPin
 	  
-	  2 index 3 get         WPout WPout*(PQR/WPin) BPout WPout BPin WPin   
-	  2 index 3 get         BPout WPout WPout*(PQR/WPin) BPout WPout BPin WPin     
-	  sub                   (WPout-BPout) WPout*(PQR/WPin) BPout WPout BPin WPin    
-	  mult                  (WPout-BPout)* WPout*(PQR/WPin) BPout WPout BPin WPin   
+	  2 index 3 get         WPout WPout*(PQR/WPin) BPout WPout BPin WPin
+	  2 index 3 get         BPout WPout WPout*(PQR/WPin) BPout WPout BPin WPin
+	  sub                   (WPout-BPout) WPout*(PQR/WPin) BPout WPout BPin WPin
+	  mult                  (WPout-BPout)* WPout*(PQR/WPin) BPout WPout BPin WPin
 	          
-	  2 index 3 get         WPout (BPout-WPout)* WPout*(PQR/WPin) BPout WPout BPin WPin     
-	  4 index 3 get         BPin WPout (BPout-WPout)* WPout*(PQR/WPin) BPout WPout BPin WPin     
+	  2 index 3 get         WPout (BPout-WPout)* WPout*(PQR/WPin) BPout WPout BPin WPin
+	  4 index 3 get         BPin WPout (BPout-WPout)* WPout*(PQR/WPin) BPout WPout BPin WPin
 	  3 index 3 get         BPout BPin WPout (BPout-WPout)* WPout*(PQR/WPin) BPout WPout BPin WPin
 	  
-	  sub                   (BPin-BPout) WPout (BPout-WPout)* WPout*(PQR/WPin) BPout WPout BPin WPin     
-	  mult                  (BPin-BPout)*WPout (BPout-WPout)* WPout*(PQR/WPin) BPout WPout BPin WPin     
-	  sub                   (BPout-WPout)* WPout*(PQR/WPin)-(BPin-BPout)*WPout BPout WPout BPin WPin     
+	  sub                   (BPin-BPout) WPout (BPout-WPout)* WPout*(PQR/WPin) BPout WPout BPin WPin
+	  mult                  (BPin-BPout)*WPout (BPout-WPout)* WPout*(PQR/WPin) BPout WPout BPin WPin
+	  sub                   (BPout-WPout)* WPout*(PQR/WPin)-(BPin-BPout)*WPout BPout WPout BPin WPin
 
-	  3 index 3 get         BPin (BPout-WPout)* WPout*(PQR/WPin)-(BPin-BPout)*WPout BPout WPout BPin WPin     
-	  3 index 3 get         WPout BPin (BPout-WPout)* WPout*(PQR/WPin)-(BPin-BPout)*WPout BPout WPout BPin WPin     
+	  3 index 3 get         BPin (BPout-WPout)* WPout*(PQR/WPin)-(BPin-BPout)*WPout BPout WPout BPin WPin
+	  3 index 3 get         WPout BPin (BPout-WPout)* WPout*(PQR/WPin)-(BPin-BPout)*WPout BPout WPout BPin WPin
 	  exch
-	  sub                   (WPout-BPin) (BPout-WPout)* WPout*(PQR/WPin)-(BPin-BPout)*WPout BPout WPout BPin WPin       
-	  div                
+	  sub                   (WPout-BPin) (BPout-WPout)* WPout*(PQR/WPin)-(BPin-BPout)*WPout BPout WPout BPin WPin
+	  div
 	  
-	  exch pop 
+	  exch pop
 	  exch pop
 	  exch pop
 	  exch pop
@@ -1232,7 +1232,7 @@ final class cmsps2
 	                      "/TransformPQR [\n" +
 	                      "{0.9642 mul %g div exch pop exch pop exch pop exch pop} bind\n" +
 	                      "{1.0000 mul %g div exch pop exch pop exch pop exch pop} bind\n" +
-	                      "{0.8249 mul %g div exch pop exch pop exch pop exch pop} bind\n]\n", 
+	                      "{0.8249 mul %g div exch pop exch pop exch pop exch pop} bind\n]\n",
 						  new Object[]{new Double(White.X), new Double(White.Y), new Double(White.Z)});
 			return;
 		}
@@ -1281,7 +1281,7 @@ final class cmsps2
 	
 	private static void EmitXYZ2Lab(cmsIOHANDLER m)
 	{
-		cmsplugin._cmsIOPrintf(m, "/RangeLMN [ -0.635 2.0 0 2 -0.635 2.0 ]\n", null); 
+		cmsplugin._cmsIOPrintf(m, "/RangeLMN [ -0.635 2.0 0 2 -0.635 2.0 ]\n", null);
 		cmsplugin._cmsIOPrintf(m, "/EncodeLMN [\n", null);
 		cmsplugin._cmsIOPrintf(m, "{ 0.964200  div dup 0.008856 le {7.787 mul 16 116 div add}{1 3 div exp} ifelse } bind\n", null);
 		cmsplugin._cmsIOPrintf(m, "{ 1.000000  div dup 0.008856 le {7.787 mul 16 116 div add}{1 3 div exp} ifelse } bind\n", null);
@@ -1300,7 +1300,7 @@ final class cmsps2
 	// Due to impedance mismatch between XYZ and almost all RGB and CMYK spaces
 	// I choose to dump LUTS in Lab instead of XYZ. There is still a lot of wasted
 	// space on 3D CLUT, but since space seems not to be a problem here, 33 points
-	// would give a reasonable accurancy. Note also that CRD tables must operate in 
+	// would give a reasonable accurancy. Note also that CRD tables must operate in
 	// 8 bits.
 	
 	private static int WriteOutputLUT(cmsIOHANDLER m, cmsHPROFILE hProfile, int Intent, int dwFlags)
@@ -1342,8 +1342,8 @@ final class cmsps2
 		Profiles[0] = hLab;
 		Profiles[1] = hProfile;
 		
-		xform = cmsxform.cmsCreateMultiprofileTransformTHR(m.ContextID, 
-			                                      Profiles, 2, lcms2.TYPE_Lab_DBL, 
+		xform = cmsxform.cmsCreateMultiprofileTransformTHR(m.ContextID,
+			                                      Profiles, 2, lcms2.TYPE_Lab_DBL,
 			                                      OutputFormat, RelativeEncodingIntent, 0);
 		cmsio0.cmsCloseProfile(hLab);
 		
@@ -1377,8 +1377,8 @@ final class cmsps2
 	    EmitPQRStage(m, hProfile, lDoBPC, Intent == lcms2.INTENT_ABSOLUTE_COLORIMETRIC);
 	    EmitXYZ2Lab(m);
 	    
-	    // FIXUP: map Lab (100, 0, 0) to perfect white, because the particular encoding for Lab 
-	    // does map a=b=0 not falling into any specific node. Since range a,b goes -128..127, 
+	    // FIXUP: map Lab (100, 0, 0) to perfect white, because the particular encoding for Lab
+	    // does map a=b=0 not falling into any specific node. Since range a,b goes -128..127,
 	    // zero is slightly moved towards right, so assure next node (in L=100 slice) is mapped to
 	    // zero. This would sacrifice a bit of highlights, but failure to do so would cause
 	    // scum dot. Ouch.
@@ -1438,12 +1438,12 @@ final class cmsps2
 	    }
 	}
 	
-	// Creates a PostScript color list from a named profile data. 
+	// Creates a PostScript color list from a named profile data.
 	// This is a HP extension.
 	
 	private static int WriteNamedColorCRD(cmsIOHANDLER m, cmsHPROFILE hNamedColor, int Intent, int dwFlags)
 	{
-	    cmsHTRANSFORM xform;    
+	    cmsHTRANSFORM xform;
 	    int i, nColors, nColorant;
 	    int OutputFormat;
 	    StringBuffer ColorName = new StringBuffer(32);
@@ -1484,7 +1484,7 @@ final class cmsps2
 	        	continue;
 	        }
 	        
-	        cmsxform.cmsDoTransform(xform, In, Out, 1);      
+	        cmsxform.cmsDoTransform(xform, In, Out, 1);
 	        BuildColorantList(Colorant, nColorant, Out);
 	        cmsplugin._cmsIOPrintf(m, "  (%s) [ %s ]\n", new Object[]{ColorName, Colorant});
 	    }
@@ -1496,11 +1496,11 @@ final class cmsps2
 	    	cmsplugin._cmsIOPrintf(m, " /Current exch /HPSpotTable defineresource pop\n", null);
 	    }
 	    
-	    cmsxform.cmsDeleteTransform(xform);  
+	    cmsxform.cmsDeleteTransform(xform);
 	    return 1;
 	}
 	
-	// This one does create a Color Rendering Dictionary. 
+	// This one does create a Color Rendering Dictionary.
 	// CRD are always LUT-Based, no matter if profile is
 	// implemented as matrix-shaper.
 	
@@ -1591,7 +1591,7 @@ final class cmsps2
 	}
 	
 	// Does create a Color Space Array on XYZ colorspace for PostScript usage
-	public static int cmsGetPostScriptCSA(cmsContext ContextID, cmsHPROFILE hProfile, int Intent, int dwFlags, byte[] Buffer, int dwBufferLen)  
+	public static int cmsGetPostScriptCSA(cmsContext ContextID, cmsHPROFILE hProfile, int Intent, int dwFlags, byte[] Buffer, int dwBufferLen)
 	{
 		cmsIOHANDLER mem;
 		int dwBytesUsed;

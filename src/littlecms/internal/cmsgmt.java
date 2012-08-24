@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2010 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -45,7 +45,7 @@ final class cmsgmt
 {
 	// Auxiliar: append a Lab identity after the given sequence of profiles
 	// and return the transform. Lab profile is closed, rest of profiles are kept open.
-	public static cmsHTRANSFORM _cmsChain2Lab(cmsContext ContextID, int nProfiles, int InputFormat, int OutputFormat, final int[] Intents, 
+	public static cmsHTRANSFORM _cmsChain2Lab(cmsContext ContextID, int nProfiles, int InputFormat, int OutputFormat, final int[] Intents,
 			final cmsHPROFILE[] hProfiles, final boolean[] BPC, final double[] AdaptationStates, int dwFlags)
 	{
 	    cmsHTRANSFORM xform;
@@ -86,13 +86,13 @@ final class cmsgmt
 	    IntentList[nProfiles]     = lcms2.INTENT_RELATIVE_COLORIMETRIC;
 	    
 	    // Create the transform
-	    xform = cmsxform.cmsCreateExtendedTransform(ContextID, nProfiles + 1, ProfileList, 
-	                                       BPCList, 
-	                                       IntentList, 
-	                                       AdaptationList, 
-	                                       null, 0, 
-	                                       InputFormat, 
-	                                       OutputFormat, 
+	    xform = cmsxform.cmsCreateExtendedTransform(ContextID, nProfiles + 1, ProfileList,
+	                                       BPCList,
+	                                       IntentList,
+	                                       AdaptationList,
+	                                       null, 0,
+	                                       InputFormat,
+	                                       OutputFormat,
 	                                       dwFlags);
 	    
 	    cmsio0.cmsCloseProfile(hLab);
@@ -100,9 +100,9 @@ final class cmsgmt
 	    return xform;
 	}
 	
-	// Compute K -> L* relationship. Flags may include black point compensation. In this case, 
+	// Compute K -> L* relationship. Flags may include black point compensation. In this case,
 	// the relationship is assumed from the profile with BPC to a black point zero.
-	private static cmsToneCurve ComputeKToLstar(cmsContext ContextID, int nPoints, int nProfiles, final int[] Intents, final cmsHPROFILE[] hProfiles, 
+	private static cmsToneCurve ComputeKToLstar(cmsContext ContextID, int nPoints, int nProfiles, final int[] Intents, final cmsHPROFILE[] hProfiles,
 			final boolean[] BPC, final double[] AdaptationStates, int dwFlags)
 	{
 	    cmsToneCurve out = null;
@@ -141,7 +141,7 @@ final class cmsgmt
 	// Compute Black tone curve on a CMYK -> CMYK transform. This is done by
 	// using the proof direction on both profiles to find K->L* relationship
 	// then joining both curves. dwFlags may include black point compensation.
-	public static cmsToneCurve _cmsBuildKToneCurve(cmsContext ContextID, int nPoints, int nProfiles, final int[] Intents, final cmsHPROFILE[] hProfiles, 
+	public static cmsToneCurve _cmsBuildKToneCurve(cmsContext ContextID, int nPoints, int nProfiles, final int[] Intents, final cmsHPROFILE[] hProfiles,
 			final boolean[] BPC, final double[] AdaptationStates, int dwFlags)
 	{
 	    cmsToneCurve in, out, KTone;
@@ -166,11 +166,11 @@ final class cmsgmt
 	    	return null;
 	    }
 	    
-	    out = ComputeKToLstar(ContextID, nPoints, 1, 
-	                            new int[]{Intents[nProfiles - 1]}, 
-	                            new cmsHPROFILE[]{hProfiles[nProfiles - 1]}, 
-	                            new boolean[]{BPC[nProfiles - 1]}, 
-	                            new double[]{AdaptationStates[nProfiles - 1]}, 
+	    out = ComputeKToLstar(ContextID, nPoints, 1,
+	                            new int[]{Intents[nProfiles - 1]},
+	                            new cmsHPROFILE[]{hProfiles[nProfiles - 1]},
+	                            new boolean[]{BPC[nProfiles - 1]},
+	                            new double[]{AdaptationStates[nProfiles - 1]},
 	                            dwFlags);
 	    if (out == null)
 	    {
@@ -178,8 +178,8 @@ final class cmsgmt
 	        return null;
 	    }
 	    
-	    // Build the relationship. This effectively limits the maximum accuracy to 16 bits, but 
-	    // since this is used on black-preserving LUTs, we are not loosing  accuracy in any case 
+	    // Build the relationship. This effectively limits the maximum accuracy to 16 bits, but
+	    // since this is used on black-preserving LUTs, we are not loosing  accuracy in any case
 	    KTone = cmsgamma.cmsJoinToneCurve(ContextID, in, out, nPoints);
 	    
 	    // Get rid of components
@@ -191,7 +191,7 @@ final class cmsgmt
 	    	return null;
 	    }
 	    
-	    // Make sure it is monotonic    
+	    // Make sure it is monotonic
 	    if (!cmsgamma.cmsIsToneCurveMonotonic(KTone))
 	    {
 	    	cmsgamma.cmsFreeToneCurve(KTone);
@@ -213,7 +213,7 @@ final class cmsgmt
 	}
 	
 	// This sampler does compute gamut boundaries by comparing original
-	// values with a transform going back and forth. Values above ERR_THERESHOLD 
+	// values with a transform going back and forth. Values above ERR_THERESHOLD
 	// of maximum are considered out of gamut.
 	
 	private static final int ERR_THERESHOLD = 5;
@@ -223,8 +223,8 @@ final class cmsgmt
 		public int run(short[] In, short[] Out, Object Cargo)
 		{
 			GAMUTCHAIN t = (GAMUTCHAIN)Cargo;
-		    cmsCIELab LabIn1 = new cmsCIELab(), LabOut1 = new cmsCIELab();  
-		    cmsCIELab LabIn2 = new cmsCIELab(), LabOut2 = new cmsCIELab();      
+		    cmsCIELab LabIn1 = new cmsCIELab(), LabOut1 = new cmsCIELab();
+		    cmsCIELab LabIn2 = new cmsCIELab(), LabOut2 = new cmsCIELab();
 		    short[] Proof = new short[lcms2.cmsMAXCHANNELS], Proof2 = new short[lcms2.cmsMAXCHANNELS];
 		    double dE1, dE2, ErrorRatio;
 		    
@@ -240,7 +240,7 @@ final class cmsgmt
 		    }
 		    
 		    // converts from PCS to colorant. This always
-		    // does return in-gamut values, 
+		    // does return in-gamut values,
 		    cmsxform.cmsDoTransform(t.hForward, LabIn1, Proof, 1);
 		    
 		    // Now, do the inverse, from colorant to PCS.
@@ -315,7 +315,7 @@ final class cmsgmt
 	// **WARNING: This algorithm does assume that gamut remapping algorithms does NOT move in-gamut colors,
 	// of course, many perceptual and saturation intents does not work in such way, but relativ. ones should.
 	
-	public static cmsPipeline _cmsCreateGamutCheckPipeline(cmsContext ContextID, cmsHPROFILE[] hProfiles, boolean[] BPC, int[] Intents, double[] AdaptationStates, 
+	public static cmsPipeline _cmsCreateGamutCheckPipeline(cmsContext ContextID, cmsHPROFILE[] hProfiles, boolean[] BPC, int[] Intents, double[] AdaptationStates,
 			int nGamutPCSposition, cmsHPROFILE hGamut)
 	{
 		cmsHPROFILE hLab;
@@ -325,7 +325,7 @@ final class cmsgmt
 		GAMUTCHAIN Chain;
 		int nChannels, nGridpoints;
 		int ColorSpace;
-		int i;    
+		int i;
 		cmsHPROFILE[] ProfileList = new cmsHPROFILE[256];
 		boolean[] BPCList = new boolean[256];
 		double[] AdaptationList = new double[256];
@@ -335,7 +335,7 @@ final class cmsgmt
 		
 		if (nGamutPCSposition <= 0 || nGamutPCSposition > 255)
 		{
-			cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSGMT_PCS_WRONG_POS), 
+			cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSGMT_PCS_WRONG_POS),
 					new Object[]{new Integer(nGamutPCSposition)});
 			return null;
 		}
@@ -348,7 +348,7 @@ final class cmsgmt
 		
 		// The figure of merit. On matrix-shaper profiles, should be almost zero as
 		// the conversion is pretty exact. On LUT based profiles, different resolutions
-		// of input and output CLUT may result in differences. 
+		// of input and output CLUT may result in differences.
 		
 		if (cmsio1.cmsIsMatrixShaper(hGamut))
 		{
@@ -374,42 +374,42 @@ final class cmsgmt
 		AdaptationList[nGamutPCSposition] = 1.0;
 		Intents[nGamutPCSposition] = lcms2.INTENT_RELATIVE_COLORIMETRIC;
 		
-		ColorSpace  = cmsio0.cmsGetColorSpace(hGamut);  
+		ColorSpace  = cmsio0.cmsGetColorSpace(hGamut);
 		
-		nChannels   = cmspcs.cmsChannelsOf(ColorSpace);     
+		nChannels   = cmspcs.cmsChannelsOf(ColorSpace);
 		nGridpoints = cmspcs._cmsReasonableGridpointsByColorspace(ColorSpace, lcms2.cmsFLAGS_HIGHRESPRECALC);
 		dwFormat    = (lcms2.CHANNELS_SH(nChannels)|(2 << lcms2.BYTES_SHIFT_VALUE));
 		
 		// 16 bits to Lab double
-		Chain.hInput = cmsxform.cmsCreateExtendedTransform(ContextID, 
-			nGamutPCSposition + 1, 
-			ProfileList, 
-			BPCList, 
-			Intents, 
-			AdaptationList, 
-			null, 0, 
-			dwFormat, lcms2.TYPE_Lab_DBL, 
+		Chain.hInput = cmsxform.cmsCreateExtendedTransform(ContextID,
+			nGamutPCSposition + 1,
+			ProfileList,
+			BPCList,
+			Intents,
+			AdaptationList,
+			null, 0,
+			dwFormat, lcms2.TYPE_Lab_DBL,
 			lcms2.cmsFLAGS_NOCACHE);
 		
 		// Does create the forward step. Lab double to device
 		dwFormat    = (lcms2.CHANNELS_SH(nChannels)|(2 << lcms2.BYTES_SHIFT_VALUE));
 		Chain.hForward = cmsxform.cmsCreateTransformTHR(ContextID,
-			hLab, lcms2.TYPE_Lab_DBL, 
-			hGamut, dwFormat, 
+			hLab, lcms2.TYPE_Lab_DBL,
+			hGamut, dwFormat,
 			lcms2.INTENT_RELATIVE_COLORIMETRIC,
 			lcms2.cmsFLAGS_NOCACHE);
 		
 		// Does create the backwards step
-		Chain.hReverse = cmsxform.cmsCreateTransformTHR(ContextID, hGamut, dwFormat, 
-			hLab, lcms2.TYPE_Lab_DBL,                                      
+		Chain.hReverse = cmsxform.cmsCreateTransformTHR(ContextID, hGamut, dwFormat,
+			hLab, lcms2.TYPE_Lab_DBL,
 			lcms2.INTENT_RELATIVE_COLORIMETRIC,
 			lcms2.cmsFLAGS_NOCACHE);
 		
 		// All ok?
 		if (Chain.hForward != null && Chain.hReverse != null)
 		{
-			// Go on, try to compute gamut LUT from PCS. This consist on a single channel containing 
-			// dE when doing a transform back and forth on the colorimetric intent. 
+			// Go on, try to compute gamut LUT from PCS. This consist on a single channel containing
+			// dE when doing a transform back and forth on the colorimetric intent.
 			
 			Gamut = cmslut.cmsPipelineAlloc(ContextID, 3, 1);
 			
@@ -509,8 +509,8 @@ final class cmsgmt
 	    
 	    // TAC only works on output profiles
 	    if (cmsio0.cmsGetDeviceClass(hProfile) != lcms2.cmsSigOutputClass)
-	    {        
-	        return 0;       
+	    {
+	        return 0;
 	    }
 	    
 	    // Create a fake formatter for result
@@ -531,10 +531,10 @@ final class cmsgmt
 	    	return 0;
 	    }
 	    // Setup a roundtrip on perceptual intent in output profile for TAC estimation
-	    bp.hRoundTrip = cmsxform.cmsCreateTransformTHR(ContextID, hLab, lcms2.TYPE_Lab_16, hProfile, dwFormatter, lcms2.INTENT_PERCEPTUAL, 
+	    bp.hRoundTrip = cmsxform.cmsCreateTransformTHR(ContextID, hLab, lcms2.TYPE_Lab_16, hProfile, dwFormatter, lcms2.INTENT_PERCEPTUAL,
 	    		lcms2.cmsFLAGS_NOOPTIMIZE|lcms2.cmsFLAGS_NOCACHE);
 	    
-	    cmsio0.cmsCloseProfile(hLab);  
+	    cmsio0.cmsCloseProfile(hLab);
 	    if (bp.hRoundTrip == null)
 	    {
 	    	return 0;

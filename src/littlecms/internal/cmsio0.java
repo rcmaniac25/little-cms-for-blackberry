@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ import littlecms.internal.lcms2_plugin.cmsTagTypeHandler;
  * <p>
  * NULL IOhandler basically does nothing but keep track on how many bytes have been
  * written. This is handy when creating profiles, where the file size is needed in the
- * header. Then, whole profile is serialized across NULL IOhandler and a second pass 
+ * header. Then, whole profile is serialized across NULL IOhandler and a second pass
  * writes the bytes to the pertinent IOhandler.
  */
 //#ifdef CMS_INTERNAL_ACCESS & DEBUG
@@ -132,7 +132,7 @@ final class cmsio0
 			{
 				FILENULL ResData = (FILENULL)iohandler.stream;
 				
-			    ResData.Pointer = offset; 
+			    ResData.Pointer = offset;
 			    return true;
 			}
 		};
@@ -198,7 +198,7 @@ final class cmsio0
 	}
 	
 	// Create a iohandler for memory block. AccessMode=='r' assumes the iohandler is going to read, and makes
-	// a copy of the memory block for letting user to free the memory after invoking open profile. In write 
+	// a copy of the memory block for letting user to free the memory after invoking open profile. In write
 	// mode ("w"), Buffere points to the begin of memory block to be written.
 	public static cmsIOHANDLER cmsOpenIOhandlerFromMem(cmsContext ContextID, byte[] Buffer, int size, final char AccessMode)
 	{
@@ -307,7 +307,7 @@ final class cmsio0
 	    }
 	    
 	    iohandler.ContextID = ContextID;
-	    iohandler.stream  = fm;   
+	    iohandler.stream  = fm;
 	    iohandler.UsedSpace = 0;
 	    iohandler.PhysicalFile.setLength(0);
 	    
@@ -346,7 +346,7 @@ final class cmsio0
 				
 			    if(offset > ResData.Size)
 			    {
-			    	cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_SEEK, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_NOT_ENOUGH_DATA), null);        
+			    	cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_SEEK, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_NOT_ENOUGH_DATA), null);
 			        return false;
 			    }
 			    
@@ -445,7 +445,7 @@ final class cmsio0
 				
 			    if (nReaded != count)
 			    {
-			    	cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_READ_ERR), 
+			    	cmserr.cmsSignalError(iohandler.ContextID, lcms2_plugin.cmsERROR_FILE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_READ_ERR),
 			    			new Object[]{new Integer(nReaded * size), new Integer(count * size)});
 			    	return 0;
 			    }
@@ -565,7 +565,7 @@ final class cmsio0
 	    setupFileIOHandler(iohandler, ContextID, fm);
 	    
 	    // Keep track of the original file
-	    if (FileName != null) 
+	    if (FileName != null)
 	    {
 	    	iohandler.PhysicalFile.setLength(0);
 	    	iohandler.PhysicalFile.append(FileName);
@@ -574,7 +574,7 @@ final class cmsio0
 	    return iohandler;
 	}
 	
-	// Create a iohandler for stream based files 
+	// Create a iohandler for stream based files
 	public static cmsIOHANDLER cmsOpenIOhandlerFromStream(cmsContext ContextID, Stream Stream)
 	{
 	    cmsIOHANDLER iohandler = null;
@@ -625,7 +625,7 @@ final class cmsio0
 	    // Set it to empty
 	    Icc.TagCount = 0;
 	    
-	    // Set default version 
+	    // Set default version
 	    Icc.Version = 0x02100000;
 	    
 	    // Set creation date/time
@@ -649,7 +649,7 @@ final class cmsio0
 	// Return the number of tags
 	public static int cmsGetTagCount(cmsHPROFILE hProfile)
 	{
-	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;  
+	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
 		if (Icc == null)
 		{
 			return -1;
@@ -661,11 +661,11 @@ final class cmsio0
 	// Return the tag signature of a given tag number
 	public static int cmsGetTagSignature(cmsHPROFILE hProfile, int n)
 	{
-	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;    
+	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
 	    
 	    if (n > Icc.TagCount)
 	    {
-	    	return 0; // Mark as not available     
+	    	return 0; // Mark as not available
 	    }
 	    if (n >= lcms2_internal.MAX_TABLE_TAG)
 	    {
@@ -735,7 +735,7 @@ final class cmsio0
 	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_ALREADY_DEFINED, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_TAG_ALREADY_EXISTS), new Object[]{new Integer(sig)});
 	        return false;
 	    }
-	    else 
+	    else
 	    {
 	        // New one
 	        
@@ -1223,14 +1223,14 @@ final class cmsio0
 	    
 	    if (sAccess.charAt(0) == 'w')
 	    {
-	        NewIcc.IsWrite = true;       
+	        NewIcc.IsWrite = true;
 	        return hEmpty;
 	    }
 	    
 	    if (!_cmsReadHeader(NewIcc))
 	    {
 	    	cmsCloseProfile(hEmpty);
-		    return null;    
+		    return null;
 	    }
 	    return hEmpty;
 
@@ -1255,7 +1255,7 @@ final class cmsio0
 	    
 	    NewIcc = (_cmsICCPROFILE)hEmpty;
 	    
-		// Ok, in this case const void* is casted to void* just because open IO handler 
+		// Ok, in this case const void* is casted to void* just because open IO handler
 		// shares read and writing modes. Don't abuse this feature!
 	    NewIcc.IOhandler = cmsOpenIOhandlerFromMem(ContextID, MemPtr, dwSize, 'r');
 	    if (NewIcc.IOhandler == null)
@@ -1308,7 +1308,7 @@ final class cmsio0
 	        
 	        if (Data == null)
 	        {
-	            // Reach here if we are copying a tag from a disk-based ICC profile which has not been modified by user. 
+	            // Reach here if we are copying a tag from a disk-based ICC profile which has not been modified by user.
 	            // In this case a blind copy of the block data is performed
 	            if (FileOrig != null && Icc.TagOffsets[i] != 0)
 	            {
@@ -1343,7 +1343,7 @@ final class cmsio0
 	                // Align to 32 bit boundary.
 	                if (!cmsplugin._cmsWriteAlignment(io))
 	                {
-	                	return false;                   
+	                	return false;
 	                }
 	            }
 	            
@@ -1371,7 +1371,7 @@ final class cmsio0
 	            
 	            if (TypeHandler == null)
 	            {
-	            	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_INTERNAL, 
+	            	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_INTERNAL,
 	            			Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_NO_TAG_HANDLER), new Object[]{new Integer(Icc.TagNames[i])});
 	                continue;
 	            }
@@ -1389,7 +1389,7 @@ final class cmsio0
 	            	StringBuffer String = new StringBuffer(4);
 					
 	            	cmserr._cmsTagSignature2String(String, TypeBase);
-	            	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_WRITE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_CANT_WRITE_TYPE), 
+	            	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_WRITE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_CANT_WRITE_TYPE),
 	            			new Object[]{String});
 	                return false;
 	            }
@@ -1522,9 +1522,9 @@ final class cmsio0
 	    return UsedSpace;
 	}
 	
-	// Low-level save to disk. 
+	// Low-level save to disk.
 	public static boolean cmsSaveProfileToFile(cmsHPROFILE hProfile, final String FileName)
-	{   
+	{
 	    cmsContext ContextID = cmsGetProfileContextID(hProfile);
 	    cmsIOHANDLER io = cmsOpenIOhandlerFromFile(ContextID, FileName, "w");
 	    boolean rc;
@@ -1624,7 +1624,7 @@ final class cmsio0
 	            {
 	            	TypeHandler.ContextID = Icc.ContextID;					// As an additional parameters
 	                TypeHandler.ICCVersion = Icc.Version;
-	            	TypeHandler.FreePtr.run(TypeHandler, Icc.TagPtrs[i]);       
+	            	TypeHandler.FreePtr.run(TypeHandler, Icc.TagPtrs[i]);
 	            }
 	            else
 	            {
@@ -1634,7 +1634,7 @@ final class cmsio0
 	    }
 	    
 	    if (Icc.IOhandler != null)
-	    {      
+	    {
 	        rc &= cmsCloseIOhandler(Icc.IOhandler);
 	    }
 	    
@@ -1659,7 +1659,7 @@ final class cmsio0
 	    {
 	        if (Type == TagDescriptor.SupportedTypes[i])
 	        {
-	        	return true; 
+	        	return true;
 	        }
 	    }
 	    
@@ -1708,7 +1708,7 @@ final class cmsio0
 	    TagDescriptor = cmstypes._cmsGetTagDescriptor(sig);
 	    if (TagDescriptor == null)
 	    {
-	    	return null; // Unsupported. 
+	    	return null; // Unsupported.
 	    }
 	    
 	    // if supported, get type and check if in list
@@ -1751,13 +1751,13 @@ final class cmsio0
 	    }
 	    
 	    // This is a weird error that may be a symptom of something more serious, the number of
-	    // stored item is actually less than the number of required elements. 
+	    // stored item is actually less than the number of required elements.
 	    if (ElemCount[0] < TagDescriptor.ElemCount)
 	    {
 	    	StringBuffer String = new StringBuffer(4);
 			
         	cmserr._cmsTagSignature2String(String, sig);
-        	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_CORRUPTION_DETECTED, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_INCONSISTANT_COUNT), 
+        	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_CORRUPTION_DETECTED, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_INCONSISTANT_COUNT),
         			new Object[]{String, new Integer(TagDescriptor.ElemCount), new Integer(ElemCount[0])});
 	    }
 	    
@@ -1768,8 +1768,8 @@ final class cmsio0
 	// Get true type of data
 	public static int _cmsGetTagTrueType(cmsHPROFILE hProfile, int sig)
 	{
-		_cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile; 
-		cmsTagTypeHandler TypeHandler;	
+		_cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
+		cmsTagTypeHandler TypeHandler;
 		int n;
 		
 		// Search for given tag in ICC profile directory
@@ -1824,7 +1824,7 @@ final class cmsio0
 	                {
 	                    TypeHandler.ContextID = Icc.ContextID;					// As an additional parameter
 	                    TypeHandler.ICCVersion = Icc.Version;
-		                TypeHandler.FreePtr.run(TypeHandler, Icc.TagPtrs[i]);       
+		                TypeHandler.FreePtr.run(TypeHandler, Icc.TagPtrs[i]);
 		            }
 		        }
 		    }
@@ -1836,7 +1836,7 @@ final class cmsio0
 	        
 	        if (i >= lcms2_internal.MAX_TABLE_TAG)
 	        {
-	            cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_TO_MANY_TAGS), 
+	            cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_RANGE, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_TO_MANY_TAGS),
 	            		new Object[]{new Integer(lcms2_internal.MAX_TABLE_TAG)});
 	            return false;
 	        }
@@ -1850,21 +1850,21 @@ final class cmsio0
 	    // This is not a link
 	    Icc.TagLinked[i] = 0;
 	    
-	    // Get information about the TAG. 
+	    // Get information about the TAG.
 	    TagDescriptor = cmstypes._cmsGetTagDescriptor(sig);
 	    if (TagDescriptor == null)
 	    {
-	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNSUPPORTED_TAG), 
+	    	cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNSUPPORTED_TAG),
 	    			new Object[]{new Integer(sig)});
 	        return false;
 	    }
 	    
-	    // Now we need to know which type to use. It depends on the version. 
+	    // Now we need to know which type to use. It depends on the version.
 	    Version = cmsGetProfileVersion(hProfile);
 	    if (TagDescriptor.DecideType != null)
 	    {
 	        // Let the tag descriptor to decide the type base on depending on
-	        // the data. This is useful for example on parametric curves, where 
+	        // the data. This is useful for example on parametric curves, where
 	        // curves specified by a table cannot be saved as parametric and needs
 	        // to be revented to single v2-curves, even on v4 profiles.
 	    	
@@ -1881,7 +1881,7 @@ final class cmsio0
 	    	cmserr._cmsTagSignature2String(TypeString, Type);
 	    	cmserr._cmsTagSignature2String(SigString,  sig);
 	    	
-	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNSUPPORTED_TYPE_FOR_TAG), 
+	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNSUPPORTED_TYPE_FOR_TAG),
 	        		new Object[]{TypeString, SigString});
 	        return false;
 	    }
@@ -1893,7 +1893,7 @@ final class cmsio0
 	    	cmserr._cmsTagSignature2String(TypeString, Type);
 	    	cmserr._cmsTagSignature2String(SigString,  sig);
 	    	
-	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNSUPPORTED_TYPE_FOR_TAG), 
+	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_UNKNOWN_EXTENSION, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_UNSUPPORTED_TYPE_FOR_TAG),
 	        		new Object[]{TypeString, SigString});
 	        return false; // Should never happen
 	    }
@@ -1906,13 +1906,13 @@ final class cmsio0
 	    
 	    TypeHandler.ContextID   = Icc.ContextID;
 	    TypeHandler.ICCVersion  = Icc.Version;
-	    Icc.TagPtrs[i]          = TypeHandler.DupPtr.run(TypeHandler, data, TagDescriptor.ElemCount); 
+	    Icc.TagPtrs[i]          = TypeHandler.DupPtr.run(TypeHandler, data, TagDescriptor.ElemCount);
 	    
 	    if (Icc.TagPtrs[i] == null)
 	    {
 	    	cmserr._cmsTagSignature2String(TypeString, Type);
 	    	cmserr._cmsTagSignature2String(SigString,  sig);
-	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_CORRUPTION_DETECTED, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_MALFORMED_TYPE_FOR_TAG), 
+	        cmserr.cmsSignalError(Icc.ContextID, lcms2_plugin.cmsERROR_CORRUPTION_DETECTED, Utility.LCMS_Resources.getString(LCMSResource.CMSIO0_MALFORMED_TYPE_FOR_TAG),
 	        		new Object[]{TypeString, SigString});
 	        
 	        return false;
@@ -1921,7 +1921,7 @@ final class cmsio0
 	    return true;
 	}
 	
-	// Read and write raw data. The only way those function would work and keep consistence with normal read and write 
+	// Read and write raw data. The only way those function would work and keep consistence with normal read and write
 	// is to do an additional step of serialization. That means, readRaw would issue a normal read and then convert the obtained
 	// data to raw bytes by using the "write" serialization logic. And vice-versa. I know this may end in situations where
 	// raw data written does not exactly correspond with the raw data proposed to cmsWriteRaw data, but this approach allows
@@ -1930,7 +1930,7 @@ final class cmsio0
 	public static int cmsReadRawTag(cmsHPROFILE hProfile, int sig, byte[] data, int BufferSize)
 	{
 		_cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
-	    Object Object; 
+	    Object Object;
 	    int i;
 	    cmsIOHANDLER MemIO;
 	    cmsTagTypeHandler TypeHandler = null;
@@ -1991,7 +1991,7 @@ final class cmsio0
 	        return Icc.TagSizes[i];
 	    }
 	    
-	    // Already readed, or previously set by cmsWriteTag(). We need to serialize that 
+	    // Already readed, or previously set by cmsWriteTag(). We need to serialize that
 	    // data to raw in order to maintain consistency.
 	    Object = cmsReadTag(hProfile, sig);
 	    if (Object == null)
@@ -2047,12 +2047,12 @@ final class cmsio0
 	}
 	
 	// Similar to the anterior. This function allows to write directly to the ICC profile any data, without
-	// checking anything. As a rule, mixing Raw with cooked doesn't work, so writing a tag as raw and then reading 
+	// checking anything. As a rule, mixing Raw with cooked doesn't work, so writing a tag as raw and then reading
 	// it as cooked without serializing does result into an error. If that is wha you want, you will need to dump
 	// the profile to memory or disk and then reopen it.
 	public static boolean cmsWriteRawTag(cmsHPROFILE hProfile, int sig, final byte[] data, int Size)
 	{
-	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;  
+	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
 	    int i;
 	    int[] temp = new int[1];
 	    
@@ -2102,7 +2102,7 @@ final class cmsio0
 	// Returns the tag linked to sig, in the case two tags are sharing same resource
 	public static int cmsTagLinkedTo(cmsHPROFILE hProfile, int sig)
 	{
-	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;  
+	    _cmsICCPROFILE Icc = (_cmsICCPROFILE)hProfile;
 	    int i;
 	    
 	    // Search for given tag in ICC profile directory

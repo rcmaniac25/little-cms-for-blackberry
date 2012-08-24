@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2010 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -84,14 +84,14 @@ final class cmscam02
 		}
 	}
 	
-	private static double compute_n(cmsCIECAM02 pMod) 
+	private static double compute_n(cmsCIECAM02 pMod)
 	{
 	    return (pMod.Yb / pMod.adoptedWhite.XYZ[1]);
 	}
 	
-	private static double compute_z(cmsCIECAM02 pMod) 
+	private static double compute_z(cmsCIECAM02 pMod)
 	{
-	    return (1.48 + 
+	    return (1.48 +
 //#ifndef BlackBerrySDK4.5.0
 	    		MathUtilities.pow(pMod.n, 0.5));
 //#else
@@ -99,9 +99,9 @@ final class cmscam02
 //#endif
 	}
 	
-	private static double computeNbb(cmsCIECAM02 pMod) 
+	private static double computeNbb(cmsCIECAM02 pMod)
 	{
-	    return (0.725 * 
+	    return (0.725 *
 //#ifndef BlackBerrySDK4.5.0
 	    		MathUtilities.pow((1.0 / pMod.n), 0.2));
 //#else
@@ -109,7 +109,7 @@ final class cmscam02
 //#endif
 	}
 	
-	private static double computeFL(cmsCIECAM02 pMod) 
+	private static double computeFL(cmsCIECAM02 pMod)
 	{
 	    double k, FL, kPow;
 	    
@@ -131,7 +131,7 @@ final class cmscam02
 	    return FL;
 	}
 	
-	private static double computeD(cmsCIECAM02 pMod) 
+	private static double computeD(cmsCIECAM02 pMod)
 	{
 	    double D;
 	    
@@ -140,7 +140,7 @@ final class cmscam02
 	    return D;
 	}
 	
-	private static CAM02COLOR XYZtoCAT02(CAM02COLOR clr) 
+	private static CAM02COLOR XYZtoCAT02(CAM02COLOR clr)
 	{
 	    clr.RGB[0] = (clr.XYZ[0] *  0.7328) + (clr.XYZ[1] *  0.4296) + (clr.XYZ[2] * -0.1624);
 	    clr.RGB[1] = (clr.XYZ[0] * -0.7036) + (clr.XYZ[1] *  1.6975) + (clr.XYZ[2] *  0.0061);
@@ -149,7 +149,7 @@ final class cmscam02
 	    return clr;
 	}
 	
-	private static CAM02COLOR ChromaticAdaptation(CAM02COLOR clr, cmsCIECAM02 pMod) 
+	private static CAM02COLOR ChromaticAdaptation(CAM02COLOR clr, cmsCIECAM02 pMod)
 	{
 	    int i;
 	    
@@ -160,10 +160,10 @@ final class cmscam02
 	            (1.0 - pMod.D)) * clr.RGB[i];
 	    }
 	    
-	    return clr; 
+	    return clr;
 	}
 	
-	private static CAM02COLOR CAT02toHPE(CAM02COLOR clr) 
+	private static CAM02COLOR CAT02toHPE(CAM02COLOR clr)
 	{
 		//At first glance this should be precomputed but the compiler takes care of it, small overhead setting each one individually
 	    double[] M = new double[9];
@@ -185,7 +185,7 @@ final class cmscam02
 	    return  clr;
 	}
 	
-	private static CAM02COLOR NonlinearCompression(CAM02COLOR clr, cmsCIECAM02 pMod) 
+	private static CAM02COLOR NonlinearCompression(CAM02COLOR clr, cmsCIECAM02 pMod)
 	{
 	    int i;
 	    double temp;
@@ -217,7 +217,7 @@ final class cmscam02
 	    return clr;
 	}
 	
-	private static CAM02COLOR ComputeCorrelates(CAM02COLOR clr, cmsCIECAM02 pMod) 
+	private static CAM02COLOR ComputeCorrelates(CAM02COLOR clr, cmsCIECAM02 pMod)
 	{
 	    double a, b, temp, e, t, r2d, d2r;
 	    
@@ -275,8 +275,8 @@ final class cmscam02
 	    }
 	    
 	    d2r = (3.141592654 / 180.0);
-	    e = ((12500.0 / 13.0) * pMod.Nc * pMod.Ncb) * 
-	        (Math.cos((clr.h * d2r + 2.0)) + 3.8); 
+	    e = ((12500.0 / 13.0) * pMod.Nc * pMod.Ncb) *
+	        (Math.cos((clr.h * d2r + 2.0)) + 3.8);
 	    
 	    if (clr.h < 20.14)
 	    {
@@ -317,7 +317,7 @@ final class cmscam02
 	    
 	    t = (e * Utility.pow(((a * a) + (b * b)), 0.5)) /
 //#endif
-	        (clr.RGBpa[0] + clr.RGBpa[1] + 
+	        (clr.RGBpa[0] + clr.RGBpa[1] +
 	        ((21.0 / 20.0) * clr.RGBpa[2]));
 	    
 //#ifndef BlackBerrySDK4.5.0
@@ -335,24 +335,24 @@ final class cmscam02
 	    return clr;
 	}
 	
-	private static CAM02COLOR InverseCorrelates(CAM02COLOR clr, cmsCIECAM02 pMod) 
+	private static CAM02COLOR InverseCorrelates(CAM02COLOR clr, cmsCIECAM02 pMod)
 	{
 	    double t, e, p1, p2, p3, p4, p5, hr, d2r;
 	    d2r = 3.141592654 / 180.0;
 	    
 //#ifndef BlackBerrySDK4.5.0
 	    t = MathUtilities.pow( (clr.C / (MathUtilities.pow((clr.J / 100.0), 0.5) *
-		        (MathUtilities.pow((1.64 - MathUtilities.pow(0.29, pMod.n)), 0.73)))), 
+		        (MathUtilities.pow((1.64 - MathUtilities.pow(0.29, pMod.n)), 0.73)))),
 		        (1.0 / 0.9) );
 //#else
 	    t = Utility.pow( (clr.C / (Utility.pow((clr.J / 100.0), 0.5) *
-		        (Utility.pow((1.64 - Utility.pow(0.29, pMod.n)), 0.73)))), 
+		        (Utility.pow((1.64 - Utility.pow(0.29, pMod.n)), 0.73)))),
 		        (1.0 / 0.9) );
 //#endif
 	    e = ((12500.0 / 13.0) * pMod.Nc * pMod.Ncb) *
 	        (Math.cos((clr.h * d2r + 2.0)) + 3.8);
 	    
-	    clr.A = pMod.adoptedWhite.A * 
+	    clr.A = pMod.adoptedWhite.A *
 //#ifndef BlackBerrySDK4.5.0
     		MathUtilities.pow(
 //#else
@@ -386,10 +386,10 @@ final class cmscam02
 	        clr.b = clr.a * (Math.sin(hr) / Math.cos(hr));
 	    }
 	    
-	    clr.RGBpa[0] = ((460.0 / 1403.0) * p2) + 
+	    clr.RGBpa[0] = ((460.0 / 1403.0) * p2) +
 	              ((451.0 / 1403.0) * clr.a) +
 	              ((288.0 / 1403.0) * clr.b);
-	    clr.RGBpa[1] = ((460.0 / 1403.0) * p2) - 
+	    clr.RGBpa[1] = ((460.0 / 1403.0) * p2) -
 	              ((891.0 / 1403.0) * clr.a) -
 	              ((261.0 / 1403.0) * clr.b);
 	    clr.RGBpa[2] = ((460.0 / 1403.0) * p2) -
@@ -427,7 +427,7 @@ final class cmscam02
 	    return clr;
 	}
 	
-	private static CAM02COLOR HPEtoCAT02(CAM02COLOR clr) 
+	private static CAM02COLOR HPEtoCAT02(CAM02COLOR clr)
 	{
 	    double[] M = new double[9];
 	    
@@ -448,18 +448,18 @@ final class cmscam02
 	    return clr;
 	}
 	
-	private static CAM02COLOR InverseChromaticAdaptation(CAM02COLOR clr, cmsCIECAM02 pMod) 
+	private static CAM02COLOR InverseChromaticAdaptation(CAM02COLOR clr, cmsCIECAM02 pMod)
 	{
 	    int i;
 	    for (i = 0; i < 3; i++)
-	    { 
+	    {
 	        clr.RGB[i] = clr.RGBc[i] /
 	            ((pMod.adoptedWhite.XYZ[1] * pMod.D / pMod.adoptedWhite.RGB[i]) + 1.0 - pMod.D);
 	    }
 	    return clr;
 	}
 	
-	private static CAM02COLOR CAT02toXYZ(CAM02COLOR clr) 
+	private static CAM02COLOR CAT02toXYZ(CAM02COLOR clr)
 	{
 	    clr.XYZ[0] = (clr.RGB[0] *  1.096124) + (clr.RGB[1] * -0.278869) + (clr.RGB[2] *  0.182745);
 	    clr.XYZ[1] = (clr.RGB[0] *  0.454369) + (clr.RGB[1] *  0.473533) + (clr.RGB[2] *  0.072098);
@@ -543,7 +543,7 @@ final class cmscam02
 	}
 	
 	public static void cmsCIECAM02Forward(cmsHANDLE hModel, final cmsCIEXYZ pIn, cmsJCh pOut)
-	{    
+	{
 	    CAM02COLOR clr = new CAM02COLOR();
 	    cmsCIECAM02 lpMod = (cmsCIECAM02)hModel;
 	    

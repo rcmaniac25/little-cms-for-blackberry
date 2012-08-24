@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -89,8 +89,8 @@ final class cmsopt
 	    // has to be dynamically allocated. This is not the case of first step shaper-CLUT, which is limited to max inputs
 		public short[] StageDEF;
 	    
-		public _cmsInterpFn16[] EvalCurveIn16; // The maximum number of input channels is known in advance 
-		public cmsInterpParams[] ParamsCurveIn16;  
+		public _cmsInterpFn16[] EvalCurveIn16; // The maximum number of input channels is known in advance
+		public cmsInterpParams[] ParamsCurveIn16;
 	    
 		public _cmsInterpFn16 EvalCLUT; // The evaluator for 3D grid
 		public cmsInterpParams CLUTparams; // (not-owned pointer)
@@ -105,7 +105,7 @@ final class cmsopt
 		}
 	}
 	
-	// Optimization for matrix-shaper in 8 bits. Numbers are operated in n.14 signed, tables are stored in 1.14 fixed 
+	// Optimization for matrix-shaper in 8 bits. Numbers are operated in n.14 signed, tables are stored in 1.14 fixed
 	
 	private static int DOUBLE_TO_1FIXED14(double x)
 	{
@@ -123,7 +123,7 @@ final class cmsopt
 		public int[][] Mat; // n.14 to n.14 (needs a saturation after that)
 		public int[] Off;
 	    
-		public short[] Shaper2R; // 1.14 to 0..255 
+		public short[] Shaper2R; // 1.14 to 0..255
 		public short[] Shaper2G;
 		public short[] Shaper2B;
 		
@@ -216,7 +216,7 @@ final class cmsopt
 		cmslut.cmsStageFree(mpe);
 	}
 	
-	// Remove all identities in chain. Note that pt actually is a double pointer to the element that holds the pointer. 
+	// Remove all identities in chain. Note that pt actually is a double pointer to the element that holds the pointer.
 	private static boolean _Remove1Op(cmsPipeline Lut, int UnaryOp)
 	{
 		ChainHolder pt = ChainHolder.MakeChain(Lut.Elements);
@@ -292,10 +292,10 @@ final class cmsopt
 		return AnyOpt;
 	}
 	
-	// Preoptimize just gets rif of no-ops coming paired. Conversion from v2 to v4 followed 
+	// Preoptimize just gets rif of no-ops coming paired. Conversion from v2 to v4 followed
 	// by a v4 to v2 and vice-versa. The elements are then discarded.
 	private static boolean PreOptimize(cmsPipeline Lut)
-	{    
+	{
 	    boolean AnyOpt = false, Opt;
 	    
 	    AnyOpt = false;
@@ -451,10 +451,10 @@ final class cmsopt
 	
 	private static final int PRELINEARIZATION_POINTS = 4096;
 	
-	// Sampler implemented by another LUT. This is a clean way to precalculate the devicelink 3D CLUT for 
+	// Sampler implemented by another LUT. This is a clean way to precalculate the devicelink 3D CLUT for
 	// almost any transform. We use floating point precision and then convert from floating point to 16 bits.
 	private static final cmsSAMPLER16 XFormSampler16 = new cmsSAMPLER16()
-	{	
+	{
 		public int run(short[] In, short[] Out, Object Cargo)
 		{
 			cmsPipeline Lut = (cmsPipeline)Cargo;
@@ -487,7 +487,7 @@ final class cmsopt
 	// Try to see if the curves of a given MPE are linear
 	private static boolean AllCurvesAreLinear(cmsStage mpe)
 	{
-	    cmsToneCurve[] Curves; 
+	    cmsToneCurve[] Curves;
 	    int i, n;
 	    
 	    Curves = cmslut._cmsStageGetPtrToCurveSet(mpe);
@@ -574,7 +574,7 @@ final class cmsopt
 	                	return false; // Not on exact node
 	                }
 	                
-	                index = p16.opta[0] * x0;    
+	                index = p16.opta[0] * x0;
 	            }
 	            else
 	            {
@@ -597,7 +597,7 @@ final class cmsopt
 	}
 	
 	// Auxiliar, to see if two values are equal or very different
-	private static boolean WhitesAreEqual(int n, short[] White1, short[] White2) 
+	private static boolean WhitesAreEqual(int n, short[] White1, short[] White2)
 	{
 	    int i;
 	    
@@ -759,9 +759,9 @@ final class cmsopt
 	}
 	
 	// -----------------------------------------------------------------------------------------------------------------------------------------------
-	// This function creates simple LUT from complex ones. The generated LUT has an optional set of 
-	// prelinearization curves, a CLUT of nGridPoints and optional postlinearization tables. 
-	// These curves have to exist in the original LUT in order to be used in the simplified output. 
+	// This function creates simple LUT from complex ones. The generated LUT has an optional set of
+	// prelinearization curves, a CLUT of nGridPoints and optional postlinearization tables.
+	// These curves have to exist in the original LUT in order to be used in the simplified output.
 	// Caller may also use the flags to allow this feature.
 	// LUTS with all curves will be simplified to a single curve. Parametric curves are lost.
 	// This function should be used on 16-bits LUTS only, as floating point losses precision when simplified
@@ -834,7 +834,7 @@ final class cmsopt
 		            // Maybe this is a linear tram, so we can avoid the whole stuff
 		            if (!AllCurvesAreLinear(PreLin))
 		            {
-		                // All seems ok, proceed.    
+		                // All seems ok, proceed.
 		                NewPreLin = cmslut.cmsStageDup(PreLin);
 		                cmslut.cmsPipelineInsertStage(Dest, lcms2.cmsAT_BEGIN, NewPreLin);
 		                
@@ -869,7 +869,7 @@ final class cmsopt
 		            // Maybe this is a linear tram, so we can avoid the whole stuff
 		            if (!AllCurvesAreLinear(PostLin))
 		            {
-		                // All seems ok, proceed.       
+		                // All seems ok, proceed.
 		                NewPostLin = cmslut.cmsStageDup(PostLin);
 		                cmslut.cmsPipelineInsertStage(Dest, lcms2.cmsAT_END, NewPostLin);
 		                
@@ -881,7 +881,7 @@ final class cmsopt
 		        }
 		    }
 
-		    // Now its time to do the sampling. We have to ignore pre/post linearization 
+		    // Now its time to do the sampling. We have to ignore pre/post linearization
 		    // The source LUT whithout pre/post curves is passed as parameter.
 		    if (!cmslut.cmsStageSampleCLut16bit(CLUT, XFormSampler16, Src, 0))
 		    {
@@ -974,8 +974,8 @@ final class cmsopt
 	};
 	
 	// -----------------------------------------------------------------------------------------------------------------------------------------------
-	// Fixes the gamma balancing of transform. This is described in my paper "Prelinearization Stages on 
-	// Color-Management Application-Specific Integrated Circuits (ASICs)" presented at NIP24. It only works 
+	// Fixes the gamma balancing of transform. This is described in my paper "Prelinearization Stages on
+	// Color-Management Application-Specific Integrated Circuits (ASICs)" presented at NIP24. It only works
 	// for RGB transforms. See the paper for more details
 	// -----------------------------------------------------------------------------------------------------------------------------------------------
 	
@@ -1019,7 +1019,7 @@ final class cmsopt
 	    }
 	}
 	
-	// Precomputes tables for 8-bit on input devicelink. 
+	// Precomputes tables for 8-bit on input devicelink.
 	private static Prelin8Data PrelinOpt8alloc(cmsContext ContextID, final cmsInterpParams p, cmsToneCurve[] G)
 	{
 	    int i;
@@ -1029,7 +1029,7 @@ final class cmsopt
 	    
 	    p8 = new Prelin8Data();
 	    
-	    // Since this only works for 8 bit input, values comes always as x * 257, 
+	    // Since this only works for 8 bit input, values comes always as x * 257,
 	    // we can safely take msb byte (x << 8 + x)
 	    
 	    for (i=0; i < 256; i++)
@@ -1107,8 +1107,8 @@ final class cmsopt
 		public void run(short[] Input, short[] Output, final Object D)
 		{
 			byte r, g, b;
-		    int rx, ry, rz;            
-		    int c0, c1, c2, c3, Rest;       
+		    int rx, ry, rz;
+		    int c0, c1, c2, c3, Rest;
 		    int OutChan;
 		    int X0, X1, Y0, Y1, Z0, Z1;
 		    Prelin8Data p8 = (Prelin8Data)D;
@@ -1141,12 +1141,12 @@ final class cmsopt
 		        {
 		            c1 = DENS(X1, Y0, Z0, LutTable, OutChan) - c0;
 		            c2 = DENS(X1, Y1, Z0, LutTable, OutChan) - DENS(X1, Y0, Z0, LutTable, OutChan);
-		            c3 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y1, Z0, LutTable, OutChan);                
+		            c3 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y1, Z0, LutTable, OutChan);
 		        }
 		        else
 		        {
 		            if (rx >= rz && rz >= ry)
-		            {            
+		            {
 		                c1 = DENS(X1, Y0, Z0, LutTable, OutChan) - c0;
 		                c2 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y0, Z1, LutTable, OutChan);
 		                c3 = DENS(X1, Y0, Z1, LutTable, OutChan) - DENS(X1, Y0, Z0, LutTable, OutChan);
@@ -1157,7 +1157,7 @@ final class cmsopt
 		                {
 		                    c1 = DENS(X1, Y0, Z1, LutTable, OutChan) - DENS(X0, Y0, Z1, LutTable, OutChan);
 		                    c2 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y0, Z1, LutTable, OutChan);
-		                    c3 = DENS(X0, Y0, Z1, LutTable, OutChan) - c0;                            
+		                    c3 = DENS(X0, Y0, Z1, LutTable, OutChan) - c0;
 		                }
 		                else
 		                {
@@ -1165,7 +1165,7 @@ final class cmsopt
 		                    {
 		                        c1 = DENS(X1, Y1, Z0, LutTable, OutChan) - DENS(X0, Y1, Z0, LutTable, OutChan);
 		                        c2 = DENS(X0, Y1, Z0, LutTable, OutChan) - c0;
-		                        c3 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y1, Z0, LutTable, OutChan);          
+		                        c3 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X1, Y1, Z0, LutTable, OutChan);
 		                    }
 		                    else
 		                    {
@@ -1173,19 +1173,19 @@ final class cmsopt
 		                        {
 		                            c1 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X0, Y1, Z1, LutTable, OutChan);
 		                            c2 = DENS(X0, Y1, Z0, LutTable, OutChan) - c0;
-		                            c3 = DENS(X0, Y1, Z1, LutTable, OutChan) - DENS(X0, Y1, Z0, LutTable, OutChan);                
+		                            c3 = DENS(X0, Y1, Z1, LutTable, OutChan) - DENS(X0, Y1, Z0, LutTable, OutChan);
 		                        }
 		                        else
 		                        {
 		                            if (rz >= ry && ry >= rx)
-		                            {             
+		                            {
 		                                c1 = DENS(X1, Y1, Z1, LutTable, OutChan) - DENS(X0, Y1, Z1, LutTable, OutChan);
 		                                c2 = DENS(X0, Y1, Z1, LutTable, OutChan) - DENS(X0, Y0, Z1, LutTable, OutChan);
-		                                c3 = DENS(X0, Y0, Z1, LutTable, OutChan) - c0;              
+		                                c3 = DENS(X0, Y0, Z1, LutTable, OutChan) - c0;
 		                            }
 		                            else
 		                            {
-		                                c1 = c2 = c3 = 0;              
+		                                c1 = c2 = c3 = 0;
 		                            }
 		                        }
 		                    }
@@ -1247,7 +1247,7 @@ final class cmsopt
 		    float v;
 		    float[] In = new float[lcms2.cmsMAXCHANNELS], Out = new float[lcms2.cmsMAXCHANNELS];
 		    boolean lIsSuitable, lIsLinear;
-		    cmsPipeline OptimizedLUT = null, LutPlusCurves = null;    
+		    cmsPipeline OptimizedLUT = null, LutPlusCurves = null;
 		    cmsStage OptimizedCLUTmpe;
 		    int ColorSpace, OutputColorSpace;
 		    cmsStage OptimizedPrelinMpe;
@@ -1316,7 +1316,7 @@ final class cmsopt
 				    
 				    if (LutPlusCurves != null)
 				    {
-				    	cmslut.cmsPipelineFree(LutPlusCurves);   
+				    	cmslut.cmsPipelineFree(LutPlusCurves);
 				    }
 				    if (OptimizedLUT != null)
 				    {
@@ -1368,7 +1368,7 @@ final class cmsopt
 		        // Exclude if non-monotonic
 		        if (!cmsgamma.cmsIsToneCurveMonotonic(Trans[t]))
 		        {
-		        	lIsSuitable = false;                             
+		        	lIsSuitable = false;
 		        }
 		        
 		        if (IsDegenerated(Trans[t]))
@@ -1415,7 +1415,7 @@ final class cmsopt
 				    
 				    if (LutPlusCurves != null)
 				    {
-				    	cmslut.cmsPipelineFree(LutPlusCurves);   
+				    	cmslut.cmsPipelineFree(LutPlusCurves);
 				    }
 				    if (OptimizedLUT != null)
 				    {
@@ -1465,7 +1465,7 @@ final class cmsopt
 			    
 			    if (LutPlusCurves != null)
 			    {
-			    	cmslut.cmsPipelineFree(LutPlusCurves);   
+			    	cmslut.cmsPipelineFree(LutPlusCurves);
 			    }
 			    
 			    return false;
@@ -1473,7 +1473,7 @@ final class cmsopt
 		    
 		    OptimizedPrelinMpe = cmslut.cmsStageAllocToneCurves(OriginalLut.ContextID, OriginalLut.InputChannels, Trans);
 		    
-		    // Create and insert the curves at the beginning    
+		    // Create and insert the curves at the beginning
 		    cmslut.cmsPipelineInsertStage(OptimizedLUT, lcms2.cmsAT_BEGIN, OptimizedPrelinMpe);
 		    
 		    // Allocate the CLUT for result
@@ -1499,7 +1499,7 @@ final class cmsopt
 			    
 			    if (LutPlusCurves != null)
 			    {
-			    	cmslut.cmsPipelineFree(LutPlusCurves);   
+			    	cmslut.cmsPipelineFree(LutPlusCurves);
 			    }
 			    if (OptimizedLUT != null)
 			    {
@@ -1537,7 +1537,7 @@ final class cmsopt
 		        }
 		        
 		        cmslut._cmsPipelineSetOptimizationParameters(OptimizedLUT, PrelinEval8, p8, Prelin8free, Prelin8dup);
-		    } 
+		    }
 		    else
 		    {
 		        Prelin16Data p16 = PrelinOpt16alloc(OptimizedLUT.ContextID, OptimizedPrelinCLUT.Params, 3, OptimizedPrelinCurves, 3, null);
@@ -1624,7 +1624,7 @@ final class cmsopt
 		}
 	};
 	
-	// Precomputes tables for 8-bit on input devicelink. 
+	// Precomputes tables for 8-bit on input devicelink.
 	private static Curves16Data CurvesAlloc(cmsContext ContextID, int nCurves, int nElements, cmsToneCurve[] G)
 	{
 	    int i, j;
@@ -1645,14 +1645,14 @@ final class cmsopt
 	        {
 	            for (j=0; j < nElements; j++)
 	            {
-	                c16.Curves[i][j] = cmsgamma.cmsEvalToneCurve16(G[i], lcms2_internal.FROM_8_TO_16(j));             
+	                c16.Curves[i][j] = cmsgamma.cmsEvalToneCurve16(G[i], lcms2_internal.FROM_8_TO_16(j));
 	            }
 	        }
 	        else
 	        {
 	            for (j=0; j < nElements; j++)
 	            {
-	                c16.Curves[i][j] = cmsgamma.cmsEvalToneCurve16(G[i], (short)j);             
+	                c16.Curves[i][j] = cmsgamma.cmsEvalToneCurve16(G[i], (short)j);
 	            }
 	        }
 	    }
@@ -1710,7 +1710,7 @@ final class cmsopt
 	{
 		public boolean run(cmsPipeline[] Lut, int Intent, int[] InputFormat, int[] OutputFormat, int[] dwFlags)
 		{
-			cmsToneCurve[] GammaTables = null; 
+			cmsToneCurve[] GammaTables = null;
 		    float[] InFloat = new float[lcms2.cmsMAXCHANNELS], OutFloat = new float[lcms2.cmsMAXCHANNELS];
 		    int i, j;
 		    cmsPipeline Src = Lut[0];
@@ -1733,7 +1733,7 @@ final class cmsopt
 			    }
 		    }
 		    
-		    // Allocate an empty LUT 
+		    // Allocate an empty LUT
 		    Dest = cmslut.cmsPipelineAlloc(Src.ContextID, Src.InputChannels, Src.OutputChannels);
 		    if (Dest == null)
 		    {
@@ -1844,7 +1844,7 @@ final class cmsopt
 		        	Curves16Data c16 = CurvesAlloc(Dest.ContextID, Data.nCurves, 65536, Data.TheCurves);
 		        	
 		        	dwFlags[0] |= lcms2.cmsFLAGS_NOCACHE;
-		        	cmslut._cmsPipelineSetOptimizationParameters(Dest, FastEvaluateCurves16, c16, CurvesFree, CurvesDup);          
+		        	cmslut._cmsPipelineSetOptimizationParameters(Dest, FastEvaluateCurves16, c16, CurvesFree, CurvesDup);
 		        }
 		    }
 		    else
@@ -1869,7 +1869,7 @@ final class cmsopt
 	// LUT is Shaper - Matrix - Matrix - Shaper, which is very frequent when combining two matrix-shaper profiles
 	
 	private static final _cmsFreeUserDataFn FreeMatShaper = new _cmsFreeUserDataFn()
-	{	
+	{
 		public void run(cmsContext ContextID, Object Data)
 		{
 			if (Data != null)
@@ -1901,8 +1901,8 @@ final class cmsopt
 		}
 	};
 	
-	// A fast matrix-shaper evaluator for 8 bits. This is a bit tricky since I'm using 1.14 signed fixed point 
-	// to accomplish some performance. Actually it takes 256x3 16 bits tables and 16385 x 3 tables of 8 bits, 
+	// A fast matrix-shaper evaluator for 8 bits. This is a bit tricky since I'm using 1.14 signed fixed point
+	// to accomplish some performance. Actually it takes 256x3 16 bits tables and 16385 x 3 tables of 8 bits,
 	// in total about 50K, and the performance boost is huge!
 	private static final _cmsOPTeval16Fn MatShaperEval16 = new _cmsOPTeval16Fn()
 	{
@@ -1912,7 +1912,7 @@ final class cmsopt
 		    int l1, l2, l3, r, g, b;
 		    int ri, gi, bi;
 		    
-		    // In this case (and only in this case!) we can use this simplification since 
+		    // In this case (and only in this case!) we can use this simplification since
 		    // In[] is assured to come from a 8 bit number. (a << 8 | a)
 		    ri = In[0] & 0xFF;
 		    gi = In[1] & 0xFF;
@@ -1928,12 +1928,12 @@ final class cmsopt
 		    l2 =  (p.Mat[1][0] * r + p.Mat[1][1] * g + p.Mat[1][2] * b + p.Off[1] + 0x2000) >> 14;
 		    l3 =  (p.Mat[2][0] * r + p.Mat[2][1] * g + p.Mat[2][2] * b + p.Off[2] + 0x2000) >> 14;
 		    
-		    // Now we have to clip to 0..1.0 range 
+		    // Now we have to clip to 0..1.0 range
 		    ri = (l1 < 0) ? 0 : ((l1 > 16384) ? 16384 : l1);
 		    gi = (l2 < 0) ? 0 : ((l2 > 16384) ? 16384 : l2);
 		    bi = (l3 < 0) ? 0 : ((l3 > 16384) ? 16384 : l3);
 		    
-		    // And across second shaper, 
+		    // And across second shaper,
 		    Out[0] = p.Shaper2R[ri];
 		    Out[1] = p.Shaper2G[gi];
 		    Out[2] = p.Shaper2B[bi];
@@ -1949,7 +1949,7 @@ final class cmsopt
 	    for (i=0; i < 256; i++)
 	    {
 	        R = (i * (1f / 255f));
-	        y = cmsgamma.cmsEvalToneCurveFloat(Curve, R);        
+	        y = cmsgamma.cmsEvalToneCurveFloat(Curve, R);
 	        
 	        Table[i] = DOUBLE_TO_1FIXED14(y);
 	    }
@@ -2009,7 +2009,7 @@ final class cmsopt
 	    for (i=0; i < 3; i++)
 	    {
 	        for (j=0; j < 3; j++)
-	        {         
+	        {
 	            p.Mat[i][j] = DOUBLE_TO_1FIXED14(Mat.v[i].n[j]);
 	        }
 	    }
@@ -2021,7 +2021,7 @@ final class cmsopt
 	            p.Off[i] = 0;
 	        }
 	        else
-	        {      
+	        {
 	            p.Off[i] = DOUBLE_TO_1FIXED14(Off.n[i]);
 	        }
 	    }
@@ -2106,7 +2106,7 @@ final class cmsopt
 		        IdentityMat = true;
 		    }
 		    
-		    // Allocate an empty LUT 
+		    // Allocate an empty LUT
 		    Dest = cmslut.cmsPipelineAlloc(Src.ContextID, Src.InputChannels, Src.OutputChannels);
 		    if (Dest == null)
 		    {
@@ -2135,8 +2135,8 @@ final class cmsopt
 		        _cmsStageToneCurvesData mpeC1 = (_cmsStageToneCurvesData)cmslut.cmsStageData(Curve1);
 		        _cmsStageToneCurvesData mpeC2 = (_cmsStageToneCurvesData)cmslut.cmsStageData(Curve2);
 		        
-		        // In this particular optimization, caché does not help as it takes more time to deal with 
-		        // the caché that with the pixel handling
+		        // In this particular optimization, cachï¿½ does not help as it takes more time to deal with
+		        // the cachï¿½ that with the pixel handling
 		        dwFlags[0] |= lcms2.cmsFLAGS_NOCACHE;
 		        
 		        // Setup the optimizarion routines
@@ -2236,7 +2236,7 @@ final class cmsopt
 	    if ((PtrLut[0]).Elements == null)
 	    {
 	        cmslut._cmsPipelineSetOptimizationParameters(PtrLut[0], FastIdentity16, PtrLut[0], null, null);
-	        return true;        
+	        return true;
 	    }
 	    
 	    // Try to get rid of identities and trivial conversions.

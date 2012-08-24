@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -168,7 +168,7 @@ final class cmssm
 	   }
 	   
 	   sp.alpha = _cmsAtan2(a, b);
-	   sp.theta = _cmsAtan2(Math.sqrt(a*a + b*b), L);  
+	   sp.theta = _cmsAtan2(Math.sqrt(a*a + b*b), L);
 	}
 	
 	// Convert to cartesian from spherical
@@ -186,7 +186,7 @@ final class cmssm
 	    cos_theta = Math.cos((lcms2_internal.M_PI * sp.theta) * (1.0 / 180.0));
 	    
 	    a = sp.r * sin_theta * sin_alpha;
-	    b = sp.r * sin_theta * cos_alpha; 
+	    b = sp.r * sin_theta * cos_alpha;
 	    L = sp.r * cos_theta;
 	    
 	    v.n[lcms2_plugin.VX] = L;
@@ -197,7 +197,7 @@ final class cmssm
 	// Quantize sector of a spherical coordinate. Saturate 360, 180 to last sector
 	// The limits are the centers of each sector, so
 	private static void QuantizeToSector(final cmsSpherical sp, int[] alpha, int[] theta)
-	{   
+	{
 	    alpha[0] = (int)Math.floor(((sp.alpha * (SECTORS)) * (1.0 / 360.0)));
 	    theta[0] = (int)Math.floor(((sp.theta * (SECTORS)) / (1.0 / 180.0)));
 	    
@@ -215,17 +215,17 @@ final class cmssm
 	private static void LineOf2Points(cmsLine line, cmsVEC3 a, cmsVEC3 b)
 	{
 	    cmsmtrx._cmsVEC3init(line.a, a.n[lcms2_plugin.VX], a.n[lcms2_plugin.VY], a.n[lcms2_plugin.VZ]);
-	    cmsmtrx._cmsVEC3init(line.u, b.n[lcms2_plugin.VX] - a.n[lcms2_plugin.VX], 
-	                            b.n[lcms2_plugin.VY] - a.n[lcms2_plugin.VY], 
-	                            b.n[lcms2_plugin.VZ] - a.n[lcms2_plugin.VZ]);     
+	    cmsmtrx._cmsVEC3init(line.u, b.n[lcms2_plugin.VX] - a.n[lcms2_plugin.VX],
+	                            b.n[lcms2_plugin.VY] - a.n[lcms2_plugin.VY],
+	                            b.n[lcms2_plugin.VZ] - a.n[lcms2_plugin.VZ]);
 	}
 	
-	// Evaluate parametric line 
+	// Evaluate parametric line
 	private static void GetPointOfLine(cmsVEC3 p, final cmsLine line, double t)
 	{
 	    p.n[lcms2_plugin.VX] = line.a.n[lcms2_plugin.VX] + t * line.u.n[lcms2_plugin.VX];
 	    p.n[lcms2_plugin.VY] = line.a.n[lcms2_plugin.VY] + t * line.u.n[lcms2_plugin.VY];
-	    p.n[lcms2_plugin.VZ] = line.a.n[lcms2_plugin.VZ] + t * line.u.n[lcms2_plugin.VZ];     
+	    p.n[lcms2_plugin.VZ] = line.a.n[lcms2_plugin.VZ] + t * line.u.n[lcms2_plugin.VZ];
 	}
 	
 	/*
@@ -244,7 +244,7 @@ final class cmssm
 	private static boolean ClosestLineToLine(cmsVEC3 r, final cmsLine line1, final cmsLine line2)
 	{
 	    double a, b, c, d, e, D;
-	    double sc, sN, sD; 
+	    double sc, sN, sD;
 	    double tc, tN, tD;
 	    cmsVEC3 w0 = new cmsVEC3();
 	    
@@ -356,7 +356,7 @@ final class cmssm
 	// Auxiliar to retrieve a pointer to the segmentr containing the Lab value
 	private static cmsGDBPoint GetPoint(cmsGDB gbd, final cmsCIELab Lab, cmsSpherical sp)
 	{
-	    cmsVEC3 v = new cmsVEC3();  
+	    cmsVEC3 v = new cmsVEC3();
 	    int[] alpha = new int[1], theta = new int[1];
 	    
 	    // Housekeeping
@@ -364,7 +364,7 @@ final class cmssm
 	    lcms2_internal._cmsAssert(Lab != null, "Lab != null");
 	    lcms2_internal._cmsAssert(sp != null, "sp != null");
 		
-	    // Center L* by substracting half of its domain, that's 50 
+	    // Center L* by substracting half of its domain, that's 50
 	    cmsmtrx._cmsVEC3init(v, Lab.L - 50.0, Lab.a, Lab.b);
 	    
 	    // Convert to spherical coordinates
@@ -389,7 +389,7 @@ final class cmssm
 	    return gbd.Gamut[theta[0]][alpha[0]];
 	}
 	
-	// Add a point to gamut descriptor. Point to add is in Lab color space. 
+	// Add a point to gamut descriptor. Point to add is in Lab color space.
 	// GBD is centered on a=b=0 and L*=50
 	public static boolean cmsGDBAddPoint(cmsHANDLE hGBD, final cmsCIELab Lab)
 	{
@@ -426,7 +426,7 @@ final class cmssm
 	// Check if a given point falls inside gamut
 	public static boolean cmsGDBCheckPoint(cmsHANDLE hGBD, final cmsCIELab Lab)
 	{
-	    cmsGDB gbd = (cmsGDB)hGBD;   
+	    cmsGDB gbd = (cmsGDB)hGBD;
 	    cmsGDBPoint ptr;
 	    cmsSpherical sp = new cmsSpherical();
 	    
@@ -450,7 +450,7 @@ final class cmssm
 	
 	// -----------------------------------------------------------------------------------------------------------------------
 	
-	// Find near sectors. The list of sectors found is returned on Close[]. 
+	// Find near sectors. The list of sectors found is returned on Close[].
 	// The function returns the number of sectors as well.
 	
 	// 24   9  10  11  12
@@ -460,7 +460,7 @@ final class cmssm
 	// 20  19  18  17  16
 	//
 	// Those are the relative movements
-	// {-2,-2}, {-1, -2}, {0, -2}, {+1, -2}, {+2,  -2}, 
+	// {-2,-2}, {-1, -2}, {0, -2}, {+1, -2}, {+2,  -2},
 	// {-2,-1}, {-1, -1}, {0, -1}, {+1, -1}, {+2,  -1},
 	// {-2, 0}, {-1,  0}, {0,  0}, {+1,  0}, {+2,   0},
 	// {-2,+1}, {-1, +1}, {0, +1}, {+1,  +1}, {+2,  +1},
@@ -509,14 +509,14 @@ final class cmssm
 	        
 	        // Cycle at the begin
 	        if (a < 0) a = SECTORS + a;
-	        if (t < 0) t = SECTORS + t;   
+	        if (t < 0) t = SECTORS + t;
 	        
 	        pt = gbd.Gamut[t][a];
 	        
 	        if (pt.Type != GP_EMPTY)
 	        {
 	        	Close[nSectors++] = pt;
-	        }                           
+	        }
 	    }
 	    
 	    return nSectors;
@@ -524,7 +524,7 @@ final class cmssm
 	
 	// Interpolate a missing sector. Method identifies whatever this is top, bottom or mid
 	private static boolean InterpolateMissingSector(cmsGDB gbd, int alpha, int theta)
-	{   
+	{
 	    cmsSpherical sp;
 	    cmsVEC3 Lab;
 	    cmsVEC3 Centre;
@@ -548,7 +548,7 @@ final class cmssm
 	    sp = new cmsSpherical();
 	    sp.alpha = ((alpha + 0.5) * 360.0) * (1.0 / (SECTORS));
 	    sp.theta = ((theta + 0.5) * 180.0) * (1.0 / (SECTORS));
-	    sp.r     = 50.0; 
+	    sp.r     = 50.0;
 	    
 	    // Convert to Cartesian
 	    Lab = new cmsVEC3();
@@ -589,8 +589,8 @@ final class cmssm
 	            templ = new cmsSpherical();
 	            ToSpherical(templ, temp);
 	            
-	            if ( templ.r > closel.r && 
-	                 templ.theta >= (theta*180.0/SECTORS) && 
+	            if ( templ.r > closel.r &&
+	                 templ.theta >= (theta*180.0/SECTORS) &&
 	                 templ.theta <= ((theta+1)*180.0/SECTORS) &&
 	                 templ.alpha >= (alpha*360.0/SECTORS) &&
 	                 templ.alpha <= ((alpha+1)*360.0/SECTORS)) {
@@ -670,34 +670,34 @@ final class cmssm
 	    
 	    Utility.fprintf (fp, "#VRML V2.0 utf8\n", null);
 	    
-	    // set the viewing orientation and distance 
+	    // set the viewing orientation and distance
 	    Utility.fprintf (fp, "DEF CamTest Group {\n", null);
-	    Utility.fprintf (fp, "\tchildren [\n", null); 
-	    Utility.fprintf (fp, "\t\tDEF Cameras Group {\n", null); 
-	    Utility.fprintf (fp, "\t\t\tchildren [\n", null); 
-	    Utility.fprintf (fp, "\t\t\t\tDEF DefaultView Viewpoint {\n", null); 
-	    Utility.fprintf (fp, "\t\t\t\t\tposition 0 0 340\n", null); 
-	    Utility.fprintf (fp, "\t\t\t\t\torientation 0 0 1 0\n", null); 
-	    Utility.fprintf (fp, "\t\t\t\t\tdescription \"default view\"\n", null); 
-	    Utility.fprintf (fp, "\t\t\t\t}\n", null); 
-	    Utility.fprintf (fp, "\t\t\t]\n", null); 
-	    Utility.fprintf (fp, "\t\t},\n", null); 
-	    Utility.fprintf (fp, "\t]\n", null); 
-	    Utility.fprintf (fp, "}\n", null); 
+	    Utility.fprintf (fp, "\tchildren [\n", null);
+	    Utility.fprintf (fp, "\t\tDEF Cameras Group {\n", null);
+	    Utility.fprintf (fp, "\t\t\tchildren [\n", null);
+	    Utility.fprintf (fp, "\t\t\t\tDEF DefaultView Viewpoint {\n", null);
+	    Utility.fprintf (fp, "\t\t\t\t\tposition 0 0 340\n", null);
+	    Utility.fprintf (fp, "\t\t\t\t\torientation 0 0 1 0\n", null);
+	    Utility.fprintf (fp, "\t\t\t\t\tdescription \"default view\"\n", null);
+	    Utility.fprintf (fp, "\t\t\t\t}\n", null);
+	    Utility.fprintf (fp, "\t\t\t]\n", null);
+	    Utility.fprintf (fp, "\t\t},\n", null);
+	    Utility.fprintf (fp, "\t]\n", null);
+	    Utility.fprintf (fp, "}\n", null);
 	    
-	    // Output the background stuff 
+	    // Output the background stuff
 	    Utility.fprintf (fp, "Background {\n", null);
 	    Utility.fprintf (fp, "\tskyColor [\n", null);
 	    Utility.fprintf (fp, "\t\t.5 .5 .5\n", null);
 	    Utility.fprintf (fp, "\t]\n", null);
 	    Utility.fprintf (fp, "}\n", null);
 	    
-	    // Output the shape stuff 
+	    // Output the shape stuff
 	    Utility.fprintf (fp, "Transform {\n", null);
 	    Utility.fprintf (fp, "\tscale .3 .3 .3\n", null);
 	    Utility.fprintf (fp, "\tchildren [\n", null);
 	    
-	    // Draw the axes as a shape: 
+	    // Draw the axes as a shape:
 	    Utility.fprintf (fp, "\t\tShape {\n", null);
 	    Utility.fprintf (fp, "\t\t\tappearance Appearance {\n", null);
 	    Utility.fprintf (fp, "\t\t\t\tmaterial Material {\n", null);
@@ -731,7 +731,7 @@ final class cmssm
 	    Utility.fprintf (fp, "\t\t\t}\n", null);
 	    Utility.fprintf (fp, "\t\t\tgeometry PointSet {\n", null);
 	    
-	    // fill in the points here 
+	    // fill in the points here
 	    Utility.fprintf (fp, "\t\t\t\tcoord Coordinate {\n", null);
 	    Utility.fprintf (fp, "\t\t\t\t\tpoint [\n", null);
 	    
@@ -760,7 +760,7 @@ final class cmssm
 	    
 	    Utility.fprintf (fp, "\t\t\t\t}\n", null);
 	    
-	    // fill in the face colors 
+	    // fill in the face colors
 	    Utility.fprintf (fp, "\t\t\t\tcolor Color {\n", null);
 	    Utility.fprintf (fp, "\t\t\t\t\tcolor [\n", null);
 	    

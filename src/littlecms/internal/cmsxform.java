@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ final class cmsxform
 	    	GlobalAdaptationState[0] = d;
 	    }
 	    
-	    return OldVal;  
+	    return OldVal;
 	}
 	
 	// Alarm codes are always global
@@ -158,7 +158,7 @@ final class cmsxform
 	    }
 	}
 	
-	// Apply transform. 
+	// Apply transform.
 	public static void cmsDoTransformStride(cmsHTRANSFORM Transform, final Object InputBuffer, Object OutputBuffer, int Size, int Stride)
 	{
 	    _cmsTRANSFORM p = (_cmsTRANSFORM)Transform;
@@ -293,7 +293,7 @@ final class cmsxform
 	// Float xform converts floats. Since there are no performance issues, one routine does all job, including gamut check.
 	// Note that because extended range, we can use a -1.0 value for out of gamut in this case.
 	private static final _cmsTransformFn FloatXFORM = new _cmsTransformFn()
-	{	
+	{
 		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size, int Stride)
 		{
 			VirtualPointer accum;
@@ -327,7 +327,7 @@ final class cmsxform
 		            else
 		            {
 		                // No, proceed normally
-		            	cmslut.cmsPipelineEvalFloat(fIn, fOut, p.Lut); 
+		            	cmslut.cmsPipelineEvalFloat(fIn, fOut, p.Lut);
 		            }
 		        }
 		        else
@@ -344,9 +344,9 @@ final class cmsxform
 	
 	// 16 bit precision -----------------------------------------------------------------------------------------------------------
 	
-	// Null transformation, only applies formatters. No caché
+	// Null transformation, only applies formatters. No cachï¿½
 	private static final _cmsTransformFn NullXFORM = new _cmsTransformFn()
-	{	
+	{
 		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size, int Stride)
 		{
 			VirtualPointer accum;
@@ -368,7 +368,7 @@ final class cmsxform
 	
 	// No gamut check, no cache, 16 bits
 	private static final _cmsTransformFn PrecalculatedXFORM = new _cmsTransformFn()
-	{	
+	{
 		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size, int Stride)
 		{
 			VirtualPointer accum;
@@ -394,25 +394,25 @@ final class cmsxform
 	{
 	    short[] wOutOfGamut = new short[1];
 	    
-	    p.GamutCheck.Eval16Fn.run(wIn, wOutOfGamut, p.GamutCheck.Data);   
+	    p.GamutCheck.Eval16Fn.run(wIn, wOutOfGamut, p.GamutCheck.Data);
 	    if (wOutOfGamut[0] >= 1)
 	    {
 	        short i;
 	        
 	        for (i = 0; i < p.Lut.OutputChannels; i++)
 	        {
-	        	wOut[i] = Alarm[i];                      
+	        	wOut[i] = Alarm[i];
 	        }
 	    }
 	    else
 	    {
-	    	p.Lut.Eval16Fn.run(wIn, wOut, p.Lut.Data);   
+	    	p.Lut.Eval16Fn.run(wIn, wOut, p.Lut.Data);
 	    }
 	}
 	
-	// Gamut check, No caché, 16 bits.
+	// Gamut check, No cachï¿½, 16 bits.
 	private static final _cmsTransformFn PrecalculatedXFORMGamutCheck = new _cmsTransformFn()
-	{	
+	{
 		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size, int Stride)
 		{
 			VirtualPointer accum;
@@ -433,9 +433,9 @@ final class cmsxform
 		}
 	};
 	
-	// No gamut check, Caché, 16 bits, 
+	// No gamut check, Cachï¿½, 16 bits,
 	private static final _cmsTransformFn CachedXFORM = new _cmsTransformFn()
-	{	
+	{
 		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size, int Stride)
 		{
 			VirtualPointer accum;
@@ -474,7 +474,7 @@ final class cmsxform
 	
 	// All those nice features together
 	private static final _cmsTransformFn CachedXFORMGamutCheck = new _cmsTransformFn()
-	{	
+	{
 		public void run(_cmsTRANSFORM p, VirtualPointer in, VirtualPointer out, int Size, int Stride)
 		{
 			VirtualPointer accum;
@@ -505,7 +505,7 @@ final class cmsxform
 				    System.arraycopy(wOut, 0, Cache.CacheOut, 0, lcms2.cmsMAXCHANNELS);
 		        }
 		        
-		        output = p.ToOutput.run(p, wOut, output, Stride);            
+		        output = p.ToOutput.run(p, wOut, output, Stride);
 		    }
 		}
 	};
@@ -541,7 +541,7 @@ final class cmsxform
 	    if (Data == null)
 	    {
 	    	// Free the chain. Memory is safely freed at exit
-	        TransformCollection = null; 
+	        TransformCollection = null;
 	        return true;
 	    }
 	    
@@ -624,7 +624,7 @@ final class cmsxform
 	            return null;
 	        }
 	        
-	        // Float transforms don't use caché, always are non-NULL
+	        // Float transforms don't use cachï¿½, always are non-NULL
 	        p.xform = FloatXFORM;
 	    }
 	    else
@@ -664,22 +664,22 @@ final class cmsxform
 	            {
 	                if ((dwFlags[0] & lcms2.cmsFLAGS_GAMUTCHECK) != 0)
 	                {
-	                	p.xform = PrecalculatedXFORMGamutCheck; // Gamut check, no caché
+	                	p.xform = PrecalculatedXFORMGamutCheck; // Gamut check, no cachï¿½
 	                }
 	                else
 	                {
-	                	p.xform = PrecalculatedXFORM; // No caché, no gamut check
+	                	p.xform = PrecalculatedXFORM; // No cachï¿½, no gamut check
 	                }
 	            }
 	            else
 	            {
 	                if ((dwFlags[0] & lcms2.cmsFLAGS_GAMUTCHECK) != 0)
 	                {
-	                	p.xform = CachedXFORMGamutCheck; // Gamut check, caché
+	                	p.xform = CachedXFORMGamutCheck; // Gamut check, cachï¿½
 	                }
 	                else
 	                {
-	                	p.xform = CachedXFORM; // No gamut check, caché
+	                	p.xform = CachedXFORM; // No gamut check, cachï¿½
 	                }
 	            }
 	        }
@@ -694,10 +694,10 @@ final class cmsxform
 	    return p;
 	}
 	
-	private static boolean GetXFormColorSpaces(int nProfiles, cmsHPROFILE[] hProfiles, int[] Input, int[] Output) 
-	{    
-	    int ColorSpaceIn, ColorSpaceOut;   
-	    int PostColorSpace;   
+	private static boolean GetXFormColorSpaces(int nProfiles, cmsHPROFILE[] hProfiles, int[] Input, int[] Output)
+	{
+	    int ColorSpaceIn, ColorSpaceOut;
+	    int PostColorSpace;
 	    int i;
 	    
 	    if (nProfiles <= 0)
@@ -788,7 +788,7 @@ final class cmsxform
 	// ----------------------------------------------------------------------------------------------------------------
 	
 	// New to lcms 2.0 -- have all parameters available.
-	public static cmsHTRANSFORM cmsCreateExtendedTransform(cmsContext ContextID, int nProfiles, cmsHPROFILE[] hProfiles, boolean[] BPC, int[] Intents, 
+	public static cmsHTRANSFORM cmsCreateExtendedTransform(cmsContext ContextID, int nProfiles, cmsHPROFILE[] hProfiles, boolean[] BPC, int[] Intents,
 			double[] AdaptationStates, cmsHPROFILE hGamutProfile, int nGamutPCSposition, int InputFormat, int OutputFormat, int dwFlags)
 	{
 		_cmsTRANSFORM xform;
@@ -813,7 +813,7 @@ final class cmsxform
 	        }
 	    }
 	    
-	    // On floating point transforms, inhibit optimizations 
+	    // On floating point transforms, inhibit optimizations
 	    FloatTransform = (cmspack._cmsFormatterIsFloat(InputFormat) && cmspack._cmsFormatterIsFloat(OutputFormat));
 	    
 	    if (cmspack._cmsFormatterIsFloat(InputFormat) || cmspack._cmsFormatterIsFloat(OutputFormat))
@@ -830,7 +830,7 @@ final class cmsxform
 		
 	    // Check if proper colorspaces
 	    if (!IsProperColorSpace(EntryColorSpace[0], InputFormat))
-	    {        
+	    {
 	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_COLORSPACE_CHECK, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_WRONG_COLORSPACE_IN), null);
 	        return null;
 	    }
@@ -845,7 +845,7 @@ final class cmsxform
 	    Lut = cmscnvrt._cmsLinkProfiles(ContextID, nProfiles, Intents, hProfiles, BPC, AdaptationStates, dwFlags);
 	    if (Lut == null)
 	    {
-	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_NOT_SUITABLE, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_CANT_LINK_PROFILES), null);   
+	    	cmserr.cmsSignalError(ContextID, lcms2.cmsERROR_NOT_SUITABLE, Utility.LCMS_Resources.getString(LCMSResource.CMSXFORM_CANT_LINK_PROFILES), null);
 	        return null;
 	    }
 	    
@@ -874,24 +874,24 @@ final class cmsxform
 	    // Create a gamut check LUT if requested
 	    if (hGamutProfile != null && ((dwFlags & lcms2.cmsFLAGS_GAMUTCHECK) != 0))
 	    {
-	        xform.GamutCheck  = cmsgmt._cmsCreateGamutCheckPipeline(ContextID, hProfiles, 
-	                                                        BPC, Intents, 
-	                                                        AdaptationStates, 
-	                                                        nGamutPCSposition, 
+	        xform.GamutCheck  = cmsgmt._cmsCreateGamutCheckPipeline(ContextID, hProfiles,
+	                                                        BPC, Intents,
+	                                                        AdaptationStates,
+	                                                        nGamutPCSposition,
 	                                                        hGamutProfile);
 	    }
 	    
 	    // Try to read input and output colorant table
 	    if (cmsio0.cmsIsTag(hProfiles[0], lcms2.cmsSigColorantTableTag))
 	    {
-	        // Input table can only come in this way.       
+	        // Input table can only come in this way.
 	        xform.InputColorant = cmsnamed.cmsDupNamedColorList((cmsNAMEDCOLORLIST)cmsio0.cmsReadTag(hProfiles[0], lcms2.cmsSigColorantTableTag));
 	    }
 	    
-	    // Output is a little bit more complex.    
+	    // Output is a little bit more complex.
 	    if (cmsio0.cmsGetDeviceClass(hProfiles[nProfiles-1]) == lcms2.cmsSigLinkClass)
 	    {
-	        // This tag may exist only on devicelink profiles.        
+	        // This tag may exist only on devicelink profiles.
 	        if (cmsio0.cmsIsTag(hProfiles[nProfiles-1], lcms2.cmsSigColorantTableOutTag))
 	        {
 	            // It may be NULL if error
@@ -927,7 +927,7 @@ final class cmsxform
 	        }
 	        else
 	        {
-	            xform.Lut.Eval16Fn.run(xform.Cache.CacheIn, xform.Cache.CacheOut, xform.Lut.Data);  
+	            xform.Lut.Eval16Fn.run(xform.Cache.CacheIn, xform.Cache.CacheOut, xform.Lut.Data);
 	        }
 	    }
 	    
@@ -936,7 +936,7 @@ final class cmsxform
 	
 	// Multiprofile transforms: Gamut check is not available here, as it is unclear from which profile the gamut comes.
 	
-	public static cmsHTRANSFORM cmsCreateMultiprofileTransformTHR(cmsContext ContextID, cmsHPROFILE[] hProfiles, int nProfiles, int InputFormat, int OutputFormat, 
+	public static cmsHTRANSFORM cmsCreateMultiprofileTransformTHR(cmsContext ContextID, cmsHPROFILE[] hProfiles, int nProfiles, int InputFormat, int OutputFormat,
 			int Intent, int dwFlags)
 	{
 		int i;
@@ -972,7 +972,7 @@ final class cmsxform
 	    return cmsCreateMultiprofileTransformTHR(cmsio0.cmsGetProfileContextID(hProfiles[0]), hProfiles, nProfiles, InputFormat, OutputFormat, Intent, dwFlags);
 	}
 	
-	public static cmsHTRANSFORM cmsCreateTransformTHR(cmsContext ContextID, cmsHPROFILE Input, int InputFormat, cmsHPROFILE Output, int OutputFormat, int Intent, 
+	public static cmsHTRANSFORM cmsCreateTransformTHR(cmsContext ContextID, cmsHPROFILE Input, int InputFormat, cmsHPROFILE Output, int OutputFormat, int Intent,
 			int dwFlags)
 	{
 		cmsHPROFILE[] hArray = new cmsHPROFILE[2];
@@ -988,7 +988,7 @@ final class cmsxform
 		return cmsCreateTransformTHR(cmsio0.cmsGetProfileContextID(Input), Input, InputFormat, Output, OutputFormat, Intent, dwFlags);
 	}
 	
-	public static cmsHTRANSFORM cmsCreateProofingTransformTHR(cmsContext ContextID, cmsHPROFILE InputProfile, int InputFormat, cmsHPROFILE OutputProfile, 
+	public static cmsHTRANSFORM cmsCreateProofingTransformTHR(cmsContext ContextID, cmsHPROFILE InputProfile, int InputFormat, cmsHPROFILE OutputProfile,
 			int OutputFormat, cmsHPROFILE ProofingProfile, int nIntent, int ProofingIntent, int dwFlags)
 	{
 		cmsHPROFILE[] hArray = new cmsHPROFILE[4];
@@ -1011,10 +1011,10 @@ final class cmsxform
 	    return cmsCreateExtendedTransform(ContextID, 4, hArray, BPC, Intents, Adaptation, ProofingProfile, 1, InputFormat, OutputFormat, dwFlags);
 	}
 	
-	public static cmsHTRANSFORM cmsCreateProofingTransform(cmsHPROFILE InputProfile, int InputFormat, cmsHPROFILE OutputProfile, int OutputFormat, 
+	public static cmsHTRANSFORM cmsCreateProofingTransform(cmsHPROFILE InputProfile, int InputFormat, cmsHPROFILE OutputProfile, int OutputFormat,
 			cmsHPROFILE ProofingProfile, int nIntent, int ProofingIntent, int dwFlags)
 	{
-		return cmsCreateProofingTransformTHR(cmsio0.cmsGetProfileContextID(InputProfile), InputProfile, InputFormat, OutputProfile, OutputFormat, ProofingProfile, 
+		return cmsCreateProofingTransformTHR(cmsio0.cmsGetProfileContextID(InputProfile), InputProfile, InputFormat, OutputProfile, OutputFormat, ProofingProfile,
 				nIntent, ProofingIntent, dwFlags);
 	}
 	

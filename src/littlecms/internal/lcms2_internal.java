@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -119,8 +119,8 @@ final class lcms2_internal extends lcms2_plugin
 	private static final double _lcms_double2fixmagic = 68719476736.0 * 1.5;  // 2^36 * 1.5, (52-16=36) uses limited precision to floor
 //#endif
 	
-	// Fast floor conversion logic. Thanks to Sree Kotay and Stuart Nixon 
-	// note than this only works in the range ..-32767...+32767 because 
+	// Fast floor conversion logic. Thanks to Sree Kotay and Stuart Nixon
+	// note than this only works in the range ..-32767...+32767 because
 	// mantissa is interpreted as 15.16 fixed point.
 	// The union is to avoid pointer aliasing overoptimization.
 	public static int _cmsQuickFloor(double val)
@@ -134,13 +134,13 @@ final class lcms2_internal extends lcms2_plugin
 	}
 	
 	// Fast floor restricted to 0..65535.0
-	public static short _cmsQuickFloorWord(double d) 
+	public static short _cmsQuickFloorWord(double d)
 	{
-	    return (short)(_cmsQuickFloor(d - 32767.0) + 32767); 
+	    return (short)(_cmsQuickFloor(d - 32767.0) + 32767);
 	}
 	
 	// Floor to word, taking care of saturation
-	public static short _cmsQuickSaturateWord(double d) 
+	public static short _cmsQuickSaturateWord(double d)
 	{
 	    d += 0.5;
 	    if (d <= 0)
@@ -581,7 +581,7 @@ final class lcms2_internal extends lcms2_plugin
 	// Pipeline Evaluator (in floating point)
 	public static interface _cmsPipelineEvalFloatFn
 	{
-		public void run(final float[] In, float[] Out, final Object Data); 
+		public void run(final float[] In, float[] Out, final Object Data);
 	}
 	
 	public static class _cmsPipeline_struct
@@ -638,7 +638,7 @@ final class lcms2_internal extends lcms2_plugin
 	
 	// Profile linker --------------------------------------------------------------------------------------------------
 	
-	public static cmsPipeline _cmsLinkProfiles(cmsContext ContextID, int nProfiles, int[] TheIntents, cmsHPROFILE[] hProfiles, boolean[] BPC, double[] AdaptationStates, 
+	public static cmsPipeline _cmsLinkProfiles(cmsContext ContextID, int nProfiles, int[] TheIntents, cmsHPROFILE[] hProfiles, boolean[] BPC, double[] AdaptationStates,
 			int dwFlags)
 	{
 		return cmscnvrt._cmsLinkProfiles(ContextID, nProfiles, TheIntents, hProfiles, BPC, AdaptationStates, dwFlags);
@@ -685,7 +685,7 @@ final class lcms2_internal extends lcms2_plugin
 	
 	// Hi level LUT building ----------------------------------------------------------------------------------------------
 
-	public static cmsPipeline _cmsCreateGamutCheckPipeline(cmsContext ContextID, cmsHPROFILE[] hProfiles, boolean[] BPC, int[] Intents, double[] AdaptationStates, 
+	public static cmsPipeline _cmsCreateGamutCheckPipeline(cmsContext ContextID, cmsHPROFILE[] hProfiles, boolean[] BPC, int[] Intents, double[] AdaptationStates,
 			int nGamutPCSposition, cmsHPROFILE hGamut)
 	{
 		return cmsgmt._cmsCreateGamutCheckPipeline(ContextID, hProfiles, BPC, Intents, AdaptationStates, nGamutPCSposition, hGamut);
@@ -805,13 +805,13 @@ final class lcms2_internal extends lcms2_plugin
 	
 	// --------------------------------------------------------------------------------------------------
 	
-	public static cmsHTRANSFORM _cmsChain2Lab(cmsContext ContextID, int nProfiles, int InputFormat, int OutputFormat, final int[] Intents, final cmsHPROFILE[] hProfiles, 
+	public static cmsHTRANSFORM _cmsChain2Lab(cmsContext ContextID, int nProfiles, int InputFormat, int OutputFormat, final int[] Intents, final cmsHPROFILE[] hProfiles,
 			final boolean[] BPC, final double[] AdaptationStates, int dwFlags)
 	{
 		return cmsgmt._cmsChain2Lab(ContextID, nProfiles, InputFormat, OutputFormat, Intents, hProfiles, BPC, AdaptationStates, dwFlags);
 	}
 	
-	public static cmsToneCurve _cmsBuildKToneCurve(cmsContext ContextID, int nPoints, int nProfiles, final int[] Intents, final cmsHPROFILE[] hProfiles, final boolean[] BPC, 
+	public static cmsToneCurve _cmsBuildKToneCurve(cmsContext ContextID, int nPoints, int nProfiles, final int[] Intents, final cmsHPROFILE[] hProfiles, final boolean[] BPC,
 			final double[] AdaptationStates, int dwFlags)
 	{
 		return cmsgmt._cmsBuildKToneCurve(ContextID, nPoints, nProfiles, Intents, hProfiles, BPC, AdaptationStates, dwFlags);

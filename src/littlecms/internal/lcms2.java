@@ -3,22 +3,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2011 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -605,15 +605,15 @@ public class lcms2
     
 	// Some (not all!) representations
 
-	/* 
+	/*
 	 * FIND:#define
 	 * REPLACE:public static final int
-	 * 
+	 *
 	 * Regular expressions where used to convert to current format, syntaxes below. Done with VS which supports "tagged expressions"
-	 * 
+	 *
 	 * FIND:{[A-Za-z0-9]+}_SH\({[A-Za-z0-9_]+}\)
 	 * REPLACE:(\2 << \1_SHIFT_VALUE)
-	 * 
+	 *
 	 * Unused:
 	 * FIND: +\(
 	 * FIND: = (
@@ -1010,8 +1010,8 @@ public class lcms2
 	}
 	
 	/**
-	 * This function returns Little CMS to its default state, as no plug-ins were declared. There is no way to unregister a single plug-in, as a single call to 
-	 * {@link #cmsPlugin(littlecms.internal.lcms2_plugin.cmsPluginBase)} function may register many different plug-ins simultaneously, then there is no way to 
+	 * This function returns Little CMS to its default state, as no plug-ins were declared. There is no way to unregister a single plug-in, as a single call to
+	 * {@link #cmsPlugin(littlecms.internal.lcms2_plugin.cmsPluginBase)} function may register many different plug-ins simultaneously, then there is no way to
 	 * identify which plug-in to unregister.
 	 */
 	public static void cmsUnregisterPlugins()
@@ -1057,7 +1057,7 @@ public class lcms2
 	
 	// Allows user to set any specific logger
 	/**
-	 * Allows user to set any specific logger. Each time this function is called, the previous logger is replaced. Calling this functin with NULL as parameter, does 
+	 * Allows user to set any specific logger. Each time this function is called, the previous logger is replaced. Calling this functin with NULL as parameter, does
 	 * reset the logger to the default Little CMS logger. The default Little CMS logger does nothing.
 	 * @param Fn Callback to the logger (user defined function), or NULL to reset Little CMS to its default logger.
 	 */
@@ -1202,11 +1202,11 @@ public class lcms2
 	
 	// DeltaE metrics
 	/**
-	 * The L*a*b* color space was devised in 1976 and, at the same time delta-E 1976 (dE76) came into being. If you can imagine attaching a string to a color point in 
-	 * 3D Lab space, dE76 describes the sphere that is described by all the possible directions you could pull the string. If you hear people speak of just plain 
-	 * 'delta-E' they are probably referring to dE76. It is also known as dE-Lab and dE-ab. One problem with dE76 is that Lab itself is not 'perceptually uniform' as 
-	 * its creators had intended. So different amounts of visual color shift in different color areas of Lab might have the same dE76 number. Conversely, the same 
-	 * amount of color shift might result in different dE76 values. Another issue is that the eye is most sensitive to hue differences, then chroma and finally 
+	 * The L*a*b* color space was devised in 1976 and, at the same time delta-E 1976 (dE76) came into being. If you can imagine attaching a string to a color point in
+	 * 3D Lab space, dE76 describes the sphere that is described by all the possible directions you could pull the string. If you hear people speak of just plain
+	 * 'delta-E' they are probably referring to dE76. It is also known as dE-Lab and dE-ab. One problem with dE76 is that Lab itself is not 'perceptually uniform' as
+	 * its creators had intended. So different amounts of visual color shift in different color areas of Lab might have the same dE76 number. Conversely, the same
+	 * amount of color shift might result in different dE76 values. Another issue is that the eye is most sensitive to hue differences, then chroma and finally
 	 * lightness and dE76 does not take this into account.
 	 * @param Lab1 Pointer to first cmsCIELab value
 	 * @param Lab2 Pointer to second cmsCIELab value
@@ -1218,8 +1218,8 @@ public class lcms2
 	}
 	
 	/**
-	 * A technical committee of the CIE (TC1-29) published an equation in 1995 called CIE94. The equation is similar to CMC but the weighting functions are largely 
-	 * based on RIT/DuPont tolerance data derived from automotive paint experiments where sample surfaces are smooth. It also has ratios, labeled kL (lightness) and 
+	 * A technical committee of the CIE (TC1-29) published an equation in 1995 called CIE94. The equation is similar to CMC but the weighting functions are largely
+	 * based on RIT/DuPont tolerance data derived from automotive paint experiments where sample surfaces are smooth. It also has ratios, labeled kL (lightness) and
 	 * Kc (chroma) and the commercial factor (cf) but these tend to be preset in software and are not often exposed for the user (as it is the case in Little CMS).
 	 * @param Lab1 Pointer to first cmsCIELab value
 	 * @param Lab2 Pointer to second cmsCIELab value
@@ -1242,12 +1242,12 @@ public class lcms2
 	}
 	
 	/**
-	 * In 1984 the CMC (Colour Measurement Committee of the Society of Dyes and Colourists of Great Britain) developed and adopted an equation based on LCH numbers. 
-	 * Intended for the textiles industry, CMC l:c allows the setting of lightness (l) and chroma (c) factors. As the eye is more sensitive to chroma, the 
-	 * default ratio for l:c is 2:1 allowing for 2x the difference in lightness than chroma (numbers). There is also a 'commercial factor' (cf) which allows an 
+	 * In 1984 the CMC (Colour Measurement Committee of the Society of Dyes and Colourists of Great Britain) developed and adopted an equation based on LCH numbers.
+	 * Intended for the textiles industry, CMC l:c allows the setting of lightness (l) and chroma (c) factors. As the eye is more sensitive to chroma, the
+	 * default ratio for l:c is 2:1 allowing for 2x the difference in lightness than chroma (numbers). There is also a 'commercial factor' (cf) which allows an
 	 * overall varying of the size of the tolerance region according to accuracy requirements. A cf=1.0 means that a delta-E CMC value <1.0 is acceptable.
 	 * <p>
-	 * CMC l:c is designed to be used with D65 and the CIE Supplementary Observer. Commonly-used values for l:c are 2:1 for acceptability and 1:1 for the threshold of 
+	 * CMC l:c is designed to be used with D65 and the CIE Supplementary Observer. Commonly-used values for l:c are 2:1 for acceptability and 1:1 for the threshold of
 	 * imperceptibility.
 	 * @param Lab1 Pointer to first cmsCIELab value
 	 * @param Lab2 Pointer to second cmsCIELab value
@@ -1259,8 +1259,8 @@ public class lcms2
 	}
 	
 	/**
-	 * Delta-E 2000 is the first major revision of the dE94 equation. Unlike dE94, which assumes that L* correctly reflects the perceived differences in lightness, 
-	 * dE2000 varies the weighting of L* depending on where in the lightness range the color falls. dE2000 is still under consideration and does not seem to be widely 
+	 * Delta-E 2000 is the first major revision of the dE94 equation. Unlike dE94, which assumes that L* correctly reflects the perceived differences in lightness,
+	 * dE2000 varies the weighting of L* depending on where in the lightness range the color falls. dE2000 is still under consideration and does not seem to be widely
 	 * supported in graphics arts applications.
 	 * @param Lab1 Pointer to first cmsCIELab value
 	 * @param Lab2 Pointer to second cmsCIELab value
@@ -1284,7 +1284,7 @@ public class lcms2
 	}
 	
 	/**
-	 * 
+	 *
 	 * @param TempK Pointer to a user-allocated double variable to receive the resulting temperature.
 	 * @param WhitePoint Target chromaticity in cmsCIExyY
 	 * @return TRUE on success, FALSE on error.
@@ -1324,7 +1324,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Does create a CAM02 object based on given viewing conditions. Such object may be used as a color appearance model and evaluated in forward and reverse 
+	 * Does create a CAM02 object based on given viewing conditions. Such object may be used as a color appearance model and evaluated in forward and reverse
 	 * directions. Degree of chromatic adaptation (d), can be specified in 0...1.0 range, or the model can be instructed to calculate it by using D_CALCULATE constant (-1).
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @param pVC Pointer to a structure holding viewing conditions
@@ -1463,7 +1463,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Destroys three tone curve objects placed into an array. This function is equivalent to call three times cmsFreeToneCurve, one per object. It exists because 
+	 * Destroys three tone curve objects placed into an array. This function is equivalent to call three times cmsFreeToneCurve, one per object. It exists because
 	 * conveniency.
 	 * @param Curve array to 3 pointers to tone curve objects.
 	 */
@@ -1517,7 +1517,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Smoothes tone curve according to the lambda parameter. From: Eilers, P.H.C. (1994) Smoothing and interpolation with finite differences. in: Graphic Gems IV, 
+	 * Smoothes tone curve according to the lambda parameter. From: Eilers, P.H.C. (1994) Smoothing and interpolation with finite differences. in: Graphic Gems IV,
 	 * Heckbert, P.S. (ed.), Academic press.
 	 * @param Tab pointer to a tone curve object.
 	 * @param lambda degree of smoothing
@@ -1540,7 +1540,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Evaluates the given 16-bit number across the given tone curve. This function is significantly faster than cmsEvalToneCurveFloat, since it uses a pre-computed 
+	 * Evaluates the given 16-bit number across the given tone curve. This function is significantly faster than cmsEvalToneCurveFloat, since it uses a pre-computed
 	 * 16-bit lookup table.
 	 * @param Curve pointer to a tone curve object.
 	 * @param v 16 bit Number to evaluate
@@ -1562,7 +1562,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Returns an estimation of cube being an identity (1:1) in the [0..1] domain. Does not take unbounded parts into account. This is just a coarse approximation, with 
+	 * Returns an estimation of cube being an identity (1:1) in the [0..1] domain. Does not take unbounded parts into account. This is just a coarse approximation, with
 	 * no mathematical validity.
 	 * @param Curve pointer to a tone curve object.
 	 * @return TRUE or FALSE.
@@ -1573,7 +1573,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Returns an estimation of monotonicity of curve in the [0..1] domain. Does not take unbounded parts into account. This is just a coarse approximation, with no 
+	 * Returns an estimation of monotonicity of curve in the [0..1] domain. Does not take unbounded parts into account. This is just a coarse approximation, with no
 	 * mathematical validity.
 	 * @param t pointer to a tone curve object.
 	 * @return TRUE or FALSE.
@@ -1599,10 +1599,10 @@ public class lcms2
 	}
 	
 	/**
-	 * Estimates the apparent gamma of the tone curve by using least squares fitting to a pure exponential expression in the <code>f(x) = x<sup>y</sup></code>. The 
+	 * Estimates the apparent gamma of the tone curve by using least squares fitting to a pure exponential expression in the <code>f(x) = x<sup>y</sup></code>. The
 	 * parameter γ is estimated at the given precision.
 	 * @param t pointer to a tone curve object.
-	 * @param Precision The maximum standard deviation allowed on the residuals, 0.01 is a fair value, set it to a big number to fit any curve, no matter how good is 
+	 * @param Precision The maximum standard deviation allowed on the residuals, 0.01 is a fair value, set it to a big number to fit any curve, no matter how good is
 	 * the fit.
 	 * @return The estimated gamma at given precision, or -1.0 if the fitting has less precision.
 	 */
@@ -1766,7 +1766,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Sets an internal flag that marks the pipeline to be saved in 8 bit precision. By default all pipelines are saved on 16 bits precision on AtoB/BToA tags and in 
+	 * Sets an internal flag that marks the pipeline to be saved in 8 bit precision. By default all pipelines are saved on 16 bits precision on AtoB/BToA tags and in
 	 * floating point precision on DToB/BToD tags.
 	 * @param lut Pointer to a pipeline object.
 	 * @param On State of the flag, TRUE=Save as 8 bits, FALSE=Save as 16 bits
@@ -1793,7 +1793,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Removes the stage from the pipeline. Additionally it can grab the stage <b>without freeing it</b>. To do so, caller must specify a variable to receive a 
+	 * Removes the stage from the pipeline. Additionally it can grab the stage <b>without freeing it</b>. To do so, caller must specify a variable to receive a
 	 * pointer to the stage being unlinked. If mpe is NULL, the stage is then removed and freed.
 	 * @param lut Pointer to a pipeline object.
 	 * @param loc enumerated constant, either {@link #cmsAT_BEGIN} or {@link #cmsAT_END}
@@ -1810,8 +1810,8 @@ public class lcms2
 	// the function founds a match with current pipeline, it fills the pointers and returns TRUE
 	// if not, returns FALSE without touching anything.
 	/**
-	 * This function is quite useful to analyze the structure of a Pipeline and retrieve the Stage elements that conform the Pipeline. It should be called with the 
-	 * Pipeline, the number of expected stages and then a list of expected types followed with a list of double pointers to Stage elements. If the function founds a 
+	 * This function is quite useful to analyze the structure of a Pipeline and retrieve the Stage elements that conform the Pipeline. It should be called with the
+	 * Pipeline, the number of expected stages and then a list of expected types followed with a list of double pointers to Stage elements. If the function founds a
 	 * match with current pipeline, it fills the pointers and returns TRUE if not, returns FALSE without touching anything.
 	 * @param Lut Pointer to a pipeline object.
 	 * @param n Number of expected stages
@@ -1837,7 +1837,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Creates a stage that contains nChannels tone curves, one per channel. Setting Curves to NULL forces identity (1:1) curves to be used. The stage keeps and owns a 
+	 * Creates a stage that contains nChannels tone curves, one per channel. Setting Curves to NULL forces identity (1:1) curves to be used. The stage keeps and owns a
 	 * private copy of the tone curve objects.
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @param nChannels Number of Channels of stage
@@ -1850,7 +1850,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Creates a stage that contains a matrix plus an optional offset. Note that Matrix is specified in double precision, whilst CLUT has only float precision. That is 
+	 * Creates a stage that contains a matrix plus an optional offset. Note that Matrix is specified in double precision, whilst CLUT has only float precision. That is
 	 * because an ICC profile can encode matrices with far more precision that CLUTS.
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @param Rows Dimensions of matrix
@@ -1865,8 +1865,8 @@ public class lcms2
 	}
 	
 	/**
-	 * Creates a stage that contains a 16 bits multidimensional lookup table (CLUT). Each dimension has same resolution. The CLUT can be initialized by specifying 
-	 * values in Table parameter. The recommended way is to set Table to NULL and use cmsStageSampleCLut16bit with a callback, because this way the implementation is 
+	 * Creates a stage that contains a 16 bits multidimensional lookup table (CLUT). Each dimension has same resolution. The CLUT can be initialized by specifying
+	 * values in Table parameter. The recommended way is to set Table to NULL and use cmsStageSampleCLut16bit with a callback, because this way the implementation is
 	 * independent of the selected number of grid points.
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @param nGridPoints the number of nodes (same for each component).
@@ -1881,8 +1881,8 @@ public class lcms2
 	}
 	
 	/**
-	 * Creates a stage that contains a float multidimensional lookup table (CLUT). Each dimension has same resolution. The CLUT can be initialized by specifying values 
-	 * in Table parameter. The recommended way is to set Table to NULL and use cmsStageSampleCLutFloat with a callback, because this way the implementation is 
+	 * Creates a stage that contains a float multidimensional lookup table (CLUT). Each dimension has same resolution. The CLUT can be initialized by specifying values
+	 * in Table parameter. The recommended way is to set Table to NULL and use cmsStageSampleCLutFloat with a callback, because this way the implementation is
 	 * independent of the selected number of grid points.
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @param nGridPoints the number of nodes (same for each component).
@@ -2154,7 +2154,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Gets an ASCII (7 bit) entry for the given Language and country. Set Buffer to NULL to get the required size. Unlike 
+	 * Gets an ASCII (7 bit) entry for the given Language and country. Set Buffer to NULL to get the required size. Unlike
 	 * {@link #cmsMLUgetASCII(cmsMLU, String, String, StringBuffer, int) cmsMLUgetASCII}, this function will return a Java String that simply terminates instead of
 	 * using a null char to terminate the String.
 	 * @param mlu a pointer to a multilocalized unicode object.
@@ -2193,7 +2193,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Gets a UNICODE char (16 bit) entry for the given Language and country. Set Buffer to NULL to get the required size. Unlike 
+	 * Gets a UNICODE char (16 bit) entry for the given Language and country. Set Buffer to NULL to get the required size. Unlike
 	 * {@link #cmsMLUgetWide(cmsMLU, String, String, StringBuffer, int) cmsMLUgetWide}, this function will return a Java String that simply terminates instead of
 	 * using a null char to terminate the String.
 	 * @param mlu a pointer to a multilocalized unicode object.
@@ -2232,8 +2232,8 @@ public class lcms2
 	}
 	
 	/**
-	 * Obtains the translation rule for given multilocalized unicode object. Unlike 
-	 * {@link #cmsMLUgetTranslation(cmsMLU, String, String, StringBuffer, StringBuffer) cmsMLUgetTranslation}, this function will return Java Strings that simply 
+	 * Obtains the translation rule for given multilocalized unicode object. Unlike
+	 * {@link #cmsMLUgetTranslation(cmsMLU, String, String, StringBuffer, StringBuffer) cmsMLUgetTranslation}, this function will return Java Strings that simply
 	 * terminates instead of using a null char to terminate the String.
 	 * @param mlu a pointer to a multilocalized unicode object.
 	 * @param LanguageCode Array of 2 chars describing the language
@@ -2378,7 +2378,7 @@ public class lcms2
 	 * @param Colorant Pointer to a 16-cmsUInt16Number to get the encoded Colorant, NULL to ignore
 	 * @return TRUE on success, FALSE on error.
 	 */
-	public static boolean cmsNamedColorInfo(final cmsNAMEDCOLORLIST NamedColorList, int nColor, StringBuffer Name, StringBuffer Prefix, StringBuffer Suffix, short[] PCS, 
+	public static boolean cmsNamedColorInfo(final cmsNAMEDCOLORLIST NamedColorList, int nColor, StringBuffer Name, StringBuffer Prefix, StringBuffer Suffix, short[] PCS,
 			short[] Colorant)
 	{
 		return cmsnamed.cmsNamedColorInfo(NamedColorList, nColor, Name, Prefix, Suffix, PCS, Colorant);
@@ -2587,9 +2587,9 @@ public class lcms2
 	/**
 	 * Reads an existing tag with signature sig, parses it and returns a pointer to an object owned by the profile object holding a representation of tag contents.
 	 * <p>
-	 * LittleCMS will return (if found) a pointer to a structure holding the tag. Simple, but not simpler as the structure is not the contents of the tag, but the 
-	 * result of <i>parsing</i> the tag. For example, reading a cmsSigAToB0 tag results as a Pipeline structure ready to be used by all the cmsPipeline functions. The 
-	 * memory belongs to the profile and is set free on closing the profile. In this way there are no memory duplicates and you can safely re-use the same tag as many 
+	 * LittleCMS will return (if found) a pointer to a structure holding the tag. Simple, but not simpler as the structure is not the contents of the tag, but the
+	 * result of <i>parsing</i> the tag. For example, reading a cmsSigAToB0 tag results as a Pipeline structure ready to be used by all the cmsPipeline functions. The
+	 * memory belongs to the profile and is set free on closing the profile. In this way there are no memory duplicates and you can safely re-use the same tag as many
 	 * times as you wish.
 	 * @param hProfile Handle to a profile object.
 	 * @param sig Tag signature
@@ -2603,7 +2603,7 @@ public class lcms2
 	/**
 	 * Writes an object to an ICC profile tag, doing all necessary serialization. The obtained tag depends on ICC version number used when creating the profile.
 	 * <p>
-	 * Writing tags is almost the same as read them, you just specify a pointer to the structure and the tag name and Little CMS will do all serialization for you. 
+	 * Writing tags is almost the same as read them, you just specify a pointer to the structure and the tag name and Little CMS will do all serialization for you.
 	 * Process under the hood may be very complex, if you realize v2 and v4 of the ICC spec are using different representations of same structures.
 	 * @param hProfile Handle to a profile object
 	 * @param sig Tag signature
@@ -2616,7 +2616,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Creates a directory entry on tag sig that points to same location as tag dest. Using this function you can collapse several tag entries to the same block in the 
+	 * Creates a directory entry on tag sig that points to same location as tag dest. Using this function you can collapse several tag entries to the same block in the
 	 * profile.
 	 * @param hProfile Handle to a profile object
 	 * @param sig Signature of linking tag
@@ -2641,7 +2641,7 @@ public class lcms2
 	
 	// Read and write raw data
 	/**
-	 * Similar to cmsReadTag, but different in two important aspects. 1st, ther memory is not owned by the profile, but for you, so you have to allocate the neccesary 
+	 * Similar to cmsReadTag, but different in two important aspects. 1st, ther memory is not owned by the profile, but for you, so you have to allocate the neccesary
 	 * amount of memory. To know the size, pass NULL as buffer and 0 as buffer size. The function returns the number of needed bytes.
 	 * <p>
 	 * The second important point is, this is raw data. No processing is performed, so you can effectively read wrong or broken profiles with this function.
@@ -2658,8 +2658,8 @@ public class lcms2
 	}
 	
 	/**
-	 * The RAW version does the same as cmsWriteTag but without any interpretation of the data. Please note it is fair easy to deal with "cooked" structures, since 
-	 * there are primitives for allocating, deleting and modifying data. For RAW data you are responsible of everything. If you want to deal with a private tag, you 
+	 * The RAW version does the same as cmsWriteTag but without any interpretation of the data. Please note it is fair easy to deal with "cooked" structures, since
+	 * there are primitives for allocating, deleting and modifying data. For RAW data you are responsible of everything. If you want to deal with a private tag, you
 	 * may want to write a plug-in instead of messing up with raw data.
 	 * @param hProfile Handle to a profile object
 	 * @param sig Signature of tag to be written
@@ -2679,7 +2679,7 @@ public class lcms2
 	public static final int cmsUseWithEmbeddedDataOnly	= 0x00000002;
 	
 	/**
-	 * Get header flags of given ICC profile object. The profile flags field does contain flags to indicate various hints for the CMM such as distributed processing 
+	 * Get header flags of given ICC profile object. The profile flags field does contain flags to indicate various hints for the CMM such as distributed processing
 	 * and caching options. The least-significant 16 bits are reserved for the ICC. Flags in bit positions 0 and 1 shall be used as indicated:
 	 * <p>
 	 * <table border=1>
@@ -2727,10 +2727,10 @@ public class lcms2
 	}
 	
 	/**
-	 * Gets the profile header rendering intent. From the ICC spec: <i>"The rendering intent field shall specify the rendering intent which should be used (or, in the 
-	 * case of a Devicelink profile, was used) when this profile is (was) combined with another profile. In a sequence of more than two profiles, it applies to the 
-	 * combination of this profile and the next profile in the sequence and not to the entire sequence. Typically, the user or application will set the rendering intent 
-	 * dynamically at runtime or embedding time. Therefore, this flag may not have any meaning until the profile is used in some context, e.g. in a Devicelink or an 
+	 * Gets the profile header rendering intent. From the ICC spec: <i>"The rendering intent field shall specify the rendering intent which should be used (or, in the
+	 * case of a Devicelink profile, was used) when this profile is (was) combined with another profile. In a sequence of more than two profiles, it applies to the
+	 * combination of this profile and the next profile in the sequence and not to the entire sequence. Typically, the user or application will set the rendering intent
+	 * dynamically at runtime or embedding time. Therefore, this flag may not have any meaning until the profile is used in some context, e.g. in a Devicelink or an
 	 * embedded source profile."</i>
 	 * @param hProfile Handle to a profile object
 	 * @return A int holding the intent code
@@ -2927,7 +2927,7 @@ public class lcms2
 	public static final int LCMS_USED_AS_PROOF = 2;
 	
 	/**
-	 * Returns TRUE if the requested intent is implemented in the given direction. Little CMS has a fallback strategy that allows to specify any rendering intent when 
+	 * Returns TRUE if the requested intent is implemented in the given direction. Little CMS has a fallback strategy that allows to specify any rendering intent when
 	 * creating the transform, but the intent really being used may be another if the requested intent is not implemented.
 	 * @param hProfile Handle to a profile object
 	 * @param Intent A int holding the intent code
@@ -3025,8 +3025,8 @@ public class lcms2
 	}
 	
 	/**
-	 * Gets several information strings from the profile, dealing with localization. Strings are returned as chars. Unlike 
-	 * {@link #cmsGetProfileInfo(cmsHPROFILE, int, String, String, StringBuffer, int) cmsGetProfileInfo}, this function will return Java Strings that simply 
+	 * Gets several information strings from the profile, dealing with localization. Strings are returned as chars. Unlike
+	 * {@link #cmsGetProfileInfo(cmsHPROFILE, int, String, String, StringBuffer, int) cmsGetProfileInfo}, this function will return Java Strings that simply
 	 * terminates instead of using a null char to terminate the String.
 	 * @param hProfile Handle to a profile object
 	 * @param Info A selector of which info to return
@@ -3066,8 +3066,8 @@ public class lcms2
 	}
 	
 	/**
-	 * Gets several information strings from the profile, dealing with localization. Strings are returned as ASCII. Unlike 
-	 * {@link #cmsGetProfileInfoASCIICleaned(cmsHPROFILE, int, String, String, StringBuffer, int) cmsGetProfileInfoASCIICleaned}, this function will return Java 
+	 * Gets several information strings from the profile, dealing with localization. Strings are returned as ASCII. Unlike
+	 * {@link #cmsGetProfileInfoASCIICleaned(cmsHPROFILE, int, String, String, StringBuffer, int) cmsGetProfileInfoASCIICleaned}, this function will return Java
 	 * Strings that simply terminates instead of using a null char to terminate the String.
 	 * @param hProfile Handle to a profile object
 	 * @param Info A selector of which info to return
@@ -3131,7 +3131,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Creates a void iohandler object (similar to a file iohandler on /dev/null). All read operations returns 0 bytes and sets the EOF flag. All write operations 
+	 * Creates a void iohandler object (similar to a file iohandler on /dev/null). All read operations returns 0 bytes and sets the EOF flag. All write operations
 	 * discards the given data.
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @return A pointer to an iohandler object on success, NULL on error.
@@ -3144,7 +3144,7 @@ public class lcms2
 	/**
 	 * Closes the iohandler object, freeing any associated resources.
 	 * @param io A pointer to an iohandler object.
-	 * @return TRUE on success, FALSE on error. Note that on file write operations, the real flushing to disk may happen on closing the iohandler, so it is important to 
+	 * @return TRUE on success, FALSE on error. Note that on file write operations, the real flushing to disk may happen on closing the iohandler, so it is important to
 	 * check the return code.
 	 */
 	public static boolean cmsCloseIOhandler(cmsIOHANDLER io)
@@ -3291,7 +3291,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Low-level save to IOHANDLER. It returns the number of bytes used to store the profile, or zero on error. io may be NULL and in this case no data is written--only 
+	 * Low-level save to IOHANDLER. It returns the number of bytes used to store the profile, or zero on error. io may be NULL and in this case no data is written--only
 	 * sizes are calculated.
 	 * @param hProfile Handle to a profile object
 	 * @param io Pointer to a serialization object.
@@ -3312,14 +3312,14 @@ public class lcms2
 	 * @param TransferFunction 3 tone curves describing the device or space gamma.
 	 * @return A handle to an ICC profile object on success, NULL on error.
 	 */
-	public static cmsHPROFILE cmsCreateRGBProfileTHR(cmsContext ContextID, final cmsCIExyY WhitePoint, final cmsCIExyYTRIPLE Primaries, 
+	public static cmsHPROFILE cmsCreateRGBProfileTHR(cmsContext ContextID, final cmsCIExyY WhitePoint, final cmsCIExyYTRIPLE Primaries,
 			final cmsToneCurve[] TransferFunction)
 	{
 		return cmsvirt.cmsCreateRGBProfileTHR(ContextID, WhitePoint, Primaries, TransferFunction);
 	}
 	
 	/**
-	 * This function creates a RGB profile based on White point, primaries and transfer functions. It populates following tags; this conform 
+	 * This function creates a RGB profile based on White point, primaries and transfer functions. It populates following tags; this conform
 	 * a standard RGB Display Profile, and then I add (As per addendum II) chromaticity tag.
 	 * <p>
 	 * <table border=1>
@@ -3357,7 +3357,7 @@ public class lcms2
 	}
 	
 	/**
-	 * This function creates a gray profile based on White point and transfer function. It populates following tags; this conform a 
+	 * This function creates a gray profile based on White point and transfer function. It populates following tags; this conform a
 	 * standard gray display profile.
 	 * <p>
 	 * <table border=1>
@@ -3510,7 +3510,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Create an ICC virtual profile for sRGB space. sRGB is a standard RGB color space created cooperatively by HP and Microsoft in 1996 for use on monitors, printers, 
+	 * Create an ICC virtual profile for sRGB space. sRGB is a standard RGB color space created cooperatively by HP and Microsoft in 1996 for use on monitors, printers,
 	 * and the Internet.
 	 * <p>
 	 * <table border=1>
@@ -3560,7 +3560,7 @@ public class lcms2
 	 * @param TempDest Destination white point temperatures
 	 * @return A handle to an ICC profile object on success, NULL on error.
 	 */
-	public static cmsHPROFILE cmsCreateBCHSWabstractProfileTHR(cmsContext ContextID, int nLUTPoints, double Bright, double Contrast, double Hue, double Saturation, 
+	public static cmsHPROFILE cmsCreateBCHSWabstractProfileTHR(cmsContext ContextID, int nLUTPoints, double Bright, double Contrast, double Hue, double Saturation,
 			int TempSrc, int TempDest)
 	{
 		return cmsvirt.cmsCreateBCHSWabstractProfileTHR(ContextID, nLUTPoints, Bright, Contrast, Hue, Saturation, TempSrc, TempDest);
@@ -3603,7 +3603,7 @@ public class lcms2
 	
 	// Converts a transform to a devicelink profile
 	/**
-	 * Generates a device-link profile from a given color transform. This profile can then be used by any other function accepting profile handle. Depending on the 
+	 * Generates a device-link profile from a given color transform. This profile can then be used by any other function accepting profile handle. Depending on the
 	 * specified version number, the implementation of the devicelink may vary. Accepted versions are in range 1.0…4.3
 	 * @param hTransform Handle to a color transform object.
 	 * @param Version The target devicelink version number.
@@ -3633,7 +3633,7 @@ public class lcms2
 	
 	// Call with NULL as parameters to get the intent count
 	/**
-	 * Fills a table with id-numbers and descriptions for all supported intents. Little CMS plug-in architecture allows to implement user-defined intents; use this 
+	 * Fills a table with id-numbers and descriptions for all supported intents. Little CMS plug-in architecture allows to implement user-defined intents; use this
 	 * function to get info about such extended functionality. Call with NULL as parameters to get the intent count
 	 * @param nMax Max array elements to fill.
 	 * @param Codes Pointer to user-allocated array of int to hold the intent id-numbers
@@ -3707,7 +3707,7 @@ public class lcms2
 	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
 	 * @return A handle to a transform object on success, NULL on error.
 	 */
-	public static cmsHTRANSFORM cmsCreateTransformTHR(cmsContext ContextID, cmsHPROFILE Input, int InputFormat, cmsHPROFILE Output, int OutputFormat, int Intent, 
+	public static cmsHTRANSFORM cmsCreateTransformTHR(cmsContext ContextID, cmsHPROFILE Input, int InputFormat, cmsHPROFILE Output, int OutputFormat, int Intent,
 			int dwFlags)
 	{
 		return cmsxform.cmsCreateTransformTHR(ContextID, Input, InputFormat, Output, OutputFormat, Intent, dwFlags);
@@ -3740,14 +3740,14 @@ public class lcms2
 	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
 	 * @return A handle to a transform object on success, NULL on error.
 	 */
-	public static cmsHTRANSFORM cmsCreateProofingTransformTHR(cmsContext ContextID, cmsHPROFILE Input, int InputFormat, cmsHPROFILE Output, int OutputFormat, 
+	public static cmsHTRANSFORM cmsCreateProofingTransformTHR(cmsContext ContextID, cmsHPROFILE Input, int InputFormat, cmsHPROFILE Output, int OutputFormat,
 			cmsHPROFILE Proofing, int Intent, int ProofingIntent, int dwFlags)
 	{
 		return cmsxform.cmsCreateProofingTransformTHR(ContextID, Input, InputFormat, Output, OutputFormat, Proofing, Intent, ProofingIntent, dwFlags);
 	}
 	
 	/**
-	 * Same as cmsCreateTransform(), but including soft-proofing. The obtained transform emulates the device described by the "Proofing" profile. Useful to preview final 
+	 * Same as cmsCreateTransform(), but including soft-proofing. The obtained transform emulates the device described by the "Proofing" profile. Useful to preview final
 	 * result without rendering to the physical medium. To enable proofing and gamut check you need to include following flags:
 	 * <p>
 	 * <b>cmsFLAGS_GAMUTCHECK</b>: Color out of gamut are flagged to a fixed color defined by the function cmsSetAlarmCodes
@@ -3762,7 +3762,7 @@ public class lcms2
 	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
 	 * @return A handle to a transform object on success, NULL on error.
 	 */
-	public static cmsHTRANSFORM cmsCreateProofingTransform(cmsHPROFILE Input, int InputFormat, cmsHPROFILE Output, int OutputFormat, cmsHPROFILE Proofing, int Intent, 
+	public static cmsHTRANSFORM cmsCreateProofingTransform(cmsHPROFILE Input, int InputFormat, cmsHPROFILE Output, int OutputFormat, cmsHPROFILE Proofing, int Intent,
 			int ProofingIntent, int dwFlags)
 	{
 		return cmsxform.cmsCreateProofingTransform(Input, InputFormat, Output, OutputFormat, Proofing, Intent, ProofingIntent, dwFlags);
@@ -3779,7 +3779,7 @@ public class lcms2
 	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
 	 * @return A handle to a transform object on success, NULL on error.
 	 */
-	public static cmsHTRANSFORM cmsCreateMultiprofileTransformTHR(cmsContext ContextID, cmsHPROFILE[] hProfiles, int nProfiles, int InputFormat, int OutputFormat, 
+	public static cmsHTRANSFORM cmsCreateMultiprofileTransformTHR(cmsContext ContextID, cmsHPROFILE[] hProfiles, int nProfiles, int InputFormat, int OutputFormat,
 			int Intent, int dwFlags)
 	{
 		return cmsxform.cmsCreateMultiprofileTransformTHR(ContextID, hProfiles, nProfiles, InputFormat, OutputFormat, Intent, dwFlags);
@@ -3800,7 +3800,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Extended form of multiprofile color transform creation, exposing all parameters for each profile in the chain. All other transform cration functions are 
+	 * Extended form of multiprofile color transform creation, exposing all parameters for each profile in the chain. All other transform cration functions are
 	 * wrappers to this call.
 	 * @param ContextID Pointer to a user-defined context cargo.
 	 * @param nProfiles Number of profiles in the array.
@@ -3814,7 +3814,7 @@ public class lcms2
 	 * @param dwFlags A combination of bit-field constants (prefix is cmsFLAGS_*).
 	 * @return A handle to a transform object on success, NULL on error.
 	 */
-	public static cmsHTRANSFORM cmsCreateExtendedTransform(cmsContext ContextID, int nProfiles, cmsHPROFILE[] hProfiles, boolean[] BPC, int[] Intents, 
+	public static cmsHTRANSFORM cmsCreateExtendedTransform(cmsContext ContextID, int nProfiles, cmsHPROFILE[] hProfiles, boolean[] BPC, int[] Intents,
 			double[] AdaptationStates, cmsHPROFILE hGamutProfile, int nGamutPCSposition, int InputFormat, int OutputFormat, int dwFlags)
 	{
 		return cmsxform.cmsCreateExtendedTransform(ContextID, nProfiles, hProfiles, BPC, Intents, AdaptationStates, hGamutProfile, nGamutPCSposition, InputFormat,
@@ -3868,9 +3868,9 @@ public class lcms2
 	
 	// Adaptation state for absolute colorimetric intent
 	/**
-	 * Sets adaptation state for absolute colorimetric intent, on all but cmsCreateExtendedTransform. Little CMS can handle incomplete 
+	 * Sets adaptation state for absolute colorimetric intent, on all but cmsCreateExtendedTransform. Little CMS can handle incomplete
 	 * adaptation states.
-	 * @param d Degree on adaptation 0=Not adapted, 1=Complete adaptation, in-between=Partial adaptation. Use negative values to return 
+	 * @param d Degree on adaptation 0=Not adapted, 1=Complete adaptation, in-between=Partial adaptation. Use negative values to return
 	 * the global state without changing it.
 	 * @return Previous global adaptation state.
 	 */
@@ -3940,7 +3940,7 @@ public class lcms2
 	 * @param io Pointer to a serialization object.
 	 * @return The resource size in bytes on success, 0 on error.
 	 */
-	public static int cmsGetPostScriptColorResource(cmsContext ContextID, int Type, cmsHPROFILE hProfile, int Intent, int dwFlags, 
+	public static int cmsGetPostScriptColorResource(cmsContext ContextID, int Type, cmsHPROFILE hProfile, int Intent, int dwFlags,
 			cmsIOHANDLER io)
 	{
 		return cmsps2.cmsGetPostScriptColorResource(ContextID, Type, hProfile, Intent, dwFlags, io);
@@ -3956,7 +3956,7 @@ public class lcms2
 	 * @param dwBufferLen Length of Buffer in bytes.
 	 * @return The resource size in bytes on success, 0 on error.
 	 */
-	public static int cmsGetPostScriptCSA(cmsContext ContextID, cmsHPROFILE hProfile, int Intent, int dwFlags, byte[] Buffer, 
+	public static int cmsGetPostScriptCSA(cmsContext ContextID, cmsHPROFILE hProfile, int Intent, int dwFlags, byte[] Buffer,
 			int dwBufferLen)
 	{
 		return cmsps2.cmsGetPostScriptCSA(ContextID, hProfile, Intent, dwFlags, Buffer, dwBufferLen);
@@ -3972,7 +3972,7 @@ public class lcms2
 	 * @param dwBufferLen Length of Buffer in bytes.
 	 * @return The resource size in bytes on success, 0 on error.
 	 */
-	public static int cmsGetPostScriptCRD(cmsContext ContextID, cmsHPROFILE hProfile, int Intent, int dwFlags, byte[] Buffer, 
+	public static int cmsGetPostScriptCRD(cmsContext ContextID, cmsHPROFILE hProfile, int Intent, int dwFlags, byte[] Buffer,
 			int dwBufferLen)
 	{
 		return cmsps2.cmsGetPostScriptCRD(ContextID, hProfile, Intent, dwFlags, Buffer, dwBufferLen);
@@ -4098,8 +4098,8 @@ public class lcms2
 	}
 	
 	/**
-	 * This function is intended to provide a way automated IT8 creators can embed comments into the file. Comments have no effect, and its only purpose is to document 
-	 * any of the file meaning. On this function the calling order is important; as successive calls to cmsIT8SetComment do embed comments in the same order the 
+	 * This function is intended to provide a way automated IT8 creators can embed comments into the file. Comments have no effect, and its only purpose is to document
+	 * any of the file meaning. On this function the calling order is important; as successive calls to cmsIT8SetComment do embed comments in the same order the
 	 * function is being called.
 	 * @param hIT8 A handle to a CGATS.17 object.
 	 * @param cComment The comment to inserted
@@ -4153,7 +4153,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Sets a property with no interpretation in current table. No quotes "" are added. No checking is performed, and it is up to the programmer to make sure the string 
+	 * Sets a property with no interpretation in current table. No quotes "" are added. No checking is performed, and it is up to the programmer to make sure the string
 	 * is valid.
 	 * <p>
 	 * Special prefixes:<br>
@@ -4266,7 +4266,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Gets a cell [Patch, Sample] as a literal string (uncooked string) in current table. Memory is handled by the CGATS.17 object and 
+	 * Gets a cell [Patch, Sample] as a literal string (uncooked string) in current table. Memory is handled by the CGATS.17 object and
 	 * should not be freed by the user.
 	 * @param hIT8 A handle to a CGATS.17 object.
 	 * @param cPatch The intended patch name (row)
@@ -4327,7 +4327,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Sets column names in current table. First column is 0 (SAMPLE_ID). Special property NUMBER_OF_FIELDS must be set before calling 
+	 * Sets column names in current table. First column is 0 (SAMPLE_ID). Special property NUMBER_OF_FIELDS must be set before calling
 	 * this function.
 	 * @param hIT8 A handle to a CGATS.17 object.
 	 * @param n Column to set name
@@ -4340,7 +4340,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Returns an array with pointers to the column names in current table. SampleNames may be NULL to get only the number of column names. 
+	 * Returns an array with pointers to the column names in current table. SampleNames may be NULL to get only the number of column names.
 	 * Memory is associated with the CGATS.17 object, and should not be freed by the user.
 	 * @param hIT8 A handle to a CGATS.17 object.
 	 * @param SampleNames A pointer to a variable of type VirtualPointer[][] which will hold the table.
@@ -4352,8 +4352,8 @@ public class lcms2
 	}
 	
 	/**
-	 * Fills buffer with the contents of SAMPLE_ID column for the set given in nPatch. That usually corresponds to patch name. Buffer may 
-	 * be NULL to get the internal memory block used by the CGATS.17 object. If specified, buffer gets a copy of such block. In this case 
+	 * Fills buffer with the contents of SAMPLE_ID column for the set given in nPatch. That usually corresponds to patch name. Buffer may
+	 * be NULL to get the internal memory block used by the CGATS.17 object. If specified, buffer gets a copy of such block. In this case
 	 * it should have space for at least 1024 characters.
 	 * @param hIT8 A handle to a CGATS.17 object.
 	 * @param nPatch set number to retrieve name
@@ -4415,8 +4415,8 @@ public class lcms2
 	}
 	
 	/**
-	 * Adds a new sample point for computing the gamut boundary descriptor. This function can be called as many times as known points. No 
-	 * memory or other resurces are wasted by adding new points. The gamut boundary descriptor cannot be checked until cmsGDBCompute() is 
+	 * Adds a new sample point for computing the gamut boundary descriptor. This function can be called as many times as known points. No
+	 * memory or other resurces are wasted by adding new points. The gamut boundary descriptor cannot be checked until cmsGDBCompute() is
 	 * called.
 	 * @param hGBD Handle to a gamut boundary descriptor.
 	 * @param Lab Pointer to a cmsCIELab value
@@ -4428,7 +4428,7 @@ public class lcms2
 	}
 	
 	/**
-	 * Computes the gamut boundary descriptor using all know points and interpolating any missing sector(s). Call this function after 
+	 * Computes the gamut boundary descriptor using all know points and interpolating any missing sector(s). Call this function after
 	 * adding all know points with cmsGDBAddPoint() and before using cmsGDBCheckPoint().
 	 * @param hGDB Handle to a gamut boundary descriptor.
 	 * @param dwFlags reserved (unused). Set it to 0
@@ -4474,9 +4474,9 @@ public class lcms2
 	
 	// Estimate total area coverage
 	/**
-	 * When several colors are printed on top of each other, there is a limit to the amount of ink that can be put on paper. This maximum 
-	 * total dot percentage is referred to as either TIC (Total Ink Coverage) or TAC (Total Area Coverage). This function does estimate 
-	 * total area coverage for a given profile in %. Only works on output profiles. On RGB profiles, 400% is returned. TAC is detected 
+	 * When several colors are printed on top of each other, there is a limit to the amount of ink that can be put on paper. This maximum
+	 * total dot percentage is referred to as either TIC (Total Ink Coverage) or TAC (Total Area Coverage). This function does estimate
+	 * total area coverage for a given profile in %. Only works on output profiles. On RGB profiles, 400% is returned. TAC is detected
 	 * by subsampling Lab color space on 6x74x74 points.
 	 * @param hProfile Handle to a profile object
 	 * @return Estimated area coverage in % on success, 0 on error.

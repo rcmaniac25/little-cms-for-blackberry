@@ -5,22 +5,22 @@
 //  Little Color Management System
 //  Copyright (c) 1998-2010 Marti Maria Saguer
 //
-// Permission is hereby granted, free of charge, to any person obtaining 
-// a copy of this software and associated documentation files (the "Software"), 
-// to deal in the Software without restriction, including without limitation 
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software 
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software
 // is furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in 
+// The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
-// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE 
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 //---------------------------------------------------------------------------------
@@ -41,9 +41,9 @@ import littlecms.internal.lcms2_plugin.cmsPluginBase;
 import littlecms.internal.lcms2_plugin.cmsPluginFormatters;
 
 /**
- * This module handles all formats supported by lcms. There are two flavors, 16 bits and 
+ * This module handles all formats supported by lcms. There are two flavors, 16 bits and
  * floating point. Floating point is supported only in a subset, those formats holding
- * cmsFloat32Number (4 bytes per component) and double (marked as 0 bytes per component as special 
+ * cmsFloat32Number (4 bytes per component) and double (marked as 0 bytes per component as special
  * case)
  */
 //#ifdef CMS_INTERNAL_ACCESS & DEBUG
@@ -72,7 +72,7 @@ final class cmspack
 	}
 	
 	// * 0xf00 / 0xffff = * 256 / 257
-	private static short FomLabV4ToLabV2(short x) 
+	private static short FomLabV4ToLabV2(short x)
 	{
 	    return (short)((((x & 0xFFFF) << 8) + 0x80) / 257);
 	}
@@ -111,7 +111,7 @@ final class cmspack
 	public static final int ANYPLANAR     = (1) << lcms2.PLANAR_SHIFT_VALUE;
 	public static final int ANYENDIAN     = (1) << lcms2.ENDIAN16_SHIFT_VALUE;
 	public static final int ANYSWAP       = (1) << lcms2.DOSWAP_SHIFT_VALUE;
-	public static final int ANYSWAPFIRST  = (1) << lcms2.SWAPFIRST_SHIFT_VALUE; 
+	public static final int ANYSWAPFIRST  = (1) << lcms2.SWAPFIRST_SHIFT_VALUE;
 	public static final int ANYFLAVOR     = (1) << lcms2.FLAVOR_SHIFT_VALUE;
 	
 	// Unpacking routines (16 bits) ----------------------------------------------------------------------------------------
@@ -819,7 +819,7 @@ final class cmspack
 				    {
 				        int index = DoSwap ? (nChan - i - 1) : i;
 				        
-				        v = lcms2_internal.FROM_8_TO_16(proc.readInt8(true)); 
+				        v = lcms2_internal.FROM_8_TO_16(proc.readInt8(true));
 				        v = Reverse ? REVERSE_FLAVOR_16(v) : v;
 				        Values[index] = v;
 				    }
@@ -1252,7 +1252,7 @@ final class cmspack
 				    else
 				    {
 				    	Buffer.getProcessor().write(Lab);
-				    	Buffer.movePosition(/*sizeof(cmsCIELab)*/cmsCIELab.SIZE + lcms2.T_EXTRA(CMMcargo.OutputFormat) * /*sizeof(cmsFloat64Number)*/8);           
+				    	Buffer.movePosition(/*sizeof(cmsCIELab)*/cmsCIELab.SIZE + lcms2.T_EXTRA(CMMcargo.OutputFormat) * /*sizeof(cmsFloat64Number)*/8);
 				    }
 					return Buffer;
 				}
@@ -1285,7 +1285,7 @@ final class cmspack
 				    else
 				    {
 				    	Buffer.getProcessor().write(XYZ);
-				    	Buffer.movePosition(/*sizeof(cmsCIEXYZ)*/cmsCIEXYZ.SIZE + lcms2.T_EXTRA(CMMcargo.OutputFormat) * /*sizeof(cmsFloat64Number)*/8);           
+				    	Buffer.movePosition(/*sizeof(cmsCIEXYZ)*/cmsCIEXYZ.SIZE + lcms2.T_EXTRA(CMMcargo.OutputFormat) * /*sizeof(cmsFloat64Number)*/8);
 				    }
 					return Buffer;
 				}
@@ -3331,7 +3331,7 @@ final class cmspack
 	}
 	
 	public static cmsFormatter _cmsGetFormatter(int Type, // Specific type, i.e. TYPE_RGB_8
-			int Dir, 
+			int Dir,
             int dwFlags)
 	{
 		cmsFormattersFactoryList f;
