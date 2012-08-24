@@ -789,7 +789,7 @@ final class cmsnamed
 	
 	// Append a color to a list. List pointer may change if reallocated
 	public static boolean cmsAppendNamedColor(cmsNAMEDCOLORLIST NamedColorList, final String Name, short[] PCS, short[] Colorant)
-	{    
+	{
 	    int i;
 	    
 	    if (NamedColorList == null)

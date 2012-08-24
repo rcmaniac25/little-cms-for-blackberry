@@ -36,9 +36,9 @@ import littlecms.internal.lcms2.cmsSAMPLERFLOAT;
 import littlecms.internal.lcms2.cmsStage;
 import littlecms.internal.lcms2.cmsToneCurve;
 import littlecms.internal.lcms2_internal._cmsPipelineEvalFloatFn;
-import littlecms.internal.lcms2_plugin._cmsOPTdupDataFn;
+import littlecms.internal.lcms2_plugin._cmsDupUserDataFn;
 import littlecms.internal.lcms2_plugin._cmsOPTeval16Fn;
-import littlecms.internal.lcms2_plugin._cmsOPTfreeDataFn;
+import littlecms.internal.lcms2_plugin._cmsFreeUserDataFn;
 import littlecms.internal.lcms2_plugin._cmsStageCLutData;
 import littlecms.internal.lcms2_plugin._cmsStageDupElemFn;
 import littlecms.internal.lcms2_plugin._cmsStageEvalFn;
@@ -1682,8 +1682,8 @@ final class cmslut
 	
 	// This function may be used to set the optional evalueator and a block of private data. If private data is being used, an optional
 	// duplicator and free functions should also be specified in order to duplicate the LUT construct. Use NULL to inhibit such functionality.
-	public static void _cmsPipelineSetOptimizationParameters(cmsPipeline Lut, _cmsOPTeval16Fn Eval16, Object PrivateData, _cmsOPTfreeDataFn FreePrivateDataFn, 
-			_cmsOPTdupDataFn DupPrivateDataFn)
+	public static void _cmsPipelineSetOptimizationParameters(cmsPipeline Lut, _cmsOPTeval16Fn Eval16, Object PrivateData, _cmsFreeUserDataFn FreePrivateDataFn, 
+			_cmsDupUserDataFn DupPrivateDataFn)
 	{
 	    Lut.Eval16Fn = Eval16;
 	    Lut.DupDataFn = DupPrivateDataFn;
@@ -1692,24 +1692,24 @@ final class cmslut
 	}
 	
 	// ----------------------------------------------------------- Reverse interpolation
-	// Here's how it goes. The derivative Df(x) of the function f is the linear 
-	// transformation that best approximates f near the point x. It can be represented 
-	// by a matrix A whose entries are the partial derivatives of the components of f 
+	// Here's how it goes. The derivative Df(x) of the function f is the linear
+	// transformation that best approximates f near the point x. It can be represented
+	// by a matrix A whose entries are the partial derivatives of the components of f
 	// with respect to all the coordinates. This is know as the Jacobian
 	//
-	// The best linear approximation to f is given by the matrix equation: 
-	// 
-	// y-y0 = A (x-x0) 
-	// 
-	// So, if x0 is a good "guess" for the zero of f, then solving for the zero of this 
-	// linear approximation will give a "better guess" for the zero of f. Thus let y=0, 
-	// and since y0=f(x0) one can solve the above equation for x. This leads to the 
-	// Newton's method formula: 
+	// The best linear approximation to f is given by the matrix equation:
 	//
-	// xn+1 = xn - A-1 f(xn) 
-	// 
-	// where xn+1 denotes the (n+1)-st guess, obtained from the n-th guess xn in the 
-	// fashion described above. Iterating this will give better and better approximations 
+	// y-y0 = A (x-x0)
+	//
+	// So, if x0 is a good "guess" for the zero of f, then solving for the zero of this
+	// linear approximation will give a "better guess" for the zero of f. Thus let y=0,
+	// and since y0=f(x0) one can solve the above equation for x. This leads to the
+	// Newton's method formula:
+	//
+	// xn+1 = xn - A-1 f(xn)
+	//
+	// where xn+1 denotes the (n+1)-st guess, obtained from the n-th guess xn in the
+	// fashion described above. Iterating this will give better and better approximations
 	// if you have a "good enough" initial guess.
 	
 	private static final float JACOBIAN_EPSILON       = 0.001f;

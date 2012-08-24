@@ -35,9 +35,9 @@ import littlecms.internal.lcms2.cmsSAMPLER16;
 import littlecms.internal.lcms2.cmsStage;
 import littlecms.internal.lcms2.cmsToneCurve;
 import littlecms.internal.lcms2_plugin._cmsInterpFn16;
-import littlecms.internal.lcms2_plugin._cmsOPTdupDataFn;
+import littlecms.internal.lcms2_plugin._cmsDupUserDataFn;
 import littlecms.internal.lcms2_plugin._cmsOPTeval16Fn;
-import littlecms.internal.lcms2_plugin._cmsOPTfreeDataFn;
+import littlecms.internal.lcms2_plugin._cmsFreeUserDataFn;
 import littlecms.internal.lcms2_plugin._cmsOPToptimizeFn;
 import littlecms.internal.lcms2_plugin._cmsStageCLutData;
 import littlecms.internal.lcms2_plugin._cmsStageMatrixData;
@@ -365,7 +365,7 @@ final class cmsopt
 		}
 	};
 	
-	private static final _cmsOPTfreeDataFn PrelinOpt16free = new _cmsOPTfreeDataFn()
+	private static final _cmsFreeUserDataFn PrelinOpt16free = new _cmsFreeUserDataFn()
 	{
 		public void run(cmsContext ContextID, Object ptr)
 		{
@@ -384,7 +384,7 @@ final class cmsopt
 		}
 	};
 	
-	private static final _cmsOPTdupDataFn Prelin16dup = new _cmsOPTdupDataFn()
+	private static final _cmsDupUserDataFn Prelin16dup = new _cmsDupUserDataFn()
 	{
 		public Object run(cmsContext ContextID, final Object ptr)
 		{
@@ -1070,7 +1070,7 @@ final class cmsopt
 	    return p8;
 	}
 	
-	private static final _cmsOPTfreeDataFn Prelin8free = new _cmsOPTfreeDataFn()
+	private static final _cmsFreeUserDataFn Prelin8free = new _cmsFreeUserDataFn()
 	{
 		public void run(cmsContext ContextID, Object ptr)
 		{
@@ -1078,7 +1078,7 @@ final class cmsopt
 		}
 	};
 	
-	private static final _cmsOPTdupDataFn Prelin8dup = new _cmsOPTdupDataFn()
+	private static final _cmsDupUserDataFn Prelin8dup = new _cmsDupUserDataFn()
 	{
 		public Object run(cmsContext ContextID, Object ptr)
 		{
@@ -1392,15 +1392,6 @@ final class cmsopt
 			        }
 			    }
 			    
-			    if (LutPlusCurves != null)
-			    {
-			    	cmslut.cmsPipelineFree(LutPlusCurves);   
-			    }
-			    if (OptimizedLUT != null)
-			    {
-			    	cmslut.cmsPipelineFree(OptimizedLUT);
-			    }
-			    
 			    return false;
 		    }
 		    
@@ -1451,15 +1442,6 @@ final class cmsopt
 			        }
 			    }
 			    
-			    if (LutPlusCurves != null)
-			    {
-			    	cmslut.cmsPipelineFree(LutPlusCurves);   
-			    }
-			    if (OptimizedLUT != null)
-			    {
-			    	cmslut.cmsPipelineFree(OptimizedLUT);
-			    }
-			    
 			    return false;
 		    }
 		    
@@ -1484,10 +1466,6 @@ final class cmsopt
 			    if (LutPlusCurves != null)
 			    {
 			    	cmslut.cmsPipelineFree(LutPlusCurves);   
-			    }
-			    if (OptimizedLUT != null)
-			    {
-			    	cmslut.cmsPipelineFree(OptimizedLUT);
 			    }
 			    
 			    return false;
@@ -1595,7 +1573,7 @@ final class cmsopt
 	
 	// Curves optimizer ------------------------------------------------------------------------------------------------------------------
 	
-	private static final _cmsOPTfreeDataFn CurvesFree = new _cmsOPTfreeDataFn()
+	private static final _cmsFreeUserDataFn CurvesFree = new _cmsFreeUserDataFn()
 	{
 		public void run(cmsContext ContextID, Object ptr)
 		{
@@ -1614,7 +1592,7 @@ final class cmsopt
 		}
 	};
 	
-	private static final _cmsOPTdupDataFn CurvesDup = new _cmsOPTdupDataFn()
+	private static final _cmsDupUserDataFn CurvesDup = new _cmsDupUserDataFn()
 	{
 		public Object run(cmsContext ContextID, Object ptr)
 		{
@@ -1814,10 +1792,6 @@ final class cmsopt
 		    ObtainedCurves = cmslut.cmsStageAllocToneCurves(Src.ContextID, Src.InputChannels, GammaTables);
 		    if (ObtainedCurves == null)
 		    {
-		    	if (ObtainedCurves != null)
-			    {
-			    	cmslut.cmsStageFree(ObtainedCurves);
-			    }
 			    if (GammaTables != null)
 			    {
 			        for (i=0; i < Src.InputChannels; i++)
@@ -1894,7 +1868,7 @@ final class cmsopt
 	// -------------------------------------------------------------------------------------------------------------------------------------
 	// LUT is Shaper - Matrix - Matrix - Shaper, which is very frequent when combining two matrix-shaper profiles
 	
-	private static final _cmsOPTfreeDataFn FreeMatShaper = new _cmsOPTfreeDataFn()
+	private static final _cmsFreeUserDataFn FreeMatShaper = new _cmsFreeUserDataFn()
 	{	
 		public void run(cmsContext ContextID, Object Data)
 		{
@@ -1905,7 +1879,7 @@ final class cmsopt
 		}
 	};
 	
-	private static final _cmsOPTdupDataFn DupMatShaper = new _cmsOPTdupDataFn()
+	private static final _cmsDupUserDataFn DupMatShaper = new _cmsDupUserDataFn()
 	{
 		public Object run(cmsContext ContextID, final Object Data)
 		{

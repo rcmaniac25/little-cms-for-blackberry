@@ -595,8 +595,8 @@ final class lcms2_internal extends lcms2_plugin
 	    
 	    _cmsOPTeval16Fn Eval16Fn;
 	    _cmsPipelineEvalFloatFn EvalFloatFn;
-	    _cmsOPTfreeDataFn FreeDataFn;
-	    _cmsOPTdupDataFn DupDataFn;
+	    _cmsFreeUserDataFn FreeDataFn;
+	    _cmsDupUserDataFn DupDataFn;
 	    
 	    /** Environment*/
 	    cmsContext ContextID;
@@ -713,6 +713,21 @@ final class lcms2_internal extends lcms2_plugin
 		return cmspack._cmsGetFormatter(Type, Dir, dwFlags);
 	}
 	
+//#ifndef CMS_NO_HALF_SUPPORT
+	
+	// Half float
+	public static float _cmsHalf2Float(short h)
+	{
+		return cmshalf._cmsHalf2Float(h);
+	}
+	
+	public static short _cmsFloat2Half(float flt)
+	{
+		return cmshalf._cmsFloat2Half(flt);
+	}
+	
+//#endif
+	
 	// Transform logic ------------------------------------------------------------------------------------------------------
 	
 	public static class _cmsCACHE
@@ -769,8 +784,8 @@ final class lcms2_internal extends lcms2_plugin
 	    // Profiles used to create the transform
 	    public cmsSEQ Sequence;
 	    
-	    public int dwOriginalFlags;      
-	    public double AdaptationState;              
+	    public int dwOriginalFlags;
+	    public double AdaptationState;
 	    
 	    // The intent of this transform. That is usually the last intent in the profilechain, but may differ
 	    public int RenderingIntent;
@@ -780,7 +795,7 @@ final class lcms2_internal extends lcms2_plugin
 	    
 	    // A user-defined pointer that can be used to store data for transform plug-ins
 	    public Object UserData;
-	    public _cmsOPTfreeDataFn FreeUserData;
+	    public _cmsFreeUserDataFn FreeUserData;
 	    
 	    public _cmsTRANSFORM()
 	    {

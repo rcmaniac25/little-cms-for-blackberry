@@ -35,7 +35,7 @@ import littlecms.internal.lcms2.cmsHTRANSFORM;
 import littlecms.internal.lcms2.cmsNAMEDCOLORLIST;
 import littlecms.internal.lcms2.cmsPipeline;
 import littlecms.internal.lcms2_internal._cmsTRANSFORM;
-import littlecms.internal.lcms2_plugin._cmsTranformFactory;
+import littlecms.internal.lcms2_plugin._cmsTransformFactory;
 import littlecms.internal.lcms2_plugin._cmsTransformFn;
 import littlecms.internal.lcms2_plugin.cmsPluginBase;
 import littlecms.internal.lcms2_plugin.cmsPluginTransform;
@@ -515,14 +515,14 @@ final class cmsxform
 	// List of used-defined transform factories
 	private static class _cmsTransformCollection
 	{
-		public _cmsTranformFactory Factory;
+		public _cmsTransformFactory Factory;
 		public _cmsTransformCollection Next;
 		
 		public _cmsTransformCollection()
 		{
 		}
 		
-		public _cmsTransformCollection(_cmsTranformFactory Factory, _cmsTransformCollection Next)
+		public _cmsTransformCollection(_cmsTransformFactory Factory, _cmsTransformCollection Next)
 		{
 			this.Factory = Factory;
 			this.Next = Next;
@@ -700,6 +700,10 @@ final class cmsxform
 	    int PostColorSpace;   
 	    int i;
 	    
+	    if (nProfiles <= 0)
+	    {
+	    	return false;
+	    }
 		if (hProfiles[0] == null)
 		{
 			return false;
@@ -707,40 +711,44 @@ final class cmsxform
 		
 	    Input[0] = PostColorSpace = cmsio0.cmsGetColorSpace(hProfiles[0]);
 	    
-	    // Special handling for named color profiles as devicelinks
-	    if (nProfiles == 1 && cmsio0.cmsGetDeviceClass(hProfiles[0]) == lcms2.cmsSigNamedColorClass)
-	    {
-	    	Input[0]  = lcms2.cmsSig1colorData;
-	    	Output[0] = PostColorSpace;
-	    	return true;
-	    }
-	    
 	    for (i = 0; i < nProfiles; i++)
 	    {
+	    	int cls;
 	        cmsHPROFILE hProfile = hProfiles[i];
 	        
 	        boolean lIsInput = (PostColorSpace != lcms2.cmsSigXYZData) &&
 	                       (PostColorSpace != lcms2.cmsSigLabData);
-	        
-	        boolean lIsDeviceLink;
 	        
 			if (hProfile == null)
 			{
 				return false;
 			}
 			
-			lIsDeviceLink = (cmsio0.cmsGetDeviceClass(hProfile) == lcms2.cmsSigLinkClass);
+			cls = cmsio0.cmsGetDeviceClass(hProfile);
 			
-	        if (lIsInput || lIsDeviceLink)
-	        {
-	            ColorSpaceIn    = cmsio0.cmsGetColorSpace(hProfile);
-	            ColorSpaceOut   = cmsio0.cmsGetPCS(hProfile);
+			if (cls == lcms2.cmsSigNamedColorClass)
+			{
+	            ColorSpaceIn    = lcms2.cmsSig1colorData;
+	            ColorSpaceOut   = (nProfiles > 1) ? cmsio0.cmsGetPCS(hProfile) : cmsio0.cmsGetColorSpace(hProfile);
 	        }
 	        else
 	        {
-	            ColorSpaceIn    = cmsio0.cmsGetPCS(hProfile);
-	            ColorSpaceOut   = cmsio0.cmsGetColorSpace(hProfile);
+		        if (lIsInput || (cls == lcms2.cmsSigLinkClass))
+		        {
+		            ColorSpaceIn    = cmsio0.cmsGetColorSpace(hProfile);
+		            ColorSpaceOut   = cmsio0.cmsGetPCS(hProfile);
+		        }
+		        else
+		        {
+		            ColorSpaceIn    = cmsio0.cmsGetPCS(hProfile);
+		            ColorSpaceOut   = cmsio0.cmsGetColorSpace(hProfile);
+		        }
 	        }
+			
+			if (i==0)
+			{
+				Input[0] = ColorSpaceIn;
+			}
 	        
 	        PostColorSpace = ColorSpaceOut;
 	    }

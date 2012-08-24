@@ -3299,6 +3299,10 @@ final class cmstypes
 	    cmsToneCurve[] Tables = new cmsToneCurve[lcms2.cmsMAXCHANNELS];
 	    
 	    // Maybe an empty table? (this is a lcms extension)
+	    if (nEntries < 2)
+	    {
+	    	return false;
+	    }
 	    if (nEntries <= 0)
 	    {
 	    	return true;

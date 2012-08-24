@@ -1,5 +1,5 @@
---Last update: 06/24/2012--
---Revision Used: 05/23/2012--
+--Last update: 08/23/2012--
+--Revision Used: 08/14/2012--
 
 TODO:
 Update LCMS 4 BB to the same level as the GIT build

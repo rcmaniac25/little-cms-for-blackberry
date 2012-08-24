@@ -1154,6 +1154,8 @@ public final class TestApp extends UiApplication
 	    fileOperation("bchslcms2.icc", remove);
 	    fileOperation("lcms2cmyk.icc", remove);
 	    fileOperation("glablcms2.icc", remove);
+	    fileOperation("lcms2link.icc", remove);
+	    fileOperation("lcms2link2.icc", remove);
 	    
 	    //Also remove the temporary, built-in profiles
 	    fileOperation("bad.icc", remove);
@@ -5148,20 +5150,30 @@ public final class TestApp extends UiApplication
 			CheckSingleFormatter16(lcms2.TYPE_Lab_FLT, "TYPE_Lab_FLT");
 			CheckSingleFormatter16(lcms2.TYPE_GRAY_FLT, "TYPE_GRAY_FLT");
 			CheckSingleFormatter16(lcms2.TYPE_RGB_FLT, "TYPE_RGB_FLT");
+			CheckSingleFormatter16(lcms2.TYPE_BGR_FLT, "TYPE_BGR_FLT");
 			CheckSingleFormatter16(lcms2.TYPE_CMYK_FLT, "TYPE_CMYK_FLT");
 			CheckSingleFormatter16(lcms2.TYPE_XYZA_FLT, "TYPE_XYZA_FLT");
 			CheckSingleFormatter16(lcms2.TYPE_LabA_FLT, "TYPE_LabA_FLT");
 			CheckSingleFormatter16(lcms2.TYPE_RGBA_FLT, "TYPE_RGBA_FLT");
+			CheckSingleFormatter16(lcms2.TYPE_ARGB_FLT, "TYPE_ARGB_FLT");
+			CheckSingleFormatter16(lcms2.TYPE_BGRA_FLT, "TYPE_BGRA_FLT");
+			CheckSingleFormatter16(lcms2.TYPE_ABGR_FLT, "TYPE_ABGR_FLT");
 			
 			CheckSingleFormatter16(lcms2.TYPE_XYZ_DBL, "TYPE_XYZ_DBL");
 			CheckSingleFormatter16(lcms2.TYPE_Lab_DBL, "TYPE_Lab_DBL");
 			CheckSingleFormatter16(lcms2.TYPE_GRAY_DBL, "TYPE_GRAY_DBL");
 			CheckSingleFormatter16(lcms2.TYPE_RGB_DBL, "TYPE_RGB_DBL");
+			CheckSingleFormatter16(lcms2.TYPE_BGR_DBL, "TYPE_BGR_DBL");
 			CheckSingleFormatter16(lcms2.TYPE_CMYK_DBL, "TYPE_CMYK_DBL");
 			
 			CheckSingleFormatter16(lcms2.TYPE_LabV2_8, "TYPE_LabV2_8");
 			CheckSingleFormatter16(lcms2.TYPE_ALabV2_8, "TYPE_ALabV2_8");
 			CheckSingleFormatter16(lcms2.TYPE_LabV2_16, "TYPE_LabV2_16");
+			
+			CheckSingleFormatter16(lcms2.TYPE_GRAY_HALF_FLT, "TYPE_GRAY_HALF_FLT");
+			CheckSingleFormatter16(lcms2.TYPE_RGB_HALF_FLT, "TYPE_RGB_HALF_FLT");
+			CheckSingleFormatter16(lcms2.TYPE_CMYK_HALF_FLT, "TYPE_CMYK_HALF_FLT");
+			CheckSingleFormatter16(lcms2.TYPE_RGBA_HALF_FLT, "TYPE_RGBA_HALF_FLT");
 			
 			return !FormatterFailed ? 1 : 0;
 		}
@@ -5248,20 +5260,61 @@ public final class TestApp extends UiApplication
 			CheckSingleFormatterFloat(lcms2.TYPE_Lab_FLT, "TYPE_Lab_FLT");
 			CheckSingleFormatterFloat(lcms2.TYPE_GRAY_FLT, "TYPE_GRAY_FLT");
 			CheckSingleFormatterFloat(lcms2.TYPE_RGB_FLT, "TYPE_RGB_FLT");
+			CheckSingleFormatterFloat(lcms2.TYPE_BGR_FLT, "TYPE_BGR_FLT");
 			CheckSingleFormatterFloat(lcms2.TYPE_CMYK_FLT, "TYPE_CMYK_FLT");
 			
-			// User
 			CheckSingleFormatterFloat(lcms2.TYPE_XYZA_FLT, "TYPE_XYZA_FLT");
 			CheckSingleFormatterFloat(lcms2.TYPE_LabA_FLT, "TYPE_LabA_FLT");
 			CheckSingleFormatterFloat(lcms2.TYPE_RGBA_FLT, "TYPE_RGBA_FLT");
+			
+			CheckSingleFormatterFloat(lcms2.TYPE_ARGB_FLT, "TYPE_ARGB_FLT");
+			CheckSingleFormatterFloat(lcms2.TYPE_BGRA_FLT, "TYPE_BGRA_FLT");
+			CheckSingleFormatterFloat(lcms2.TYPE_ABGR_FLT, "TYPE_ABGR_FLT");
 			
 			CheckSingleFormatterFloat(lcms2.TYPE_XYZ_DBL, "TYPE_XYZ_DBL");
 			CheckSingleFormatterFloat(lcms2.TYPE_Lab_DBL, "TYPE_Lab_DBL");
 			CheckSingleFormatterFloat(lcms2.TYPE_GRAY_DBL, "TYPE_GRAY_DBL");
 			CheckSingleFormatterFloat(lcms2.TYPE_RGB_DBL, "TYPE_RGB_DBL");
+			CheckSingleFormatterFloat(lcms2.TYPE_BGR_DBL, "TYPE_BGR_DBL");
 			CheckSingleFormatterFloat(lcms2.TYPE_CMYK_DBL, "TYPE_CMYK_DBL");
 			
+			CheckSingleFormatterFloat(lcms2.TYPE_GRAY_HALF_FLT, "TYPE_GRAY_HALF_FLT");
+			CheckSingleFormatterFloat(lcms2.TYPE_RGB_HALF_FLT, "TYPE_RGB_HALF_FLT");
+			CheckSingleFormatterFloat(lcms2.TYPE_CMYK_HALF_FLT, "TYPE_CMYK_HALF_FLT");
+			CheckSingleFormatterFloat(lcms2.TYPE_RGBA_HALF_FLT, "TYPE_RGBA_HALF_FLT");
+			
 			return !FormatterFailed ? 1 : 0;
+		}
+	};
+	
+	// Check half float
+	private static boolean my_isfinite(float x)
+	{
+		return x != x;
+	}
+	private static final TestFn CheckFormattersHalf = new TestFn()
+	{
+		public int run()
+		{
+			int i, j;
+			
+		    for (i=0; i < 0xffff; i++)
+		    {
+		        float f = lcms2_internal._cmsHalf2Float((short)i);
+		        
+		        if (!my_isfinite(f)) 
+		        {
+		            j = lcms2_internal._cmsFloat2Half(f);
+		            
+		            if (i != j)
+		            {
+		                Fail("%d != %d in Half float support!\n", new Object[]{new Integer(i), new Integer(j)});
+		                return 0;
+		            }
+		        }
+		    }
+		    
+		    return 1;
 		}
 	};
 	
@@ -8950,6 +9003,69 @@ public final class TestApp extends UiApplication
 		}
 	};
 	
+	private static final TestFn CheckLinking = new TestFn()
+	{
+		public int run()
+		{
+			cmsHPROFILE h;
+		    cmsPipeline pipeline;
+		    cmsStage stageBegin, stageEnd;
+		    
+		    // Create a CLUT based profile
+		    h = lcms2.cmsCreateInkLimitingDeviceLinkTHR(DbgThread(), lcms2.cmsSigCmykData, 150);
+		    
+		    // link a second tag
+		    lcms2.cmsLinkTag(h, lcms2.cmsSigAToB1Tag, lcms2.cmsSigAToB0Tag);
+		    
+		    // Save the linked devicelink
+		    if (!lcms2.cmsSaveProfileToFile(h, "lcms2link.icc"))
+		    {
+		    	return 0;
+		    }
+		    lcms2.cmsCloseProfile(h);
+		    
+		    // Now open the profile and read the pipeline
+		    h = lcms2.cmsOpenProfileFromFile("lcms2link.icc", "r");
+		    if (h == null)
+		    {
+		    	return 0;
+		    }
+		    
+		    pipeline = (cmsPipeline)lcms2.cmsReadTag(h, lcms2.cmsSigAToB1Tag);
+		    if (pipeline == null)
+		    {
+		        return 0;
+		    }
+		    
+		    pipeline = lcms2.cmsPipelineDup(pipeline);
+		    
+		    // extract stage from pipe line
+		    cmsStage[] tmp = new cmsStage[1];
+		    lcms2.cmsPipelineUnlinkStage(pipeline, lcms2.cmsAT_BEGIN, tmp);
+		    stageBegin = tmp[0];
+		    lcms2.cmsPipelineUnlinkStage(pipeline, lcms2.cmsAT_END,   tmp);
+		    stageEnd = tmp[0];
+		    lcms2.cmsPipelineInsertStage(pipeline, lcms2.cmsAT_END,   stageEnd);
+		    lcms2.cmsPipelineInsertStage(pipeline, lcms2.cmsAT_BEGIN, stageBegin);
+		    
+		    if (lcms2.cmsTagLinkedTo(h, lcms2.cmsSigAToB1Tag) != lcms2.cmsSigAToB0Tag)
+		    {
+		    	return 0;
+		    }
+		    
+		    lcms2.cmsWriteTag(h, lcms2.cmsSigAToB0Tag, pipeline);
+		    lcms2.cmsPipelineFree(pipeline);
+
+			if (!lcms2.cmsSaveProfileToFile(h, "lcms2link2.icc"))
+			{
+				return 0;
+			}
+			lcms2.cmsCloseProfile(h);
+		    
+		    return 1;
+		}
+	};
+	
 	// --------------------------------------------------------------------------------------------------
 	// P E R F O R M A N C E   C H E C K S
 	// --------------------------------------------------------------------------------------------------
@@ -10128,6 +10244,7 @@ public final class TestApp extends UiApplication
 			    Check("Named Color LUT", CheckNamedColorLUT);
 			    Check("Usual formatters", CheckFormatters16);
 			    Check("Floating point formatters", CheckFormattersFloat);
+			    Check("HALF formatters", CheckFormattersHalf);
 			    
 			    // ChangeBuffersFormat
 			    Check("ChangeBuffersFormat", CheckChangeBufferFormat);
@@ -10186,6 +10303,7 @@ public final class TestApp extends UiApplication
 			    Check("PostScript generator", CheckPostScript);
 			    Check("Segment maxima GBD", CheckGBD);
 			    Check("MD5 digest", CheckMD5);
+			    Check("Linking", CheckLinking);
 		    }
 		    
 		    if (DoSpeedTests)
@@ -10200,7 +10318,7 @@ public final class TestApp extends UiApplication
 		    lcms2.cmsUnregisterPlugins();
 		    
 		    // Cleanup
-		    //RemoveTestProfiles(); TODO Remove
+		    RemoveTestProfiles();
 		    
 		    Utility.fprintf(print, "Total number of failures: %d\n", new Object[]{new Integer(TotalFail)});
 		}

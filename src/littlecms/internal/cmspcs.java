@@ -1056,6 +1056,7 @@ final class cmspcs
 	{
 	    switch (ColorSpace)
 	    {
+	    	case lcms2.cmsSig1colorData:
 		    case lcms2.cmsSigGrayData:
 		    	return 1;
 		    case lcms2.cmsSig2colorData:

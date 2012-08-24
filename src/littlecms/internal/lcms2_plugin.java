@@ -709,6 +709,19 @@ public class lcms2_plugin extends lcms2
 	}
 	
 	//----------------------------------------------------------------------------------------------------------
+	
+	// Shared callbacks for user data
+	public static interface _cmsFreeUserDataFn
+	{
+		public void run(cmsContext ContextID, Object Data);
+	}
+	
+	public static interface _cmsDupUserDataFn
+	{
+		public Object run(cmsContext ContextID, final Object Data);
+	}
+	
+	//----------------------------------------------------------------------------------------------------------
 
 	// Plug-in foundation
 	public static final int cmsPluginMagicNumber               = 0x61637070; // 'acpp'
@@ -1244,16 +1257,6 @@ public class lcms2_plugin extends lcms2
 		public void run(final short[] In, short[] Out, final Object Data);
 	}
 	
-	public static interface _cmsOPTfreeDataFn
-	{
-		public void run(cmsContext ContextID, Object Data);
-	}
-	
-	public static interface _cmsOPTdupDataFn
-	{
-		public Object run(cmsContext ContextID, final Object Data);
-	}
-	
 	public static interface _cmsOPToptimizeFn
 	{
 		public boolean run(cmsPipeline[] Lut, int Intent, int[] InputFormat, int[] OutputFormat, int[] dwFlags);
@@ -1262,8 +1265,8 @@ public class lcms2_plugin extends lcms2
 	// This function may be used to set the optional evaluator and a block of private data. If private data is being used, an optional
 	// duplicator and free functions should also be specified in order to duplicate the LUT construct. Use NULL to inhibit such functionality.
 	
-	public static void _cmsPipelineSetOptimizationParameters(cmsPipeline Lut, _cmsOPTeval16Fn Eval16, Object PrivateData, _cmsOPTfreeDataFn FreePrivateDataFn, 
-			_cmsOPTdupDataFn DupPrivateDataFn)
+	public static void _cmsPipelineSetOptimizationParameters(cmsPipeline Lut, _cmsOPTeval16Fn Eval16, Object PrivateData, _cmsFreeUserDataFn FreePrivateDataFn, 
+			_cmsDupUserDataFn DupPrivateDataFn)
 	{
 		cmslut._cmsPipelineSetOptimizationParameters(Lut, Eval16, PrivateData, FreePrivateDataFn, DupPrivateDataFn);
 	}
@@ -1281,9 +1284,9 @@ public class lcms2_plugin extends lcms2
 		public void run(_cmsTRANSFORM CMMcargo, final VirtualPointer InputBuffer, VirtualPointer OutputBuffer, int Size, int Stride);
 	}
 	
-	public static interface _cmsTranformFactory
+	public static interface _cmsTransformFactory
 	{
-		public boolean run(_cmsTransformFn xform, Object UserData, _cmsOPTfreeDataFn FreeUserData, cmsPipeline[] Lut, int[] InputFormat, int[] OutputFormat, int[] dwFlags);
+		public boolean run(_cmsTransformFn xform, Object UserData, _cmsFreeUserDataFn FreePrivateDataFn, cmsPipeline[] Lut, int[] InputFormat, int[] OutputFormat, int[] dwFlags);
 	}
 	
 	// Retrieve user data as specified by the factory
@@ -1292,15 +1295,9 @@ public class lcms2_plugin extends lcms2
 		return cmsxform._cmsGetTransformUserData(CMMcargo);
 	}
 	
-	// FIXME: Those are hacks that should be solved somehow.
-	public static Object _cmsOPTgetTransformPipelinePrivateData(_cmsTRANSFORM CMMcargo)
-	{
-		throw new UnsupportedOperationException();
-	}
-	
 	public static class cmsPluginTransform extends cmsPluginBase
 	{
 		// Transform entry point
-		public _cmsTranformFactory Factory;
+		public _cmsTransformFactory Factory;
 	}
 }

@@ -563,7 +563,7 @@ final class cmscam02
 	    
 	    pOut.J = clr.J;
 	    pOut.C = clr.C;
-	    pOut.h = clr.h;         
+	    pOut.h = clr.h;
 	}
 	
 	public static void cmsCIECAM02Reverse(cmsHANDLE hModel, final cmsJCh pIn, cmsCIEXYZ pOut)
