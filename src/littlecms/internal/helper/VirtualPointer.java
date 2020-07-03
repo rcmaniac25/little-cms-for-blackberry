@@ -418,7 +418,7 @@ public class VirtualPointer
                     {
                         if (i < (len - 2))
                         {
-                            if (BitConverter.toInt16(vp.data, i) == 0) //This isn't normal (null byte is, well, a byte) but it adds extra safety and sanity
+                            if (BitConverter.toInt16(vp.data, i) == 0) //This isn't normal (null byte is, well, a byte) but it adds extra safety and confidence
                             {
                                 actLen = (i - vp.dataPos) + 2;
                                 break;
