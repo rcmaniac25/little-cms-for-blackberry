@@ -1,0 +1,17 @@
+#ignore file for Eclipse
+
+# ignore files
+.hg
+.locale_interfaces
+.preprocessed
+.settings
+bin
+deliverables
+doc
+
+# linker utility
+*.suo
+obj
+System.*
+mscorlib.*
+linker.csproj.user
